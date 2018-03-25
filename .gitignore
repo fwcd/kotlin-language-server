@@ -1,3 +1,9 @@
 .idea/
 *.iml
+
 target/
+out/
+*.vsix
+
+node_modules/
+.vscode-test/
