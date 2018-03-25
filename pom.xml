@@ -79,7 +79,7 @@
     <dependency>
       <groupId>org.eclipse.lsp4j</groupId>
       <artifactId>org.eclipse.lsp4j</artifactId>
-      <version>0.3.0</version>
+      <version>0.4.0.M6</version>
     </dependency>
 
     <dependency>

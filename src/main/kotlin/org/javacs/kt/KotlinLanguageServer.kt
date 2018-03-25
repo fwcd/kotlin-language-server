@@ -1,9 +1,7 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.InitializeParams
-import org.eclipse.lsp4j.InitializeResult
-import org.eclipse.lsp4j.ServerCapabilities
-import org.eclipse.lsp4j.TextDocumentSyncKind
+import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
 
@@ -30,6 +28,10 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
         val capabilities = ServerCapabilities()
         capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
+        capabilities.workspace = WorkspaceServerCapabilities()
+        capabilities.workspace.workspaceFolders = WorkspaceFoldersOptions()
+        capabilities.workspace.workspaceFolders.supported = true
+        capabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
 
         return CompletableFuture.completedFuture(InitializeResult(capabilities))
     }
