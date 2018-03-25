@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.psi.KtPsiFactory
 
 abstract class TestBase {
 
-    protected val testFileName = "HelloWorld.kt"
+    protected val testFileName = "TestFile.kt"
     protected val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, "test-module")
     }
