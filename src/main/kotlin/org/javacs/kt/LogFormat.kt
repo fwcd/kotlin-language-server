@@ -21,7 +21,7 @@ object LogFormat: Formatter() {
         return result
     }
 
-    private val format = "%1\$tF\t%1\$tT\t%4\$s\t%2\$s\t%5\$s%6\$s%n"
+    private const val format = "%1\$tF\t%1\$tT\t%4\$s\t%2\$s\t%5\$s%6\$s%n"
     private val date = Date()
 
     override fun format(record: LogRecord): String {

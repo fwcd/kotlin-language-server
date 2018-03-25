@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     private var client: LanguageClient? = null
@@ -15,7 +16,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     }
 
     override fun shutdown(): CompletableFuture<Any> {
-        return CompletableFuture.completedFuture(null)
+        return completedFuture(null)
     }
 
     override fun getTextDocumentService(): TextDocumentService {
@@ -33,7 +34,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.workspace.workspaceFolders.supported = true
         capabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
 
-        return CompletableFuture.completedFuture(InitializeResult(capabilities))
+        return completedFuture(InitializeResult(capabilities))
     }
 
     override fun getWorkspaceService(): WorkspaceService {
