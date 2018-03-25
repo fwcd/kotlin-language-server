@@ -71,7 +71,7 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        TODO("not implemented")
+        activeDocuments.remove(URI(params.textDocument.uri))
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
