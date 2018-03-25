@@ -57,4 +57,25 @@ object Bar {
 
         assertThat(receiver.staticScope.getFunctionNames(), hasItem(hasToString("foo")))
     }
+
+    @Test
+    fun `resolve across files`() {
+        val fooText = """
+object Foo {
+    fun foo() = "Foo"
+}"""
+        val barText = """
+object Bar {
+    fun bar() = Foo.foo()
+}"""
+        val fooFile = parser.createFile("Foo.kt", fooText)
+        val barFile = parser.createFile("Bar.kt", barText)
+        val barAnalyze = analyze(fooFile, barFile)
+        val foo = findExpressionAt(barFile, 36)
+        val call = foo.getParentResolvedCall(barAnalyze.bindingContext, false)!!
+
+        assertThat(call.candidateDescriptor.name.asString(), equalTo("foo"))
+        assertThat(call.candidateDescriptor.findPsi()!!.containingFile.name, equalTo("Foo.kt"))
+        assertThat(call.candidateDescriptor.containingDeclaration.name.asString(), equalTo("Foo"))
+    }
 }

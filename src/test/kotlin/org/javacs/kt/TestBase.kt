@@ -30,13 +30,18 @@ abstract class TestBase {
 
     protected fun parseAnalyze(text: String): ParseAnalyzeResult {
         val file = parser.createFile(testFileName, text)
+        val analyze = analyze(file)
+        return ParseAnalyzeResult(file, analyze)
+    }
+
+    protected fun analyze(vararg files: KtFile): AnalysisResult {
         val analyze = TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                 project = env.project,
-                files = listOf(file),
+                files = files.asList(),
                 trace = CliBindingTrace(),
                 configuration = env.configuration,
                 packagePartProvider = env::createPackagePartProvider)
-        return ParseAnalyzeResult(file, analyze)
+        return analyze
     }
 
     protected fun findExpressionAt(file: KtFile, offset: Int): KtExpression? {
