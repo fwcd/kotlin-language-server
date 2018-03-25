@@ -1,26 +1,52 @@
 {
     "name": "kotlin",
-    "displayName": "kotlin",
+    "displayName": "Kotlin",
     "description": "Kotlin language support",
-    "version": "0.0.1",
+    "icon": "Icon128.png",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/georgewfraser/vscode-kt.git"
+    },
+    "version": "0.1.0",
     "publisher": "georgewfraser",
     "engines": {
         "vscode": "^1.21.0"
     },
     "categories": [
-        "Other"
+        "Languages",
+        "Linters"
+    ],
+    "keywords": [
+        "kotlin"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onLanguage:kotlin"
     ],
     "main": "./out/extension",
+    "files": [
+        "target/KotlinLanguageServer.jar"
+    ],
     "contributes": {
-        "commands": [
+        "languages": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
+                "id": "kotlin",
+                "extensions": [
+                    ".kt"
+                ],
+                "aliases": [
+                    "Kotlin"
+                ]
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Java configuration",
+            "properties": {
+                "java.home": {
+                    "type": "string",
+                    "description": "Installation directory of Java"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
@@ -34,5 +60,8 @@
         "vscode": "^1.1.6",
         "@types/node": "^7.0.43",
         "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "vscode-languageclient": "^4.0.0"
     }
 }

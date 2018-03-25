@@ -8,6 +8,7 @@ tslint.json
 out/test/**
 out/**/*.map
 target/**
+!target/KotlinLanguageServer.jar
 
 src/**
 lib/**

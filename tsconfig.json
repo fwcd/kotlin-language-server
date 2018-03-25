@@ -9,7 +9,7 @@
         "sourceMap": true,
         "rootDir": "lib",
         /* Strict Type-Checking Option */
-        "strict": true,   /* enable all strict type-checking options */
+        // "strict": true,   /* enable all strict type-checking options */
         /* Additional Checks */
         "noUnusedLocals": true /* Report errors on unused locals. */
         // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
