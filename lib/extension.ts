@@ -4,7 +4,7 @@
 import * as VSCode from 'vscode';
 import * as Path from "path";
 import * as FS from "fs";
-import {LanguageClient, LanguageClientOptions, ServerOptions, StreamInfo} from "vscode-languageclient";
+import {LanguageClient, LanguageClientOptions, ServerOptions} from "vscode-languageclient";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
