@@ -20,4 +20,22 @@ fun main() = foo()
         assertThat(call.candidateDescriptor.name.asString(), equalTo("foo"))
         assertThat(call.candidateDescriptor.findPsi()!!.containingFile.name, equalTo(testFileName))
     }
+
+    @Test
+    fun `resolve a member defined in the same file`() {
+        val text = """
+object Foo {
+    fun foo() = "Foo"
+}
+object Bar {
+    fun bar() = Foo.foo() + "Bar"
+}"""
+        val (file, analyze) = parseAnalyze(text)
+        val foo = findExpressionAt(file, 73)!!
+        val call = foo.getParentResolvedCall(analyze.bindingContext, false)!!
+
+        assertThat(call.candidateDescriptor.name.asString(), equalTo("foo"))
+        assertThat(call.candidateDescriptor.findPsi()!!.containingFile.name, equalTo(testFileName))
+        assertThat(call.candidateDescriptor.containingDeclaration.name.asString(), equalTo("Foo"))
+    }
 }
