@@ -10,6 +10,7 @@
   <properties>
     <kotlin.version>1.2.31</kotlin.version>
     <junit.version>4.10</junit.version>
+    <main.class>org.javacs.kt.MainKt</main.class>
   </properties>
 
   <build>
@@ -50,7 +51,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.javacs.kt.MainKt</mainClass>
+                            <mainClass>${main.class}</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -61,7 +62,7 @@
                 </configuration>
             </execution>
         </executions>
-    </plugin>
+      </plugin>
     </plugins>
   </build>
 

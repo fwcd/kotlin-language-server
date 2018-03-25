@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
@@ -17,7 +18,7 @@ abstract class TestBase {
 
     protected val testFileName = "TestFile.kt"
     protected val config = CompilerConfiguration().apply {
-        put(CommonConfigurationKeys.MODULE_NAME, "test-module")
+        put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
     }
     protected val env = KotlinCoreEnvironment.createForProduction(
             parentDisposable = Disposable { },

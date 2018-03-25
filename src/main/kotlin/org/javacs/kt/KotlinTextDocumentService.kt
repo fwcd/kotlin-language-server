@@ -11,9 +11,7 @@ import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 class KotlinTextDocumentService : TextDocumentService {
-    private val activeDocuments = HashMap<URI, VersionedContent>()
-
-    data class VersionedContent(val content: String, val version: Int)
+    private val activeDocuments = hashMapOf<URI, ActiveDocument>()
 
     override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem> {
         TODO("not implemented")
@@ -60,7 +58,7 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        activeDocuments[URI(params.textDocument.uri)] = VersionedContent(params.textDocument.text, params.textDocument.version)
+        activeDocuments[URI(params.textDocument.uri)] = ActiveDocument(params.textDocument.text, params.textDocument.version)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -87,12 +85,12 @@ class KotlinTextDocumentService : TextDocumentService {
         if (document.version > existing.version) {
             for (change in params.contentChanges) {
                 if (change.range == null)
-                    activeDocuments[uri] = VersionedContent(change.text, document.version)
+                    activeDocuments[uri] = ActiveDocument(change.text, document.version)
                 else
                     newText = patch(newText, change)
             }
 
-            activeDocuments[uri] = VersionedContent(newText, document.version)
+            activeDocuments[uri] = ActiveDocument(newText, document.version)
         }
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
@@ -140,3 +138,5 @@ class KotlinTextDocumentService : TextDocumentService {
         }
     }
 }
+
+data class ActiveDocument(val content: String, val version: Int)
