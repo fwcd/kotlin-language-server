@@ -121,7 +121,7 @@ class KotlinWorkspaceService : WorkspaceService {
     }
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-        TODO("not implemented") 
+        LOG.info(params.toString())
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<MutableList<out SymbolInformation>> {
