@@ -1,7 +1,10 @@
 package org.javacs.kt
 
-fun main(args: Array<String>) {
-    System.out.println(message())
-}
+import org.eclipse.lsp4j.launch.LSPLauncher
 
-fun message() = "Hello world!"
+fun main(args: Array<String>) {
+    val server = KotlinLanguageServer()
+    val launcher = LSPLauncher.createServerLauncher(server, System.`in`, System.out)
+    server.connect(launcher.remoteProxy)
+    launcher.startListening()
+}
