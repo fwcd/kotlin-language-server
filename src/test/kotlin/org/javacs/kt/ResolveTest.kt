@@ -78,4 +78,21 @@ object Bar {
         assertThat(call.candidateDescriptor.findPsi()!!.containingFile.name, equalTo("Foo.kt"))
         assertThat(call.candidateDescriptor.containingDeclaration.name.asString(), equalTo("Foo"))
     }
+
+    @Test
+    fun `resolve inactive document`() {
+        val barText = """
+object Bar {
+    fun bar() = Foo.foo()
+}"""
+        val barFile = parser.createFile("Bar.kt", barText)
+        val fooFile = testResourcesFile("/resolveInactiveDocument/Foo.kt")
+        val barAnalyze = analyze(fooFile, barFile)
+        val foo = findExpressionAt(barFile, 36)
+        val call = foo.getParentResolvedCall(barAnalyze.bindingContext, false)!!
+
+        assertThat(call.candidateDescriptor.name.asString(), equalTo("foo"))
+        assertThat(call.candidateDescriptor.findPsi()!!.containingFile.name, equalTo("Foo.kt"))
+        assertThat(call.candidateDescriptor.containingDeclaration.name.asString(), equalTo("Foo"))
+    }
 }

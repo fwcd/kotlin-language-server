@@ -6,6 +6,9 @@ import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.com.intellij.openapi.Disposable
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
+import org.jetbrains.kotlin.com.intellij.psi.PsiManager
 import org.jetbrains.kotlin.com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -50,5 +53,13 @@ abstract class TestBase {
 
     protected fun parent(ex: KtExpression?): KtExpression? {
         return PsiTreeUtil.getParentOfType(ex, KtExpression::class.java)
+    }
+
+    private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+
+    protected fun testResourcesFile(relativePath: String): KtFile {
+        val absolutePath = javaClass.getResource(relativePath).path
+        val virtualFile = localFileSystem.findFileByPath(absolutePath) ?: throw RuntimeException("$absolutePath not found")
+        return PsiManager.getInstance(env.project).findFile(virtualFile) as KtFile
     }
 }
