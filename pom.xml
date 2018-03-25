@@ -8,7 +8,7 @@
   <name>vscode-kt</name>
   <url>http://maven.apache.org</url>
   <properties>
-    <kotlin.version>1.2.30</kotlin.version>
+    <kotlin.version>1.2.31</kotlin.version>
     <junit.version>4.10</junit.version>
   </properties>
 
