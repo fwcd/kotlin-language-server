@@ -5,7 +5,7 @@
     "icon": "Icon128.png",
     "repository": {
         "type": "git",
-        "url": "https://github.com/georgewfraser/vscode-kt.git"
+        "url": "https://github.com/georgewfraser/kotlin-language-server.git"
     },
     "version": "0.1.0",
     "publisher": "georgewfraser",
