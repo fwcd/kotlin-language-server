@@ -18,26 +18,25 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
 abstract class TestBase {
-
-    protected val testFileName = "TestFile.kt"
-    protected val config = CompilerConfiguration().apply {
+    val testFileName = "TestFile.kt"
+    val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
     }
-    protected val env = KotlinCoreEnvironment.createForProduction(
+    val env = KotlinCoreEnvironment.createForProduction(
             parentDisposable = Disposable { },
             configuration = config,
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
-    protected val parser = KtPsiFactory(env.project)
+    val parser = KtPsiFactory(env.project)
 
-    protected data class ParseAnalyzeResult(val file: KtFile, val analyze: AnalysisResult)
+    data class ParseAnalyzeResult(val file: KtFile, val analyze: AnalysisResult)
 
-    protected fun parseAnalyze(text: String): ParseAnalyzeResult {
+    fun parseAnalyze(text: String): ParseAnalyzeResult {
         val file = parser.createFile(testFileName, text)
         val analyze = analyze(file)
         return ParseAnalyzeResult(file, analyze)
     }
 
-    protected fun analyze(vararg files: KtFile): AnalysisResult {
+    fun analyze(vararg files: KtFile): AnalysisResult {
         val analyze = TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                 project = env.project,
                 files = files.asList(),
@@ -47,17 +46,17 @@ abstract class TestBase {
         return analyze
     }
 
-    protected fun findExpressionAt(file: KtFile, offset: Int): KtExpression? {
+    fun findExpressionAt(file: KtFile, offset: Int): KtExpression? {
         return PsiTreeUtil.getParentOfType(file.findElementAt(offset), KtExpression::class.java)
     }
 
-    protected fun parent(ex: KtExpression?): KtExpression? {
+    fun parent(ex: KtExpression?): KtExpression? {
         return PsiTreeUtil.getParentOfType(ex, KtExpression::class.java)
     }
 
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
 
-    protected fun testResourcesFile(relativePath: String): KtFile {
+    fun testResourcesFile(relativePath: String): KtFile {
         val absolutePath = javaClass.getResource(relativePath).path
         val virtualFile = localFileSystem.findFileByPath(absolutePath) ?: throw RuntimeException("$absolutePath not found")
         return PsiManager.getInstance(env.project).findFile(virtualFile) as KtFile
