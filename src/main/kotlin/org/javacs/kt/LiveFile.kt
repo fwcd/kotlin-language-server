@@ -1,48 +1,21 @@
 package org.javacs.kt
 
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.analyzer.AnalysisResult
-import org.jetbrains.kotlin.builtins.DefaultBuiltIns
-import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport.CliBindingTrace
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.config.JvmTarget.JVM_1_6
-import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
-import org.jetbrains.kotlin.container.getValue
-import org.jetbrains.kotlin.container.useImpl
-import org.jetbrains.kotlin.container.useInstance
-import org.jetbrains.kotlin.context.ModuleContext
+import org.javacs.kt.compiler.PARSER
+import org.javacs.kt.compiler.analyzeExpression
+import org.javacs.kt.compiler.analyzeFiles
+import org.javacs.kt.completion.completeIdentifiers
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
-import org.jetbrains.kotlin.descriptors.impl.ModuleDescriptorImpl
-import org.jetbrains.kotlin.frontend.di.configureModule
-import org.jetbrains.kotlin.load.java.JvmAbi
-import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
-import org.jetbrains.kotlin.resolve.AnnotationResolverImpl
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.BindingTraceContext
-import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
-import org.jetbrains.kotlin.resolve.createContainer
-import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatform
-import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
-import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
-import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import java.net.URI
 
 class LiveFile(private val fileName: URI, private var text: String) {
-    private var file = parser.createFile(text)
+    private var file = PARSER.createFile(text)
     private var analyze = analyzeFiles(file)
     /** For testing */
     var reAnalyzed = false
@@ -85,13 +58,10 @@ class LiveFile(private val fileName: URI, private var text: String) {
     private fun completeId(
             ref: KtNameReferenceExpression,
             strategy: RecoveryStrategy): Sequence<DeclarationDescriptor> {
+        val partial = partialId(ref)
         val scope = findScope(ref, strategy.newContext) ?: return emptySequence()
-        val nameFilter = partialId(ref)
-        val found = scope.parentsWithSelf.flatMap {
-            it.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
-        }
 
-        return found
+        return completeIdentifiers(scope, partial)
     }
 
     private fun completeMembers(
@@ -100,20 +70,16 @@ class LiveFile(private val fileName: URI, private var text: String) {
         val type = strategy.newContext.getType(dot.receiverExpression)
                    ?: robustType(dot.receiverExpression, strategy.newContext)
                    ?: return emptyList()
-        val nameFilter = partialId(dot.selectorExpression)
-        val found = type.memberScope.getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter)
+        val partial = partialId(dot.selectorExpression)
 
-        return found
+        return org.javacs.kt.completion.completeMembers(type, partial)
     }
 
-    private fun partialId(exprAtCursor: KtExpression?): (Name) -> Boolean {
+    private fun partialId(exprAtCursor: KtExpression?): String {
         val select = exprAtCursor?.text ?: ""
         val word = Regex("[^()]+")
-        val partial = word.find(select)?.value ?: ""
 
-        return {
-            containsCharactersInOrder(it.identifier, partial, false)
-        }
+        return word.find(select)?.value ?: ""
     }
 
     /**
@@ -122,7 +88,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
      */
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
-        val parse = parser.createExpression(expr.text)
+        val parse = PARSER.createExpression(expr.text)
         val analyze = analyzeExpression(parse, scope)
 
         return analyze.getType(parse)
@@ -130,32 +96,8 @@ class LiveFile(private val fileName: URI, private var text: String) {
 
     private fun findScope(expr: KtExpression, context: BindingContext): LexicalScope? {
         return expr.parentsWithSelf.filterIsInstance<KtElement>().mapNotNull {
-            context.get(
-                    BindingContext.LEXICAL_SCOPE, it)
+            context.get(BindingContext.LEXICAL_SCOPE, it)
         }.firstOrNull()
-    }
-
-    fun containsCharactersInOrder(
-            candidate: CharSequence, pattern: CharSequence, caseSensitive: Boolean): Boolean {
-        var iCandidate = 0
-        var iPattern = 0
-
-        while (iCandidate < candidate.length && iPattern < pattern.length) {
-            var patternChar = pattern[iPattern]
-            var testChar = candidate[iCandidate]
-
-            if (!caseSensitive) {
-                patternChar = Character.toLowerCase(patternChar)
-                testChar = Character.toLowerCase(testChar)
-            }
-
-            if (patternChar == testChar) {
-                iPattern++
-                iCandidate++
-            } else iCandidate++
-        }
-
-        return iPattern == pattern.length
     }
 
     /**
@@ -186,7 +128,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
         LOG.info("Re-analyzing $fileName")
 
         text = newText
-        file = parser.createFile(newText)
+        file = PARSER.createFile(newText)
         analyze = analyzeFiles(file)
         reAnalyzed = true
     }
@@ -216,7 +158,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
                 val start = element.textRange.startOffset
                 val end = element.textRange.endOffset + newText.length - text.length
                 val exprText = newText.substring(start, end)
-                val expr = parser.createFunction(exprText)
+                val expr = PARSER.createFunction(exprText)
                 ReparseFunction(element, expr)
             }
             else -> null
@@ -244,48 +186,5 @@ class LiveFile(private val fileName: URI, private var text: String) {
         override val oldExpr = file
         override val newExpr = file
         override val newContext = analyze.bindingContext
-    }
-
-    companion object {
-        // For non-incremental analyze
-        private val config = CompilerConfiguration().apply {
-            put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
-        }
-        private val env = KotlinCoreEnvironment.createForProduction(
-                parentDisposable = Disposable { },
-                configuration = config,
-                configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
-        private val parser = KtPsiFactory(env.project)
-
-        private fun analyzeFiles(vararg files: KtFile): AnalysisResult =
-                TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
-                        project = env.project,
-                        files = files.asList(),
-                        trace = CliBindingTrace(),
-                        configuration = env.configuration,
-                        packagePartProvider = env::createPackagePartProvider)
-
-        // For incremental
-        private val module = ModuleDescriptorImpl(
-                Name.special("<LanguageServerModule>"),
-                LockBasedStorageManager.NO_LOCKS,
-                DefaultBuiltIns.Instance).apply {
-            setDependencies(listOf(this))
-            initialize(PackageFragmentProvider.Empty)
-        }
-        private val container = createContainer("LanguageServer", JvmPlatform, {
-            configureModule(ModuleContext(module, env.project), JvmPlatform, JVM_1_6)
-            useInstance(LanguageVersionSettingsImpl.DEFAULT)
-            useImpl<AnnotationResolverImpl>()
-            useImpl<ExpressionTypingServices>()
-        })
-        private val expressionTypingServices: ExpressionTypingServices by container
-
-        private fun analyzeExpression(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext {
-            val trace = BindingTraceContext()
-            expressionTypingServices.getTypeInfo(
-                    scopeWithImports, expression, TypeUtils.NO_EXPECTED_TYPE, DataFlowInfo.EMPTY, trace, true)
-            return trace.bindingContext
-        }
     }
 }
