@@ -84,8 +84,9 @@ class KotlinTextDocumentService : TextDocumentService {
         val offset = offset(active.content, position.position.line, position.position.character)
         val completions = active.compiled.completionsAt(active.content, offset)
         val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
+        val isIncomplete = list.size == MAX_COMPLETION_ITEMS
 
-        return CompletableFuture.completedFuture(Either.forRight(CompletionList(list.size == MAX_COMPLETION_ITEMS, list)))
+        return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
     }
 
     private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
@@ -290,6 +291,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     override fun visitFunctionDescriptor(desc: FunctionDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
+        result.kind = CompletionItemKind.Function
         result.insertText = functionInsertText(desc)
         result.insertTextFormat = InsertTextFormat.Snippet
 
