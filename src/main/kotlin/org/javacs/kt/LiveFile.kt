@@ -134,15 +134,17 @@ class LiveFile(private val fileName: URI, private var text: String) {
     }
 
     /**
-     * Region that has been changed, in both old-document and new-document coordinates
+     * Region that has been changed
      */
     private fun changedRegion(newText: String): TextRange? {
         if (text == newText) return null
 
         val prefix = text.commonPrefixWith(newText).length
         val suffix = text.commonSuffixWith(newText).length
+        var end = text.length - suffix
+        if (end > prefix) end = prefix
 
-        return TextRange(prefix, text.length - suffix)
+        return TextRange(prefix, end)
     }
 
     private fun recoverAt(newText: String, cursor: Int): RecoveryStrategy? {
