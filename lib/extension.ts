@@ -37,6 +37,7 @@ export function activate(context: VSCode.ExtensionContext) {
     }
     let fatJar = Path.resolve(context.extensionPath, "target", "KotlinLanguageServer.jar");
     let args = [
+        '-Xverify:none', // helps VisualVM avoid 'error 62'
         '-jar', fatJar
     ];
     // Start the child java process

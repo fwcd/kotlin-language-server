@@ -1,47 +1,121 @@
 package org.javacs.kt
 
-import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.hasToString
-import org.junit.Assert.assertThat
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
-class HoverTest: TestBase() {
-
+class HoverTest: LanguageServerTestFixture("hover") {
     @Test
-    fun `run the Kotlin compiler`() {
-        val text = """
-fun main(args: Array<String>) {
-    println("Hello world!")
-}"""
-        val (file, _) = parseAnalyze(text)
-        val ex = findExpressionAt(file, 40)
+    fun `string reference`() {
+        val file = "Literals.kt"
+        open(file)
 
-        assertThat(ex?.text, equalTo("println"))
-        assertThat(parent(ex)?.text, equalTo("""println("Hello world!")"""))
+        val hover = languageServer.textDocumentService.hover(position(file, 3, 19)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("val stringLiteral: String", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
     }
 
     @Test
-    fun `find the types of expressions`() {
-        val text = """
-fun main(): string {
-    val text = ""
-    return text
-}"""
-        val (file, analyze) = parseAnalyze(text)
-        val stringLiteral = findExpressionAt(file, 38)!!
-        val textDeclaration = findExpressionAt(file, 32)!!
-        val textReference = findExpressionAt(file, 53)!!
+    fun `function reference`() {
+        val file = "FunctionReference.kt"
+        open(file)
 
-        assertThat(stringLiteral.text, equalTo("\"\""))
-        assertThat(textDeclaration.text, equalTo("""val text = """""))
-        assertThat(textReference.text, equalTo("text"))
+        val hover = languageServer.textDocumentService.hover(position(file, 2, 45)).get()!!
+        val contents = hover.contents.first().right
 
-        val stringLiteralType = analyze.bindingContext.getType(stringLiteral)
-        val textDeclarationType = analyze.bindingContext.getType(textDeclaration)
-        val textReferenceType = analyze.bindingContext.getType(textReference)
+        assertEquals("kotlin", contents.language)
+        assertEquals("fun isFoo(s: String): Boolean", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
 
-        assertThat(stringLiteralType, hasToString("String"))
-        assertThat(textDeclarationType, hasToString("Unit"))
-        assertThat(textReferenceType, hasToString("String"))
+    @Test
+    fun `object reference`() {
+        val file = "ObjectReference.kt"
+        open(file)
+
+        val hover = languageServer.textDocumentService.hover(position(file, 2, 7)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("object AnObject", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
+
+    @Test
+    fun `object reference with incomplete method`() {
+        val file = "ObjectReference.kt"
+        open(file)
+
+        val hover = languageServer.textDocumentService.hover(position(file, 6, 7)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("object AnObject", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
+
+    @Test
+    fun `object reference with method`() {
+        val file = "ObjectReference.kt"
+        open(file)
+
+        val hover = languageServer.textDocumentService.hover(position(file, 10, 7)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("object AnObject", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
+
+    @Test
+    fun `object method`() {
+        val file = "ObjectReference.kt"
+        open(file)
+
+        val hover = languageServer.textDocumentService.hover(position(file, 10, 15)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("fun doh(): Unit", contents.value)
+        // File has not been edited
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
+
+    @Test
+    fun `incrementally repair a single-expression function`() {
+        val file = "Recover.kt"
+        open(file)
+        replace(file, 2, 9, "\"Foo\"", "intFunction()")
+
+        val hover = languageServer.textDocumentService.hover(position(file, 2, 11)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("fun intFunction(): Int", contents.value)
+        // Edit is inside function
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
+    }
+
+    @Test
+    fun `incrementally repair a block function`() {
+        val file = "Recover.kt"
+        open(file)
+        replace(file, 5, 13, "\"Foo\"", "intFunction()")
+
+        val hover = languageServer.textDocumentService.hover(position(file, 5, 13)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("fun intFunction(): Int", contents.value)
+        // Edit is inside function
+        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file).toUri()))
     }
 }

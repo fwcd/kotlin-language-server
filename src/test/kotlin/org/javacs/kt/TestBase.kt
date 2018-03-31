@@ -37,13 +37,12 @@ abstract class TestBase {
     }
 
     fun analyze(vararg files: KtFile): AnalysisResult {
-        val analyze = TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
+        return TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                 project = env.project,
                 files = files.asList(),
                 trace = CliBindingTrace(),
                 configuration = env.configuration,
                 packagePartProvider = env::createPackagePartProvider)
-        return analyze
     }
 
     fun findExpressionAt(file: KtFile, offset: Int): KtExpression? {
