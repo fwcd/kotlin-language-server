@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.net.URI
+import kotlin.math.max
 
 class LiveFile(private val fileName: URI, private var text: String) {
     private var file = PARSER.createFile(text)
@@ -64,8 +65,9 @@ class LiveFile(private val fileName: URI, private var text: String) {
 
         val prefix = text.commonPrefixWith(newText).length
         val suffix = text.commonSuffixWith(newText).length
-        var end = text.length - suffix
-        if (end > prefix) end = prefix
+        val end = max(text.length - suffix, prefix)
+
+        LOG.info("Changed ${prefix}-${end}")
 
         return TextRange(prefix, end)
     }
