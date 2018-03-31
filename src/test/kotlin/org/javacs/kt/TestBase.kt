@@ -49,10 +49,6 @@ abstract class TestBase {
         return PsiTreeUtil.getParentOfType(file.findElementAt(offset), KtExpression::class.java)
     }
 
-    fun parent(ex: KtExpression?): KtExpression? {
-        return PsiTreeUtil.getParentOfType(ex, KtExpression::class.java)
-    }
-
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
 
     fun testResourcesFile(relativePath: String): KtFile {
