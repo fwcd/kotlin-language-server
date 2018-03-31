@@ -83,13 +83,13 @@ class KotlinTextDocumentService : TextDocumentService {
         val active = activeDocuments[uri] ?: throw RuntimeException("$uri is not open")
         val offset = offset(active.content, position.position.line, position.position.character)
         val completions = active.compiled.completionsAt(active.content, offset)
-        val list = completions.map(::completionItem)
+        val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
 
         return CompletableFuture.completedFuture(Either.forRight(CompletionList(list.size == MAX_COMPLETION_ITEMS, list)))
     }
 
     private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
-            desc.accept(RenderCompletionItem(desc), null)
+            desc.accept(RenderCompletionItem(), null)
 
     override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem> {
         TODO("not implemented")
@@ -243,33 +243,55 @@ class KotlinTextDocumentService : TextDocumentService {
     data class ActiveDocument(val content: String, val version: Int, val compiled: LiveFile)
 }
 
-class RenderCompletionItem(desc: DeclarationDescriptor): DeclarationDescriptorVisitor<CompletionItem, Unit> {
+class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
 
     private val result = CompletionItem()
 
+    private fun setDefaults(desc: DeclarationDescriptor) {
+        result.label = desc.name.identifier
+        result.filterText = desc.name.identifier
+        result.insertText = desc.name.identifier
+        result.insertTextFormat = InsertTextFormat.PlainText
+        result.detail = DECL_RENDERER.render(desc)
+    }
+
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Property
+
+        return result
     }
 
     override fun visitConstructorDescriptor(desc: ConstructorDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Constructor
+
+        return result
     }
 
     override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Variable
+
+        return result
     }
 
     override fun visitPackageViewDescriptor(desc: PackageViewDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Module
+
+        return result
     }
 
     override fun visitFunctionDescriptor(desc: FunctionDescriptor, nothing: Unit?): CompletionItem {
-        result.label = desc.name.identifier
-        result.filterText = desc.name.identifier
+        setDefaults(desc)
+
         result.insertText = functionInsertText(desc)
         result.insertTextFormat = InsertTextFormat.Snippet
-        result.detail = DECL_RENDERER.render(desc)
-        result.kind = CompletionItemKind.Function
 
         return result
     }
@@ -279,42 +301,82 @@ class RenderCompletionItem(desc: DeclarationDescriptor): DeclarationDescriptorVi
             else "${desc.name.identifier}(\$0)"
 
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Module
+
+        return result
     }
 
     override fun visitClassDescriptor(desc: ClassDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Class
+
+        return result
     }
 
     override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Module
+
+        return result
     }
 
     override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Variable
+
+        return result
     }
 
     override fun visitTypeParameterDescriptor(desc: TypeParameterDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Variable
+
+        return result
     }
 
     override fun visitScriptDescriptor(desc: ScriptDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Module
+
+        return result
     }
 
     override fun visitTypeAliasDescriptor(desc: TypeAliasDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Variable
+
+        return result
     }
 
     override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Property
+
+        return result
     }
 
     override fun visitVariableDescriptor(desc: VariableDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Variable
+
+        return result
     }
 
     override fun visitPropertyDescriptor(desc: PropertyDescriptor, nothing: Unit?): CompletionItem {
-        TODO("not implemented")
+        setDefaults(desc)
+
+        result.kind = CompletionItemKind.Property
+
+        return result
     }
 }

@@ -31,8 +31,10 @@ import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.createContainer
 import org.jetbrains.kotlin.resolve.jvm.platform.JvmPlatform
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
+import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
@@ -67,15 +69,29 @@ class LiveFile(private val fileName: URI, private var text: String) {
         }
     }
 
-    fun completionsAt(newText: String, cursor: Int): Collection<DeclarationDescriptor> {
-        val strategy = recover(newText, cursor) ?: return emptyList()
-        val leaf = strategy.newExpr.findElementAt(cursor - strategy.oldRange.startOffset - 1) ?: return emptyList()
+    fun completionsAt(newText: String, cursor: Int): Sequence<DeclarationDescriptor> {
+        val strategy = recover(newText, cursor) ?: return emptySequence()
+        val leaf = strategy.newExpr.findElementAt(cursor - strategy.oldRange.startOffset - 1) ?: return emptySequence()
         val elements = leaf.parentsWithSelf.filterIsInstance<KtElement>()
         val exprs = elements.takeWhile { it is KtExpression }.filterIsInstance<KtExpression>()
         val dot = exprs.filterIsInstance<KtDotQualifiedExpression>().firstOrNull()
-        if (dot != null) return completeMembers(dot, strategy)
+        if (dot != null) return completeMembers(dot, strategy).asSequence()
+        val ref = exprs.filterIsInstance<KtNameReferenceExpression>().firstOrNull()
+        if (ref != null) return completeId(ref, strategy)
 
-        TODO()
+        return emptySequence()
+    }
+
+    private fun completeId(
+            ref: KtNameReferenceExpression,
+            strategy: RecoveryStrategy): Sequence<DeclarationDescriptor> {
+        val scope = findScope(ref, strategy.newContext) ?: return emptySequence()
+        val nameFilter = partialId(ref)
+        val found = scope.parentsWithSelf.flatMap {
+            it.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
+        }
+
+        return found
     }
 
     private fun completeMembers(
@@ -84,12 +100,20 @@ class LiveFile(private val fileName: URI, private var text: String) {
         val type = strategy.newContext.getType(dot.receiverExpression)
                    ?: robustType(dot.receiverExpression, strategy.newContext)
                    ?: return emptyList()
-        val select = dot.selectorExpression?.text ?: ""
-        val word = Regex("[^()]+")
-        val partial = word.find(select)?.value ?: ""
-        val found = type.memberScope.getDescriptorsFiltered { containsCharactersInOrder(it.identifier, partial, false)}
+        val nameFilter = partialId(dot.selectorExpression)
+        val found = type.memberScope.getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter)
 
         return found
+    }
+
+    private fun partialId(exprAtCursor: KtExpression?): (Name) -> Boolean {
+        val select = exprAtCursor?.text ?: ""
+        val word = Regex("[^()]+")
+        val partial = word.find(select)?.value ?: ""
+
+        return {
+            containsCharactersInOrder(it.identifier, partial, false)
+        }
     }
 
     /**
@@ -97,14 +121,18 @@ class LiveFile(private val fileName: URI, private var text: String) {
      * try re-parsing and re-analyzing just the difficult expression
      */
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
-        val scope = expr.parentsWithSelf
-                            .filterIsInstance<KtElement>()
-                            .mapNotNull { context.get(BindingContext.LEXICAL_SCOPE, it) }
-                            .firstOrNull() ?: return null
+        val scope = findScope(expr, context) ?: return null
         val parse = parser.createExpression(expr.text)
         val analyze = analyzeExpression(parse, scope)
 
         return analyze.getType(parse)
+    }
+
+    private fun findScope(expr: KtExpression, context: BindingContext): LexicalScope? {
+        return expr.parentsWithSelf.filterIsInstance<KtElement>().mapNotNull {
+            context.get(
+                    BindingContext.LEXICAL_SCOPE, it)
+        }.firstOrNull()
     }
 
     fun containsCharactersInOrder(
