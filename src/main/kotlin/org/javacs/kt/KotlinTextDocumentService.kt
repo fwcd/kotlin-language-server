@@ -30,7 +30,8 @@ class KotlinTextDocumentService : TextDocumentService {
         val uri = URI(position.textDocument.uri)
         val active = activeDocuments[uri] ?: throw RuntimeException("$uri is not open")
         val offset = offset(active.content, position.position.line, position.position.character)
-        val (location, decl) = active.compiled.hoverAt(active.content, offset) ?: return noHover(position)
+        val recover = active.compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val (location, decl) = recover.hover() ?: return noHover(position)
         val hoverText = DECL_RENDERER.render(decl)
         val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
         val range = Range(position(active.content, location.startOffset), position(active.content, location.endOffset))
@@ -39,10 +40,13 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
-        LOG.info("No hover found at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
+        LOG.info("No hover found at ${describePosition(position)}")
 
         return CompletableFuture.completedFuture(null)
     }
+
+    private fun describePosition(position: TextDocumentPositionParams) =
+            "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
 
     override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<MutableList<out DocumentHighlight>> {
         TODO("not implemented")
@@ -72,11 +76,18 @@ class KotlinTextDocumentService : TextDocumentService {
         val uri = URI(position.textDocument.uri)
         val active = activeDocuments[uri] ?: throw RuntimeException("$uri is not open")
         val offset = offset(active.content, position.position.line, position.position.character)
-        val completions = active.compiled.completionsAt(active.content, offset)
+        val recover = active.compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val completions = recover.completions()
         val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
         val isIncomplete = list.size == MAX_COMPLETION_ITEMS
 
         return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
+    }
+
+    private fun<T> cantRecover(position: TextDocumentPositionParams): CompletableFuture<T> {
+        LOG.info("Couldn't recover compiler at ${describePosition(position)}")
+
+        return CompletableFuture.completedFuture(null)
     }
 
     private fun completionItem(desc: DeclarationDescriptor): CompletionItem =

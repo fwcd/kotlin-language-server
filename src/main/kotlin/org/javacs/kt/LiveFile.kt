@@ -1,19 +1,13 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
 import org.javacs.kt.compiler.PARSER
 import org.javacs.kt.compiler.analyzeExpression
 import org.javacs.kt.compiler.analyzeFiles
-import org.javacs.kt.completion.completeIdentifiers
-import org.javacs.kt.completion.completeMembers
-import org.javacs.kt.completion.completeTypes
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.types.KotlinType
 import java.net.URI
 
 class LiveFile(private val fileName: URI, private var text: String) {
@@ -22,91 +16,17 @@ class LiveFile(private val fileName: URI, private var text: String) {
     /** For testing */
     var reAnalyzed = false
 
-    fun hoverAt(newText: String, cursor: Int): Pair<TextRange, DeclarationDescriptor>? {
-        val strategy = recover(newText, cursor) ?: return null
-        val start = strategy.oldRange.startOffset
-        val leaf = strategy.newExpr.findElementAt(cursor - start) ?: return null
-        val elements = leaf.parentsWithSelf.filterIsInstance<PsiElement>()
-        val stopAtDeclaration = elements.takeWhile { it !is KtDeclaration }
-        val expressionsOnly = stopAtDeclaration.filterIsInstance<KtExpression>()
-        val hasHover = expressionsOnly.filter { hoverDecl(it, strategy.newContext) != null }
-        val expr = hasHover.firstOrNull() ?: return null
-        val range = expr.textRange.shiftRight(strategy.oldRange.startOffset)
-        val hover = hoverDecl(expr, strategy.newContext) ?: return null
-
-        return Pair(range, hover)
-    }
-
-    private fun hoverDecl(expr: KtExpression, context: BindingContext): DeclarationDescriptor? {
-        return when (expr) {
-            is KtReferenceExpression -> context.get(BindingContext.REFERENCE_TARGET, expr) ?: return null
-            else -> null
-        }
-    }
-
-    fun completionsAt(newText: String, cursor: Int): Sequence<DeclarationDescriptor> {
-        val strategy = recover(newText, cursor) ?: return emptySequence()
-        val leaf = strategy.newExpr.findElementAt(cursor - strategy.oldRange.startOffset - 1) ?: return emptySequence()
-        val expr = find<KtExpression>(leaf) ?: return emptySequence()
-        val typeParent = find<KtTypeElement>(expr)
-        if (typeParent != null) {
-            val scope = findScope(expr, strategy.newContext) ?: return emptySequence()
-            val partial = matchIdentifier(expr)
-
-            return completeTypes(scope, partial)
-        }
-        val dotParent = find<KtDotQualifiedExpression>(expr)
-        if (dotParent != null) {
-            val type = strategy.newContext.getType(dotParent.receiverExpression)
-                       ?: robustType(dotParent.receiverExpression, strategy.newContext)
-                       ?: return emptySequence()
-            val partial = matchIdentifier(dotParent.selectorExpression)
-
-            return completeMembers(type, partial)
-        }
-        val idParent = find<KtNameReferenceExpression>(expr)
-        if (idParent != null) {
-            val scope = findScope(idParent, strategy.newContext) ?: return emptySequence()
-            val partial = matchIdentifier(expr)
-
-            return completeIdentifiers(scope, partial)
-        }
-
-        return emptySequence()
-    }
-
-    private inline fun<reified Find> find(cursor: PsiElement) =
-            cursor.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
-
-    private fun matchIdentifier(exprAtCursor: KtExpression?): String {
-        val select = exprAtCursor?.text ?: ""
-        val word = Regex("[^()]+")
-
-        return word.find(select)?.value ?: ""
-    }
-
-    /**
-     * If we're having trouble figuring out the type of an expression,
-     * try re-parsing and re-analyzing just the difficult expression
-     */
-    fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
-        val scope = findScope(expr, context) ?: return null
-        val parse = PARSER.createExpression(expr.text)
-        val analyze = analyzeExpression(parse, scope)
-
-        return analyze.getType(parse)
-    }
-
-    private fun findScope(expr: KtExpression, context: BindingContext): LexicalScope? {
-        return expr.parentsWithSelf.filterIsInstance<KtElement>().mapNotNull {
-            context.get(BindingContext.LEXICAL_SCOPE, it)
-        }.firstOrNull()
-    }
-
     /**
      * Try to re-analyze a section of the file, but fall back on full re-compilation if necessary
      */
-    private fun recover(newText: String, cursor: Int): RecoveryStrategy? {
+    fun recover(newText: String, cursor: Int): CompilerSession? {
+        val strategy = recoverStrategy(newText, cursor) ?: return null
+        val textOffset = strategy.oldRange.startOffset
+
+        return CompilerSession(strategy.newExpr, strategy.newContext, cursor, textOffset)
+    }
+
+    private fun recoverStrategy(newText: String, cursor: Int): RecoveryStrategy? {
         reAnalyzed = false
 
         // If there are no changes, we can use the existing analyze

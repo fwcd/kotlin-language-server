@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
-// For non-incremental analyze
 private val config = CompilerConfiguration().apply {
     put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
 }
@@ -29,5 +28,3 @@ fun analyzeFiles(vararg files: KtFile): AnalysisResult =
                 trace = CliBindingTrace(),
                 configuration = ENV.configuration,
                 packagePartProvider = ENV::createPackagePartProvider)
-
-// For incremental
