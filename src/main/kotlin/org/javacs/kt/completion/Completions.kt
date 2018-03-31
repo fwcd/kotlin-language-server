@@ -9,26 +9,35 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 
-fun completeMembers(type: KotlinType, partialIdentifier: String): Collection<DeclarationDescriptor> {
+fun completeMembers(type: KotlinType, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return type.memberScope.getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter)
+    return type.memberScope.getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter).asSequence()
+}
+
+fun completeTypes(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
+    val kindsFilter = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
+    val nameFilter = matchesPartialIdentifier(partialIdentifier)
+
+    return scope.parentsWithSelf.flatMap {
+        it.getContributedDescriptors(kindsFilter, nameFilter).asSequence()
+    }
 }
 
 fun completeIdentifiers(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
     return scope.parentsWithSelf.flatMap {
-        val locals = it.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter)
+        val locals = it.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
         val members = implicitMembers(it, partialIdentifier)
 
-        locals.asSequence() + members.asSequence()
+        locals + members
     }
 }
 
-private fun implicitMembers(scope: HierarchicalScope, partialIdentifier: String): Collection<DeclarationDescriptor> {
-    if (scope !is LexicalScope) return emptyList()
-    val implicit = scope.implicitReceiver ?: return emptyList()
+private fun implicitMembers(scope: HierarchicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
+    if (scope !is LexicalScope) return emptySequence()
+    val implicit = scope.implicitReceiver ?: return emptySequence()
 
     return completeMembers(implicit.type, partialIdentifier)
 }

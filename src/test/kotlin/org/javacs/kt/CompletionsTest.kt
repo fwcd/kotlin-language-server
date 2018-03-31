@@ -43,4 +43,18 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("aCompanionVal"))
         assertThat(labels, hasItem("aCompanionFun"))
     }
+
+    @Test
+    fun `complete a type name`() {
+        val file = "Types.kt"
+        open(file)
+
+        val completions = languageServer.textDocumentService.completion(position(file, 2, 25)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("SomeInnerClass"))
+        assertThat(labels, hasItem("String"))
+        assertThat(labels, hasItem("SomeInnerObject"))
+        assertThat(labels, hasItem("SomeAlias"))
+    }
 }

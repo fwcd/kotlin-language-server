@@ -6,6 +6,8 @@ import org.javacs.kt.compiler.PARSER
 import org.javacs.kt.compiler.analyzeExpression
 import org.javacs.kt.compiler.analyzeFiles
 import org.javacs.kt.completion.completeIdentifiers
+import org.javacs.kt.completion.completeMembers
+import org.javacs.kt.completion.completeTypes
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -45,37 +47,38 @@ class LiveFile(private val fileName: URI, private var text: String) {
     fun completionsAt(newText: String, cursor: Int): Sequence<DeclarationDescriptor> {
         val strategy = recover(newText, cursor) ?: return emptySequence()
         val leaf = strategy.newExpr.findElementAt(cursor - strategy.oldRange.startOffset - 1) ?: return emptySequence()
-        val elements = leaf.parentsWithSelf.filterIsInstance<KtElement>()
-        val exprs = elements.takeWhile { it is KtExpression }.filterIsInstance<KtExpression>()
-        val dot = exprs.filterIsInstance<KtDotQualifiedExpression>().firstOrNull()
-        if (dot != null) return completeMembers(dot, strategy).asSequence()
-        val ref = exprs.filterIsInstance<KtNameReferenceExpression>().firstOrNull()
-        if (ref != null) return completeId(ref, strategy)
+        val expr = find<KtExpression>(leaf) ?: return emptySequence()
+        val typeParent = find<KtTypeElement>(expr)
+        if (typeParent != null) {
+            val scope = findScope(expr, strategy.newContext) ?: return emptySequence()
+            val partial = matchIdentifier(expr)
+
+            return completeTypes(scope, partial)
+        }
+        val dotParent = find<KtDotQualifiedExpression>(expr)
+        if (dotParent != null) {
+            val type = strategy.newContext.getType(dotParent.receiverExpression)
+                       ?: robustType(dotParent.receiverExpression, strategy.newContext)
+                       ?: return emptySequence()
+            val partial = matchIdentifier(dotParent.selectorExpression)
+
+            return completeMembers(type, partial)
+        }
+        val idParent = find<KtNameReferenceExpression>(expr)
+        if (idParent != null) {
+            val scope = findScope(idParent, strategy.newContext) ?: return emptySequence()
+            val partial = matchIdentifier(expr)
+
+            return completeIdentifiers(scope, partial)
+        }
 
         return emptySequence()
     }
 
-    private fun completeId(
-            ref: KtNameReferenceExpression,
-            strategy: RecoveryStrategy): Sequence<DeclarationDescriptor> {
-        val partial = partialId(ref)
-        val scope = findScope(ref, strategy.newContext) ?: return emptySequence()
+    private inline fun<reified Find> find(cursor: PsiElement) =
+            cursor.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
 
-        return completeIdentifiers(scope, partial)
-    }
-
-    private fun completeMembers(
-            dot: KtDotQualifiedExpression,
-            strategy: RecoveryStrategy): Collection<DeclarationDescriptor> {
-        val type = strategy.newContext.getType(dot.receiverExpression)
-                   ?: robustType(dot.receiverExpression, strategy.newContext)
-                   ?: return emptyList()
-        val partial = partialId(dot.selectorExpression)
-
-        return org.javacs.kt.completion.completeMembers(type, partial)
-    }
-
-    private fun partialId(exprAtCursor: KtExpression?): String {
+    private fun matchIdentifier(exprAtCursor: KtExpression?): String {
         val select = exprAtCursor?.text ?: ""
         val word = Regex("[^()]+")
 
