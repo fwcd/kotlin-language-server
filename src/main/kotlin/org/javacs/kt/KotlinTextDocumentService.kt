@@ -3,10 +3,7 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
-import org.jetbrains.kotlin.descriptors.*
-import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
-import org.jetbrains.kotlin.renderer.DescriptorRenderer
-import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.StringReader
@@ -15,13 +12,6 @@ import java.net.URI
 import java.util.concurrent.CompletableFuture
 
 private const val MAX_COMPLETION_ITEMS = 50
-
-private val DECL_RENDERER = DescriptorRenderer.withOptions {
-    withDefinedIn = false
-    modifiers = emptySet()
-    classifierNamePolicy = ClassifierNamePolicy.SHORT
-    parameterNameRenderingPolicy = ParameterNameRenderingPolicy.ONLY_NON_SYNTHESIZED
-}
 
 class KotlinTextDocumentService : TextDocumentService {
     private val activeDocuments = hashMapOf<URI, ActiveDocument>()
@@ -244,141 +234,3 @@ class KotlinTextDocumentService : TextDocumentService {
     data class ActiveDocument(val content: String, val version: Int, val compiled: LiveFile)
 }
 
-class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
-
-    private val result = CompletionItem()
-
-    private fun setDefaults(desc: DeclarationDescriptor) {
-        result.label = desc.name.identifier
-        result.filterText = desc.name.identifier
-        result.insertText = desc.name.identifier
-        result.insertTextFormat = InsertTextFormat.PlainText
-        result.detail = DECL_RENDERER.render(desc)
-    }
-
-    override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Property
-
-        return result
-    }
-
-    override fun visitConstructorDescriptor(desc: ConstructorDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Constructor
-
-        return result
-    }
-
-    override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Variable
-
-        return result
-    }
-
-    override fun visitPackageViewDescriptor(desc: PackageViewDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Module
-
-        return result
-    }
-
-    override fun visitFunctionDescriptor(desc: FunctionDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Function
-        result.insertText = functionInsertText(desc)
-        result.insertTextFormat = InsertTextFormat.Snippet
-
-        return result
-    }
-
-    private fun functionInsertText(desc: FunctionDescriptor) =
-            if (desc.valueParameters.isEmpty()) "${desc.name.identifier}()"
-            else "${desc.name.identifier}(\$0)"
-
-    override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Module
-
-        return result
-    }
-
-    override fun visitClassDescriptor(desc: ClassDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Class
-
-        return result
-    }
-
-    override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Module
-
-        return result
-    }
-
-    override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Variable
-
-        return result
-    }
-
-    override fun visitTypeParameterDescriptor(desc: TypeParameterDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Variable
-
-        return result
-    }
-
-    override fun visitScriptDescriptor(desc: ScriptDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Module
-
-        return result
-    }
-
-    override fun visitTypeAliasDescriptor(desc: TypeAliasDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Variable
-
-        return result
-    }
-
-    override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Property
-
-        return result
-    }
-
-    override fun visitVariableDescriptor(desc: VariableDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Variable
-
-        return result
-    }
-
-    override fun visitPropertyDescriptor(desc: PropertyDescriptor, nothing: Unit?): CompletionItem {
-        setDefaults(desc)
-
-        result.kind = CompletionItemKind.Property
-
-        return result
-    }
-}
