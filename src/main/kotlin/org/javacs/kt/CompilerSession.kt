@@ -14,6 +14,12 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 
+/**
+ * @param surrounding An element that surrounds the cursor
+ * @param context Result of type-checking `surrounding`
+ * @param cursor The user's cursor
+ * @param textOffset Offset between the coordinate system of `surrounding` and the coordinates of `cursor`
+ */
 class CompilerSession(private val surrounding: KtElement, private val context: BindingContext, private val cursor: Int, private val textOffset: Int) {
 
     fun hover(): Pair<TextRange, DeclarationDescriptor>? {
