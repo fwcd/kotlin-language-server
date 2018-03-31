@@ -23,24 +23,24 @@ import org.jetbrains.kotlin.storage.LockBasedStorageManager
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 
-private val module = ModuleDescriptorImpl(
+private val MODULE = ModuleDescriptorImpl(
         Name.special("<LanguageServerModule>"),
         LockBasedStorageManager.NO_LOCKS,
         DefaultBuiltIns.Instance).apply {
     setDependencies(listOf(this))
     initialize(PackageFragmentProvider.Empty)
 }
-private val container = createContainer("LanguageServer", JvmPlatform, {
-    configureModule(ModuleContext(module, ENV.project), JvmPlatform, JVM_1_6)
+private val CONTAINER = createContainer("LanguageServer", JvmPlatform, {
+    configureModule(ModuleContext(MODULE, ENV.project), JvmPlatform, JVM_1_6)
     useInstance(LanguageVersionSettingsImpl.DEFAULT)
     useImpl<AnnotationResolverImpl>()
     useImpl<ExpressionTypingServices>()
 })
-private val expressionTypingServices: ExpressionTypingServices by container
+private val INCREMENTAL_COMPILER: ExpressionTypingServices by CONTAINER
 
-fun analyzeExpression(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext {
+fun compileIncrementally(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext {
     val trace = BindingTraceContext()
-    expressionTypingServices.getTypeInfo(
+    INCREMENTAL_COMPILER.getTypeInfo(
             scopeWithImports, expression, TypeUtils.NO_EXPECTED_TYPE, DataFlowInfo.EMPTY, trace, true)
     return trace.bindingContext
 }

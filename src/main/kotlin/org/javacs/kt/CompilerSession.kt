@@ -3,7 +3,7 @@ package org.javacs.kt
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.javacs.kt.compiler.PARSER
-import org.javacs.kt.compiler.analyzeExpression
+import org.javacs.kt.compiler.compileIncrementally
 import org.javacs.kt.completion.completeIdentifiers
 import org.javacs.kt.completion.completeMembers
 import org.javacs.kt.completion.completeTypes
@@ -86,7 +86,7 @@ class CompilerSession(private val surrounding: KtElement, private val context: B
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
         val parse = PARSER.createExpression(expr.text)
-        val analyze = analyzeExpression(parse, scope)
+        val analyze = compileIncrementally(parse, scope)
 
         return analyze.getType(parse)
     }

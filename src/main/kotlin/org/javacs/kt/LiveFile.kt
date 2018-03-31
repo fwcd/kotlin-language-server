@@ -2,8 +2,8 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import org.javacs.kt.compiler.PARSER
-import org.javacs.kt.compiler.analyzeExpression
-import org.javacs.kt.compiler.analyzeFiles
+import org.javacs.kt.compiler.compileFully
+import org.javacs.kt.compiler.compileIncrementally
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -12,7 +12,7 @@ import java.net.URI
 
 class LiveFile(private val fileName: URI, private var text: String) {
     private var file = PARSER.createFile(text)
-    private var analyze = analyzeFiles(file)
+    private var analyze = compileFully(file)
     /** For testing */
     var reAnalyzed = false
 
@@ -52,7 +52,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
 
         text = newText
         file = PARSER.createFile(newText)
-        analyze = analyzeFiles(file)
+        analyze = compileFully(file)
         reAnalyzed = true
     }
 
@@ -102,7 +102,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
         private val oldScope = analyze.bindingContext.get(BindingContext.LEXICAL_SCOPE, oldExpr.bodyExpression)!!
         override val oldRange = oldExpr.textRange
         override val willRepair = oldExpr.bodyExpression!!.textRange
-        override val newContext = analyzeExpression(newExpr, oldScope)
+        override val newContext = compileIncrementally(newExpr, oldScope)
     }
 
     inner class NoChanges: RecoveryStrategy {

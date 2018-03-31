@@ -12,16 +12,16 @@ import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtPsiFactory
 
-private val config = CompilerConfiguration().apply {
+private val CONFIG = CompilerConfiguration().apply {
     put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
 }
 val ENV = KotlinCoreEnvironment.createForProduction(
         parentDisposable = Disposable { },
-        configuration = config,
+        configuration = CONFIG,
         configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
 val PARSER = KtPsiFactory(ENV.project)
 
-fun analyzeFiles(vararg files: KtFile): AnalysisResult =
+fun compileFully(vararg files: KtFile): AnalysisResult =
         TopDownAnalyzerFacadeForJVM.analyzeFilesWithJavaIntegration(
                 project = ENV.project,
                 files = files.asList(),
