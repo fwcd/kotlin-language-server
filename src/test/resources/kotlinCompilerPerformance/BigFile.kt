@@ -2,7 +2,7 @@ import java.util.*
 import kotlin.properties.Delegates
 import kotlin.reflect.KProperty
 
-class Examples {
+object BigFile {
     /**
      * In this example, `val` denotes a declaration of a read-only local variable,
      * that is assigned an pattern matching expression.
@@ -30,7 +30,7 @@ class Examples {
         println(max(args[0].toInt(), args[1].toInt()))
     }
 
-    fun max(a: Int, b: Int) = if (a > b) a else b
+    fun max(a: Int, b: Int): Int = if (a > b) a else b
 
     // Return null if str does not hold a number
     fun parseInt(str: String): Int? {
