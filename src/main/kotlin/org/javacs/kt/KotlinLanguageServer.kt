@@ -5,14 +5,16 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
-import org.eclipse.lsp4j.services.WorkspaceService
+import java.net.URI
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     private var client: LanguageClient? = null
-    private val textDocuments = KotlinTextDocumentService()
-    private val workspaces = KotlinWorkspaceService()
+    private var textDocuments: KotlinTextDocumentService? = null
+    private var workspaces: KotlinWorkspaceService? = null
 
     override fun connect(client: LanguageClient) {
         this.client = client
@@ -25,7 +27,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     }
 
     override fun getTextDocumentService(): KotlinTextDocumentService {
-        return textDocuments
+        return textDocuments!!
     }
 
     override fun exit() {
@@ -41,11 +43,25 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.hoverProvider = true
         capabilities.completionProvider = CompletionOptions(false, listOf("."))
 
+        workspaces = KotlinWorkspaceService(initialWorkspaceRoots(params))
+        textDocuments = KotlinTextDocumentService(workspaces!!)
+
         return completedFuture(InitializeResult(capabilities))
     }
 
-    override fun getWorkspaceService(): WorkspaceService {
-        return workspaces
+    override fun getWorkspaceService(): KotlinWorkspaceService {
+        return workspaces!!
     }
+}
+
+private fun initialWorkspaceRoots(params: InitializeParams): Set<Path> {
+    val result = mutableSetOf<Path>()
+
+    if (params.rootUri != null)
+        result.add(Paths.get(URI(params.rootUri)))
+
+    // TODO add workspaceFolders when lsp4j adds it
+
+    return result
 }
 

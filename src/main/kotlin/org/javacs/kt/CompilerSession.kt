@@ -2,8 +2,6 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import org.javacs.kt.compiler.PARSER
-import org.javacs.kt.compiler.compileIncrementally
 import org.javacs.kt.completion.completeIdentifiers
 import org.javacs.kt.completion.completeMembers
 import org.javacs.kt.completion.completeTypes
@@ -20,7 +18,7 @@ import org.jetbrains.kotlin.types.KotlinType
  * @param cursor The user's cursor
  * @param textOffset Offset between the coordinate system of `surrounding` and the coordinates of `cursor`
  */
-class CompilerSession(private val surrounding: KtElement, private val context: BindingContext, private val cursor: Int, private val textOffset: Int) {
+class CompilerSession(private val compiler: Compiler, private val surrounding: KtElement, private val context: BindingContext, private val cursor: Int, private val textOffset: Int) {
 
     fun hover(): Pair<TextRange, DeclarationDescriptor>? {
         val psi = surrounding.findElementAt(cursor - textOffset) ?: return null
@@ -85,8 +83,8 @@ class CompilerSession(private val surrounding: KtElement, private val context: B
      */
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
-        val parse = PARSER.createExpression(expr.text)
-        val analyze = compileIncrementally(parse, scope)
+        val parse = Compiler.parser.createExpression(expr.text)
+        val analyze = compiler.compileIncrementally(parse, scope)
 
         return analyze.getType(parse)
     }

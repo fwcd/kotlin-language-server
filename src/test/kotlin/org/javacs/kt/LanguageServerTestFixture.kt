@@ -11,8 +11,7 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
     val languageServer = createLanguageServer()
 
     private fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
-        val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt").toURI()
-        val testResources = Paths.get(anchorTxt).parent
+        val testResources = testResourcesRoot()
         return testResources.resolve(relativeWorkspaceRoot)
     }
 
@@ -78,5 +77,9 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
     override fun showMessage(message: MessageParams?) {
         LOG.info(message.toString())
     }
+}
 
+fun testResourcesRoot(): Path {
+    val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt").toURI()
+    return Paths.get(anchorTxt).parent!!
 }

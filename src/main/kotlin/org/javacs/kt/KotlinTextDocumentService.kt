@@ -9,15 +9,17 @@ import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-class KotlinTextDocumentService : TextDocumentService {
-    private val activeDocuments = hashMapOf<URI, ActiveDocument>()
+class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) : TextDocumentService {
+    private val activeDocuments = hashMapOf<Path, ActiveDocument>()
 
-    fun didReAnalyze(document: URI): Boolean {
-        return activeDocuments[document]?.compiled?.reAnalyzed ?: false
+    fun didReAnalyze(document: Path): Boolean {
+        return workspace.liveFile(document).reAnalyzed
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<MutableList<out Command>> {
@@ -27,10 +29,11 @@ class KotlinTextDocumentService : TextDocumentService {
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
         LOG.info("Looking for hover at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
-        val uri = URI(position.textDocument.uri)
-        val active = activeDocuments[uri] ?: throw RuntimeException("$uri is not open")
+        val file = Paths.get(URI.create(position.textDocument.uri))
+        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
+        val compiled = workspace.liveFile(file)
         val offset = offset(active.content, position.position.line, position.position.character)
-        val recover = active.compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val recover = compiled.recover(active.content, offset) ?: return cantRecover(position)
         val (location, decl) = recover.hover() ?: return noHover(position)
         val hoverText = DECL_RENDERER.render(decl)
         val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
@@ -73,10 +76,11 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
-        val uri = URI(position.textDocument.uri)
-        val active = activeDocuments[uri] ?: throw RuntimeException("$uri is not open")
+        val file = Paths.get(URI.create(position.textDocument.uri))
+        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
+        val compiled = workspace.liveFile(file)
         val offset = offset(active.content, position.position.line, position.position.character)
-        val recover = active.compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val recover = compiled.recover(active.content, offset) ?: return cantRecover(position)
         val completions = recover.completions()
         val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
         val isIncomplete = list.size == MAX_COMPLETION_ITEMS
@@ -102,9 +106,9 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        val uri = URI(params.textDocument.uri)
-        val compiled = LiveFile(uri, params.textDocument.text)
-        activeDocuments[uri] = ActiveDocument(params.textDocument.text, params.textDocument.version, compiled)
+        val file = Paths.get(URI.create(params.textDocument.uri))
+        activeDocuments[file] = ActiveDocument(params.textDocument.text, params.textDocument.version)
+        workspace.onOpen(file, params.textDocument.text)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -115,7 +119,9 @@ class KotlinTextDocumentService : TextDocumentService {
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        activeDocuments.remove(URI(params.textDocument.uri))
+        val file = Paths.get(URI.create(params.textDocument.uri))
+        activeDocuments.remove(file)
+        workspace.onClose(file)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
@@ -124,19 +130,19 @@ class KotlinTextDocumentService : TextDocumentService {
 
     override fun didChange(params: DidChangeTextDocumentParams) {
         val document = params.textDocument
-        val uri = URI.create(document.uri)
-        val existing = activeDocuments[uri]!!
+        val file = Paths.get(URI.create(document.uri))
+        val existing = activeDocuments[file]!!
         var newText = existing.content
 
         if (document.version > existing.version) {
             for (change in params.contentChanges) {
                 if (change.range == null)
-                    activeDocuments[uri] = ActiveDocument(change.text, document.version, existing.compiled)
+                    activeDocuments[file] = ActiveDocument(change.text, document.version)
                 else
                     newText = patch(newText, change)
             }
 
-            activeDocuments[uri] = ActiveDocument(newText, document.version, existing.compiled)
+            activeDocuments[file] = ActiveDocument(newText, document.version)
         }
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
@@ -242,6 +248,6 @@ class KotlinTextDocumentService : TextDocumentService {
         return Position(line, char)
     }
 
-    data class ActiveDocument(val content: String, val version: Int, val compiled: LiveFile)
+    private data class ActiveDocument(val content: String, val version: Int)
 }
 

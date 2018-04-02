@@ -1,8 +1,10 @@
 package org.javacs.kt;
 
-import org.jetbrains.kotlin.analyzer.AnalysisResult;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.kotlin.psi.KtExpression;
 import org.jetbrains.kotlin.psi.KtFile;
+import org.jetbrains.kotlin.resolve.BindingContext;
 import org.jetbrains.kotlin.types.KotlinType;
 import org.junit.Test;
 import org.openjdk.jmh.annotations.*;
@@ -14,6 +16,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
 
 import static java.util.stream.Collectors.joining;
 
@@ -24,8 +27,12 @@ public class KotlinCompilerPerformance {
         return new BufferedReader(new InputStreamReader(in)).lines().collect(joining("\n"));
     }
 
+    public static abstract class StateBase {
+        Compiler compiler = new Compiler(Collections.emptyList());
+    }
+
     @State(Scope.Thread)
-    public static class KotlinEnv extends TestBase {
+    public static class KotlinEnv extends StateBase {
         String fileText;
 
         @Setup(Level.Invocation)
@@ -36,45 +43,46 @@ public class KotlinCompilerPerformance {
 
     @Benchmark
     public void parse(KotlinEnv state) {
-        KtFile file = state.getParser().createFile(state.fileText);
+        KtFile file = Compiler.Companion.getParser().createFile(state.fileText);
     }
 
     @State(Scope.Thread)
-    public static class PreParsed extends TestBase {
+    public static class PreParsed extends StateBase {
         KtFile file;
 
         @Setup(Level.Invocation)
         public void parse() {
-            file = getParser().createFile(readFileText());
+            file = Compiler.Companion.getParser().createFile(readFileText());
         }
     }
 
     @Benchmark
     public void findParsedExpression(PreParsed state) {
-        KtExpression expr = state.findExpressionAt(state.file, 2873);
+        PsiElement expr = state.file.findElementAt(2873);
     }
 
     @Benchmark
     public void analyze(PreParsed state) {
-        AnalysisResult analyze = state.analyze(state.file);
+        BindingContext context = state.compiler.compileFully(state.file);
     }
 
     @State(Scope.Thread)
-    public static class PreAnalyzed extends TestBase {
+    public static class PreAnalyzed extends StateBase {
         KtFile file;
-        AnalysisResult analyze;
+        BindingContext context;
 
         @Setup(Level.Invocation)
         public void analyze() {
-            file = getParser().createFile(readFileText());
-            analyze = analyze(file);
+            file = Compiler.Companion.getParser().createFile(readFileText());
+            context = compiler.compileFully(file);
         }
     }
 
     @Benchmark
     public void findExpressionType(PreAnalyzed state) {
-        KtExpression expr = state.findExpressionAt(state.file, 18123);
-        KotlinType type = state.analyze.getBindingContext().getType(expr);
+        PsiElement psi = state.file.findElementAt(18123);
+        KtExpression expr = PsiTreeUtil.getNonStrictParentOfType(psi, KtExpression.class);
+        KotlinType type = state.context.getType(expr);
     }
 
     // TODO compare incremental re-analyze with full re-analyze

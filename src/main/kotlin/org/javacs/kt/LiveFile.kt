@@ -1,19 +1,16 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
-import org.javacs.kt.compiler.PARSER
-import org.javacs.kt.compiler.compileFully
-import org.javacs.kt.compiler.compileIncrementally
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
-import java.net.URI
+import java.nio.file.Path
 import kotlin.math.max
 
-class LiveFile(private val fileName: URI, private var text: String) {
-    private var file = PARSER.createFile(text)
-    private var analyze = compileFully(file)
+class LiveFile(private val compiler: Compiler, private val fileName: Path, var text: String) {
+    private var file = compiler.openForEditing(fileName, text)
+    private var context = compiler.compileFully(file)
     /** For testing */
     var reAnalyzed = false
 
@@ -24,7 +21,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
         val strategy = recoverStrategy(newText, cursor) ?: return null
         val textOffset = strategy.oldRange.startOffset
 
-        return CompilerSession(strategy.newExpr, strategy.newContext, cursor, textOffset)
+        return CompilerSession(compiler, strategy.newExpr, strategy.newContext, cursor, textOffset)
     }
 
     private fun recoverStrategy(newText: String, cursor: Int): RecoveryStrategy? {
@@ -52,8 +49,8 @@ class LiveFile(private val fileName: URI, private var text: String) {
         LOG.info("Re-analyzing $fileName")
 
         text = newText
-        file = PARSER.createFile(newText)
-        analyze = compileFully(file)
+        file = compiler.openForEditing(fileName, newText)
+        context = compiler.compileFully(file)
         reAnalyzed = true
     }
 
@@ -85,7 +82,7 @@ class LiveFile(private val fileName: URI, private var text: String) {
                 val start = element.textRange.startOffset
                 val end = element.textRange.endOffset + newText.length - text.length
                 val exprText = newText.substring(start, end)
-                val expr = PARSER.createFunction(exprText)
+                val expr = Compiler.parser.createFunction(exprText)
                 ReparseFunction(element, expr)
             }
             else -> null
@@ -101,10 +98,10 @@ class LiveFile(private val fileName: URI, private var text: String) {
     }
 
     inner class ReparseFunction(override val oldExpr: KtNamedFunction, override val newExpr: KtNamedFunction): RecoveryStrategy {
-        private val oldScope = analyze.bindingContext.get(BindingContext.LEXICAL_SCOPE, oldExpr.bodyExpression)!!
+        private val oldScope = context.get(BindingContext.LEXICAL_SCOPE, oldExpr.bodyExpression)!!
         override val oldRange = oldExpr.textRange
         override val willRepair = oldExpr.bodyExpression!!.textRange
-        override val newContext = compileIncrementally(newExpr, oldScope)
+        override val newContext = compiler.compileIncrementally(newExpr, oldScope)
     }
 
     inner class NoChanges: RecoveryStrategy {
@@ -112,6 +109,6 @@ class LiveFile(private val fileName: URI, private var text: String) {
         override val willRepair = file.textRange
         override val oldExpr = file
         override val newExpr = file
-        override val newContext = analyze.bindingContext
+        override val newContext = context
     }
 }
