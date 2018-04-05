@@ -17,8 +17,7 @@ private class FileToEdit {
     @Test
     fun compileFile() {
         val original = Compiler.openFile(file)
-        val compiler = Compiler(listOf())
-        val context = compiler.compileFully(original)
+        val context = Compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(45)!!
         val kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
@@ -27,9 +26,8 @@ private class FileToEdit {
 
     @Test
     fun newFile() {
-        val compiler = Compiler(listOf(Compiler.openFile(file)))
-        val original = compiler.openForEditing(file, editedText)
-        val context = compiler.compileFully(original)
+        val original = Compiler.createFile(file, editedText)
+        val context = Compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(46)!!
         val kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
@@ -39,14 +37,13 @@ private class FileToEdit {
     @Test
     fun editFile() {
         val original = Compiler.openFile(file)
-        val compiler = Compiler(listOf(original))
-        var context = compiler.compileFully(original)
+        var context = Compiler.compileFile(original, listOf(original))
         var psi = original.findElementAt(46)!!
         var kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
         assertThat(context.getType(kt), hasToString("String"))
 
-        val edited = compiler.openForEditing(file, editedText)
+        val edited = Compiler.createFile(file, editedText)
 //        val documentManager = PsiDocumentManager.getInstance(original.project)
 //        val document = documentManager.getDocument(original)!!
 //        document.setText(editedText)
@@ -57,7 +54,7 @@ private class FileToEdit {
 //        assertNotNull(newView.virtualFile)
 //        assertTrue(newView.isEventSystemEnabled)
 //        assertNotNull(edited.virtualFile)
-        context = compiler.compileFully(edited)
+        context = Compiler.compileFile(edited, listOf(edited))
         psi = edited.findElementAt(46)!!
         kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 

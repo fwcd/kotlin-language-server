@@ -2,6 +2,8 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.utils.keysToMap
 import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -11,27 +13,39 @@ import java.util.concurrent.CompletableFuture
 import java.util.stream.Collectors.toList
 
 class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceService {
-    private var sources = workspaceRoots.flatMap(::findSourceFiles).toSet()
-    private var compiler = Compiler.fromPaths(sources)
-    private var activeDocuments = mutableMapOf<Path, LiveFile>()
+    private val diskFiles: MutableMap<Path, KtFile> = workspaceRoots
+            .flatMap(::findSourceFiles)
+            .keysToMap(Compiler::openFile)
+            .toMutableMap()
+    private val openFiles = mutableMapOf<Path, LiveFile>()
+
+    private fun sourcePath(): Collection<KtFile> {
+        val result = mutableMapOf<Path, KtFile>()
+
+        result.putAll(diskFiles)
+        openFiles.forEach {
+            path, document -> result[path] = document.file
+        }
+
+        return result.values
+    }
 
     fun onOpen(file: Path, content: String) {
-        updateCompilerIfNeeded(sources.plusElement(file))
-        compiler.openForEditing(file, content)
-        activeDocuments[file] = LiveFile(compiler, file, content)
+        diskFiles.remove(file)
+        openFiles[file] = LiveFile(file, content, ::sourcePath)
     }
 
     fun onClose(file: Path) {
-        activeDocuments.remove(file)
-        compiler.close(file)
+        diskFiles[file] = Compiler.openFile(file)
+        openFiles.remove(file)
     }
 
     fun liveFile(file: Path): LiveFile {
-        return activeDocuments[file] ?: throw RuntimeException("$file is not open")
+        return openFiles[file] ?: throw RuntimeException("$file is not open")
     }
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
-        val newSources = changeWatchedFiles(sources, params)
+        val newSources = changeWatchedFiles(diskFiles.keys, params)
 
         updateCompilerIfNeeded(newSources)
     }
@@ -45,19 +59,24 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
-        val newSources = changeWorkspaceRoots(sources, params)
+        val newSources = changeWorkspaceRoots(diskFiles.keys, params)
 
         updateCompilerIfNeeded(newSources)
     }
 
     private fun updateCompilerIfNeeded(newSources: Set<Path>) {
-        if (newSources != sources) {
-            sources = newSources
-            compiler = Compiler.fromPaths(newSources)
-            activeDocuments = activeDocuments
-                    .filterKeys { newSources.contains(it) }
-                    .mapValues { LiveFile(compiler, it.key, it.value.text) }
-                    .toMutableMap()
+        if (newSources != diskFiles.keys) {
+            val added = newSources - diskFiles.keys
+            val removed = diskFiles.keys - newSources
+
+            for (each in removed) {
+                diskFiles.remove(each)
+                openFiles.remove(each)
+            }
+
+            for (each in added) {
+                diskFiles[each] = Compiler.openFile(each)
+            }
         }
     }
 }

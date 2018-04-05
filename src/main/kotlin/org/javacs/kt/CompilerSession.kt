@@ -18,7 +18,12 @@ import org.jetbrains.kotlin.types.KotlinType
  * @param cursor The user's cursor
  * @param textOffset Offset between the coordinate system of `surrounding` and the coordinates of `cursor`
  */
-class CompilerSession(private val compiler: Compiler, private val surrounding: KtElement, private val context: BindingContext, private val cursor: Int, private val textOffset: Int) {
+class CompilerSession(
+        private val surrounding: KtElement,
+        private val context: BindingContext,
+        private val cursor: Int,
+        private val textOffset: Int,
+        private val sourcePath: Collection<KtFile>) {
 
     fun hover(): Pair<TextRange, DeclarationDescriptor>? {
         val psi = surrounding.findElementAt(cursor - textOffset) ?: return null
@@ -84,7 +89,7 @@ class CompilerSession(private val compiler: Compiler, private val surrounding: K
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
         val parse = Compiler.parser.createExpression(expr.text)
-        val analyze = compiler.compileIncrementally(parse, scope)
+        val analyze = Compiler.compileExpression(parse, scope, sourcePath)
 
         return analyze.getType(parse)
     }

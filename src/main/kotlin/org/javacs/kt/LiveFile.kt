@@ -2,15 +2,16 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.nio.file.Path
 import kotlin.math.max
 
-class LiveFile(private val compiler: Compiler, private val fileName: Path, var text: String) {
-    private var file = compiler.openForEditing(fileName, text)
-    private var context = compiler.compileFully(file)
+class LiveFile(private val fileName: Path, var text: String, val sourcePath: () -> Collection<KtFile>) {
+    var file = Compiler.createFile(fileName, text)
+    private var context = Compiler.compileFile(file, sourcePath() + file)
     /** For testing */
     var reAnalyzed = false
 
@@ -21,7 +22,7 @@ class LiveFile(private val compiler: Compiler, private val fileName: Path, var t
         val strategy = recoverStrategy(newText, cursor) ?: return null
         val textOffset = strategy.oldRange.startOffset
 
-        return CompilerSession(compiler, strategy.newExpr, strategy.newContext, cursor, textOffset)
+        return CompilerSession(strategy.newExpr, strategy.newContext, cursor, textOffset, sourcePath())
     }
 
     private fun recoverStrategy(newText: String, cursor: Int): RecoveryStrategy? {
@@ -49,8 +50,8 @@ class LiveFile(private val compiler: Compiler, private val fileName: Path, var t
         LOG.info("Re-analyzing $fileName")
 
         text = newText
-        file = compiler.openForEditing(fileName, newText)
-        context = compiler.compileFully(file)
+        file = Compiler.createFile(fileName, newText)
+        context = Compiler.compileFile(file, sourcePath())
         reAnalyzed = true
     }
 
@@ -101,7 +102,7 @@ class LiveFile(private val compiler: Compiler, private val fileName: Path, var t
         private val oldScope = context.get(BindingContext.LEXICAL_SCOPE, oldExpr.bodyExpression)!!
         override val oldRange = oldExpr.textRange
         override val willRepair = oldExpr.bodyExpression!!.textRange
-        override val newContext = compiler.compileIncrementally(newExpr, oldScope)
+        override val newContext = Compiler.compileExpression(newExpr, oldScope, sourcePath())
     }
 
     inner class NoChanges: RecoveryStrategy {
