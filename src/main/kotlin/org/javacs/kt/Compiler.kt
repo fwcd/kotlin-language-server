@@ -80,7 +80,7 @@ object Compiler {
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): BindingContext {
         val (container, trace) = createContainer(sourcePath)
-        val incrementalCompiler: ExpressionTypingServices by container
+        val incrementalCompiler = container.get<ExpressionTypingServices>()
         incrementalCompiler.getTypeInfo(
                 scopeWithImports,
                 expression,
