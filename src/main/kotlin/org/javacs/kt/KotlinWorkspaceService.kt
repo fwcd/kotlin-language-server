@@ -17,9 +17,9 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
             .flatMap(::findSourceFiles)
             .keysToMap(Compiler::openFile)
             .toMutableMap()
-    private val openFiles = mutableMapOf<Path, LiveFile>()
+    private val openFiles = mutableMapOf<Path, CompiledFile>()
 
-    private fun sourcePath(): Collection<KtFile> {
+    fun sourcePath(): Collection<KtFile> {
         val result = mutableMapOf<Path, KtFile>()
 
         result.putAll(diskFiles)
@@ -31,8 +31,10 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
     }
 
     fun onOpen(file: Path, content: String) {
+        val ktFile = Compiler.createFile(file, content)
+        val context = Compiler.compileFile(ktFile, sourcePath() + ktFile)
         diskFiles.remove(file)
-        openFiles[file] = LiveFile(file, content, ::sourcePath)
+        openFiles[file] = CompiledFile(file, ktFile, context)
     }
 
     fun onClose(file: Path) {
@@ -40,8 +42,17 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
         openFiles.remove(file)
     }
 
-    fun liveFile(file: Path): LiveFile {
+    fun compiledFile(file: Path): CompiledFile {
         return openFiles[file] ?: throw RuntimeException("$file is not open")
+    }
+
+    fun recompile(file: Path, content: String): CompiledFile {
+        val existing = openFiles[file] ?: throw RuntimeException("$file is not open")
+        val new = existing.recompileFile(content, sourcePath())
+
+        openFiles[file] = new
+
+        return new
     }
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {

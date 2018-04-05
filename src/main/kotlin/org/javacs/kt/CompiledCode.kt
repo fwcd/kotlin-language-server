@@ -18,7 +18,8 @@ import org.jetbrains.kotlin.types.KotlinType
  * @param cursor The user's cursor
  * @param textOffset Offset between the coordinate system of `surrounding` and the coordinates of `cursor`
  */
-class CompilerSession(
+class CompiledCode(
+        val fileContent: String,
         private val surrounding: KtElement,
         private val context: BindingContext,
         private val cursor: Int,
@@ -27,11 +28,10 @@ class CompilerSession(
 
     fun hover(): Pair<TextRange, DeclarationDescriptor>? {
         val psi = surrounding.findElementAt(cursor - textOffset) ?: return null
-        val expr = psi.parentsWithSelf
-                .takeWhile { it !is KtDeclaration }
-                .filterIsInstance<KtExpression>()
-                .filter { doHover(it) != null }
-                .firstOrNull() ?: return null
+        val stopAtDeclaration = psi.parentsWithSelf.takeWhile { it !is KtDeclaration }
+        val onlyExpressions = stopAtDeclaration.filterIsInstance<KtExpression>()
+        val hasHover = onlyExpressions.filter { doHover(it) != null }
+        val expr = hasHover.firstOrNull() ?: return null
         val range = expr.textRange.shiftRight(textOffset)
         val hover = doHover(expr)!!
 

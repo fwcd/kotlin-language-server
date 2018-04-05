@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.javacs.kt.RecompileStrategy.*
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import java.io.BufferedReader
 import java.io.IOException
@@ -18,10 +19,6 @@ private const val MAX_COMPLETION_ITEMS = 50
 class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) : TextDocumentService {
     private val activeDocuments = hashMapOf<Path, ActiveDocument>()
 
-    fun didReAnalyze(document: Path): Boolean {
-        return workspace.liveFile(document).reAnalyzed
-    }
-
     override fun codeAction(params: CodeActionParams): CompletableFuture<MutableList<out Command>> {
         TODO("not implemented")
     }
@@ -29,17 +26,32 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
         LOG.info("Looking for hover at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
-        val file = Paths.get(URI.create(position.textDocument.uri))
-        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
-        val compiled = workspace.liveFile(file)
-        val offset = offset(active.content, position.position.line, position.position.character)
-        val recover = compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val recover = recover(position) ?: return cantRecover(position)
         val (location, decl) = recover.hover() ?: return noHover(position)
         val hoverText = DECL_RENDERER.render(decl)
         val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
-        val range = Range(position(active.content, location.startOffset), position(active.content, location.endOffset))
+        val range = Range(position(recover.fileContent, location.startOffset), position(recover.fileContent, location.endOffset))
 
         return CompletableFuture.completedFuture(Hover(listOf(hover), range))
+    }
+
+    private fun recover(position: TextDocumentPositionParams): CompiledCode? {
+        val file = Paths.get(URI.create(position.textDocument.uri))
+        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
+        val offset = offset(active.content, position.position.line, position.position.character)
+        val compiled = workspace.compiledFile(file)
+        val recompileStrategy = compiled.recompile(active.content, offset)
+
+        return when (recompileStrategy) {
+            Expression ->
+                compiled.recompileExpression(active.content, offset, workspace.sourcePath())
+            File ->
+                workspace.recompile(file, active.content).compiledCode(offset, workspace.sourcePath())
+            NoChanges ->
+                compiled.compiledCode(offset, workspace.sourcePath())
+            Impossible ->
+                null
+        }
     }
 
     private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
@@ -76,11 +88,7 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     }
 
     override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
-        val file = Paths.get(URI.create(position.textDocument.uri))
-        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
-        val compiled = workspace.liveFile(file)
-        val offset = offset(active.content, position.position.line, position.position.character)
-        val recover = compiled.recover(active.content, offset) ?: return cantRecover(position)
+        val recover = recover(position) ?: return cantRecover(position)
         val completions = recover.completions()
         val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
         val isIncomplete = list.size == MAX_COMPLETION_ITEMS

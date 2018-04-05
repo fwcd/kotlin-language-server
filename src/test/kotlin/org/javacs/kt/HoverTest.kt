@@ -1,7 +1,6 @@
 package org.javacs.kt
 
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class HoverTest: LanguageServerTestFixture("hover") {
@@ -15,8 +14,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("val stringLiteral: String", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -29,8 +26,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("fun isFoo(s: String): Boolean", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -43,8 +38,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("object AnObject", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -57,8 +50,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("object AnObject", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -71,8 +62,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("object AnObject", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -85,8 +74,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("fun doh(): Unit", contents.value)
-        // File has not been edited
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -100,8 +87,6 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("fun intFunction(): Int", contents.value)
-        // Edit is inside function
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 
     @Test
@@ -115,7 +100,5 @@ class HoverTest: LanguageServerTestFixture("hover") {
 
         assertEquals("kotlin", contents.language)
         assertEquals("fun intFunction(): Int", contents.value)
-        // Edit is inside function
-        assertFalse("Re-analyzed file", languageServer.textDocumentService.didReAnalyze(workspaceRoot.resolve(file)))
     }
 }
