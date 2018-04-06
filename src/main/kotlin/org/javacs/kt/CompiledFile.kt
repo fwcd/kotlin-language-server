@@ -27,6 +27,8 @@ class CompiledFile(private val path: Path, val file: KtFile, private val context
         val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: return File
         // If the expression that we're going to re-compile doesn't include all the changes, give up
         if (!surroundingFunction.bodyExpression!!.textRange.contains(changed)) return File
+        // If the function body doesn't have scope, give up
+        val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression) ?: return File
 
         return Function
     }
