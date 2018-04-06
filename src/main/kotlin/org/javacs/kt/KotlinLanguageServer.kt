@@ -13,8 +13,8 @@ import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     private var client: LanguageClient? = null
-    private var textDocuments: KotlinTextDocumentService? = null
-    private var workspaces: KotlinWorkspaceService? = null
+    private val workspaces = KotlinWorkspaceService(listOf())
+    private val textDocuments = KotlinTextDocumentService(workspaces)
 
     override fun connect(client: LanguageClient) {
         this.client = client
@@ -27,7 +27,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     }
 
     override fun getTextDocumentService(): KotlinTextDocumentService {
-        return textDocuments!!
+        return textDocuments
     }
 
     override fun exit() {
@@ -43,8 +43,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.hoverProvider = true
         capabilities.completionProvider = CompletionOptions(false, listOf("."))
 
-        workspaces = KotlinWorkspaceService(initialWorkspaceRoots(params))
-        textDocuments = KotlinTextDocumentService(workspaces!!)
+        workspaces.initialize(params)
 
         return completedFuture(InitializeResult(capabilities))
     }

@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
-import java.util.stream.Collectors.toList
+import java.util.stream.Collectors.toSet
 
 class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceService {
     private val diskFiles: MutableMap<Path, KtFile> = workspaceRoots
@@ -67,6 +67,14 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<MutableList<out SymbolInformation>> {
         TODO("not implemented")
+    }
+
+    fun initialize(params: InitializeParams) {
+        if (params.rootUri != null) {
+            val sources = findSourceFiles(Paths.get(URI.create(params.rootUri)))
+
+            updateCompilerIfNeeded(sources)
+        }
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
@@ -142,9 +150,9 @@ private fun changeWorkspaceRoots(originalSources: Set<Path>, params: DidChangeWo
     return sources
 }
 
-private fun findSourceFiles(root: Path): Collection<Path> {
+private fun findSourceFiles(root: Path): Set<Path> {
     val pattern = FileSystems.getDefault().getPathMatcher("glob:*.kt")
-    return Files.walk(root).filter { pattern.matches(it.fileName) } .collect(toList())
+    return Files.walk(root).filter { pattern.matches(it.fileName) } .collect(toSet())
 }
 
 private fun logAdded(removed: List<Path>, rootPath: Path?) {
