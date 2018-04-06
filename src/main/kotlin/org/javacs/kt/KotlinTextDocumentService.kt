@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
+import org.javacs.kt.RecompileStrategy.Function
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import java.io.BufferedReader
 import java.io.IOException
@@ -43,8 +44,8 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
         val recompileStrategy = compiled.recompile(active.content, offset)
 
         return when (recompileStrategy) {
-            Expression ->
-                compiled.recompileExpression(active.content, offset, workspace.sourcePath())
+            Function ->
+                compiled.recompileFunction(active.content, offset, workspace.sourcePath())
             File ->
                 workspace.recompile(file, active.content).compiledCode(offset, workspace.sourcePath())
             NoChanges ->

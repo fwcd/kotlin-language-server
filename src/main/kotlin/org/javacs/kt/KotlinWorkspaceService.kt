@@ -31,9 +31,9 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
     }
 
     fun onOpen(file: Path, content: String) {
+        diskFiles.remove(file)
         val ktFile = Compiler.createFile(file, content)
         val context = Compiler.compileFile(ktFile, sourcePath() + ktFile)
-        diskFiles.remove(file)
         openFiles[file] = CompiledFile(file, ktFile, context)
     }
 

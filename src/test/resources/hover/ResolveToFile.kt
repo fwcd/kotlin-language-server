@@ -1,0 +1,5 @@
+object ResolveToFile {
+    fun target() {
+
+    }
+}

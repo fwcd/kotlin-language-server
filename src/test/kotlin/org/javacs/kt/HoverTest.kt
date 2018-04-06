@@ -101,4 +101,18 @@ class HoverTest: LanguageServerTestFixture("hover") {
         assertEquals("kotlin", contents.language)
         assertEquals("fun intFunction(): Int", contents.value)
     }
+
+    @Test
+    fun `resolve across files`() {
+        val from = "ResolveFromFile.kt"
+        val to = "ResolveToFile.kt"
+        open(from)
+        open(to)
+
+        val hover = languageServer.textDocumentService.hover(position(from, 3, 26)).get()!!
+        val contents = hover.contents.first().right
+
+        assertEquals("kotlin", contents.language)
+        assertEquals("fun target(): Unit", contents.value)
+    }
 }

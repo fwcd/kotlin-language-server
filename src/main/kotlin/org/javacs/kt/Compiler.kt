@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import com.intellij.lang.Language
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -52,9 +51,8 @@ object Compiler {
     }
 
     fun createFile(file: Path, content: String): KtFile {
-        val absolutePath = file.toAbsolutePath().toString().substring(1)
-        val language = Language.findLanguageByID("kotlin")!!
-        return PsiFileFactory.getInstance(env.project).createFileFromText(absolutePath, language, content) as KtFile
+        val original = openFile(file)
+        return PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
     }
 
     private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
