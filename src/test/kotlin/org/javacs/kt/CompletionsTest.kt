@@ -57,4 +57,18 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("SomeInnerObject"))
         assertThat(labels, hasItem("SomeAlias"))
     }
+
+    @Test
+    fun `fill an empty body`() {
+        val file = "FillEmptyBody.kt"
+        open(file)
+
+        replace(file, 2, 16, "", """"
+            Callee.
+""")
+        val completions = languageServer.textDocumentService.completion(position(file, 3, 20)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("bar"))
+    }
 }

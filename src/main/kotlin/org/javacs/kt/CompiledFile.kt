@@ -21,16 +21,53 @@ class CompiledFile(private val path: Path, val file: KtFile, private val context
 
     fun recompile(newText: String, cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
-        val changed = changedRegion(newText) ?: return NoChanges
+        val (oldChanged, _) = changedRegion(newText) ?: return run {
+            LOG.info("${path.fileName} has not changed")
+            NoChanges
+        }
         // Look for a recoverable expression around the cursor
-        val leaf = file.findElementAt(cursor) ?: return Impossible
-        val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: return File
+        val oldCursor = oldCursor(newText, cursor)
+        val leaf = file.findElementAt(oldCursor) ?: run {
+            return if (oldChanged.contains(oldCursor)) {
+                LOG.info("No element at ${path.fileName}:$cursor, inside changed region")
+                File
+            } else {
+                LOG.info("No element at ${path.fileName}:$cursor")
+                Impossible
+            }
+        }
+        val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: run {
+            LOG.info("No surrounding function at ${path.fileName}:$cursor")
+            return File
+        }
         // If the expression that we're going to re-compile doesn't include all the changes, give up
-        if (!surroundingFunction.bodyExpression!!.textRange.contains(changed)) return File
+        val willRepair = surroundingFunction.bodyExpression!!.textRange
+        if (!willRepair.contains(oldChanged)) {
+            LOG.info("Changed region ${path.fileName}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
+            return File
+        }
         // If the function body doesn't have scope, give up
-        val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression) ?: return File
+        val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression) ?: run {
+            LOG.info("${surroundingFunction.name} has no scope")
+            return File
+        }
 
+        LOG.info("Successfully recovered at ${path.fileName}:$cursor using ${surroundingFunction.name}")
         return Function
+    }
+
+    fun oldCursor(newText: String, cursor: Int): Int {
+        val (oldChanged, newChanged) = changedRegion(newText) ?: return cursor
+
+        return when {
+            cursor <= newChanged.startOffset -> cursor
+            cursor < newChanged.endOffset -> {
+                val newRelative = cursor - newChanged.startOffset
+                val oldRelative = newRelative * oldChanged.length / newChanged.length
+                oldChanged.startOffset + oldRelative
+            }
+            else -> file.text.length - (newText.length - cursor)
+        }
     }
 
     fun compiledCode(cursor: Int, sourcePath: Collection<KtFile>): CompiledCode {
@@ -41,7 +78,8 @@ class CompiledFile(private val path: Path, val file: KtFile, private val context
      * Re-analyze a single function declaration
      */
     fun recompileFunction(newText: String, cursor: Int, sourcePath: Collection<KtFile>): CompiledCode {
-        val surroundingFunction = file.findElementAt(cursor)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull()!!
+        val oldCursor = oldCursor(newText, cursor)
+        val surroundingFunction = file.findElementAt(oldCursor)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull()!!
         val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression)!!
         val start = surroundingFunction.textRange.startOffset
         val end = surroundingFunction.textRange.endOffset + newText.length - file.text.length
@@ -67,15 +105,14 @@ class CompiledFile(private val path: Path, val file: KtFile, private val context
     /**
      * Region that has been changed
      */
-    private fun changedRegion(newText: String): TextRange? {
+    private fun changedRegion(newText: String): Pair<TextRange, TextRange>? {
         if (file.text == newText) return null
 
         val prefix = file.text.commonPrefixWith(newText).length
         val suffix = file.text.commonSuffixWith(newText).length
-        val end = max(file.text.length - suffix, prefix)
+        val oldEnd = max(file.text.length - suffix, prefix)
+        val newEnd = max(newText.length - suffix, prefix)
 
-        LOG.info("Changed ${prefix}-${end}")
-
-        return TextRange(prefix, end)
+        return Pair(TextRange(prefix, oldEnd), TextRange(prefix, newEnd))
     }
 }
