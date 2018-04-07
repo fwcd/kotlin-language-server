@@ -71,7 +71,10 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
 
     fun initialize(params: InitializeParams) {
         if (params.rootUri != null) {
-            val sources = findSourceFiles(Paths.get(URI.create(params.rootUri)))
+            val root = Paths.get(URI.create(params.rootUri))
+            val sources = findSourceFiles(root)
+
+            logAdded(sources, root)
 
             updateCompilerIfNeeded(sources)
         }
@@ -155,12 +158,12 @@ private fun findSourceFiles(root: Path): Set<Path> {
     return Files.walk(root).filter { pattern.matches(it.fileName) } .collect(toSet())
 }
 
-private fun logAdded(removed: List<Path>, rootPath: Path?) {
-    if (removed.size > 5) LOG.info("Removing ${removed.size} files under $rootPath")
-    else LOG.info("Removing ${removed.joinToString(", ")}")
+private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
+    if (sources.size > 5) LOG.info("Adding ${sources.size} files under $rootPath")
+    else LOG.info("Adding ${sources.joinToString(", ")}")
 }
 
-private fun logRemoved(removed: List<Path>, rootPath: Path?) {
-    if (removed.size > 5) LOG.info("Removing ${removed.size} files under $rootPath")
-    else LOG.info("Removing ${removed.joinToString(", ")}")
+private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
+    if (sources.size > 5) LOG.info("Removing ${sources.size} files under $rootPath")
+    else LOG.info("Removing ${sources.joinToString(", ")}")
 }

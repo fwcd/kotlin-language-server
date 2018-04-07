@@ -25,15 +25,19 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     }
 
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
-        LOG.info("Looking for hover at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
+        reportTime {
+            LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
-        val recover = recover(position) ?: return cantRecover(position)
-        val (location, decl) = recover.hover() ?: return noHover(position)
-        val hoverText = DECL_RENDERER.render(decl)
-        val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
-        val range = Range(position(recover.fileContent, location.startOffset), position(recover.fileContent, location.endOffset))
+            val recover = recover(position) ?: return cantRecover(position)
+            val (location, decl) = recover.hover() ?: return noHover(position)
+            val hoverText = DECL_RENDERER.render(decl)
+            val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
+            val range = Range(
+                    position(recover.fileContent, location.startOffset),
+                    position(recover.fileContent, location.endOffset))
 
-        return CompletableFuture.completedFuture(Hover(listOf(hover), range))
+            return CompletableFuture.completedFuture(Hover(listOf(hover), range))
+        }
     }
 
     private fun recover(position: TextDocumentPositionParams): CompiledCode? {
@@ -89,12 +93,19 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     }
 
     override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
-        val recover = recover(position) ?: return cantRecover(position)
-        val completions = recover.completions()
-        val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
-        val isIncomplete = list.size == MAX_COMPLETION_ITEMS
+        reportTime {
+            LOG.info("Completing at ${describePosition(position)}")
 
-        return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
+            val started = System.currentTimeMillis()
+            val recover = recover(position) ?: return cantRecover(position)
+            val completions = recover.completions()
+            val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
+            val isIncomplete = list.size == MAX_COMPLETION_ITEMS
+
+            LOG.info("Found ${list.size} items in ${System.currentTimeMillis() - started} ms")
+
+            return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
+        }
     }
 
     private fun<T> cantRecover(position: TextDocumentPositionParams): CompletableFuture<T> {
@@ -260,3 +271,12 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     private data class ActiveDocument(val content: String, val version: Int)
 }
 
+private inline fun<T> reportTime(block: () -> T): T {
+    val started = System.currentTimeMillis()
+    try {
+        return block()
+    } finally {
+        val finished = System.currentTimeMillis()
+        LOG.info("Finished in ${finished - started} ms")
+    }
+}
