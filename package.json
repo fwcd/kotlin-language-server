@@ -27,17 +27,36 @@
         "target/KotlinLanguageServer.jar"
     ],
     "contributes": {
-        "languages": [
-            {
-                "id": "kotlin",
-                "extensions": [
-                    ".kt"
-                ],
-                "aliases": [
-                    "Kotlin"
-                ]
-            }
-        ],
+		"languages": [
+			{
+				"id": "kotlin",
+				"aliases": [
+					"Kotlin"
+				],
+				"extensions": [
+                    ".kt",
+                    ".kts"
+				],
+				"configuration": "./kotlin.configuration.json"
+			}
+		],
+		"grammars": [
+			{
+				"language": "kotlin",
+				"scopeName": "source.Kotlin",
+				"path": "./syntaxes/Kotlin.tmLanguage"
+			},
+			{
+				"scopeName": "markdown.Kotlin.codeblock",
+				"path": "./syntaxes/codeblock.json",
+				"injectTo": [
+					"text.html.markdown"
+				],
+				"embeddedLanguages": {
+					"meta.embedded.block.kotlin": "kotlin"
+				}
+			}
+		],
         "configuration": {
             "title": "Java configuration",
             "properties": {
