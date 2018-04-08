@@ -37,7 +37,7 @@
                     ".kt",
                     ".kts"
 				],
-				"configuration": "./kotlin.configuration.json"
+				"configuration": "./syntaxes/kotlin.configuration.json"
 			}
 		],
 		"grammars": [

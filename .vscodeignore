@@ -4,6 +4,7 @@
 tsconfig.json
 tslint.json
 *.iml
+pom.xml
 
 out/test/**
 out/**/*.map
@@ -14,4 +15,3 @@ src/**
 lib/**
 
 .gitignore
-vsc-extension-quickstart.md
