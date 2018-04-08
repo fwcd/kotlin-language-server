@@ -1,14 +1,13 @@
 package org.javacs.kt
 
-import com.intellij.openapi.util.TextRange
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
+import org.javacs.kt.position.changedRegion
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.nio.file.Path
-import kotlin.math.max
 
 enum class RecompileStrategy {
     Function,
@@ -21,7 +20,7 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
 
     fun recompile(newText: String, cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
-        val (oldChanged, _) = changedRegion(newText) ?: return run {
+        val (oldChanged, _) = changedRegion(file.text, newText) ?: return run {
             LOG.info("${path.fileName} has not changed")
             NoChanges
         }
@@ -57,7 +56,7 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
     }
 
     fun oldCursor(newText: String, cursor: Int): Int {
-        val (oldChanged, newChanged) = changedRegion(newText) ?: return cursor
+        val (oldChanged, newChanged) = changedRegion(file.text, newText) ?: return cursor
 
         return when {
             cursor <= newChanged.startOffset -> cursor
@@ -100,19 +99,5 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
         val newContext = Compiler.compileFile(file, sourcePath)
 
         return CompiledFile(path, newFile, newContext)
-    }
-
-    /**
-     * Region that has been changed
-     */
-    private fun changedRegion(newText: String): Pair<TextRange, TextRange>? {
-        if (file.text == newText) return null
-
-        val prefix = file.text.commonPrefixWith(newText).length
-        val suffix = file.text.commonSuffixWith(newText).length
-        val oldEnd = max(file.text.length - suffix, prefix)
-        val newEnd = max(newText.length - suffix, prefix)
-
-        return Pair(TextRange(prefix, oldEnd), TextRange(prefix, newEnd))
     }
 }

@@ -3,6 +3,7 @@ package org.javacs.kt.position
 import com.intellij.openapi.util.TextRange
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import kotlin.math.max
 
 /**
  * Convert from 0-based line and column to 0-based offset
@@ -64,3 +65,17 @@ fun position(content: String, offset: Int): Position {
 
 fun range(content: String, range: TextRange) =
         Range(position(content, range.startOffset), position(content, range.endOffset))
+
+/**
+ * Region that has been changed
+ */
+fun changedRegion(oldText: String, newText: String): Pair<TextRange, TextRange>? {
+    if (oldText == newText) return null
+
+    val prefix = oldText.commonPrefixWith(newText).length
+    val suffix = oldText.commonSuffixWith(newText).length
+    val oldEnd = max(oldText.length - suffix, prefix)
+    val newEnd = max(newText.length - suffix, prefix)
+
+    return Pair(TextRange(prefix, oldEnd), TextRange(prefix, newEnd))
+}
