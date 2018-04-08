@@ -84,7 +84,7 @@ class CompiledFile(private val path: Path, val file: KtFile, private val context
         val start = surroundingFunction.textRange.startOffset
         val end = surroundingFunction.textRange.endOffset + newText.length - file.text.length
         val newFunctionText = newText.substring(start, end)
-        val newFunction = Compiler.parser.createFunction(newFunctionText)
+        val newFunction = Compiler.createFunction(newFunctionText)
         val newContext = Compiler.compileExpression(newFunction, scope, sourcePath)
 
         return CompiledCode(newText, newFunction, newContext, cursor, surroundingFunction.textRange.startOffset, sourcePath)

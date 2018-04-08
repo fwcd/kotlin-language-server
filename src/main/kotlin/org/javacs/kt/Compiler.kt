@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtPsiFactory
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
@@ -40,7 +41,7 @@ object Compiler {
             parentDisposable = Disposable { },
             configuration = config,
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
-    val parser = KtPsiFactory(env.project)
+    private val parser = KtPsiFactory(env.project)
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
 
     fun openFile(path: Path): KtFile {
@@ -53,6 +54,14 @@ object Compiler {
     fun createFile(file: Path, content: String): KtFile {
         val original = openFile(file)
         return PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
+    }
+
+    fun createExpression(text: String): KtExpression {
+        return parser.createExpression(text)
+    }
+
+    fun createFunction(text: String): KtNamedFunction {
+        return parser.createFunction(text)
     }
 
     private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {

@@ -148,7 +148,7 @@ class CompiledCode(
      */
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
-        val parse = Compiler.parser.createExpression(expr.text)
+        val parse = Compiler.createExpression(expr.text)
         val analyze = Compiler.compileExpression(parse, scope, sourcePath)
 
         return analyze.getType(parse)
