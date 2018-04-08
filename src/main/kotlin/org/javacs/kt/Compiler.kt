@@ -53,7 +53,11 @@ object Compiler {
 
     fun createFile(file: Path, content: String): KtFile {
         val original = openFile(file)
-        return PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
+        val new = PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
+
+        new.originalFile = original
+
+        return new
     }
 
     fun createExpression(text: String): KtExpression {

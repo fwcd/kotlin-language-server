@@ -11,9 +11,8 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 
-data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)
-
 /**
+ * @param fileContent Current contents of the entire file
  * @param surrounding An element that surrounds the cursor
  * @param context Result of type-checking `surrounding`
  * @param cursor The user's cursor
@@ -163,3 +162,5 @@ class CompiledCode(
 
 private inline fun<reified Find> find(cursor: PsiElement) =
         cursor.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
+
+data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)

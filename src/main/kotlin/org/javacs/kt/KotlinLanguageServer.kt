@@ -5,19 +5,15 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
-import java.net.URI
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
-    private var client: LanguageClient? = null
-    private val workspaces = KotlinWorkspaceService(listOf())
+    private val workspaces = KotlinWorkspaceService()
     private val textDocuments = KotlinTextDocumentService(workspaces)
 
     override fun connect(client: LanguageClient) {
-        this.client = client
+        workspaces.connect(client)
 
         LOG.info("Connected to client")
     }
@@ -50,18 +46,6 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     }
 
     override fun getWorkspaceService(): KotlinWorkspaceService {
-        return workspaces!!
+        return workspaces
     }
 }
-
-private fun initialWorkspaceRoots(params: InitializeParams): Set<Path> {
-    val result = mutableSetOf<Path>()
-
-    if (params.rootUri != null)
-        result.add(Paths.get(URI(params.rootUri)))
-
-    // TODO add workspaceFolders when lsp4j adds it
-
-    return result
-}
-

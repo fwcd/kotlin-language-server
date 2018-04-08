@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture
 abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: String): LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
     val languageServer = createLanguageServer()
+    val diagnostics = mutableListOf<Diagnostic>()
 
     private fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
         val testResources = testResourcesRoot()
@@ -56,8 +57,10 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
 
     // LanguageClient functions
 
-    override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams?) {
+    override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
         LOG.info(diagnostics.toString())
+
+        this.diagnostics.addAll(diagnostics.diagnostics)
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {

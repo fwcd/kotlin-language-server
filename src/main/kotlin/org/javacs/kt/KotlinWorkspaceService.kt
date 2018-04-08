@@ -1,9 +1,10 @@
 package org.javacs.kt
 
 import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.WorkspaceService
+import org.javacs.kt.diagnostic.langServerDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.utils.keysToMap
 import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -12,12 +13,14 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.stream.Collectors.toSet
 
-class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceService {
-    private val diskFiles: MutableMap<Path, KtFile> = workspaceRoots
-            .flatMap(::findSourceFiles)
-            .keysToMap(Compiler::openFile)
-            .toMutableMap()
+class KotlinWorkspaceService : WorkspaceService {
+    private val diskFiles = mutableMapOf<Path, KtFile>()
     private val openFiles = mutableMapOf<Path, CompiledFile>()
+    private var client: LanguageClient? = null
+
+    fun connect(client: LanguageClient) {
+        this.client = client
+    }
 
     fun sourcePath(): Collection<KtFile> {
         val result = mutableMapOf<Path, KtFile>()
@@ -31,10 +34,15 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
     }
 
     fun onOpen(file: Path, content: String) {
+        // Remove the old file immediately so it doesn't show up in the source path
         diskFiles.remove(file)
+
+        // Compile the new content
         val ktFile = Compiler.createFile(file, content)
         val context = Compiler.compileFile(ktFile, sourcePath() + ktFile)
+
         openFiles[file] = CompiledFile(file, ktFile, context)
+        reportDiagnostics(file)
     }
 
     fun onClose(file: Path) {
@@ -47,13 +55,25 @@ class KotlinWorkspaceService(workspaceRoots: Collection<Path>) : WorkspaceServic
     }
 
     fun recompile(file: Path, content: String): CompiledFile {
-        val existing = openFiles[file] ?: throw RuntimeException("$file is not open")
+        val existing = compiledFile(file)
         val new = existing.recompileFile(content, sourcePath())
 
         openFiles[file] = new
+        reportDiagnostics(file)
 
         return new
     }
+
+    private fun reportDiagnostics(file: Path) {
+        val compiled = compiledFile(file)
+        val diagnostics = compiled.context.diagnostics.toList().flatMap {
+            langServerDiagnostic(it, ::compiledFileText)
+        }
+        client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+    }
+
+    private fun compiledFileText(file: Path) =
+            compiledFile(file).file.text
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         val newSources = changeWatchedFiles(diskFiles.keys, params)

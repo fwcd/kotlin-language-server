@@ -6,6 +6,8 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.docs.findDoc
+import org.javacs.kt.position.offset
+import org.javacs.kt.position.position
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
@@ -135,6 +137,28 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
         workspace.onOpen(file, params.textDocument.text)
     }
 
+    private val debounceLint = Debounce(1.0)
+    private val pendingLintFiles = mutableSetOf<Path>()
+
+    private fun lint(file: Path) {
+        pendingLintFiles.add(file)
+        debounceLint.submit(::doLint)
+    }
+
+    private fun doLint() {
+        val todo = pendingLintFiles.toList()
+        pendingLintFiles.clear()
+
+        for (file in todo) {
+            val active = activeDocuments[file] ?: return
+            val compiled = workspace.compiledFile(file)
+
+            if (active.content != compiled.file.text) {
+                workspace.recompile(file, active.content)
+            }
+        }
+    }
+
     override fun didSave(params: DidSaveTextDocumentParams) {
     }
 
@@ -204,6 +228,8 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
             }
 
             activeDocuments[file] = ActiveDocument(newText, document.version)
+
+            lint(file)
         }
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
@@ -249,64 +275,6 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
         } catch (e: IOException) {
             throw RuntimeException(e)
         }
-    }
-
-    /**
-     * Convert from 0-based line and column to 0-based offset
-     */
-    private fun offset(content: String, line: Int, char: Int): Int {
-        val reader = content.reader()
-        var offset = 0
-
-        var lineOffset = 0
-        while (lineOffset < line) {
-            val nextChar = reader.read()
-
-            if (nextChar == -1)
-                throw RuntimeException("Reached end of file before reaching line $line")
-
-            if (nextChar.toChar() == '\n')
-                lineOffset++
-
-            offset++
-        }
-
-        var charOffset = 0
-        while (charOffset < char) {
-            val nextChar = reader.read()
-
-            if (nextChar == -1)
-                throw RuntimeException("Reached end of file before reaching char $char")
-
-            charOffset++
-            offset++
-        }
-
-        return offset
-    }
-
-    private fun position(content: String, offset: Int): Position {
-        val reader = content.reader()
-        var line = 0
-        var char = 0
-
-        var find = 0
-        while (find < offset) {
-            val nextChar = reader.read()
-
-            if (nextChar == -1)
-                throw RuntimeException("Reached end of file before reaching offset $offset")
-
-            find++
-            char++
-
-            if (nextChar.toChar() == '\n') {
-                line++
-                char = 0
-            }
-        }
-
-        return Position(line, char)
     }
 
     private data class ActiveDocument(val content: String, val version: Int)

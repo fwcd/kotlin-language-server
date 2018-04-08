@@ -17,7 +17,7 @@ enum class RecompileStrategy {
     Impossible
 }
 
-class CompiledFile(private val path: Path, val file: KtFile, private val context: BindingContext) {
+class CompiledFile(private val path: Path, val file: KtFile, val context: BindingContext) {
 
     fun recompile(newText: String, cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
