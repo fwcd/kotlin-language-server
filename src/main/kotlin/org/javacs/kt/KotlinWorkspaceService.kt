@@ -1,9 +1,7 @@
 package org.javacs.kt
 
 import org.eclipse.lsp4j.*
-import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.WorkspaceService
-import org.javacs.kt.diagnostic.langServerDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import java.net.URI
 import java.nio.file.FileSystems
@@ -16,11 +14,6 @@ import java.util.stream.Collectors.toSet
 class KotlinWorkspaceService : WorkspaceService {
     private val diskFiles = mutableMapOf<Path, KtFile>()
     private val openFiles = mutableMapOf<Path, CompiledFile>()
-    private var client: LanguageClient? = null
-
-    fun connect(client: LanguageClient) {
-        this.client = client
-    }
 
     fun sourcePath(): Collection<KtFile> {
         val result = mutableMapOf<Path, KtFile>()
@@ -42,7 +35,6 @@ class KotlinWorkspaceService : WorkspaceService {
         val context = Compiler.compileFile(ktFile, sourcePath() + ktFile)
 
         openFiles[file] = CompiledFile(file, ktFile, context)
-        reportDiagnostics(file)
     }
 
     fun onClose(file: Path) {
@@ -54,28 +46,18 @@ class KotlinWorkspaceService : WorkspaceService {
         return openFiles[file] ?: throw RuntimeException("$file is not open")
     }
 
+    fun compiledFileOrNull(file: Path): CompiledFile? {
+        return openFiles[file]
+    }
+
     fun recompile(file: Path, content: String): CompiledFile {
         val existing = compiledFile(file)
         val new = existing.recompileFile(content, sourcePath())
 
         openFiles[file] = new
-        reportDiagnostics(file)
 
         return new
     }
-
-    private fun reportDiagnostics(file: Path) {
-        val compiled = compiledFile(file)
-        val diagnostics = compiled.context.diagnostics.toList().flatMap {
-            langServerDiagnostic(it, ::compiledFileText)
-        }
-        client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
-
-        LOG.info("Reported ${diagnostics.size} diagnostics in $file")
-    }
-
-    private fun compiledFileText(file: Path) =
-            compiledFile(file).file.text
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         val newSources = changeWatchedFiles(diskFiles.keys, params)

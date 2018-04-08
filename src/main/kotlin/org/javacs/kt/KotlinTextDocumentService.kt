@@ -2,9 +2,12 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
+import org.javacs.kt.diagnostic.ConvertDiagnostics
+import org.javacs.kt.diagnostic.LangServerDiagnostic
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
@@ -24,7 +27,12 @@ import java.util.concurrent.CompletableFuture
 private const val MAX_COMPLETION_ITEMS = 50
 
 class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) : TextDocumentService {
+    private var client: LanguageClient? = null
     private val activeDocuments = hashMapOf<Path, ActiveDocument>()
+
+    fun connect(client: LanguageClient) {
+        this.client = client
+    }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<MutableList<out Command>> {
         TODO("not implemented")
@@ -135,29 +143,53 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
         val file = Paths.get(URI.create(params.textDocument.uri))
         activeDocuments[file] = ActiveDocument(params.textDocument.text, params.textDocument.version)
         workspace.onOpen(file, params.textDocument.text)
+        lintLater()
     }
 
-    private val debounceLint = Debounce(1.0)
-    private val pendingLintFiles = mutableSetOf<Path>()
+    val debounceLint = Debounce(1.0)
 
-    private fun lint(file: Path) {
-        pendingLintFiles.add(file)
+    private fun lintLater() {
         debounceLint.submit(::doLint)
     }
 
     private fun doLint() {
-        val todo = pendingLintFiles.toList()
-        pendingLintFiles.clear()
+        recompileChangedFiles()
 
-        for (file in todo) {
-            val active = activeDocuments[file] ?: return
-            val compiled = workspace.compiledFile(file)
+        val converter = ConvertDiagnostics(::openFileText, ::compiledFileText)
+        fun fileDiagnostics(file: Path): List<Pair<Path, LangServerDiagnostic>> {
+            val compiled = workspace.compiledFileOrNull(file) ?: return emptyList()
+            return compiled.context.diagnostics.flatMap(converter::convert)
+        }
+        val all = activeDocuments.keys.flatMap(::fileDiagnostics)
+        val byFile = all.groupBy({ it.first }, { it.second })
 
-            if (active.content != compiled.file.text) {
-                workspace.recompile(file, active.content)
-            }
+        for ((file, diagnostics) in byFile) {
+            client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+
+            LOG.info("Reported ${diagnostics.size} diagnostics in $file")
         }
     }
+
+    private fun recompileChangedFiles() {
+        for (file in activeDocuments.keys) {
+            recompileIfChanged(file)
+        }
+    }
+
+    private fun recompileIfChanged(file: Path) {
+        val active = activeDocuments[file] ?: return
+        val compiled = workspace.compiledFileOrNull(file) ?: return
+
+        if (active.content != compiled.file.text) {
+            workspace.recompile(file, active.content)
+        }
+    }
+
+    private fun openFileText(file: Path) =
+            activeDocuments[file]?.content
+
+    private fun compiledFileText(file: Path) =
+            workspace.compiledFileOrNull(file)?.file?.text
 
     override fun didSave(params: DidSaveTextDocumentParams) {
     }
@@ -228,8 +260,7 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
             }
 
             activeDocuments[file] = ActiveDocument(newText, document.version)
-
-            lint(file)
+            lintLater()
         }
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }

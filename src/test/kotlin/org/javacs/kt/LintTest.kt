@@ -10,6 +10,8 @@ class LintTest: LanguageServerTestFixture("lint") {
     @Test fun `report error on open`() {
         open("LintErrors.kt")
 
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+
         assertThat(diagnostics, not(empty<Diagnostic>()))
     }
 }

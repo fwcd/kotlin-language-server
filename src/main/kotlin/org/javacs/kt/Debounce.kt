@@ -15,4 +15,8 @@ class Debounce(permitsPerSecond: Double) {
             task()
         }
     }
+
+    fun waitForPendingTask() {
+        pendingTask.get()
+    }
 }
