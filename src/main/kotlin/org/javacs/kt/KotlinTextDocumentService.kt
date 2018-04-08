@@ -2,11 +2,9 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
-import org.javacs.kt.diagnostic.ConvertDiagnostics
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
@@ -14,24 +12,17 @@ import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import org.jetbrains.kotlin.diagnostics.Diagnostic
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
-import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
 private const val MAX_COMPLETION_ITEMS = 50
 
 class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocumentService {
-    private var client: LanguageClient? = null
-
-    fun connect(client: LanguageClient) {
-        this.client = client
-    }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<MutableList<out Command>> {
         TODO("not implemented")
@@ -140,8 +131,6 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
         val open = sourcePath.open(file, params.textDocument.text, params.textDocument.version)
-
-        reportDiagnostics(open.context.diagnostics.toList())
     }
 
     val debounceLint = Debounce(1.0)
@@ -151,29 +140,8 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     }
 
     private fun doLint() {
-        val changed = sourcePath.recompileChangedFiles()
-        val kotlinDiagnostics = changed.flatMap { it.context.diagnostics }
-
-        reportDiagnostics(kotlinDiagnostics)
+        sourcePath.recompileChangedFiles()
     }
-
-    private fun reportDiagnostics(kotlinDiagnostics: List<Diagnostic>) {
-        val converter = ConvertDiagnostics(::openFileText, ::compiledFileText)
-        val langServerDiagnostics = kotlinDiagnostics.flatMap { converter.convert(it) }
-        val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
-
-        for ((file, diagnostics) in byFile) {
-            client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
-
-            LOG.info("Reported ${diagnostics.size} diagnostics in $file")
-        }
-    }
-
-    private fun openFileText(file: Path) =
-            sourcePath.openFiles[file]?.content
-
-    private fun compiledFileText(file: Path) =
-            sourcePath.openFiles[file]?.compiled?.file?.text
 
     override fun didSave(params: DidSaveTextDocumentParams) {
     }

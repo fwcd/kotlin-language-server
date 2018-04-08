@@ -1,5 +1,9 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.PublishDiagnosticsParams
+import org.eclipse.lsp4j.services.LanguageClient
+import org.javacs.kt.diagnostic.ConvertDiagnostics
+import org.javacs.kt.diagnostic.KotlinDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -10,6 +14,11 @@ class SourcePath {
     val workspaceRoots = mutableSetOf<Path>()
     val diskFiles = mutableMapOf<Path, KtFile>()
     val openFiles = mutableMapOf<Path, OpenFile>()
+    private var client: LanguageClient? = null
+
+    fun connect(client: LanguageClient) {
+        this.client = client
+    }
 
     fun open(file: Path, content: String, version: Int): CompiledFile {
         return compile(file, content, version)
@@ -42,6 +51,8 @@ class SourcePath {
 
         openFiles[file] = OpenFile(content, version, compiled)
 
+        reportDiagnostics(file, compiled.context.diagnostics.toList())
+
         return compiled
     }
 
@@ -50,17 +61,35 @@ class SourcePath {
         diskFiles[file] = Compiler.openFile(file)
     }
 
-    fun recompileChangedFiles(): List<CompiledFile> =
-            openFiles.keys.mapNotNull(::recompileIfChanged)
+    fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
+        recompileChangedFiles()
 
-    private fun recompileIfChanged(file: Path): CompiledFile? {
-        val open = openFiles[file] ?: return null
+        val converter = ConvertDiagnostics(::openFileText)
+        val langServerDiagnostics = kotlinDiagnostics.flatMap { converter.convert(it) }
+        val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
-        if (open.content != open.compiled.file.text)
-            return compile(file, open.content, open.version)
-        else
-            return null
+        for ((file, diagnostics) in byFile) {
+            client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+
+            LOG.info("Reported ${diagnostics.size} diagnostics in $file")
+        }
+
+        if (!byFile.containsKey(compiledFile)) {
+            client!!.publishDiagnostics(PublishDiagnosticsParams(compiledFile.toUri().toString(), listOf()))
+
+            LOG.info("Cleared diagnostics in $compiledFile")
+        }
     }
+
+    fun recompileChangedFiles() {
+        for ((file, open) in openFiles) {
+            if (open.content != open.compiled.file.text)
+                compile(file, open.content, open.version)
+        }
+    }
+
+    private fun openFileText(file: Path) =
+            openFiles[file]?.content
 
     fun createdOnDisk(file: Path) {
         diskFiles[file] = Compiler.openFile(file)

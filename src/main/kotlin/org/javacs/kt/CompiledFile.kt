@@ -88,16 +88,4 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
 
         return CompiledCode(newText, newFunction, newContext, cursor, surroundingFunction.textRange.startOffset, sourcePath)
     }
-
-    /**
-     * Re-analyze the document if it has changed too much to be analyzed incrementally
-     */
-    fun recompileFile(newText: String, sourcePath: Collection<KtFile>): CompiledFile {
-        LOG.info("Re-analyzing $path")
-
-        val newFile = Compiler.createFile(path, newText)
-        val newContext = Compiler.compileFile(file, sourcePath)
-
-        return CompiledFile(path, newFile, newContext)
-    }
 }

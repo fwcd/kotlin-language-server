@@ -1,5 +1,6 @@
 package org.javacs.kt.diagnostic
 
+import com.intellij.psi.PsiFile
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.javacs.kt.position.range
 import org.jetbrains.kotlin.diagnostics.Severity
@@ -10,10 +11,10 @@ import java.nio.file.Paths
 typealias LangServerDiagnostic = org.eclipse.lsp4j.Diagnostic
 typealias KotlinDiagnostic = org.jetbrains.kotlin.diagnostics.Diagnostic
 
-class ConvertDiagnostics(private val openFiles: (Path) -> String?, private val compiledFiles: (Path) -> String?) {
+class ConvertDiagnostics(private val openFiles: (Path) -> String?) {
     fun convert(diagnostic: KotlinDiagnostic): List<Pair<Path, LangServerDiagnostic>> {
         return diagnostic.textRanges.map {
-            val path = Paths.get(diagnostic.psiFile.originalFile.viewProvider.virtualFile.path)
+            val path = diagnostic.psiFile.toPath()
             val content = openFiles(path) ?: return emptyList()
             val result = LangServerDiagnostic(
                     range(content, it),
@@ -38,4 +39,7 @@ class ConvertDiagnostics(private val openFiles: (Path) -> String?, private val c
                 Severity.WARNING -> DiagnosticSeverity.Warning
             }
 }
+
+fun PsiFile.toPath() =
+        Paths.get(this.originalFile.viewProvider.virtualFile.path)
 
