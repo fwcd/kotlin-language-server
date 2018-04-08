@@ -22,10 +22,13 @@
         <artifactId>kotlin-maven-plugin</artifactId>
         <groupId>org.jetbrains.kotlin</groupId>
         <version>${kotlin.version}</version>
+        <configuration>
+          <jvmTarget>1.8</jvmTarget>
+          <experimentalCoroutines>enable</experimentalCoroutines>
+        </configuration>
         <executions>
           <execution>
             <id>compile</id>
-            <phase>process-sources</phase>
             <goals> <goal>compile</goal> </goals>
             <configuration>
               <sourceDirs>
@@ -75,20 +78,6 @@
             <id>java-test-compile</id>
             <phase>test-compile</phase>
             <goals> <goal>testCompile</goal> </goals>
-          </execution>
-          <execution>
-            <id>compile</id>
-            <phase>compile</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>testCompile</id>
-            <phase>test-compile</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
