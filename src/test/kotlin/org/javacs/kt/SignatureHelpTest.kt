@@ -16,9 +16,9 @@ class SignatureHelpTest: LanguageServerTestFixture("signatureHelp") {
     @Test fun `provide signature help for a function call`() {
         val help = languageServer.textDocumentService.signatureHelp(position(file, 3, 20)).get()!!
 
+        assertThat(help.signatures, hasSize(2))
         assertThat(help.activeParameter, equalTo(0))
         assertThat(help.activeSignature, equalTo(0))
-        assertThat(help.signatures, hasSize(2))
         assertThat(help.signatures.map { it.label }, hasItems("fun foo(bar: String): Unit", "fun foo(bar: Int): Unit"))
         assertThat(help.signatures.map { it.documentation }, hasItems("Call foo with a String", "Call foo with an Int"))
         assertThat(help.signatures.flatMap { it.parameters.map { it.label }}, hasItems("bar: String", "bar: Int"))
@@ -28,9 +28,9 @@ class SignatureHelpTest: LanguageServerTestFixture("signatureHelp") {
     @Test fun `provide signature help for a constructor`() {
         val help = languageServer.textDocumentService.signatureHelp(position(file, 4, 21)).get()!!
 
+        assertThat(help.signatures, hasSize(2))
         assertThat(help.activeParameter, equalTo(0))
         assertThat(help.activeSignature, equalTo(0))
-        assertThat(help.signatures, hasSize(2))
         assertThat(help.signatures.map { it.label }, hasItems("constructor Constructor(bar: String)", "constructor Constructor(bar: Int)"))
         assertThat(help.signatures.map { it.documentation }, hasItems("Construct with a String", "Construct with an Int"))
         assertThat(help.signatures.flatMap { it.parameters.map { it.label }}, hasItems("bar: String", "bar: Int"))

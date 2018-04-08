@@ -15,7 +15,10 @@ import org.jetbrains.kotlin.types.KotlinType
 fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDescriptor> {
     val nameFilter = equalsIdentifier(identifier)
 
-    return type.memberScope.getDescriptorsFiltered(Companion.CALLABLES, nameFilter).asSequence().filterIsInstance<CallableDescriptor>()
+    return type.memberScope
+            .getDescriptorsFiltered(Companion.CALLABLES, nameFilter).asSequence()
+            .filter { nameFilter(it.name) }
+            .filterIsInstance<CallableDescriptor>()
 }
 
 fun completeMembers(type: KotlinType, partialIdentifier: String): Sequence<DeclarationDescriptor> {
@@ -26,17 +29,17 @@ fun completeMembers(type: KotlinType, partialIdentifier: String): Sequence<Decla
 
 private fun doCompleteMembers(type: KotlinType, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
     return type.memberScope
-            .getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter)
-            .asSequence()
+            .getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter).asSequence()
+            .filter { nameFilter(it.name) }
 }
 
 fun completeTypes(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val kindsFilter = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return scope.parentsWithSelf.flatMap {
-        it.getContributedDescriptors(kindsFilter, nameFilter).asSequence()
-    }
+    return scope.parentsWithSelf
+            .flatMap { it.getContributedDescriptors(kindsFilter, nameFilter).asSequence() }
+            .filter { nameFilter(it.name) }
 }
 
 fun identifierOverloads(scope: LexicalScope, identifier: String): Sequence<CallableDescriptor> {
@@ -53,9 +56,11 @@ fun completeIdentifiers(scope: LexicalScope, partialIdentifier: String): Sequenc
 }
 
 private fun allIdentifiers(scope: LexicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
-    return scope.parentsWithSelf
+    val matchesName = scope.parentsWithSelf
             .flatMap { scopeIdentifiers(it, nameFilter) }
-            .flatMap(::explodeConstructors)
+            .filter { nameFilter(it.name) }
+
+    return matchesName.flatMap(::explodeConstructors)
 }
 
 private fun scopeIdentifiers(scope: HierarchicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {

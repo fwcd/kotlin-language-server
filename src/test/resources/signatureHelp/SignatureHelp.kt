@@ -1,5 +1,5 @@
 private object SignatureHelp {
-    fun main() {
+    fun main(param: String) {
         Target.foo()
         Constructor()
         Target.multiParam("1", )

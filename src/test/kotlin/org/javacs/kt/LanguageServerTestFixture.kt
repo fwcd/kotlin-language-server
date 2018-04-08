@@ -58,8 +58,6 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
     // LanguageClient functions
 
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        LOG.info(diagnostics.toString())
-
         this.diagnostics.addAll(diagnostics.diagnostics)
     }
 
