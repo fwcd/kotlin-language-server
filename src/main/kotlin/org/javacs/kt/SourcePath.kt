@@ -62,6 +62,7 @@ class SourcePath {
     }
 
     fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
+        // TODO instead of recompiling the whole file, try to recover incrementally
         recompileChangedFiles()
 
         val converter = ConvertDiagnostics(::openFileText)
