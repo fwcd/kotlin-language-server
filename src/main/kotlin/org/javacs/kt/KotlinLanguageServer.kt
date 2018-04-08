@@ -5,12 +5,15 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
+import java.net.URI
+import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
-    private val workspaces = KotlinWorkspaceService()
-    private val textDocuments = KotlinTextDocumentService(workspaces)
+    private val sourcePath = SourcePath()
+    private val workspaces = KotlinWorkspaceService(sourcePath)
+    private val textDocuments = KotlinTextDocumentService(sourcePath)
 
     override fun connect(client: LanguageClient) {
         textDocuments.connect(client)
@@ -40,7 +43,11 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.completionProvider = CompletionOptions(false, listOf("."))
         capabilities.signatureHelpProvider = SignatureHelpOptions(listOf("(", ","))
 
-        workspaces.initialize(params)
+        if (params.rootUri != null) {
+            LOG.info("Adding workspace ${params.rootUri} to source path")
+
+            sourcePath.addWorkspaceRoot(Paths.get(URI.create(params.rootUri)))
+        }
 
         return completedFuture(InitializeResult(capabilities))
     }

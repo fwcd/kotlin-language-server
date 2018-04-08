@@ -7,7 +7,6 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.diagnostic.ConvertDiagnostics
-import org.javacs.kt.diagnostic.LangServerDiagnostic
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
@@ -15,6 +14,7 @@ import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
+import org.jetbrains.kotlin.diagnostics.Diagnostic
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.StringReader
@@ -26,9 +26,8 @@ import java.util.concurrent.CompletableFuture
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) : TextDocumentService {
+class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocumentService {
     private var client: LanguageClient? = null
-    private val activeDocuments = hashMapOf<Path, ActiveDocument>()
 
     fun connect(client: LanguageClient) {
         this.client = client
@@ -56,18 +55,17 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
 
     private fun recover(position: TextDocumentPositionParams): CompiledCode? {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val active = activeDocuments[file] ?: throw RuntimeException("$file is not open")
-        val offset = offset(active.content, position.position.line, position.position.character)
-        val compiled = workspace.compiledFile(file)
-        val recompileStrategy = compiled.recompile(active.content, offset)
+        val open = sourcePath.openFiles[file] ?: throw RuntimeException("$file is not open")
+        val offset = offset(open.content, position.position.line, position.position.character)
+        val recompileStrategy = open.compiled.recompile(open.content, offset)
 
         return when (recompileStrategy) {
             Function ->
-                compiled.recompileFunction(active.content, offset, workspace.sourcePath())
+                open.compiled.recompileFunction(open.content, offset, sourcePath.allSources())
             File ->
-                workspace.recompile(file, active.content).compiledCode(offset, workspace.sourcePath())
+                sourcePath.recompileOpenFile(file).compiledCode(offset, sourcePath.allSources())
             NoChanges ->
-                compiled.compiledCode(offset, workspace.sourcePath())
+                open.compiled.compiledCode(offset, sourcePath.allSources())
             Impossible ->
                 null
         }
@@ -141,9 +139,9 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
-        activeDocuments[file] = ActiveDocument(params.textDocument.text, params.textDocument.version)
-        workspace.onOpen(file, params.textDocument.text)
-        lintLater()
+        val open = sourcePath.open(file, params.textDocument.text, params.textDocument.version)
+
+        reportDiagnostics(open.context.diagnostics.toList())
     }
 
     val debounceLint = Debounce(1.0)
@@ -153,15 +151,16 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     }
 
     private fun doLint() {
-        recompileChangedFiles()
+        val changed = sourcePath.recompileChangedFiles()
+        val kotlinDiagnostics = changed.flatMap { it.context.diagnostics }
 
+        reportDiagnostics(kotlinDiagnostics)
+    }
+
+    private fun reportDiagnostics(kotlinDiagnostics: List<Diagnostic>) {
         val converter = ConvertDiagnostics(::openFileText, ::compiledFileText)
-        fun fileDiagnostics(file: Path): List<Pair<Path, LangServerDiagnostic>> {
-            val compiled = workspace.compiledFileOrNull(file) ?: return emptyList()
-            return compiled.context.diagnostics.flatMap(converter::convert)
-        }
-        val all = activeDocuments.keys.flatMap(::fileDiagnostics)
-        val byFile = all.groupBy({ it.first }, { it.second })
+        val langServerDiagnostics = kotlinDiagnostics.flatMap { converter.convert(it) }
+        val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((file, diagnostics) in byFile) {
             client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
@@ -170,26 +169,11 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
         }
     }
 
-    private fun recompileChangedFiles() {
-        for (file in activeDocuments.keys) {
-            recompileIfChanged(file)
-        }
-    }
-
-    private fun recompileIfChanged(file: Path) {
-        val active = activeDocuments[file] ?: return
-        val compiled = workspace.compiledFileOrNull(file) ?: return
-
-        if (active.content != compiled.file.text) {
-            workspace.recompile(file, active.content)
-        }
-    }
-
     private fun openFileText(file: Path) =
-            activeDocuments[file]?.content
+            sourcePath.openFiles[file]?.content
 
     private fun compiledFileText(file: Path) =
-            workspace.compiledFileOrNull(file)?.file?.text
+            sourcePath.openFiles[file]?.compiled?.file?.text
 
     override fun didSave(params: DidSaveTextDocumentParams) {
     }
@@ -237,8 +221,8 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
 
     override fun didClose(params: DidCloseTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
-        activeDocuments.remove(file)
-        workspace.onClose(file)
+
+        sourcePath.close(file)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
@@ -248,18 +232,18 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
     override fun didChange(params: DidChangeTextDocumentParams) {
         val document = params.textDocument
         val file = Paths.get(URI.create(document.uri))
-        val existing = activeDocuments[file]!!
+        val existing = sourcePath.openFiles[file]!!
         var newText = existing.content
 
         if (document.version > existing.version) {
             for (change in params.contentChanges) {
                 if (change.range == null)
-                    activeDocuments[file] = ActiveDocument(change.text, document.version)
+                    newText = change.text
                 else
                     newText = patch(newText, change)
             }
 
-            activeDocuments[file] = ActiveDocument(newText, document.version)
+            sourcePath.editOpenFile(file, newText, document.version)
             lintLater()
         }
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
@@ -307,8 +291,6 @@ class KotlinTextDocumentService(private val workspace: KotlinWorkspaceService) :
             throw RuntimeException(e)
         }
     }
-
-    private data class ActiveDocument(val content: String, val version: Int)
 }
 
 private inline fun<T> reportTime(block: () -> T): T {
