@@ -70,6 +70,8 @@ class KotlinWorkspaceService : WorkspaceService {
             langServerDiagnostic(it, ::compiledFileText)
         }
         client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+
+        LOG.info("Reported ${diagnostics.size} diagnostics in $file")
     }
 
     private fun compiledFileText(file: Path) =
