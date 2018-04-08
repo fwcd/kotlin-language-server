@@ -9,12 +9,20 @@ import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
+import org.jetbrains.kotlin.types.ErrorUtils
+import org.jetbrains.kotlin.types.UnresolvedType
 
 val DECL_RENDERER = DescriptorRenderer.withOptions {
     withDefinedIn = false
     modifiers = emptySet()
     classifierNamePolicy = ClassifierNamePolicy.SHORT
     parameterNameRenderingPolicy = ParameterNameRenderingPolicy.ONLY_NON_SYNTHESIZED
+    typeNormalizer = {
+        when (it) {
+            is UnresolvedType ->  ErrorUtils.createErrorTypeWithCustomDebugName(it.presentableName)
+            else -> it
+        }
+    }
 }
 
 class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
@@ -22,11 +30,18 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     private val result = CompletionItem()
 
     private fun setDefaults(desc: DeclarationDescriptor) {
-        result.label = desc.name.identifier
-        result.filterText = desc.name.identifier
-        result.insertText = desc.name.identifier
+        result.label = label(desc)
+        result.filterText = label(desc)
+        result.insertText = label(desc)
         result.insertTextFormat = PlainText
         result.detail = DECL_RENDERER.render(desc)
+    }
+
+    private fun label(desc: DeclarationDescriptor): String {
+        return when (desc) {
+            is ConstructorDescriptor -> desc.containingDeclaration.name.identifier
+            else -> desc.name.identifier
+        }
     }
 
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
@@ -41,6 +56,8 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
         setDefaults(desc)
 
         result.kind = Constructor
+        result.insertText = functionInsertText(desc)
+        result.insertTextFormat = Snippet
 
         return result
     }
@@ -71,9 +88,14 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
         return result
     }
 
-    private fun functionInsertText(desc: FunctionDescriptor) =
-            if (desc.valueParameters.isEmpty()) "${desc.name.identifier}()"
-            else "${desc.name.identifier}(\$0)"
+    private fun functionInsertText(desc: FunctionDescriptor): String {
+        val name = label(desc)
+
+        return if (desc.valueParameters.isEmpty())
+            "$name()"
+        else
+            "$name(\$0)"
+    }
 
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)

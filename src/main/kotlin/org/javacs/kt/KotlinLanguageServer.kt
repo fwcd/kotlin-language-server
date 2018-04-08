@@ -42,6 +42,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
         capabilities.hoverProvider = true
         capabilities.completionProvider = CompletionOptions(false, listOf("."))
+        capabilities.signatureHelpProvider = SignatureHelpOptions(listOf("(", ","))
 
         workspaces.initialize(params)
 

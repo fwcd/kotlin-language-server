@@ -2,15 +2,16 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import org.javacs.kt.completion.completeIdentifiers
-import org.javacs.kt.completion.completeMembers
-import org.javacs.kt.completion.completeTypes
+import org.javacs.kt.completion.*
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
+
+data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)
 
 /**
  * @param surrounding An element that surrounds the cursor
@@ -25,6 +26,65 @@ class CompiledCode(
         private val cursor: Int,
         private val textOffset: Int,
         private val sourcePath: Collection<KtFile>) {
+
+    fun signatureHelp(): KotlinSignatureHelp? {
+        val psi = surrounding.findElementAt(cursor - textOffset) ?: return null
+        val call = psi.parentsWithSelf.filterIsInstance<KtCallExpression>().firstOrNull() ?: return null
+        val candidates = candidates(call)
+        val activeDeclaration = activeDeclaration(call, candidates)
+        val activeParameter = activeParameter(call, cursor)
+
+        return KotlinSignatureHelp(candidates, activeDeclaration, activeParameter)
+    }
+
+    private fun candidates(call: KtCallExpression): List<CallableDescriptor> {
+        val target = call.calleeExpression!!
+        val identifier = target.text
+        val dotParent = find<KtDotQualifiedExpression>(target)
+        if (dotParent != null) {
+            val type = context.getType(dotParent.receiverExpression)
+                       ?: robustType(dotParent.receiverExpression, context)
+                       ?: return emptyList()
+
+            return memberOverloads(type, identifier).toList()
+        }
+        val idParent = find<KtNameReferenceExpression>(target)
+        if (idParent != null) {
+            val scope = findScope(idParent, context) ?: return emptyList()
+
+            return identifierOverloads(scope, identifier).toList()
+        }
+        return emptyList()
+    }
+
+    private fun activeDeclaration(call: KtCallExpression, candidates: List<CallableDescriptor>): Int {
+        return candidates.indexOfFirst { isCompatibleWith(call, it) }
+    }
+
+    private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescriptor): Boolean {
+        val argumentList = call.valueArgumentList ?: return true
+        val nArguments = argumentList.text.count { it == ',' } + 1
+        if (nArguments > candidate.valueParameters.size)
+            return false
+
+        for (arg in call.valueArguments) {
+            if (arg.isNamed()) {
+                if (candidate.valueParameters.none { arg.name == it.name.identifier })
+                    return false
+            }
+            // TODO consider types as well
+        }
+
+        return true
+    }
+
+    private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
+        val args = call.valueArgumentList ?: return -1
+        val text = args.text
+        val beforeCursor = text.subSequence(0, cursor - args.textRange.startOffset)
+
+        return beforeCursor.count { it == ','}
+    }
 
     fun hover(): Pair<TextRange, DeclarationDescriptor>? {
         val psi = surrounding.findElementAt(cursor - textOffset) ?: return null

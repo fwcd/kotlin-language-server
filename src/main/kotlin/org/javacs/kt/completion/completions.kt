@@ -1,18 +1,33 @@
 package org.javacs.kt.completion
 
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 
+fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDescriptor> {
+    val nameFilter = equalsIdentifier(identifier)
+
+    return type.memberScope.getDescriptorsFiltered(Companion.CALLABLES, nameFilter).asSequence().filterIsInstance<CallableDescriptor>()
+}
+
 fun completeMembers(type: KotlinType, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return type.memberScope.getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter).asSequence()
+    return doCompleteMembers(type, nameFilter)
+}
+
+private fun doCompleteMembers(type: KotlinType, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
+    return type.memberScope
+            .getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter)
+            .asSequence()
 }
 
 fun completeTypes(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
@@ -24,22 +39,50 @@ fun completeTypes(scope: LexicalScope, partialIdentifier: String): Sequence<Decl
     }
 }
 
+fun identifierOverloads(scope: LexicalScope, identifier: String): Sequence<CallableDescriptor> {
+    val nameFilter = equalsIdentifier(identifier)
+
+    return allIdentifiers(scope, nameFilter)
+            .filterIsInstance<CallableDescriptor>()
+}
+
 fun completeIdentifiers(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return scope.parentsWithSelf.flatMap {
-        val locals = it.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
-        val members = implicitMembers(it, partialIdentifier)
+    return allIdentifiers(scope, nameFilter)
+}
 
-        locals + members
+private fun allIdentifiers(scope: LexicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
+    return scope.parentsWithSelf
+            .flatMap { scopeIdentifiers(it, nameFilter) }
+            .flatMap(::explodeConstructors)
+}
+
+private fun scopeIdentifiers(scope: HierarchicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
+    val locals = scope.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
+    val members = implicitMembers(scope, nameFilter)
+
+    return locals + members
+}
+
+private fun explodeConstructors(desc: DeclarationDescriptor): Sequence<DeclarationDescriptor> {
+    return when (desc) {
+        is ClassDescriptor ->
+            desc.constructors.asSequence() + desc
+        else ->
+            sequenceOf(desc)
     }
 }
 
-private fun implicitMembers(scope: HierarchicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
+private fun implicitMembers(scope: HierarchicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
     if (scope !is LexicalScope) return emptySequence()
     val implicit = scope.implicitReceiver ?: return emptySequence()
 
-    return completeMembers(implicit.type, partialIdentifier)
+    return doCompleteMembers(implicit.type, nameFilter)
+}
+
+private fun equalsIdentifier(identifier: String): (Name) -> Boolean {
+    return { it.identifier == identifier }
 }
 
 private fun matchesPartialIdentifier(partialIdentifier: String): (Name) -> Boolean {

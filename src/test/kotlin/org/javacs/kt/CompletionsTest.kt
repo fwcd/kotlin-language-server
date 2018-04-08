@@ -6,8 +6,7 @@ import org.junit.Test
 
 class CompletionsTest: LanguageServerTestFixture("completions") {
 
-    @Test
-    fun `complete instance member`() {
+    @Test fun `complete instance member`() {
         val file = "InstanceMember.kt"
         open(file)
 
@@ -17,8 +16,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("instanceFoo"))
     }
 
-    @Test
-    fun `complete object member`() {
+    @Test fun `complete object member`() {
         val file = "ObjectMember.kt"
         open(file)
 
@@ -28,8 +26,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("objectFoo"))
     }
 
-    @Test
-    fun `complete identifiers in function scope`() {
+    @Test fun `complete identifiers in function scope`() {
         val file = "FunctionScope.kt"
         open(file)
 
@@ -44,8 +41,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("aCompanionFun"))
     }
 
-    @Test
-    fun `complete a type name`() {
+    @Test fun `complete a type name`() {
         val file = "Types.kt"
         open(file)
 
@@ -58,8 +54,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         assertThat(labels, hasItem("SomeAlias"))
     }
 
-    @Test
-    fun `fill an empty body`() {
+    @Test fun `fill an empty body`() {
         val file = "FillEmptyBody.kt"
         open(file)
 
@@ -70,5 +65,15 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("bar"))
+    }
+
+    @Test fun `complete a constructor`() {
+        val file = "Constructor.kt"
+        open(file)
+
+        val completions = languageServer.textDocumentService.completion(position(file, 2, 10)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("SomeConstructor"))
     }
 }
