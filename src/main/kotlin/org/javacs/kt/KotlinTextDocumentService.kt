@@ -8,6 +8,7 @@ import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
+import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
@@ -151,7 +152,8 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
             LOG.info("Signature help at ${describePosition(position)}")
 
             val recover = recover(position) ?: return cantRecover(position)
-            val (declarations, activeDeclaration, activeParameter) = recover.signatureHelp() ?: return noFunctionCall(position)
+            val help = SignatureHelpSession(recover)
+            val (declarations, activeDeclaration, activeParameter) = help.signatureHelp() ?: return noFunctionCall(position)
             val signatures = declarations.map(::toSignature)
             val result = SignatureHelp(signatures, activeDeclaration, activeParameter)
 
