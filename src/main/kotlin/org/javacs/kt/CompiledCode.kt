@@ -6,7 +6,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 
 /**
@@ -46,11 +45,11 @@ class CompiledCode(
         return analyze.getType(parse)
     }
 
-    fun findScope(expr: KtExpression): LexicalScope? {
-        return expr.parentsWithSelf.filterIsInstance<KtElement>().mapNotNull {
-            context.get(BindingContext.LEXICAL_SCOPE, it)
-        }.firstOrNull()
-    }
+    fun findScope(expr: KtExpression) =
+            expr.parentsWithSelf
+                    .filterIsInstance<KtElement>()
+                    .mapNotNull { context.get(BindingContext.LEXICAL_SCOPE, it) }
+                    .firstOrNull()
 
     fun referenceTarget(expr: KtReferenceExpression) =
             context.get(BindingContext.REFERENCE_TARGET, expr)
