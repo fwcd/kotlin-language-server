@@ -2,8 +2,8 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.services.LanguageClient
-import org.javacs.kt.diagnostic.ConvertDiagnostics
 import org.javacs.kt.diagnostic.KotlinDiagnostic
+import org.javacs.kt.diagnostic.convertDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import java.nio.file.FileSystems
 import java.nio.file.Files
@@ -65,8 +65,7 @@ class SourcePath(private val cp: CompilerClassPath) {
         // TODO instead of recompiling the whole file, try to recover incrementally
         recompileChangedFiles()
 
-        val converter = ConvertDiagnostics(::openFileText)
-        val langServerDiagnostics = kotlinDiagnostics.flatMap { converter.convert(it) }
+        val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((file, diagnostics) in byFile) {
