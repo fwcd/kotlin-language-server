@@ -30,18 +30,11 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     private val result = CompletionItem()
 
     private fun setDefaults(desc: DeclarationDescriptor) {
-        result.label = label(desc)
-        result.filterText = label(desc)
-        result.insertText = label(desc)
+        result.label = desc.label()
+        result.filterText = desc.label()
+        result.insertText = desc.label()
         result.insertTextFormat = PlainText
         result.detail = DECL_RENDERER.render(desc)
-    }
-
-    private fun label(desc: DeclarationDescriptor): String {
-        return when (desc) {
-            is ConstructorDescriptor -> desc.containingDeclaration.name.identifier
-            else -> desc.name.identifier
-        }
     }
 
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
@@ -89,7 +82,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     }
 
     private fun functionInsertText(desc: FunctionDescriptor): String {
-        val name = label(desc)
+        val name = desc.label()
 
         return if (desc.valueParameters.isEmpty())
             "$name()"
@@ -175,5 +168,13 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
         result.kind = Property
 
         return result
+    }
+}
+
+fun DeclarationDescriptor.label(): String? {
+    return when {
+        this is ConstructorDescriptor -> this.containingDeclaration.name.identifier
+        this.name.isSpecial -> null
+        else -> this.name.identifier
     }
 }

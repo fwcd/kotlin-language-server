@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import documentSymbols
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
@@ -9,14 +10,11 @@ import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.hover.hovers
+import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
-import org.javacs.kt.position.range
 import org.javacs.kt.signatureHelp.SignatureHelpSession
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
+import org.jetbrains.kotlin.descriptors.*
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.StringReader
@@ -29,7 +27,7 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocumentService {
 
-    override fun codeAction(params: CodeActionParams): CompletableFuture<MutableList<out Command>> {
+    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
         TODO("not implemented")
     }
 
@@ -76,23 +74,23 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     private fun describePosition(position: TextDocumentPositionParams) =
             "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
 
-    override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<MutableList<out DocumentHighlight>> {
+    override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>> {
         TODO("not implemented")
     }
 
-    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
+    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams): CompletableFuture<MutableList<out Location>> {
+    override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
 
             val recover = recover(position) ?: return cantRecover(position)
-            val (file, range) = goToDefinition(recover) ?: return noDefinition(position)
-            val result = Location(file.toUri().toString(), range(recover.fileContent, range))
+            val declaration = goToDefinition(recover) ?: return noDefinition(position)
+            val location = location(recover.fileContent, declaration) ?: return noDefinition(position)
 
-            return CompletableFuture.completedFuture(mutableListOf(result))
+            return CompletableFuture.completedFuture(listOf(location))
         }
     }
 
@@ -102,11 +100,11 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         return CompletableFuture.completedFuture(null)
     }
 
-    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
+    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> {
         TODO("not implemented")
     }
 
-    override fun codeLens(params: CodeLensParams): CompletableFuture<MutableList<out CodeLens>> {
+    override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>> {
         TODO("not implemented")
     }
 
@@ -114,7 +112,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         TODO("not implemented")
     }
 
-    override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<MutableList<CompletionItem>, CompletionList>> {
+    override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
@@ -142,8 +140,48 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         TODO("not implemented")
     }
 
-    override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<MutableList<out SymbolInformation>> {
-        TODO("not implemented")
+    override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<SymbolInformation>> {
+        LOG.info("Find symbols in ${params.textDocument}")
+
+        reportTime {
+            sourcePath.recompileChangedFiles()
+
+            val path = Paths.get(URI(params.textDocument.uri))
+            val content = sourcePath.openFiles[path] ?: throw RuntimeException("$path is not open")
+            val decls = documentSymbols(content.compiled)
+            val infos = decls.mapNotNull { symbolInfo(content.content, it) }.toList()
+
+            return CompletableFuture.completedFuture(infos)
+        }
+    }
+
+    private fun symbolInfo(content: String, d: DeclarationDescriptor): SymbolInformation? {
+        val name = d.label()
+        val kind = symbolKind(d) ?: return null
+        val loc = location(content, d) ?: return null
+
+        return SymbolInformation(name, kind, loc, d.containingDeclaration?.label())
+    }
+
+    private fun symbolKind(d: DeclarationDescriptor): SymbolKind? {
+        return when (d) {
+            is ClassDescriptor -> SymbolKind.Class
+            is ConstructorDescriptor -> SymbolKind.Constructor
+            is FunctionDescriptor -> SymbolKind.Function
+            is PropertyDescriptor -> SymbolKind.Property
+            is PropertyGetterDescriptor -> SymbolKind.Property
+            is PropertySetterDescriptor -> SymbolKind.Property
+            is VariableDescriptor -> SymbolKind.Variable
+            is TypeAliasDescriptor -> SymbolKind.Constant
+            is ModuleDescriptor -> SymbolKind.Module
+//            is PackageFragmentDescriptor ->
+//            is PackageViewDescriptor ->
+//            is TypeParameterDescriptor ->
+//            is ScriptDescriptor ->
+//            is ValueParameterDescriptor ->
+//            is ReceiverParameterDescriptor ->
+            else -> null
+        }
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
@@ -212,7 +250,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         sourcePath.close(file)
     }
 
-    override fun formatting(params: DocumentFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
+    override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
         TODO("not implemented")
     }
 
@@ -236,7 +274,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
 
-    override fun references(params: ReferenceParams): CompletableFuture<MutableList<out Location>> {
+    override fun references(params: ReferenceParams): CompletableFuture<List<Location>> {
         TODO("not implemented")
     }
 

@@ -44,6 +44,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.completionProvider = CompletionOptions(false, listOf("."))
         capabilities.signatureHelpProvider = SignatureHelpOptions(listOf("(", ","))
         capabilities.definitionProvider = true
+        capabilities.documentSymbolProvider = true
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace ${params.rootUri} to source path")

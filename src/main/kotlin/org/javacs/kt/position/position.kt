@@ -2,8 +2,12 @@ package org.javacs.kt.position
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import org.javacs.kt.diagnostic.toPath
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import kotlin.math.max
 
@@ -67,6 +71,13 @@ fun position(content: String, offset: Int): Position {
 
 fun range(content: String, range: TextRange) =
         Range(position(content, range.startOffset), position(content, range.endOffset))
+
+fun location(content: String, declaration: DeclarationDescriptor): Location? {
+    val target = declaration.findPsi() ?: return null
+    val file = target.containingFile.toPath().toUri().toString()
+
+    return Location(file, range(content, target.textRange))
+}
 
 /**
  * Region that has been changed
