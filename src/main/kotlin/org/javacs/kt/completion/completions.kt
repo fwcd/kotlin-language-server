@@ -137,7 +137,7 @@ private fun matchesPartialIdentifier(partialIdentifier: String): (Name) -> Boole
     }
 }
 
-private fun containsCharactersInOrder(
+fun containsCharactersInOrder(
         candidate: CharSequence, pattern: CharSequence, caseSensitive: Boolean): Boolean {
     var iCandidate = 0
     var iPattern = 0

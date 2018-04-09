@@ -2,6 +2,9 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
+import org.javacs.kt.completion.containsCharactersInOrder
+import org.javacs.kt.symbols.symbolInformation
+import org.javacs.kt.symbols.workspaceSymbols
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -36,8 +39,16 @@ class KotlinWorkspaceService(private val sourcePath: SourcePath, private val cla
         LOG.info(params.toString())
     }
 
-    override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<MutableList<out SymbolInformation>> {
-        TODO("not implemented")
+    private val maxSymbols = 50
+
+    override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
+        val result = workspaceSymbols(sourcePath)
+                .filter { containsCharactersInOrder(it.name!!, params.query, false) }
+                .mapNotNull(::symbolInformation)
+                .take(maxSymbols)
+                .toList()
+
+        return CompletableFuture.completedFuture(result)
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {

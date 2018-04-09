@@ -40,8 +40,6 @@ fun findDoc(desc: DeclarationDescriptorWithSource): KDocTag? {
     }
 }
 
-/* From Kotlin compiler source */
-
 fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
     val root = this
 

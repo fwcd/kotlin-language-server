@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import documentSymbols
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
@@ -14,6 +13,7 @@ import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
 import org.javacs.kt.signatureHelp.SignatureHelpSession
+import org.javacs.kt.symbols.documentSymbols
 import org.jetbrains.kotlin.descriptors.*
 import java.io.BufferedReader
 import java.io.IOException
