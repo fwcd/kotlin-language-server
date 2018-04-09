@@ -1,10 +1,6 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
-import org.javacs.kt.completion.completeIdentifiers
-import org.javacs.kt.completion.completeMembers
-import org.javacs.kt.completion.completeTypes
-import org.javacs.kt.position.findParent
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -47,34 +43,6 @@ class CompiledCode(
         }
     }
 
-    fun completions(): Sequence<DeclarationDescriptor> {
-        val psi = surrounding.findElementAt(cursor - textOffset - 1) ?: return emptySequence()
-        val expr = psi.findParent<KtExpression>() ?: return emptySequence()
-        val typeParent = expr.findParent<KtTypeElement>()
-        if (typeParent != null) {
-            val scope = findScope(expr) ?: return emptySequence()
-            val partial = matchIdentifier(expr)
-
-            return completeTypes(scope, partial)
-        }
-        val dotParent = expr.findParent<KtDotQualifiedExpression>()
-        if (dotParent != null) {
-            val type = getType(dotParent.receiverExpression) ?: return emptySequence()
-            val partial = matchIdentifier(dotParent.selectorExpression)
-
-            return completeMembers(type, partial)
-        }
-        val idParent = expr.findParent<KtNameReferenceExpression>()
-        if (idParent != null) {
-            val scope = findScope(idParent) ?: return emptySequence()
-            val partial = matchIdentifier(expr)
-
-            return completeIdentifiers(scope, partial)
-        }
-
-        return emptySequence()
-    }
-
     fun cursor() =
             cursor - textOffset
 
@@ -101,11 +69,4 @@ class CompiledCode(
             context.get(BindingContext.LEXICAL_SCOPE, it)
         }.firstOrNull()
     }
-}
-
-private fun matchIdentifier(exprAtCursor: KtExpression?): String {
-    val select = exprAtCursor?.text ?: ""
-    val word = Regex("[^()]+")
-
-    return word.find(select)?.value ?: ""
 }

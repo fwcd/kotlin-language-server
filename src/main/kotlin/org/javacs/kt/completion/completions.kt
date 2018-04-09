@@ -1,9 +1,15 @@
 package org.javacs.kt.completion
 
+import org.javacs.kt.CompiledCode
+import org.javacs.kt.position.findParent
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtNameReferenceExpression
+import org.jetbrains.kotlin.psi.KtTypeElement
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
@@ -11,6 +17,41 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
+
+fun completions(code: CompiledCode): Sequence<DeclarationDescriptor> {
+    val psi = code.exprAt(-1) ?: return emptySequence()
+    val expr = psi.findParent<KtExpression>() ?: return emptySequence()
+    val typeParent = expr.findParent<KtTypeElement>()
+    if (typeParent != null) {
+        val scope = code.findScope(expr) ?: return emptySequence()
+        val partial = matchIdentifier(expr)
+
+        return completeTypes(scope, partial)
+    }
+    val dotParent = expr.findParent<KtDotQualifiedExpression>()
+    if (dotParent != null) {
+        val type = code.getType(dotParent.receiverExpression) ?: return emptySequence()
+        val partial = matchIdentifier(dotParent.selectorExpression)
+
+        return completeMembers(type, partial)
+    }
+    val idParent = expr.findParent<KtNameReferenceExpression>()
+    if (idParent != null) {
+        val scope = code.findScope(idParent) ?: return emptySequence()
+        val partial = matchIdentifier(expr)
+
+        return completeIdentifiers(scope, partial)
+    }
+
+    return emptySequence()
+}
+
+private fun matchIdentifier(exprAtCursor: KtExpression?): String {
+    val select = exprAtCursor?.text ?: ""
+    val word = Regex("[^()]+")
+
+    return word.find(select)?.value ?: ""
+}
 
 fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDescriptor> {
     val nameFilter = equalsIdentifier(identifier)

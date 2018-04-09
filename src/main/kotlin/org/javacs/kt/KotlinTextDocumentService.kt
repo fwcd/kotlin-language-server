@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
+import org.javacs.kt.completion.completions
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
@@ -102,7 +103,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
             val started = System.currentTimeMillis()
             val recover = recover(position) ?: return cantRecover(position)
-            val completions = recover.completions()
+            val completions = completions(recover)
             val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
             val isIncomplete = list.size == MAX_COMPLETION_ITEMS
 
