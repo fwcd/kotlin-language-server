@@ -9,8 +9,10 @@ import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport.CliB
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
+import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.load.java.JvmAbi
@@ -33,9 +35,10 @@ import java.nio.file.Path
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-object Compiler {
+class Compiler(classPath: Set<Path>) {
     private val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
+        addAll(JVMConfigurationKeys.CONTENT_ROOTS, classPath.map { JvmClasspathRoot(it.toFile())})
     }
     private val env = KotlinCoreEnvironment.createForProduction(
             parentDisposable = Disposable { },

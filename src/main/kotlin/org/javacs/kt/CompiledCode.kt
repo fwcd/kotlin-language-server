@@ -24,6 +24,7 @@ class CompiledCode(
         private val context: BindingContext,
         private val cursor: Int,
         private val textOffset: Int,
+        private val compiler: Compiler,
         private val sourcePath: Collection<KtFile>) {
 
     fun signatureHelp(): KotlinSignatureHelp? {
@@ -147,8 +148,8 @@ class CompiledCode(
      */
     fun robustType(expr: KtExpression, context: BindingContext): KotlinType? {
         val scope = findScope(expr, context) ?: return null
-        val parse = Compiler.createExpression(expr.text)
-        val analyze = Compiler.compileExpression(parse, scope, sourcePath)
+        val parse = compiler.createExpression(expr.text)
+        val analyze = compiler.compileExpression(parse, scope, sourcePath)
 
         return analyze.getType(parse)
     }

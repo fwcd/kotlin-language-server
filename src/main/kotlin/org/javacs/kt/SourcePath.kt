@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-class SourcePath {
+class SourcePath(private val cp: CompilerClassPath) {
     val workspaceRoots = mutableSetOf<Path>()
     val diskFiles = mutableMapOf<Path, KtFile>()
     val openFiles = mutableMapOf<Path, OpenFile>()
@@ -44,10 +44,10 @@ class SourcePath {
         openFiles.remove(file)
 
         // Compile the new content
-        val ktFile = Compiler.createFile(file, content)
+        val ktFile = cp.compiler.createFile(file, content)
         val sourcePath = diskFiles.values + openFiles.values.map { it.compiled.file } + ktFile
-        val context = Compiler.compileFile(ktFile, sourcePath)
-        val compiled = CompiledFile(file, ktFile, context)
+        val context = cp.compiler.compileFile(ktFile, sourcePath)
+        val compiled = CompiledFile(file, ktFile, context, cp)
 
         openFiles[file] = OpenFile(content, version, compiled)
 
@@ -58,7 +58,7 @@ class SourcePath {
 
     fun close(file: Path) {
         openFiles.remove(file)
-        diskFiles[file] = Compiler.openFile(file)
+        diskFiles[file] = cp.compiler.openFile(file)
     }
 
     fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
@@ -93,15 +93,23 @@ class SourcePath {
             openFiles[file]?.content
 
     fun createdOnDisk(file: Path) {
-        diskFiles[file] = Compiler.openFile(file)
+        changedOnDisk(file)
     }
 
     fun deletedOnDisk(file: Path) {
-
+        if (isSource(file))
+            diskFiles.remove(file)
     }
 
     fun changedOnDisk(file: Path) {
+        if (isSource(file))
+            diskFiles[file] = cp.compiler.openFile(file)
+    }
 
+    private fun isSource(file: Path): Boolean {
+        val name = file.fileName.toString()
+
+        return name.endsWith(".kt") || name.endsWith(".kts")
     }
 
     fun addWorkspaceRoot(root: Path) {
@@ -110,7 +118,7 @@ class SourcePath {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            diskFiles[file] = Compiler.openFile(file)
+            diskFiles[file] = cp.compiler.openFile(file)
         }
 
         workspaceRoots.add(root)
@@ -137,18 +145,18 @@ class SourcePath {
 }
 
 private fun findSourceFiles(root: Path): Set<Path> {
-    val pattern = FileSystems.getDefault().getPathMatcher("glob:*.kt")
+    val pattern = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
     return Files.walk(root).filter { pattern.matches(it.fileName) } .collect(Collectors.toSet())
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    if (sources.size > 5) LOG.info("Adding ${sources.size} files under $rootPath")
-    else LOG.info("Adding ${sources.joinToString(", ")}")
+    if (sources.size > 5) LOG.info("Adding ${sources.size} files under $rootPath to source path")
+    else LOG.info("Adding ${sources.joinToString(", ")} to source path")
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    if (sources.size > 5) LOG.info("Removing ${sources.size} files under $rootPath")
-    else LOG.info("Removing ${sources.joinToString(", ")}")
+    if (sources.size > 5) LOG.info("Removing ${sources.size} files under $rootPath to source path")
+    else LOG.info("Removing ${sources.joinToString(", ")} to source path")
 }
 
 data class OpenFile(val content: String, val version: Int, val compiled: CompiledFile)

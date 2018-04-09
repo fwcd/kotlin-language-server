@@ -10,6 +10,7 @@ import org.junit.Assert.assertThat
 import org.junit.Test
 
 class CompilerTest {
+    val compiler = Compiler(setOf())
     val myTestResources = testResourcesRoot().resolve("compiler")
     val file = myTestResources.resolve("FileToEdit.kt")
     val editedText = """
@@ -19,8 +20,8 @@ private class FileToEdit {
 
     @Test
     fun compileFile() {
-        val original = Compiler.openFile(file)
-        val context = Compiler.compileFile(original, listOf(original))
+        val original = compiler.openFile(file)
+        val context = compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(45)!!
         val kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
@@ -29,8 +30,8 @@ private class FileToEdit {
 
     @Test
     fun newFile() {
-        val original = Compiler.createFile(file, editedText)
-        val context = Compiler.compileFile(original, listOf(original))
+        val original = compiler.createFile(file, editedText)
+        val context = compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(46)!!
         val kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
@@ -39,15 +40,15 @@ private class FileToEdit {
 
     @Test
     fun editFile() {
-        val original = Compiler.openFile(file)
-        var context = Compiler.compileFile(original, listOf(original))
+        val original = compiler.openFile(file)
+        var context = compiler.compileFile(original, listOf(original))
         var psi = original.findElementAt(46)!!
         var kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
         assertThat(context.getType(kt), hasToString("String"))
 
-        val edited = Compiler.createFile(file, editedText)
-        context = Compiler.compileFile(edited, listOf(edited))
+        val edited = compiler.createFile(file, editedText)
+        context = compiler.compileFile(edited, listOf(edited))
         psi = edited.findElementAt(46)!!
         kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
 
@@ -56,12 +57,12 @@ private class FileToEdit {
 
     @Test
     fun editRef() {
-        val original = Compiler.openFile(testResourcesRoot().resolve("hover/Recover.kt"))
-        val context = Compiler.compileFile(original, listOf(original))
+        val original = compiler.openFile(testResourcesRoot().resolve("hover/Recover.kt"))
+        val context = compiler.compileFile(original, listOf(original))
         val function = original.findElementAt(49)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().first()
         val scope = context.get(BindingContext.LEXICAL_SCOPE, function.bodyExpression)!!
-        val recompile = Compiler.createFunction("""private fun singleExpressionFunction() = intFunction()""")
-        val recompileContext = Compiler.compileExpression(recompile, scope, setOf(original))
+        val recompile = compiler.createFunction("""private fun singleExpressionFunction() = intFunction()""")
+        val recompileContext = compiler.compileExpression(recompile, scope, setOf(original))
         val intFunctionRef = recompile.findElementAt(41)!!.parentsWithSelf.filterIsInstance<KtReferenceExpression>().first()
         val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!
 

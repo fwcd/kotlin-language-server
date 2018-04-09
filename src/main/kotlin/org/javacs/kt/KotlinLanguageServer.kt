@@ -11,8 +11,9 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
-    private val sourcePath = SourcePath()
-    private val workspaces = KotlinWorkspaceService(sourcePath)
+    private val classPath = CompilerClassPath()
+    private val sourcePath = SourcePath(classPath)
+    private val workspaces = KotlinWorkspaceService(sourcePath, classPath)
     private val textDocuments = KotlinTextDocumentService(sourcePath)
 
     override fun connect(client: LanguageClient) {
@@ -46,7 +47,10 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         if (params.rootUri != null) {
             LOG.info("Adding workspace ${params.rootUri} to source path")
 
-            sourcePath.addWorkspaceRoot(Paths.get(URI.create(params.rootUri)))
+            val root = Paths.get(URI.create(params.rootUri))
+
+            sourcePath.addWorkspaceRoot(root)
+            classPath.addWorkspaceRoot(root)
         }
 
         return completedFuture(InitializeResult(capabilities))

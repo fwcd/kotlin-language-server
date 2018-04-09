@@ -16,7 +16,7 @@ enum class RecompileStrategy {
     Impossible
 }
 
-class CompiledFile(private val path: Path, val file: KtFile, val context: BindingContext) {
+class CompiledFile(private val path: Path, val file: KtFile, val context: BindingContext, private val cp: CompilerClassPath) {
 
     fun recompile(newText: String, cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
@@ -70,7 +70,7 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
     }
 
     fun compiledCode(cursor: Int, sourcePath: Collection<KtFile>): CompiledCode {
-        return CompiledCode(file.text, file, context, cursor, 0, sourcePath)
+        return CompiledCode(file.text, file, context, cursor, 0, cp.compiler, sourcePath)
     }
 
     /**
@@ -83,9 +83,9 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
         val start = surroundingFunction.textRange.startOffset
         val end = surroundingFunction.textRange.endOffset + newText.length - file.text.length
         val newFunctionText = newText.substring(start, end)
-        val newFunction = Compiler.createFunction(newFunctionText)
-        val newContext = Compiler.compileExpression(newFunction, scope, sourcePath)
+        val newFunction = cp.compiler.createFunction(newFunctionText)
+        val newContext = cp.compiler.compileExpression(newFunction, scope, sourcePath)
 
-        return CompiledCode(newText, newFunction, newContext, cursor, surroundingFunction.textRange.startOffset, sourcePath)
+        return CompiledCode(newText, newFunction, newContext, cursor, surroundingFunction.textRange.startOffset, cp.compiler, sourcePath)
     }
 }

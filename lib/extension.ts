@@ -29,7 +29,9 @@ export function activate(context: VSCode.ExtensionContext) {
             configurationSection: 'kotlin',
             // Notify the server about file changes to 'javaconfig.json' files contain in the workspace
             fileEvents: [
-                VSCode.workspace.createFileSystemWatcher('**/*.kt')
+                VSCode.workspace.createFileSystemWatcher('**/*.kt'),
+                VSCode.workspace.createFileSystemWatcher('**/*.kts'),
+                VSCode.workspace.createFileSystemWatcher('**/pom.xml'),
             ]
         },
         outputChannelName: 'Kotlin',
