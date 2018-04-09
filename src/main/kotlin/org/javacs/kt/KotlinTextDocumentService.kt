@@ -165,6 +165,12 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
     private fun symbolKind(d: DeclarationDescriptor): SymbolKind? {
         return when (d) {
+            is ValueParameterDescriptor -> null
+            is TypeParameterDescriptor -> null
+            is ScriptDescriptor -> null
+            is PackageViewDescriptor -> null
+            is PackageFragmentDescriptor -> null
+            is ReceiverParameterDescriptor -> null
             is ClassDescriptor -> SymbolKind.Class
             is ConstructorDescriptor -> SymbolKind.Constructor
             is FunctionDescriptor -> SymbolKind.Function
@@ -174,12 +180,6 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
             is VariableDescriptor -> SymbolKind.Variable
             is TypeAliasDescriptor -> SymbolKind.Constant
             is ModuleDescriptor -> SymbolKind.Module
-//            is PackageFragmentDescriptor ->
-//            is PackageViewDescriptor ->
-//            is TypeParameterDescriptor ->
-//            is ScriptDescriptor ->
-//            is ValueParameterDescriptor ->
-//            is ReceiverParameterDescriptor ->
             else -> null
         }
     }

@@ -1,7 +1,7 @@
 private class DocumentSymbols() {
     val aProperty = 1
 
-    fun aFunction() {
+    fun aFunction(aFunctionArg: Int) {
     }
 
     constructor(aConstructorArg: Int): this() {
