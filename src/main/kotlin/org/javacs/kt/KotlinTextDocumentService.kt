@@ -7,6 +7,7 @@ import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.completion.completions
 import org.javacs.kt.docs.findDoc
+import org.javacs.kt.hover.hovers
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
 import org.javacs.kt.signatureHelp.SignatureHelpSession
@@ -35,7 +36,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
             val recover = recover(position) ?: return cantRecover(position)
-            val (location, decl) = recover.hover() ?: return noHover(position)
+            val (location, decl) = hovers(recover) ?: return noHover(position)
             val hoverText = DECL_RENDERER.render(decl)
             val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
             val range = Range(

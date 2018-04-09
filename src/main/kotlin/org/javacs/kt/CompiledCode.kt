@@ -1,8 +1,9 @@
 package org.javacs.kt
 
-import com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtExpression
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
@@ -20,28 +21,9 @@ class CompiledCode(
         private val surrounding: KtElement,
         private val context: BindingContext,
         private val cursor: Int,
-        private val textOffset: Int,
+        val textOffset: Int,
         private val compiler: Compiler,
         private val sourcePath: Collection<KtFile>) {
-
-    fun hover(): Pair<TextRange, DeclarationDescriptor>? {
-        val psi = surrounding.findElementAt(cursor - textOffset) ?: return null
-        val stopAtDeclaration = psi.parentsWithSelf.takeWhile { it !is KtDeclaration }
-        val onlyExpressions = stopAtDeclaration.filterIsInstance<KtExpression>()
-        val hasHover = onlyExpressions.filter { doHover(it) != null }
-        val expr = hasHover.firstOrNull() ?: return null
-        val range = expr.textRange.shiftRight(textOffset)
-        val hover = doHover(expr)!!
-
-        return Pair(range, hover)
-    }
-
-    private fun doHover(expr: KtExpression): DeclarationDescriptor? {
-        return when (expr) {
-            is KtReferenceExpression -> context.get(BindingContext.REFERENCE_TARGET, expr) ?: return null
-            else -> null
-        }
-    }
 
     fun cursor() =
             cursor - textOffset
@@ -69,4 +51,7 @@ class CompiledCode(
             context.get(BindingContext.LEXICAL_SCOPE, it)
         }.firstOrNull()
     }
+
+    fun referenceTarget(expr: KtReferenceExpression) =
+            context.get(BindingContext.REFERENCE_TARGET, expr)
 }
