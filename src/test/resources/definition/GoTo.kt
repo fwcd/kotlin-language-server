@@ -1,0 +1,5 @@
+object GoTo {
+    fun methodInDifferentFile() {
+
+    }
+}

@@ -6,10 +6,12 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.completion.completions
+import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.docs.findDoc
 import org.javacs.kt.hover.hovers
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
+import org.javacs.kt.position.range
 import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -83,7 +85,21 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     }
 
     override fun definition(position: TextDocumentPositionParams): CompletableFuture<MutableList<out Location>> {
-        TODO("not implemented")
+        reportTime {
+            LOG.info("Go-to-definition at ${describePosition(position)}")
+
+            val recover = recover(position) ?: return cantRecover(position)
+            val (file, range) = goToDefinition(recover) ?: return noDefinition(position)
+            val result = Location(file.toUri().toString(), range(recover.fileContent, range))
+
+            return CompletableFuture.completedFuture(mutableListOf(result))
+        }
+    }
+
+    private fun<T> noDefinition(position: TextDocumentPositionParams): CompletableFuture<T> {
+        LOG.info("Couldn't find definition at ${describePosition(position)}")
+
+        return CompletableFuture.completedFuture(null)
     }
 
     override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<MutableList<out TextEdit>> {
@@ -102,13 +118,12 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
-            val started = System.currentTimeMillis()
             val recover = recover(position) ?: return cantRecover(position)
             val completions = completions(recover)
             val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
             val isIncomplete = list.size == MAX_COMPLETION_ITEMS
 
-            LOG.info("Found ${list.size} items in ${System.currentTimeMillis() - started} ms")
+            LOG.info("Found ${list.size} items")
 
             return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
         }
