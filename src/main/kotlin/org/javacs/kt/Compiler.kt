@@ -84,10 +84,13 @@ class Compiler(classPath: Set<Path>) {
         return Pair(container, trace)
     }
 
-    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): BindingContext {
+    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): BindingContext =
+            compileFiles(listOf(file), sourcePath)
+
+    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingContext {
         val (container, trace) = createContainer(sourcePath)
         val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
-        val analyze = topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, listOf(file))
+        val analyze = topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
 
         return trace.bindingContext
     }

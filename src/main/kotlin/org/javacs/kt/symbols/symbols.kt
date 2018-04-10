@@ -14,12 +14,8 @@ import org.jetbrains.kotlin.psi.psiUtil.parents
 fun documentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
         file.preOrderTraversal().mapNotNull { pickImportantElements(it, true) }
 
-fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> {
-    val open = sources.openFiles.asSequence().flatMap { doWorkspaceSymbols(it.value.compiled.file) }
-    val disk = sources.diskFiles.values.asSequence().flatMap { doWorkspaceSymbols(it) }
-
-    return open + disk
-}
+fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> =
+        sources.allSources().asSequence().flatMap(::doWorkspaceSymbols)
 
 private fun doWorkspaceSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
     file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }

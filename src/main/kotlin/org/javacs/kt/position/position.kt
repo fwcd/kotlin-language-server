@@ -74,9 +74,14 @@ fun range(content: String, range: TextRange) =
 
 fun location(content: String, declaration: DeclarationDescriptor): Location? {
     val target = declaration.findPsi() ?: return null
-    val file = target.containingFile.toPath().toUri().toString()
 
-    return Location(file, range(content, target.textRange))
+    return location(content, target)
+}
+
+fun location(content: String, expr: PsiElement): Location {
+    val file = expr.containingFile.toPath().toUri().toString()
+
+    return Location(file, range(content, expr.textRange))
 }
 
 /**

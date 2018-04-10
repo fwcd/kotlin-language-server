@@ -2,41 +2,49 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.services.LanguageClient
+import org.javacs.kt.RecompileStrategy.*
+import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.diagnostic.KotlinDiagnostic
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.resolve.BindingContext
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 
+class OpenFile(val content: String, val version: Int, val compiled: CompiledFile)
+
 class SourcePath(private val cp: CompilerClassPath) {
-    val workspaceRoots = mutableSetOf<Path>()
-    val diskFiles = mutableMapOf<Path, KtFile>()
-    val openFiles = mutableMapOf<Path, OpenFile>()
+    private val workspaceRoots = mutableSetOf<Path>()
+    private val diskFiles = mutableMapOf<Path, KtFile>()
+    private val openFiles = mutableMapOf<Path, OpenFile>()
     private var client: LanguageClient? = null
+
+    fun openFile(file: Path): OpenFile? =
+            openFiles[file]
 
     fun connect(client: LanguageClient) {
         this.client = client
     }
 
     fun open(file: Path, content: String, version: Int): CompiledFile {
-        return compile(file, content, version)
+        return compileOpenFile(file, content, version)
     }
 
     fun editOpenFile(file: Path, content: String, version: Int) {
         assert(version > openFiles[file]!!.version)
 
-        compile(file, content, version)
+        compileOpenFile(file, content, version)
     }
 
     fun recompileOpenFile(file: Path): CompiledFile {
         val open = openFiles[file]!!
 
-        return compile(file, open.content, open.version)
+        return compileOpenFile(file, open.content, open.version)
     }
 
-    private fun compile(file: Path, content: String, version: Int): CompiledFile {
+    private fun compileOpenFile(file: Path, content: String, version: Int): CompiledFile {
         LOG.info("Compile $file")
 
         // Remove the old file immediately so it doesn't show up in the source path
@@ -45,7 +53,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         // Compile the new content
         val ktFile = cp.compiler.createFile(file, content)
-        val sourcePath = diskFiles.values + openFiles.values.map { it.compiled.file } + ktFile
+        val sourcePath = allSources() + ktFile
         val context = cp.compiler.compileFile(ktFile, sourcePath)
         val compiled = CompiledFile(file, ktFile, context, cp)
 
@@ -56,9 +64,12 @@ class SourcePath(private val cp: CompilerClassPath) {
         return compiled
     }
 
+    private fun openDiskFile(file: Path): KtFile =
+            cp.compiler.openFile(file)
+
     fun close(file: Path) {
         openFiles.remove(file)
-        diskFiles[file] = cp.compiler.openFile(file)
+        diskFiles[file] = openDiskFile(file)
     }
 
     fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
@@ -84,12 +95,9 @@ class SourcePath(private val cp: CompilerClassPath) {
     fun recompileChangedFiles() {
         for ((file, open) in openFiles) {
             if (open.content != open.compiled.file.text)
-                compile(file, open.content, open.version)
+                compileOpenFile(file, open.content, open.version)
         }
     }
-
-    private fun openFileText(file: Path) =
-            openFiles[file]?.content
 
     fun createdOnDisk(file: Path) {
         changedOnDisk(file)
@@ -102,7 +110,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            diskFiles[file] = cp.compiler.openFile(file)
+            diskFiles[file] = openDiskFile(file)
     }
 
     private fun isSource(file: Path): Boolean {
@@ -117,7 +125,7 @@ class SourcePath(private val cp: CompilerClassPath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            diskFiles[file] = cp.compiler.openFile(file)
+            diskFiles[file] = openDiskFile(file)
         }
 
         workspaceRoots.add(root)
@@ -135,11 +143,26 @@ class SourcePath(private val cp: CompilerClassPath) {
         workspaceRoots.remove(root)
     }
 
-    fun allSources(): Collection<KtFile> {
-        val open = openFiles.values.map { it.compiled.file }
-        val disk = diskFiles.values
+    fun allSources(): Collection<KtFile> =
+            openFiles.values.map { it.compiled.file } + diskFiles.values
 
-        return open + disk
+    fun compileFiles(files: Collection<KtFile>): BindingContext =
+            cp.compiler.compileFiles(files, allSources())
+
+    fun recover(file: Path, offset: Int): CompiledCode? {
+        val open = openFile(file) ?: throw RuntimeException("$file is not open")
+        val recompileStrategy = open.compiled.recompile(open.content, offset)
+
+        return when (recompileStrategy) {
+            Function ->
+                open.compiled.recompileFunction(open.content, offset, allSources())
+            File ->
+                recompileOpenFile(file).compiledCode(offset, allSources())
+            NoChanges ->
+                open.compiled.compiledCode(offset, allSources())
+            Impossible ->
+                null
+        }
     }
 }
 
@@ -157,5 +180,3 @@ private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
     if (sources.size > 5) LOG.info("Removing ${sources.size} files under $rootPath to source path")
     else LOG.info("Removing ${sources.joinToString(", ")} to source path")
 }
-
-data class OpenFile(val content: String, val version: Int, val compiled: CompiledFile)

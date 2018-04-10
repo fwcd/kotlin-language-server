@@ -3,8 +3,6 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
-import org.javacs.kt.RecompileStrategy.*
-import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.docs.findDoc
@@ -12,6 +10,7 @@ import org.javacs.kt.hover.hovers
 import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
+import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.symbols.symbolInformation
@@ -53,20 +52,10 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
     private fun recover(position: TextDocumentPositionParams): CompiledCode? {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val open = sourcePath.openFiles[file] ?: throw RuntimeException("$file is not open")
+        val open = sourcePath.openFile(file) ?: throw RuntimeException("$file is not open")
         val offset = offset(open.content, position.position.line, position.position.character)
-        val recompileStrategy = open.compiled.recompile(open.content, offset)
 
-        return when (recompileStrategy) {
-            Function ->
-                open.compiled.recompileFunction(open.content, offset, sourcePath.allSources())
-            File ->
-                sourcePath.recompileOpenFile(file).compiledCode(offset, sourcePath.allSources())
-            NoChanges ->
-                open.compiled.compiledCode(offset, sourcePath.allSources())
-            Impossible ->
-                null
-        }
+        return sourcePath.recover(file, offset)
     }
 
     private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
@@ -151,7 +140,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
             sourcePath.recompileChangedFiles()
 
             val path = Paths.get(URI(params.textDocument.uri))
-            val content = sourcePath.openFiles[path] ?: throw RuntimeException("$path is not open")
+            val content = sourcePath.openFile(path) ?: throw RuntimeException("$path is not open")
             val decls = documentSymbols(content.compiled.file)
             val infos = decls.mapNotNull(::symbolInformation).toList()
 
@@ -232,7 +221,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     override fun didChange(params: DidChangeTextDocumentParams) {
         val document = params.textDocument
         val file = Paths.get(URI.create(document.uri))
-        val existing = sourcePath.openFiles[file]!!
+        val existing = sourcePath.openFile(file)!!
         var newText = existing.content
 
         if (document.version > existing.version) {
@@ -249,8 +238,15 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
 
-    override fun references(params: ReferenceParams): CompletableFuture<List<Location>> {
-        TODO("not implemented")
+    override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {
+        val file = Paths.get(URI.create(position.textDocument.uri))
+        val open = sourcePath.openFile(file) ?: throw RuntimeException("$file is not open")
+        val offset = offset(open.content, position.position.line, position.position.character)
+        val found = findReferences(file, offset, sourcePath)
+                .map { location(open.content, it) }
+                .toList()
+
+        return CompletableFuture.completedFuture(found)
     }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {

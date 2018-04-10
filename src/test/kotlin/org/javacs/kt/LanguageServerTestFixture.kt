@@ -27,13 +27,15 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
         return languageServer
     }
 
-    fun position(relativePath: String, line: Int, column: Int): TextDocumentPositionParams {
+    fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
-        val position = Position(line - 1, column - 1)
+        val position = position(line, column)
 
         return TextDocumentPositionParams(fileId, position)
     }
+
+    fun position(line: Int, column: Int) = Position(line - 1, column - 1)
 
     fun uri(relativePath: String) =
             workspaceRoot.resolve(relativePath).toUri()
@@ -47,7 +49,7 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
     }
 
     fun replace(relativePath: String, line: Int, char: Int, oldText: String, newText: String) {
-        val range = Range(Position(line - 1, char - 1), Position(line - 1, char -1 + oldText.length))
+        val range = Range(position(line, char), Position(line - 1, char - 1 + oldText.length))
         val edit = TextDocumentContentChangeEvent(range, oldText.length, newText)
         val doc = VersionedTextDocumentIdentifier(1)
         doc.uri = uri(relativePath).toString()

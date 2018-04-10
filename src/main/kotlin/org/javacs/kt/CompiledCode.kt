@@ -1,5 +1,7 @@
 package org.javacs.kt
 
+import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
@@ -24,14 +26,20 @@ class CompiledCode(
         private val compiler: Compiler,
         private val sourcePath: Collection<KtFile>) {
 
-    fun cursor() =
+    fun cursor(): Int =
             cursor - textOffset
 
-    fun exprAt(relativeToCursor: Int) =
+    fun exprAt(relativeToCursor: Int): PsiElement? =
             surrounding.findElementAt(cursor - textOffset + relativeToCursor)
 
-    fun getType(expr: KtExpression) =
+    fun getType(expr: KtExpression): KotlinType? =
             context.getType(expr) ?: robustType(expr)
+
+    fun getDeclaration(expr: PsiElement): DeclarationDescriptor? =
+            context.get(BindingContext.DECLARATION_TO_DESCRIPTOR, expr)
+
+    fun referenceTarget(expr: KtReferenceExpression): DeclarationDescriptor? =
+            context.get(BindingContext.REFERENCE_TARGET, expr)
 
     /**
      * If we're having trouble figuring out the type of an expression,
@@ -50,7 +58,4 @@ class CompiledCode(
                     .filterIsInstance<KtElement>()
                     .mapNotNull { context.get(BindingContext.LEXICAL_SCOPE, it) }
                     .firstOrNull()
-
-    fun referenceTarget(expr: KtReferenceExpression) =
-            context.get(BindingContext.REFERENCE_TARGET, expr)
 }

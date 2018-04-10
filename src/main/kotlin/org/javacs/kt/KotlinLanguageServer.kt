@@ -46,6 +46,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.definitionProvider = true
         capabilities.documentSymbolProvider = true
         capabilities.workspaceSymbolProvider = true
+        capabilities.referencesProvider = true
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace ${params.rootUri} to source path")

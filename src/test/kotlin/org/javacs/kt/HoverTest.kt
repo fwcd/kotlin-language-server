@@ -9,7 +9,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "Literals.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 3, 19)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 3, 19)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -21,7 +21,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "FunctionReference.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 2, 45)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 2, 45)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -33,7 +33,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "ObjectReference.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 2, 7)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 2, 7)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -45,7 +45,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "ObjectReference.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 6, 7)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 6, 7)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -57,7 +57,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "ObjectReference.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 10, 7)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 10, 7)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -69,7 +69,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         val file = "ObjectReference.kt"
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(position(file, 10, 15)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 10, 15)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -82,7 +82,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         open(file)
         replace(file, 2, 9, "\"Foo\"", "intFunction()")
 
-        val hover = languageServer.textDocumentService.hover(position(file, 2, 11)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 2, 11)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -95,7 +95,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         open(file)
         replace(file, 5, 13, "\"Foo\"", "intFunction()")
 
-        val hover = languageServer.textDocumentService.hover(position(file, 5, 13)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 5, 13)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)
@@ -109,7 +109,7 @@ class HoverTest: LanguageServerTestFixture("hover") {
         open(from)
         open(to)
 
-        val hover = languageServer.textDocumentService.hover(position(from, 3, 26)).get()!!
+        val hover = languageServer.textDocumentService.hover(textDocumentPosition(from, 3, 26)).get()!!
         val contents = hover.contents.first().right
 
         assertEquals("kotlin", contents.language)

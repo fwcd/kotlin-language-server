@@ -10,7 +10,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val file = "InstanceMember.kt"
         open(file)
 
-        val completions = languageServer.textDocumentService.completion(position(file, 3, 15)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 15)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
@@ -20,7 +20,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val file = "ObjectMember.kt"
         open(file)
 
-        val completions = languageServer.textDocumentService.completion(position(file, 2, 17)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 17)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("objectFoo"))
@@ -30,7 +30,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val file = "FunctionScope.kt"
         open(file)
 
-        val completions = languageServer.textDocumentService.completion(position(file, 4, 10)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("anArgument"))
@@ -45,7 +45,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val file = "Types.kt"
         open(file)
 
-        val completions = languageServer.textDocumentService.completion(position(file, 2, 25)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 25)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("SomeInnerClass"))
@@ -61,7 +61,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         replace(file, 2, 16, "", """"
             Callee.
 """)
-        val completions = languageServer.textDocumentService.completion(position(file, 3, 20)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 20)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("bar"))
@@ -71,7 +71,7 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
         val file = "Constructor.kt"
         open(file)
 
-        val completions = languageServer.textDocumentService.completion(position(file, 2, 10)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("SomeConstructor"))
