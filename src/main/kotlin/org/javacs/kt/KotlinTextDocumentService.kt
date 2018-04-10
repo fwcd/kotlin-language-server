@@ -14,7 +14,11 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
 import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.javacs.kt.symbols.documentSymbols
-import org.jetbrains.kotlin.descriptors.*
+import org.javacs.kt.symbols.symbolInformation
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
+import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.StringReader
@@ -148,39 +152,10 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
             val path = Paths.get(URI(params.textDocument.uri))
             val content = sourcePath.openFiles[path] ?: throw RuntimeException("$path is not open")
-            val decls = documentSymbols(content.compiled)
-            val infos = decls.mapNotNull { symbolInfo(content.content, it) }.toList()
+            val decls = documentSymbols(content.compiled.file)
+            val infos = decls.mapNotNull(::symbolInformation).toList()
 
             return CompletableFuture.completedFuture(infos)
-        }
-    }
-
-    private fun symbolInfo(content: String, d: DeclarationDescriptor): SymbolInformation? {
-        val name = d.label()
-        val kind = symbolKind(d) ?: return null
-        val loc = location(content, d) ?: return null
-
-        return SymbolInformation(name, kind, loc, d.containingDeclaration?.label())
-    }
-
-    private fun symbolKind(d: DeclarationDescriptor): SymbolKind? {
-        return when (d) {
-            is ValueParameterDescriptor -> null
-            is TypeParameterDescriptor -> null
-            is ScriptDescriptor -> null
-            is PackageViewDescriptor -> null
-            is PackageFragmentDescriptor -> null
-            is ReceiverParameterDescriptor -> null
-            is ClassDescriptor -> SymbolKind.Class
-            is ConstructorDescriptor -> SymbolKind.Constructor
-            is FunctionDescriptor -> SymbolKind.Function
-            is PropertyDescriptor -> SymbolKind.Property
-            is PropertyGetterDescriptor -> SymbolKind.Property
-            is PropertySetterDescriptor -> SymbolKind.Property
-            is VariableDescriptor -> SymbolKind.Variable
-            is TypeAliasDescriptor -> SymbolKind.Constant
-            is ModuleDescriptor -> SymbolKind.Module
-            else -> null
         }
     }
 

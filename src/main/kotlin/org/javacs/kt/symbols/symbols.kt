@@ -4,24 +4,15 @@ import com.intellij.psi.PsiElement
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.SymbolInformation
 import org.eclipse.lsp4j.SymbolKind
-import org.javacs.kt.CompiledFile
 import org.javacs.kt.SourcePath
 import org.javacs.kt.diagnostic.toPath
 import org.javacs.kt.docs.preOrderTraversal
 import org.javacs.kt.position.range
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
-import org.jetbrains.kotlin.resolve.BindingContext
 
-fun documentSymbols(file: CompiledFile): Sequence<DeclarationDescriptor> =
-        file.file.preOrderTraversal().mapNotNull { pickDeclarations(file, it) }
-
-fun pickDeclarations(file: CompiledFile, node: PsiElement): DeclarationDescriptor? =
-        when (node) {
-            is KtNamedDeclaration -> file.context.get(BindingContext.DECLARATION_TO_DESCRIPTOR, node)
-            else -> null
-        }
+fun documentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
+        file.preOrderTraversal().mapNotNull { pickImportantElements(it, true) }
 
 fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> {
     val open = sources.openFiles.asSequence().flatMap { doWorkspaceSymbols(it.value.compiled.file) }
@@ -30,18 +21,17 @@ fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> {
     return open + disk
 }
 
-// TODO this logic is more general and should be combined with documentSymbol implementation
-private fun doWorkspaceSymbols(file: KtFile): Sequence<KtNamedDeclaration> {
-    return file.preOrderTraversal().mapNotNull(::pickImportantElements)
-}
+private fun doWorkspaceSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
+    file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
 
-private fun pickImportantElements(node: PsiElement): KtNamedDeclaration? =
+private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtNamedDeclaration? =
         when (node) {
             is KtClassOrObject -> if (node.name == null) null else node
             is KtTypeAlias -> node
             is KtConstructor<*> -> node
-            is KtNamedFunction -> if (node.isLocal) null else node
-            is KtProperty -> if (node.isLocal) null else node
+            is KtNamedFunction -> if (!node.isLocal || includeLocals) node else null
+            is KtProperty -> if (!node.isLocal || includeLocals) node else null
+            is KtVariableDeclaration -> if (includeLocals) node else null
             else -> null
         }
 
@@ -58,6 +48,7 @@ private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
             is KtConstructor<*> -> SymbolKind.Constructor
             is KtNamedFunction -> SymbolKind.Function
             is KtProperty -> SymbolKind.Property
+            is KtVariableDeclaration -> SymbolKind.Variable
             else -> throw IllegalArgumentException("Unexpected symbol $d")
         }
 
