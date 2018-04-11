@@ -2,11 +2,12 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.LanguageClient
+import org.junit.Before
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: String): LanguageClient {
+abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
     val languageServer = createLanguageServer()
     val diagnostics = mutableListOf<Diagnostic>()
@@ -39,6 +40,13 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
 
     fun uri(relativePath: String) =
             workspaceRoot.resolve(relativePath).toUri()
+
+    fun referenceParams(relativePath: String, line: Int, column: Int): ReferenceParams {
+        val request = ReferenceParams(ReferenceContext(true))
+        request.textDocument = TextDocumentIdentifier(uri(relativePath).toString())
+        request.position = position(line, column)
+        return request
+    }
 
     fun open(relativePath: String) {
         val file =  workspaceRoot.resolve(relativePath)
@@ -85,4 +93,10 @@ abstract class LanguageServerTestFixture(private val relativeWorkspaceRoot: Stri
 fun testResourcesRoot(): Path {
     val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt").toURI()
     return Paths.get(anchorTxt).parent!!
+}
+
+open class SingleFileTestFixture(relativeWorkspaceRoot: String, val file: String): LanguageServerTestFixture(relativeWorkspaceRoot) {
+    @Before fun openFile() {
+        open(file)
+    }
 }

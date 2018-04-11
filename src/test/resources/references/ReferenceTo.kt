@@ -3,12 +3,11 @@ object ReferenceTo {
 
     }
 
-    operator fun plus(value: Int) {
-
-    }
+    private class MainConstructor(foo: Int)
 
     fun main() {
         ReferenceTo.foo()
-        ReferenceTo + 1
+        MainConstructor(1)
+        // TODO getValue, setValue, contains, invoke
     }
 }
