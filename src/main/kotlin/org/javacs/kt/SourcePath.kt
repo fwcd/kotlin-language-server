@@ -33,11 +33,10 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     fun editOpenFile(file: Path, content: String, version: Int) {
-        assert(version > openFiles[file]!!.version)
+        val open = openFiles[file]!!
+        assert(version > open.version)
 
-        val open = openFiles[file] ?: throw RuntimeException("$file is not open")
         val edit = OpenFile(content, version, open.compiled)
-
         openFiles[file] = edit
     }
 
