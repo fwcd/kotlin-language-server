@@ -18,36 +18,49 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
-fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtReferenceExpression> {
+fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
     val recover = sources.recover(file, offset) ?: return emptyList()
     val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.getDeclaration(element) ?: return emptyList()
     val maybes = findPossibleReferences(declaration, sources)
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sources.compileFiles(maybes)
-    val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
 
-    return references
-            .filter { matchesReference(it.value, element) }
-            .map { it.key }
+    if (isComponent(declaration)) {
+        val references = recompile.getSliceContents(BindingContext.COMPONENT_RESOLVED_CALL)
+
+        return references
+                .filter { matchesReference(it.value.candidateDescriptor, element) }
+                .map { it.value.call.callElement }
+    }
+    else {
+        val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
+
+        return references
+                .filter { matchesReference(it.value, element) }
+                .map { it.key }
+    }
 }
 
 private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
     if (declaration is ClassConstructorDescriptor) {
         return possibleNameReferences(declaration.constructedClass.name, sources)
     }
-    if (declaration is FunctionDescriptor && declaration.isOperator) {
-        if (OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)) {
-            return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
-        }
-        else {
-            val operators = operatorNames(declaration.name)
+    if (isComponent(declaration)) {
+        return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
+    }
+    if (declaration is FunctionDescriptor) {
+        val operators = operatorNames(declaration.name)
 
-            return tokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
-        }
+        return tokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
     }
     return possibleNameReferences(declaration.name, sources)
 }
+
+private fun isComponent(declaration: DeclarationDescriptor): Boolean =
+        declaration is FunctionDescriptor &&
+        declaration.isOperator &&
+        OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)
 
 private fun componentReferences(sources: SourcePath): Set<KtFile> =
         sources.allSources().values.filter { componentReference(it) }.toSet()
