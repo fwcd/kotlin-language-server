@@ -33,6 +33,13 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtE
                 .filter { matchesReference(it.value.candidateDescriptor, element) }
                 .map { it.value.call.callElement }
     }
+    else if (isIterator(declaration)) {
+        val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
+
+        return references
+                .filter { matchesReference(it.value.candidateDescriptor, element) }
+                .map { it.value.call.callElement }
+    }
     else {
         val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
 
@@ -52,6 +59,9 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     if (isGetSet(declaration)) {
         return possibleGetSets(sources) + possibleNameReferences(declaration.name, sources)
     }
+    if (isIterator(declaration)) {
+        return hasForLoops(sources) + possibleNameReferences(declaration.name, sources)
+    }
     if (declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.INVOKE) {
         return possibleInvokeReferences(declaration, sources) + possibleNameReferences(declaration.name, sources)
     }
@@ -62,6 +72,14 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     }
     return possibleNameReferences(declaration.name, sources)
 }
+
+private fun isIterator(declaration: DeclarationDescriptor) = declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.ITERATOR
+
+fun hasForLoops(sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter(::hasForLoop).toSet()
+
+fun hasForLoop(source: KtFile): Boolean =
+        source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
 
 private fun isGetSet(declaration: DeclarationDescriptor) =
         declaration is FunctionDescriptor &&
