@@ -32,36 +32,42 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtE
     else if (isIterator(declaration)) {
         return findIteratorReferences(element, recompile) + findNameReferences(element, recompile)
     }
+    else if (isPropertyDelegate(declaration)) {
+        return findDelegateReferences(element, recompile) + findNameReferences(element, recompile)
+    }
     else {
         return findNameReferences(element, recompile)
     }
 }
 
-private fun findNameReferences(
-        element: KtNamedDeclaration, recompile: BindingContext): List<KtReferenceExpression> {
+private fun findNameReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtReferenceExpression> {
     val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
 
     return references.filter { matchesReference(it.value, element) }.map { it.key }
 }
 
-private fun findIteratorReferences(
-        element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
-    val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
+private fun findDelegateReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
+    val references = recompile.getSliceContents(BindingContext.DELEGATED_PROPERTY_RESOLVED_CALL)
 
-    return references.filter {
-        matchesReference(
-                it.value.candidateDescriptor, element)
-    }.map { it.value.call.callElement }
+    return references
+            .filter { matchesReference(it.value.candidateDescriptor, element) }
+            .map { it.value.call.callElement }
 }
 
-private fun findComponentReferences(
-        element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
+private fun findIteratorReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
+    val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
+
+    return references
+            .filter { matchesReference( it.value.candidateDescriptor, element) }
+            .map { it.value.call.callElement }
+}
+
+private fun findComponentReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
     val references = recompile.getSliceContents(BindingContext.COMPONENT_RESOLVED_CALL)
 
-    return references.filter {
-        matchesReference(
-                it.value.candidateDescriptor, element)
-    }.map { it.value.call.callElement }
+    return references
+            .filter { matchesReference(it.value.candidateDescriptor, element) }
+            .map { it.value.call.callElement }
 }
 
 private fun possibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
@@ -70,6 +76,9 @@ private fun possibleReferences(declaration: DeclarationDescriptor, sources: Sour
     }
     if (isComponent(declaration)) {
         return possibleComponentReferences(sources) + possibleNameReferences(declaration.name, sources)
+    }
+    if (isPropertyDelegate(declaration)) {
+        return hasPropertyDelegates(sources) + possibleNameReferences(declaration.name, sources)
     }
     if (isGetSet(declaration)) {
         return possibleGetSets(sources) + possibleNameReferences(declaration.name, sources)
@@ -87,6 +96,17 @@ private fun possibleReferences(declaration: DeclarationDescriptor, sources: Sour
     }
     return possibleNameReferences(declaration.name, sources)
 }
+
+private fun isPropertyDelegate(declaration: DeclarationDescriptor) =
+        declaration is FunctionDescriptor &&
+        declaration.isOperator &&
+        (declaration.name == OperatorNameConventions.GET_VALUE || declaration.name == OperatorNameConventions.SET_VALUE)
+
+private fun hasPropertyDelegates(sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter(::hasPropertyDelegate).toSet()
+
+fun hasPropertyDelegate(source: KtFile): Boolean =
+        source.preOrderTraversal().filterIsInstance<KtPropertyDelegate>().any()
 
 private fun isIterator(declaration: DeclarationDescriptor) =
         declaration is FunctionDescriptor &&
