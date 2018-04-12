@@ -49,6 +49,9 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     if (isComponent(declaration)) {
         return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
     }
+    if (declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.INVOKE) {
+        return possibleInvokeReferences(declaration, sources) + possibleNameReferences(declaration.name, sources)
+    }
     if (declaration is FunctionDescriptor) {
         val operators = operatorNames(declaration.name)
 
@@ -56,6 +59,13 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     }
     return possibleNameReferences(declaration.name, sources)
 }
+
+private fun possibleInvokeReferences(declaration: FunctionDescriptor, sources: SourcePath) =
+        sources.allSources().values.filter { possibleInvokeReference(declaration, it) }.toSet()
+
+// TODO this is not very selective
+private fun possibleInvokeReference(declaration: FunctionDescriptor, source: KtFile): Boolean =
+        source.preOrderTraversal().filterIsInstance<KtCallExpression>().any()
 
 private fun isComponent(declaration: DeclarationDescriptor): Boolean =
         declaration is FunctionDescriptor &&

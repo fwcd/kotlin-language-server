@@ -68,7 +68,7 @@ class ReferenceGetSetValueTest: SingleFileTestFixture("references", "ReferenceGe
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
-        assertThat(references, hasItem(hasToString(containsString("line=8"))))
+        assertThat(references, hasItem(hasToString(containsString("line = 8"))))
     }
 
     @Test fun `find references to setValue`() {
@@ -76,7 +76,7 @@ class ReferenceGetSetValueTest: SingleFileTestFixture("references", "ReferenceGe
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
-        assertThat(references, hasItem(hasToString(containsString("line=8"))))
+        assertThat(references, hasItem(hasToString(containsString("line = 8"))))
     }
 }
 
@@ -86,7 +86,7 @@ class ReferenceGetterSetterTest: SingleFileTestFixture("references", "ReferenceG
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
-        assertThat(references, hasItem(hasToString(containsString("line=7"))))
+        assertThat(references, hasItem(hasToString(containsString("line = 7"))))
     }
 
     @Test fun `find references to set`() {
@@ -94,7 +94,7 @@ class ReferenceGetterSetterTest: SingleFileTestFixture("references", "ReferenceG
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
-        assertThat(references, hasItem(hasToString(containsString("line=8"))))
+        assertThat(references, hasItem(hasToString(containsString("line = 8"))))
     }
 }
 
@@ -104,7 +104,7 @@ class ReferenceInvokeTest: SingleFileTestFixture("references", "ReferenceInvoke.
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
-        assertThat(references, hasItem(hasToString(containsString("line=6"))))
+        assertThat(references, hasItem(hasToString(containsString("line = 6"))))
     }
 }
 
