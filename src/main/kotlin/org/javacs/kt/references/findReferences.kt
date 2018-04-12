@@ -22,7 +22,7 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtR
     val recover = sources.recover(file, offset) ?: return emptyList()
     val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.getDeclaration(element) ?: return emptyList()
-    val maybes = sources.allSources().values.filter { mightReference(declaration, it) }
+    val maybes = findPossibleReferences(declaration, sources)
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sources.compileFiles(maybes)
     val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
@@ -32,37 +32,56 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtR
             .map { it.key }
 }
 
+private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
+    if (declaration is ClassConstructorDescriptor) {
+        return possibleNameReferences(declaration.constructedClass.name, sources)
+    }
+    if (declaration is FunctionDescriptor && declaration.isOperator) {
+        if (OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)) {
+            return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
+        }
+        else {
+            val operators = operatorNames(declaration.name)
+
+            return tokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
+        }
+    }
+    return possibleNameReferences(declaration.name, sources)
+}
+
+private fun componentReferences(sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter { componentReference(it) }.toSet()
+
+private fun componentReference(source: KtFile): Boolean =
+        source.preOrderTraversal()
+                .filterIsInstance<KtDestructuringDeclarationEntry>()
+                .any()
+
+private fun tokenReferences(find: List<KtSingleValueToken>, sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter { tokenReference(find, it) }.toSet()
+
+private fun tokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
+        source.preOrderTraversal()
+                .filterIsInstance<KtOperationReferenceExpression>()
+                .any { it.operationSignTokenType in find }
+
+private fun possibleNameReferences(declaration: Name, sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter { possibleNameReference(declaration, it) }.toSet()
+
+private fun possibleNameReference(declaration: Name, source: KtFile): Boolean =
+        source.preOrderTraversal()
+                .filterIsInstance<KtSimpleNameExpression>()
+                .any { it.getReferencedNameAsName() == declaration }
+
 private fun matchesReference(found: DeclarationDescriptor, search: KtNamedDeclaration): Boolean {
     if (found is ConstructorDescriptor && found.isPrimary)
         return search is KtClass && found.constructedClass.fqNameSafe == search.fqName
-    else if (found.fqNameSafe == search.fqName)
-        return found.findPsi() == search
     else
-        return false
+        return found.findPsi() == search
 }
 
-private fun mightReference(target: DeclarationDescriptor, file: KtFile): Boolean =
-        file.preOrderTraversal()
-                .filterIsInstance<KtSimpleNameExpression>()
-                .any { possibleNameMatch(target, it) }
-
-private fun possibleNameMatch(target: DeclarationDescriptor, from: KtSimpleNameExpression): Boolean =
-        when (from) {
-            is KtOperationReferenceExpression -> from.operationSignTokenType in operatorNames(target)
-            else -> name(target) == from.getReferencedNameAsName()
-        }
-
-private fun name(target: DeclarationDescriptor): Name =
-        when (target) {
-            is ClassConstructorDescriptor -> target.constructedClass.name
-            else -> target.name
-        }
-
-private fun operatorNames(target: DeclarationDescriptor): List<KtSingleValueToken> {
-    if (target is FunctionDescriptor && target.isOperator) {
-        val name = target.name
-
-        return when (name) {
+private fun operatorNames(name: Name): List<KtSingleValueToken> =
+        when (name) {
             OperatorNameConventions.EQUALS -> listOf(KtTokens.EQEQ)
             OperatorNameConventions.COMPARE_TO -> listOf(KtTokens.GT, KtTokens.LT, KtTokens.LTEQ, KtTokens.GTEQ)
             else -> {
@@ -70,9 +89,6 @@ private fun operatorNames(target: DeclarationDescriptor): List<KtSingleValueToke
                             OperatorConventions.BINARY_OPERATION_NAMES.inverse()[name] ?:
                             OperatorConventions.ASSIGNMENT_OPERATIONS.inverse()[name] ?:
                             OperatorConventions.BOOLEAN_OPERATIONS.inverse()[name]
-                return listOfNotNull(token)
+                listOfNotNull(token)
             }
         }
-    }
-    else return emptyList()
-}

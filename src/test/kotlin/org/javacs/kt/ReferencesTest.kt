@@ -58,7 +58,7 @@ class ReferenceConstructorTest: SingleFileTestFixture("references", "ReferenceCo
         val request = referenceParams(file, 2, 10)
         val references = languageServer.textDocumentService.references(request).get()
 
-        assertThat("Finds reference to the main constructor", references, hasItem(hasProperty("uri", containsString("ReferenceConstructor.kt"))))
+        assertThat("Finds reference to a secondary constructor", references, hasItem(hasProperty("uri", containsString("ReferenceConstructor.kt"))))
     }
 }
 
