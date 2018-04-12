@@ -56,10 +56,12 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): Languag
         languageServer.textDocumentService.didOpen(DidOpenTextDocumentParams(document))
     }
 
+    private var version = 1
+
     fun replace(relativePath: String, line: Int, char: Int, oldText: String, newText: String) {
         val range = Range(position(line, char), Position(line - 1, char - 1 + oldText.length))
         val edit = TextDocumentContentChangeEvent(range, oldText.length, newText)
-        val doc = VersionedTextDocumentIdentifier(1)
+        val doc = VersionedTextDocumentIdentifier(version++)
         doc.uri = uri(relativePath).toString()
 
         languageServer.textDocumentService.didChange(DidChangeTextDocumentParams(doc, listOf(edit)))

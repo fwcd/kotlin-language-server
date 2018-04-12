@@ -110,8 +110,6 @@ class ReferenceInvokeTest: SingleFileTestFixture("references", "ReferenceInvoke.
 
 class ReferenceOperatorTest: SingleFileTestFixture("references", "ReferenceOperator.kt") {
     @Test fun `find references to equals`() {
-        // TODO this does work, but kotlin stdlib is not getting included so equals(Any?) is not resolving
-        // Need to include stdlib when no pom.xml is found
         val request = referenceParams(file, 2, 30)
         val references = languageServer.textDocumentService.references(request).get()
 

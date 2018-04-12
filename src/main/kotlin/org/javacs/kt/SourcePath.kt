@@ -35,7 +35,10 @@ class SourcePath(private val cp: CompilerClassPath) {
     fun editOpenFile(file: Path, content: String, version: Int) {
         assert(version > openFiles[file]!!.version)
 
-        compileOpenFile(file, content, version)
+        val open = openFiles[file] ?: throw RuntimeException("$file is not open")
+        val edit = OpenFile(content, version, open.compiled)
+
+        openFiles[file] = edit
     }
 
     fun recompileOpenFile(file: Path): CompiledFile {
@@ -47,14 +50,10 @@ class SourcePath(private val cp: CompilerClassPath) {
     private fun compileOpenFile(file: Path, content: String, version: Int): CompiledFile {
         LOG.info("Compile $file")
 
-        // Remove the old file immediately so it doesn't show up in the source path
-        diskFiles.remove(file)
-        openFiles.remove(file)
-
         // Compile the new content
         val ktFile = cp.compiler.createFile(file, content)
-        val sourcePath = allSources() + ktFile
-        val context = cp.compiler.compileFile(ktFile, sourcePath)
+        val sourcePath = allSources() - file + Pair(file, ktFile)
+        val context = cp.compiler.compileFile(ktFile, sourcePath.values)
         val compiled = CompiledFile(file, ktFile, context, cp)
 
         openFiles[file] = OpenFile(content, version, compiled)
@@ -71,6 +70,8 @@ class SourcePath(private val cp: CompilerClassPath) {
         openFiles.remove(file)
         diskFiles[file] = openDiskFile(file)
     }
+
+    var lintCount = 0
 
     fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
         // TODO instead of recompiling the whole file, try to recover incrementally
@@ -90,6 +91,8 @@ class SourcePath(private val cp: CompilerClassPath) {
 
             LOG.info("Cleared diagnostics in $compiledFile")
         }
+
+        lintCount++
     }
 
     fun recompileChangedFiles() {
@@ -143,11 +146,11 @@ class SourcePath(private val cp: CompilerClassPath) {
         workspaceRoots.remove(root)
     }
 
-    fun allSources(): Collection<KtFile> =
-            openFiles.values.map { it.compiled.file } + diskFiles.values
+    fun allSources(): Map<Path, KtFile> =
+            diskFiles + openFiles.mapValues { it.value.compiled.file }
 
     fun compileFiles(files: Collection<KtFile>): BindingContext =
-            cp.compiler.compileFiles(files, allSources())
+            cp.compiler.compileFiles(files, allSources().values)
 
     fun recover(file: Path, offset: Int): CompiledCode? {
         val open = openFile(file) ?: throw RuntimeException("$file is not open")
@@ -155,11 +158,11 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         return when (recompileStrategy) {
             Function ->
-                open.compiled.recompileFunction(open.content, offset, allSources())
+                open.compiled.recompileFunction(open.content, offset, allSources().values)
             File ->
-                recompileOpenFile(file).compiledCode(offset, allSources())
+                recompileOpenFile(file).compiledCode(offset, allSources().values)
             NoChanges ->
-                open.compiled.compiledCode(offset, allSources())
+                open.compiled.compiledCode(offset, allSources().values)
             Impossible ->
                 null
         }

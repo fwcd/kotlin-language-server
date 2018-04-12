@@ -11,8 +11,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
-    private val classPath = CompilerClassPath()
-    private val sourcePath = SourcePath(classPath)
+    val classPath = CompilerClassPath()
+    val sourcePath = SourcePath(classPath)
     private val workspaces = KotlinWorkspaceService(sourcePath, classPath)
     private val textDocuments = KotlinTextDocumentService(sourcePath)
 

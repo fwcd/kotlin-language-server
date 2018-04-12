@@ -22,7 +22,7 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtR
     val recover = sources.recover(file, offset) ?: return emptyList()
     val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.getDeclaration(element) ?: return emptyList()
-    val maybes = sources.allSources().filter { mightReference(declaration, it) }
+    val maybes = sources.allSources().values.filter { mightReference(declaration, it) }
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sources.compileFiles(maybes)
     val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
@@ -35,8 +35,10 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtR
 private fun matchesReference(found: DeclarationDescriptor, search: KtNamedDeclaration): Boolean {
     if (found is ConstructorDescriptor && found.isPrimary)
         return search is KtClass && found.constructedClass.fqNameSafe == search.fqName
-    else
+    else if (found.fqNameSafe == search.fqName)
         return found.findPsi() == search
+    else
+        return false
 }
 
 private fun mightReference(target: DeclarationDescriptor, file: KtFile): Boolean =

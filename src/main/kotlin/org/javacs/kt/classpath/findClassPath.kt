@@ -1,6 +1,7 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
+import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -12,6 +13,11 @@ fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
                 .flatMap { pomFiles(it) }
                 .flatMap { readPom(it) }
                 .toSet()
+                .ifEmpty { backupClassPath() }
+
+// TODO find latest available version of stdlib
+private fun backupClassPath() =
+    listOfNotNull(findArtifact(Artifact("org.jetbrains.kotlin", "kotlin-stdlib", "1.2.31"), false)).toSet()
 
 private fun pomFiles(workspaceRoot: Path): Set<Path> =
         Files.walk(workspaceRoot)
