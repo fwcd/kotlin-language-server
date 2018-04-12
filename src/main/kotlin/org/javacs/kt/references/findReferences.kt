@@ -22,39 +22,54 @@ fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtE
     val recover = sources.recover(file, offset) ?: return emptyList()
     val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.getDeclaration(element) ?: return emptyList()
-    val maybes = findPossibleReferences(declaration, sources)
+    val maybes = possibleReferences(declaration, sources)
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sources.compileFiles(maybes)
 
     if (isComponent(declaration)) {
-        val references = recompile.getSliceContents(BindingContext.COMPONENT_RESOLVED_CALL)
-
-        return references
-                .filter { matchesReference(it.value.candidateDescriptor, element) }
-                .map { it.value.call.callElement }
+        return findComponentReferences(element, recompile) + findNameReferences(element, recompile)
     }
     else if (isIterator(declaration)) {
-        val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
-
-        return references
-                .filter { matchesReference(it.value.candidateDescriptor, element) }
-                .map { it.value.call.callElement }
+        return findIteratorReferences(element, recompile) + findNameReferences(element, recompile)
     }
     else {
-        val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
-
-        return references
-                .filter { matchesReference(it.value, element) }
-                .map { it.key }
+        return findNameReferences(element, recompile)
     }
 }
 
-private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
+private fun findNameReferences(
+        element: KtNamedDeclaration, recompile: BindingContext): List<KtReferenceExpression> {
+    val references = recompile.getSliceContents(BindingContext.REFERENCE_TARGET)
+
+    return references.filter { matchesReference(it.value, element) }.map { it.key }
+}
+
+private fun findIteratorReferences(
+        element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
+    val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
+
+    return references.filter {
+        matchesReference(
+                it.value.candidateDescriptor, element)
+    }.map { it.value.call.callElement }
+}
+
+private fun findComponentReferences(
+        element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
+    val references = recompile.getSliceContents(BindingContext.COMPONENT_RESOLVED_CALL)
+
+    return references.filter {
+        matchesReference(
+                it.value.candidateDescriptor, element)
+    }.map { it.value.call.callElement }
+}
+
+private fun possibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
     if (declaration is ClassConstructorDescriptor) {
         return possibleNameReferences(declaration.constructedClass.name, sources)
     }
     if (isComponent(declaration)) {
-        return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
+        return possibleComponentReferences(sources) + possibleNameReferences(declaration.name, sources)
     }
     if (isGetSet(declaration)) {
         return possibleGetSets(sources) + possibleNameReferences(declaration.name, sources)
@@ -68,17 +83,20 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     if (declaration is FunctionDescriptor) {
         val operators = operatorNames(declaration.name)
 
-        return tokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
+        return possibleTokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
     }
     return possibleNameReferences(declaration.name, sources)
 }
 
-private fun isIterator(declaration: DeclarationDescriptor) = declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.ITERATOR
+private fun isIterator(declaration: DeclarationDescriptor) =
+        declaration is FunctionDescriptor &&
+        declaration.isOperator &&
+        declaration.name == OperatorNameConventions.ITERATOR
 
-fun hasForLoops(sources: SourcePath): Set<KtFile> =
+private fun hasForLoops(sources: SourcePath): Set<KtFile> =
         sources.allSources().values.filter(::hasForLoop).toSet()
 
-fun hasForLoop(source: KtFile): Boolean =
+private fun hasForLoop(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
 
 private fun isGetSet(declaration: DeclarationDescriptor) =
@@ -86,7 +104,7 @@ private fun isGetSet(declaration: DeclarationDescriptor) =
         declaration.isOperator &&
         (declaration.name == OperatorNameConventions.GET || declaration.name == OperatorNameConventions.SET)
 
-fun possibleGetSets(sources: SourcePath): Set<KtFile> =
+private fun possibleGetSets(sources: SourcePath): Set<KtFile> =
         sources.allSources().values.filter(::possibleGetSet).toSet()
 
 private fun possibleGetSet(source: KtFile) =
@@ -104,18 +122,18 @@ private fun isComponent(declaration: DeclarationDescriptor): Boolean =
         declaration.isOperator &&
         OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)
 
-private fun componentReferences(sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter { componentReference(it) }.toSet()
+private fun possibleComponentReferences(sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter { possibleComponentReference(it) }.toSet()
 
-private fun componentReference(source: KtFile): Boolean =
+private fun possibleComponentReference(source: KtFile): Boolean =
         source.preOrderTraversal()
                 .filterIsInstance<KtDestructuringDeclarationEntry>()
                 .any()
 
-private fun tokenReferences(find: List<KtSingleValueToken>, sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter { tokenReference(find, it) }.toSet()
+private fun possibleTokenReferences(find: List<KtSingleValueToken>, sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter { possibleTokenReference(find, it) }.toSet()
 
-private fun tokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
+private fun possibleTokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
         source.preOrderTraversal()
                 .filterIsInstance<KtOperationReferenceExpression>()
                 .any { it.operationSignTokenType in find }

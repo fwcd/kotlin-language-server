@@ -20,6 +20,8 @@ class ReferenceCollectionishTest: SingleFileTestFixture("references", "Reference
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
+        assertThat("Finds for-loop reference", references, hasItem(hasToString(containsString("line = 8"))))
+        assertThat("Finds iterator() reference", references, hasItem(hasToString(containsString("line = 9"))))
     }
 
     @Test fun `find references to contains`() {
@@ -27,6 +29,8 @@ class ReferenceCollectionishTest: SingleFileTestFixture("references", "Reference
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
+        assertThat("Finds reference using in", references, hasItem(hasToString(containsString("line = 10"))))
+        assertThat("Finds contains() reference", references, hasItem(hasToString(containsString("line = 11"))))
     }
 
     @Test fun `find references to rangeTo`() {
@@ -43,6 +47,8 @@ class ReferenceComponentsTest: SingleFileTestFixture("references", "ReferenceCom
         val references = languageServer.textDocumentService.references(request).get()
 
         assertThat(references, hasItem(hasProperty("uri", containsString(file))))
+        assertThat("Finds destructuring reference", references, hasItem(hasToString(containsString("line = 6"))))
+        assertThat("Finds component1() reference", references, hasItem(hasToString(containsString("line = 7"))))
     }
 }
 

@@ -5,4 +5,5 @@ private class ReferenceComponents {
 
 private fun main() {
     val (a, b) = ReferenceComponents()
+    val c = ReferenceComponents().component1()
 }

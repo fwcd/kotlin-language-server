@@ -7,6 +7,8 @@ private class ReferenceCollectionish {
 private fun main() {
     val example = ReferenceCollectionish()
     for (i in example) { }
+    example.iterator()
     1 in example
+    example.contains(1)
     for (i in example..10) { }
 }
