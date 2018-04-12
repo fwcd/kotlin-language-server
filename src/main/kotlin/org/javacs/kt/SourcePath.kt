@@ -92,6 +92,8 @@ class SourcePath(private val cp: CompilerClassPath) {
             LOG.info("Cleared diagnostics in $compiledFile")
         }
 
+        // LOG.log(Level.WARNING, "LINT", Exception())
+
         lintCount++
     }
 
