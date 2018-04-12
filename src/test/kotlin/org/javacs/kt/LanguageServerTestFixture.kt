@@ -12,7 +12,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): Languag
     val languageServer = createLanguageServer()
     val diagnostics = mutableListOf<Diagnostic>()
 
-    private fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
+    fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
         val testResources = testResourcesRoot()
         return testResources.resolve(relativeWorkspaceRoot)
     }
