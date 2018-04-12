@@ -49,6 +49,9 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     if (isComponent(declaration)) {
         return componentReferences(sources) + possibleNameReferences(declaration.name, sources)
     }
+    if (isGetSet(declaration)) {
+        return possibleGetSets(sources) + possibleNameReferences(declaration.name, sources)
+    }
     if (declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.INVOKE) {
         return possibleInvokeReferences(declaration, sources) + possibleNameReferences(declaration.name, sources)
     }
@@ -59,6 +62,17 @@ private fun findPossibleReferences(declaration: DeclarationDescriptor, sources: 
     }
     return possibleNameReferences(declaration.name, sources)
 }
+
+private fun isGetSet(declaration: DeclarationDescriptor) =
+        declaration is FunctionDescriptor &&
+        declaration.isOperator &&
+        (declaration.name == OperatorNameConventions.GET || declaration.name == OperatorNameConventions.SET)
+
+fun possibleGetSets(sources: SourcePath): Set<KtFile> =
+        sources.allSources().values.filter(::possibleGetSet).toSet()
+
+private fun possibleGetSet(source: KtFile) =
+        source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
 
 private fun possibleInvokeReferences(declaration: FunctionDescriptor, sources: SourcePath) =
         sources.allSources().values.filter { possibleInvokeReference(declaration, it) }.toSet()
