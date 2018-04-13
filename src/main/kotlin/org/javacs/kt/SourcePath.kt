@@ -1,6 +1,8 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
+import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.eclipse.lsp4j.services.LanguageClient
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
@@ -8,66 +10,184 @@ import org.javacs.kt.diagnostic.KotlinDiagnostic
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.StringReader
+import java.io.StringWriter
+import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.stream.Collectors
 
-class OpenFile(val content: String, val version: Int, val compiled: CompiledFile)
+private class OpenFile(
+        var content: String,
+        var version: Int,
+        var parsed: KtFile,
+        var parsedVersion: Int,
+        var compiled: BindingContext? = null,
+        var compiledVersion: Int? = null)
 
 class SourcePath(private val cp: CompilerClassPath) {
     private val workspaceRoots = mutableSetOf<Path>()
-    private val diskFiles = mutableMapOf<Path, KtFile>()
-    private val openFiles = mutableMapOf<Path, OpenFile>()
+    private val files = mutableMapOf<Path, OpenFile>()
     private var client: LanguageClient? = null
 
-    fun openFile(file: Path): OpenFile? =
-            openFiles[file]
+    /**
+     * Get the latest content of a file
+     */
+    fun content(file: Path): String {
+        return files[file]!!.content
+    }
+
+    /**
+     * Compile the latest version of a file
+     */
+    fun compiledFile(file: Path): Pair<KtFile, BindingContext> {
+        val compiled = compileIfChanged(file)
+
+        return Pair(compiled.file, compiled.context)
+    }
+
+    /**
+     * Compile the latest version of the region around `offset`
+     */
+    fun compiledCode(file: Path, offset: Int): CompiledCode {
+        val open = files[file]!!
+        val compiled = compileIfNull(file)
+        val recompileStrategy = compiled.recompile(open.content, offset)
+
+        return when (recompileStrategy) {
+            NoChanges ->
+                compiled.compiledCode(offset, all())
+            Function ->
+                compiled.recompileFunction(open.content, offset, all())
+            File, Impossible ->
+                compileIfChanged(file).compiledCode(offset, all())
+        }
+    }
+
+    /**
+     * Get parsed trees for all files on source path
+     */
+    fun all(): Collection<KtFile> =
+            files.values.map { it.parsed }
+
+    fun open(file: Path, content: String, version: Int) {
+        files[file] = OpenFile(content, version, cp.compiler.createFile(file, content), version)
+
+        doCompile(file)
+    }
+
+    fun close(file: Path) {
+        files.remove(file)
+    }
+
+    /**
+     * Edit a file, but don't re-compile yet
+     */
+    fun edit(params: DidChangeTextDocumentParams) {
+        val document = params.textDocument
+        val file = Paths.get(URI.create(document.uri))
+        val existing = files[file]!!
+        var newText = existing.content
+
+        if (document.version > existing.version) {
+            for (change in params.contentChanges) {
+                if (change.range == null) newText = change.text
+                else newText = patch(newText, change)
+            }
+
+            existing.content = newText
+            existing.version = document.version
+        } else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
+    }
+
+    private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
+        try {
+            val range = change.range
+            val reader = BufferedReader(StringReader(sourceText))
+            val writer = StringWriter()
+
+            // Skip unchanged lines
+            var line = 0
+
+            while (line < range.start.line) {
+                writer.write(reader.readLine() + '\n')
+                line++
+            }
+
+            // Skip unchanged chars
+            for (character in 0 until range.start.character) writer.write(reader.read())
+
+            // Write replacement text
+            writer.write(change.text)
+
+            // Skip replaced text
+            reader.skip(change.rangeLength!!.toLong())
+
+            // Write remaining text
+            while (true) {
+                val next = reader.read()
+
+                if (next == -1) return writer.toString()
+                else writer.write(next)
+            }
+        } catch (e: IOException) {
+            throw RuntimeException(e)
+        }
+    }
 
     fun connect(client: LanguageClient) {
         this.client = client
     }
 
-    fun open(file: Path, content: String, version: Int): CompiledFile {
-        return compileOpenFile(file, content, version)
+    private fun parseIfChanged(file: Path): KtFile {
+        val open = files[file]!!
+
+        if (open.version != open.parsedVersion) {
+            open.parsed = cp.compiler.createFile(file, open.content)
+            open.parsedVersion = open.version
+        }
+
+        return open.parsed
     }
 
-    fun editOpenFile(file: Path, content: String, version: Int) {
-        val open = openFiles[file]!!
-        assert(version > open.version)
+    private fun compileIfNull(file: Path): CompiledFile {
+        val open = files[file]!!
 
-        val edit = OpenFile(content, version, open.compiled)
-        openFiles[file] = edit
+        if (open.compiled == null) {
+            doCompile(file)
+        }
+
+        return CompiledFile(file, open.parsed, open.compiled!!, cp)
     }
 
-    fun recompileOpenFile(file: Path): CompiledFile {
-        val open = openFiles[file]!!
+    private fun compileIfChanged(file: Path): CompiledFile {
+        val open = files[file]!!
 
-        return compileOpenFile(file, open.content, open.version)
+        parseIfChanged(file)
+
+        if (open.parsedVersion != open.compiledVersion) {
+            doCompile(file)
+        }
+
+        return CompiledFile(file, open.parsed, open.compiled!!, cp)
     }
 
-    private fun compileOpenFile(file: Path, content: String, version: Int): CompiledFile {
-        LOG.info("Compile $file")
+    private fun doCompile(file: Path) {
+        val open = files[file]!!
 
-        // Compile the new content
-        val ktFile = cp.compiler.createFile(file, content)
-        val sourcePath = allSources() - file + Pair(file, ktFile)
-        val context = cp.compiler.compileFile(ktFile, sourcePath.values)
-        val compiled = CompiledFile(file, ktFile, context, cp)
-
-        openFiles[file] = OpenFile(content, version, compiled)
-
-        reportDiagnostics(file, compiled.context.diagnostics.toList())
-
-        return compiled
+        open.compiled = cp.compiler.compileFile(open.parsed, all())
+        open.compiledVersion = open.parsedVersion
+        reportDiagnostics(file, open.compiled!!.diagnostics.toList())
     }
 
-    private fun openDiskFile(file: Path): KtFile =
-            cp.compiler.openFile(file)
+    private fun openDiskFile(file: Path): OpenFile {
+        val parse = cp.compiler.openFile(file)
 
-    fun close(file: Path) {
-        openFiles.remove(file)
-        diskFiles[file] = openDiskFile(file)
+        return OpenFile(parse.text, -1, parse, -1)
     }
 
     var lintCount = 0
@@ -88,7 +208,7 @@ class SourcePath(private val cp: CompilerClassPath) {
         if (!byFile.containsKey(compiledFile)) {
             client!!.publishDiagnostics(PublishDiagnosticsParams(compiledFile.toUri().toString(), listOf()))
 
-            LOG.info("Cleared diagnostics in $compiledFile")
+            LOG.info("No diagnostics in $compiledFile")
         }
 
         // LOG.log(Level.WARNING, "LINT", Exception())
@@ -97,9 +217,8 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     fun recompileChangedFiles() {
-        for ((file, open) in openFiles) {
-            if (open.content != open.compiled.file.text)
-                compileOpenFile(file, open.content, open.version)
+        for (file in files.keys) {
+            compileIfChanged(file)
         }
     }
 
@@ -109,12 +228,12 @@ class SourcePath(private val cp: CompilerClassPath) {
 
     fun deletedOnDisk(file: Path) {
         if (isSource(file))
-            diskFiles.remove(file)
+            files.remove(file)
     }
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            diskFiles[file] = openDiskFile(file)
+            files[file] = openDiskFile(file)
     }
 
     private fun isSource(file: Path): Boolean {
@@ -129,45 +248,26 @@ class SourcePath(private val cp: CompilerClassPath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            diskFiles[file] = openDiskFile(file)
+            files[file] = openDiskFile(file)
         }
 
         workspaceRoots.add(root)
     }
 
     fun removeWorkspaceRoot(root: Path) {
-        val rmSources = diskFiles.keys.filter { it.startsWith(root) }
+        val rmSources = files.keys.filter { it.startsWith(root) }
 
         logRemoved(rmSources, root)
 
         for (file in rmSources) {
-            diskFiles.remove(file)
+            files.remove(file)
         }
 
         workspaceRoots.remove(root)
     }
 
-    fun allSources(): Map<Path, KtFile> =
-            diskFiles + openFiles.mapValues { it.value.compiled.file }
-
     fun compileFiles(files: Collection<KtFile>): BindingContext =
-            cp.compiler.compileFiles(files, allSources().values)
-
-    fun recover(file: Path, offset: Int): CompiledCode? {
-        val open = openFile(file) ?: throw RuntimeException("$file is not open")
-        val recompileStrategy = open.compiled.recompile(open.content, offset)
-
-        return when (recompileStrategy) {
-            Function ->
-                open.compiled.recompileFunction(open.content, offset, allSources().values)
-            File ->
-                recompileOpenFile(file).compiledCode(offset, allSources().values)
-            NoChanges ->
-                open.compiled.compiledCode(offset, allSources().values)
-            Impossible ->
-                null
-        }
-    }
+            cp.compiler.compileFiles(files, all())
 }
 
 private fun findSourceFiles(root: Path): Set<Path> {

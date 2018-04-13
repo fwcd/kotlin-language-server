@@ -18,10 +18,6 @@ import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import java.io.BufferedReader
-import java.io.IOException
-import java.io.StringReader
-import java.io.StringWriter
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -50,12 +46,12 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         }
     }
 
-    private fun recover(position: TextDocumentPositionParams): CompiledCode? {
+    private fun recover(position: TextDocumentPositionParams): CompiledCode {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val open = sourcePath.openFile(file) ?: throw RuntimeException("$file is not open")
-        val offset = offset(open.content, position.position.line, position.position.character)
+        val content = sourcePath.content(file)
+        val offset = offset(content, position.position.line, position.position.character)
 
-        return sourcePath.recover(file, offset)
+        return sourcePath.compiledCode(file, offset)
     }
 
     private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
@@ -137,11 +133,10 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         LOG.info("Find symbols in ${params.textDocument}")
 
         reportTime {
-            sourcePath.recompileChangedFiles()
-
             val path = Paths.get(URI(params.textDocument.uri))
-            val content = sourcePath.openFile(path) ?: throw RuntimeException("$path is not open")
-            val decls = documentSymbols(content.compiled.file)
+            // TODO does this work without compiling?
+            val (file, _) = sourcePath.compiledFile(path)
+            val decls = documentSymbols(file)
             val infos = decls.mapNotNull(::symbolInformation).toList()
 
             return CompletableFuture.completedFuture(infos)
@@ -150,7 +145,8 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
-        val open = sourcePath.open(file, params.textDocument.text, params.textDocument.version)
+
+        sourcePath.open(file, params.textDocument.text, params.textDocument.version)
     }
 
     val debounceLint = Debounce(1.0)
@@ -219,31 +215,15 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        val document = params.textDocument
-        val file = Paths.get(URI.create(document.uri))
-        val existing = sourcePath.openFile(file)!!
-        var newText = existing.content
-
-        if (document.version > existing.version) {
-            for (change in params.contentChanges) {
-                if (change.range == null)
-                    newText = change.text
-                else
-                    newText = patch(newText, change)
-            }
-
-            sourcePath.editOpenFile(file, newText, document.version)
-            lintLater()
-        }
-        else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
+        sourcePath.edit(params)
     }
 
     override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val open = sourcePath.openFile(file) ?: throw RuntimeException("$file is not open")
-        val offset = offset(open.content, position.position.line, position.position.character)
+        val content = sourcePath.content(file)
+        val offset = offset(content, position.position.line, position.position.character)
         val found = findReferences(file, offset, sourcePath)
-                .map { location(open.content, it) }
+                .map { location(content, it) }
                 .toList()
 
         return CompletableFuture.completedFuture(found)
@@ -251,41 +231,6 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
-    }
-
-    private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
-        try {
-            val range = change.range
-            val reader = BufferedReader(StringReader(sourceText))
-            val writer = StringWriter()
-
-            // Skip unchanged lines
-            var line = 0
-
-            while (line < range.start.line) {
-                writer.write(reader.readLine() + '\n')
-                line++
-            }
-
-            // Skip unchanged chars
-            for (character in 0 until range.start.character) writer.write(reader.read())
-
-            // Write replacement text
-            writer.write(change.text)
-
-            // Skip replaced text
-            reader.skip(change.rangeLength!!.toLong())
-
-            // Write remaining text
-            while (true) {
-                val next = reader.read()
-
-                if (next == -1) return writer.toString()
-                else writer.write(next)
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
-        }
     }
 }
 

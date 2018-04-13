@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
 fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
-    val recover = sources.recover(file, offset) ?: return emptyList()
+    val recover = sources.compiledCode(file, offset)
     val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.getDeclaration(element) ?: return emptyList()
     val maybes = possibleReferences(declaration, sources)
@@ -103,7 +103,7 @@ private fun isPropertyDelegate(declaration: DeclarationDescriptor) =
         (declaration.name == OperatorNameConventions.GET_VALUE || declaration.name == OperatorNameConventions.SET_VALUE)
 
 private fun hasPropertyDelegates(sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter(::hasPropertyDelegate).toSet()
+        sources.all().filter(::hasPropertyDelegate).toSet()
 
 fun hasPropertyDelegate(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtPropertyDelegate>().any()
@@ -114,7 +114,7 @@ private fun isIterator(declaration: DeclarationDescriptor) =
         declaration.name == OperatorNameConventions.ITERATOR
 
 private fun hasForLoops(sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter(::hasForLoop).toSet()
+        sources.all().filter(::hasForLoop).toSet()
 
 private fun hasForLoop(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
@@ -125,13 +125,13 @@ private fun isGetSet(declaration: DeclarationDescriptor) =
         (declaration.name == OperatorNameConventions.GET || declaration.name == OperatorNameConventions.SET)
 
 private fun possibleGetSets(sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter(::possibleGetSet).toSet()
+        sources.all().filter(::possibleGetSet).toSet()
 
 private fun possibleGetSet(source: KtFile) =
         source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
 
 private fun possibleInvokeReferences(declaration: FunctionDescriptor, sources: SourcePath) =
-        sources.allSources().values.filter { possibleInvokeReference(declaration, it) }.toSet()
+        sources.all().filter { possibleInvokeReference(declaration, it) }.toSet()
 
 // TODO this is not very selective
 private fun possibleInvokeReference(declaration: FunctionDescriptor, source: KtFile): Boolean =
@@ -143,7 +143,7 @@ private fun isComponent(declaration: DeclarationDescriptor): Boolean =
         OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)
 
 private fun possibleComponentReferences(sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter { possibleComponentReference(it) }.toSet()
+        sources.all().filter { possibleComponentReference(it) }.toSet()
 
 private fun possibleComponentReference(source: KtFile): Boolean =
         source.preOrderTraversal()
@@ -151,7 +151,7 @@ private fun possibleComponentReference(source: KtFile): Boolean =
                 .any()
 
 private fun possibleTokenReferences(find: List<KtSingleValueToken>, sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter { possibleTokenReference(find, it) }.toSet()
+        sources.all().filter { possibleTokenReference(find, it) }.toSet()
 
 private fun possibleTokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
         source.preOrderTraversal()
@@ -159,7 +159,7 @@ private fun possibleTokenReference(find: List<KtSingleValueToken>, source: KtFil
                 .any { it.operationSignTokenType in find }
 
 private fun possibleNameReferences(declaration: Name, sources: SourcePath): Set<KtFile> =
-        sources.allSources().values.filter { possibleNameReference(declaration, it) }.toSet()
+        sources.all().filter { possibleNameReference(declaration, it) }.toSet()
 
 private fun possibleNameReference(declaration: Name, source: KtFile): Boolean =
         source.preOrderTraversal()

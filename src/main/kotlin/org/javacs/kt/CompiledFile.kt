@@ -55,7 +55,7 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
         return Function
     }
 
-    fun oldCursor(newText: String, cursor: Int): Int {
+    private fun oldCursor(newText: String, cursor: Int): Int {
         val (oldChanged, newChanged) = changedRegion(file.text, newText) ?: return cursor
 
         return when {

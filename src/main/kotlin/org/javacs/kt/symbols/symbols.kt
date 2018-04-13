@@ -15,7 +15,7 @@ fun documentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
         file.preOrderTraversal().mapNotNull { pickImportantElements(it, true) }
 
 fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> =
-        sources.allSources().values.asSequence().flatMap(::doWorkspaceSymbols)
+        sources.all().asSequence().flatMap(::doWorkspaceSymbols)
 
 private fun doWorkspaceSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
     file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
