@@ -173,7 +173,10 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     fun close(file: Path) {
-        files += openDiskFile(file)
+        files -= file 
+        
+        if (Files.exists(file))
+            files += openDiskFile(file)
     }
 
     /**
