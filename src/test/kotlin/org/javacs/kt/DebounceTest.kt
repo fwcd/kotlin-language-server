@@ -18,6 +18,6 @@ class DebounceTest {
 
         debounce.waitForPendingTask()
 
-        assertThat(counter, lessThan(3))
+        assertThat(counter, lessThan(5))
     }
 }

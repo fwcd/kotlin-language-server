@@ -24,6 +24,6 @@ class LintTest: SingleFileTestFixture("lint", "LintErrors.kt") {
         languageServer.sourcePath.debounceLint.waitForPendingTask()
 
         assertThat(diagnostics, not(empty<Diagnostic>()))
-        assertThat(languageServer.sourcePath.lintCount, lessThan(3))
+        assertThat(languageServer.sourcePath.lintCount, lessThan(5))
     }
 }
