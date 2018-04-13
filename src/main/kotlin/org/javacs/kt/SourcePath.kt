@@ -24,6 +24,7 @@ import java.util.stream.Collectors
 private class OpenFile(
         var content: String,
         var version: Int,
+        var open: Boolean,
         var parsed: KtFile,
         var parsedVersion: Int,
         var compiled: BindingContext? = null,
@@ -75,13 +76,13 @@ class SourcePath(private val cp: CompilerClassPath) {
             files.values.map { it.parsed }
 
     fun open(file: Path, content: String, version: Int) {
-        files[file] = OpenFile(content, version, cp.compiler.createFile(file, content), version)
+        files[file] = createMemoryFile(content, version, file)
 
-        doCompile(file)
+        compileIfNull(file)
     }
 
     fun close(file: Path) {
-        files.remove(file)
+        files[file] = openDiskFile(file)
     }
 
     /**
@@ -101,6 +102,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
             existing.content = newText
             existing.version = document.version
+            lintLater()
         } else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
 
@@ -184,18 +186,21 @@ class SourcePath(private val cp: CompilerClassPath) {
         reportDiagnostics(file, open.compiled!!.diagnostics.toList())
     }
 
+    private fun createMemoryFile(content: String, version: Int, file: Path): OpenFile {
+        val parse = cp.compiler.createFile(file, content)
+
+        return OpenFile(content, version, true, parse, version)
+    }
+
     private fun openDiskFile(file: Path): OpenFile {
         val parse = cp.compiler.openFile(file)
 
-        return OpenFile(parse.text, -1, parse, -1)
+        return OpenFile(parse.text, -1, false, parse, -1)
     }
 
     var lintCount = 0
 
     fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
-        // TODO instead of recompiling the whole file, try to recover incrementally
-        recompileChangedFiles()
-
         val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
@@ -216,9 +221,16 @@ class SourcePath(private val cp: CompilerClassPath) {
         lintCount++
     }
 
-    fun recompileChangedFiles() {
-        for (file in files.keys) {
-            compileIfChanged(file)
+    val debounceLint = Debounce(1.0)
+
+    private fun lintLater() {
+        debounceLint.submit(::doLint)
+    }
+
+    private fun doLint() {
+        for ((file, open) in files) {
+            if (open.open)
+                compileIfChanged(file)
         }
     }
 

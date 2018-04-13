@@ -7,7 +7,7 @@ import org.junit.Test
 
 class LintTest: SingleFileTestFixture("lint", "LintErrors.kt") {
     @Test fun `report error on open`() {
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.sourcePath.debounceLint.waitForPendingTask()
 
         assertThat(diagnostics, not(empty<Diagnostic>()))
     }
@@ -21,9 +21,9 @@ class LintTest: SingleFileTestFixture("lint", "LintErrors.kt") {
             text = newText
         }
 
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.sourcePath.debounceLint.waitForPendingTask()
 
         assertThat(diagnostics, not(empty<Diagnostic>()))
-        assertThat(languageServer.sourcePath.lintCount, equalTo(1))
+        assertThat(languageServer.sourcePath.lintCount, lessThan(3))
     }
 }

@@ -34,7 +34,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         reportTime {
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
-            val recover = recover(position) ?: return cantRecover(position)
+            val recover = recover(position)
             val (location, decl) = hovers(recover) ?: return noHover(position)
             val hoverText = DECL_RENDERER.render(decl)
             val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
@@ -75,7 +75,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
 
-            val recover = recover(position) ?: return cantRecover(position)
+            val recover = recover(position)
             val declaration = goToDefinition(recover) ?: return noDefinition(position)
             val location = location(recover.fileContent, declaration) ?: return noDefinition(position)
 
@@ -105,7 +105,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
-            val recover = recover(position) ?: return cantRecover(position)
+            val recover = recover(position)
             val completions = completions(recover)
             val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
             val isIncomplete = list.size == MAX_COMPLETION_ITEMS
@@ -114,12 +114,6 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
 
             return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
         }
-    }
-
-    private fun<T> cantRecover(position: TextDocumentPositionParams): CompletableFuture<T> {
-        LOG.info("Couldn't recover compiler at ${describePosition(position)}")
-
-        return CompletableFuture.completedFuture(null)
     }
 
     private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
@@ -149,16 +143,6 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         sourcePath.open(file, params.textDocument.text, params.textDocument.version)
     }
 
-    val debounceLint = Debounce(1.0)
-
-    private fun lintLater() {
-        debounceLint.submit(::doLint)
-    }
-
-    private fun doLint() {
-        sourcePath.recompileChangedFiles()
-    }
-
     override fun didSave(params: DidSaveTextDocumentParams) {
     }
 
@@ -166,7 +150,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         reportTime {
             LOG.info("Signature help at ${describePosition(position)}")
 
-            val recover = recover(position) ?: return cantRecover(position)
+            val recover = recover(position)
             val help = SignatureHelpSession(recover)
             val (declarations, activeDeclaration, activeParameter) = help.signatureHelp() ?: return noFunctionCall(position)
             val signatures = declarations.map(::toSignature)
