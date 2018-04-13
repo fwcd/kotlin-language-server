@@ -74,10 +74,10 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
-
+            
             val recover = recover(position)
             val declaration = goToDefinition(recover) ?: return noDefinition(position)
-            val location = location(recover.fileContent, declaration) ?: return noDefinition(position)
+            val location = location(declaration) ?: return noDefinition(position)
 
             return CompletableFuture.completedFuture(listOf(location))
         }
@@ -207,7 +207,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
         val content = sourcePath.content(file)
         val offset = offset(content, position.position.line, position.position.character)
         val found = findReferences(file, offset, sourcePath)
-                .map { location(content, it) }
+                .map { location(it) }
                 .toList()
 
         return CompletableFuture.completedFuture(found)

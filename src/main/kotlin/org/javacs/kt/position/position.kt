@@ -72,13 +72,14 @@ fun position(content: String, offset: Int): Position {
 fun range(content: String, range: TextRange) =
         Range(position(content, range.startOffset), position(content, range.endOffset))
 
-fun location(content: String, declaration: DeclarationDescriptor): Location? {
+fun location(declaration: DeclarationDescriptor): Location? {
     val target = declaration.findPsi() ?: return null
 
-    return location(content, target)
+    return location(target)
 }
 
-fun location(content: String, expr: PsiElement): Location {
+fun location(expr: PsiElement): Location {
+    val content = expr.containingFile.text
     val file = expr.containingFile.toPath().toUri().toString()
 
     return Location(file, range(content, expr.textRange))
