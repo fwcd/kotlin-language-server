@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
-import java.nio.file.Path
 
 enum class RecompileStrategy {
     Function,
@@ -16,47 +15,51 @@ enum class RecompileStrategy {
     Impossible
 }
 
-class CompiledFile(private val path: Path, val file: KtFile, val context: BindingContext, private val cp: CompilerClassPath) {
-
-    fun recompile(newText: String, cursor: Int): RecompileStrategy {
+class CompiledFile(
+        private val content: String,
+        private val compiledFile: KtFile,
+        private val compiledContext: BindingContext,
+        private val sourcePath: Collection<KtFile>,
+        private val cp: CompilerClassPath) {
+    fun recompile(cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
-        val (oldChanged, _) = changedRegion(file.text, newText) ?: return run {
-            LOG.info("${path.fileName} has not changed")
+        val (oldChanged, _) = changedRegion(compiledFile.text, content) ?: return run {
+            LOG.info("${compiledFile.name} has not changed")
             NoChanges
         }
         // Look for a recoverable expression around the cursor
-        val oldCursor = oldCursor(newText, cursor)
-        val leaf = file.findElementAt(oldCursor) ?: run {
+        val oldCursor = oldCursor(cursor)
+        val leaf = compiledFile.findElementAt(oldCursor) ?: run {
             return if (oldChanged.contains(oldCursor)) {
-                LOG.info("No element at ${path.fileName}:$cursor, inside changed region")
+                LOG.info("No element at ${compiledFile.name}:$cursor, inside changed region")
                 File
             } else {
-                LOG.info("No element at ${path.fileName}:$cursor")
+                LOG.info("No element at ${compiledFile.name}:$cursor")
                 Impossible
             }
         }
         val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: run {
-            LOG.info("No surrounding function at ${path.fileName}:$cursor")
+            LOG.info("No surrounding function at ${compiledFile.name}:$cursor")
             return File
         }
         // If the expression that we're going to re-compile doesn't include all the changes, give up
         val willRepair = surroundingFunction.bodyExpression!!.textRange
         if (!willRepair.contains(oldChanged)) {
-            LOG.info("Changed region ${path.fileName}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
+            LOG.info("Changed region ${compiledFile.name}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
             return File
         }
         // If the function body doesn't have scope, give up
-        val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression) ?: run {
+        val scope = compiledContext.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression) ?: run {
             LOG.info("${surroundingFunction.name} has no scope")
             return File
         }
 
-        LOG.info("Successfully recovered at ${path.fileName}:$cursor using ${surroundingFunction.name}")
+        LOG.info("Successfully recovered at ${compiledFile.name}:$cursor using ${surroundingFunction.name}")
         return Function
     }
 
-    private fun oldCursor(newText: String, cursor: Int): Int {
-        val (oldChanged, newChanged) = changedRegion(file.text, newText) ?: return cursor
+    private fun oldCursor(cursor: Int): Int {
+        val (oldChanged, newChanged) = changedRegion(compiledFile.text, content) ?: return cursor
 
         return when {
             cursor <= newChanged.startOffset -> cursor
@@ -65,27 +68,34 @@ class CompiledFile(private val path: Path, val file: KtFile, val context: Bindin
                 val oldRelative = newRelative * oldChanged.length / newChanged.length
                 oldChanged.startOffset + oldRelative
             }
-            else -> file.text.length - (newText.length - cursor)
+            else -> compiledFile.text.length - (content.length - cursor)
         }
     }
 
-    fun compiledCode(cursor: Int, sourcePath: Collection<KtFile>): CompiledCode {
-        return CompiledCode(file.text, file, context, cursor, 0, cp.compiler, sourcePath)
+    fun compiledCode(cursor: Int): CompiledCode {
+        return CompiledCode(compiledFile.text, compiledFile, compiledContext, cursor, 0, cp.compiler, sourcePath)
     }
 
     /**
      * Re-analyze a single function declaration
      */
-    fun recompileFunction(newText: String, cursor: Int, sourcePath: Collection<KtFile>): CompiledCode {
-        val oldCursor = oldCursor(newText, cursor)
-        val surroundingFunction = file.findElementAt(oldCursor)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull()!!
-        val scope = context.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression)!!
+    fun recompileFunction(cursor: Int): CompiledCode {
+        val oldCursor = oldCursor(cursor)
+        val surroundingFunction = compiledFile.findElementAt(oldCursor)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull()!!
+        val scope = compiledContext.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression)!!
         val start = surroundingFunction.textRange.startOffset
-        val end = surroundingFunction.textRange.endOffset + newText.length - file.text.length
-        val newFunctionText = newText.substring(start, end)
+        val end = surroundingFunction.textRange.endOffset + content.length - compiledFile.text.length
+        val newFunctionText = content.substring(start, end)
         val newFunction = cp.compiler.createFunction(newFunctionText)
         val newContext = cp.compiler.compileExpression(newFunction, scope, sourcePath)
 
-        return CompiledCode(newText, newFunction, newContext, cursor, surroundingFunction.textRange.startOffset, cp.compiler, sourcePath)
+        return CompiledCode(
+                content,
+                newFunction,
+                newContext,
+                cursor,
+                surroundingFunction.textRange.startOffset,
+                cp.compiler,
+                sourcePath)
     }
 }

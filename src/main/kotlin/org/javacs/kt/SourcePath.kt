@@ -21,19 +21,73 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
-private class OpenFile(
-        var content: String,
-        var version: Int,
-        var open: Boolean,
-        var parsed: KtFile,
-        var parsedVersion: Int,
-        var compiled: BindingContext? = null,
-        var compiledVersion: Int? = null)
-
 class SourcePath(private val cp: CompilerClassPath) {
-    private val workspaceRoots = mutableSetOf<Path>()
-    private val files = mutableMapOf<Path, OpenFile>()
+    private var workspaceRoots = setOf<Path>()
+    private var files = mapOf<Path, OpenFile>()
     private var client: LanguageClient? = null
+
+    private inner class OpenFile(
+            val file: Path,
+            val content: String,
+            val version: Int,
+            val open: Boolean,
+            val parsed: KtFile? = null,
+            val parsedVersion: Int? = null,
+            val compiledFile: KtFile? = null,
+            val compiledContext: BindingContext? = null,
+            val compiledVersion: Int? = null) {
+
+        fun edit(newContent: String, newVersion: Int): OpenFile {
+            val result = OpenFile(file, newContent, newVersion, open, parsed, parsedVersion, compiledFile, compiledContext, compiledVersion)
+
+            files += Pair(file, result)
+
+            return result
+        }
+
+        fun parseIfChanged(): OpenFile {
+            if (version != parsedVersion) {
+                val reparse = cp.compiler.createFile(file, content)
+                val result = OpenFile(file, content, version, open, reparse, version, compiledFile, compiledContext, compiledVersion)
+
+                files += Pair(file, result)
+
+                return result
+            }
+            else return this
+        }
+
+        fun compileIfNull(): OpenFile =
+                parseIfChanged().doCompileIfNull()
+
+        private fun doCompileIfNull(): OpenFile =
+            if (compiledVersion == null)
+                doCompileIfChanged()
+            else
+                this
+
+        fun compileIfChanged(): OpenFile =
+                parseIfChanged().doCompileIfChanged()
+
+        private fun doCompileIfChanged(): OpenFile {
+            if (parsedVersion != compiledVersion) {
+                val recompile = cp.compiler.compileFile(parsed!!, all())
+                val result = OpenFile(file, content, version, open, parsed, parsedVersion, parsed, recompile, parsedVersion)
+
+                files += Pair(file, result)
+                reportDiagnostics(file, recompile.diagnostics.toList())
+
+                return result
+            }
+            else return this
+        }
+
+        fun prepareCompiledFile(): CompiledFile =
+                parseIfChanged().compileIfNull().doPrepareCompiledFile()
+
+        private fun doPrepareCompiledFile(): CompiledFile =
+                CompiledFile(content, compiledFile!!, compiledContext!!, all(), cp)
+    }
 
     /**
      * Get the latest content of a file
@@ -46,9 +100,9 @@ class SourcePath(private val cp: CompilerClassPath) {
      * Compile the latest version of a file
      */
     fun compiledFile(file: Path): Pair<KtFile, BindingContext> {
-        val compiled = compileIfChanged(file)
+        val compiled = files[file]!!.compileIfChanged()
 
-        return Pair(compiled.file, compiled.context)
+        return Pair(compiled.compiledFile!!, compiled.compiledContext!!)
     }
 
     /**
@@ -56,16 +110,16 @@ class SourcePath(private val cp: CompilerClassPath) {
      */
     fun compiledCode(file: Path, offset: Int): CompiledCode {
         val open = files[file]!!
-        val compiled = compileIfNull(file)
-        val recompileStrategy = compiled.recompile(open.content, offset)
+        val compiled = open.prepareCompiledFile()
+        val recompileStrategy = compiled.recompile(offset)
 
         return when (recompileStrategy) {
             NoChanges ->
-                compiled.compiledCode(offset, all())
+                compiled.compiledCode(offset)
             Function ->
-                compiled.recompileFunction(open.content, offset, all())
+                compiled.recompileFunction(offset)
             File, Impossible ->
-                compileIfChanged(file).compiledCode(offset, all())
+                open.compileIfChanged().prepareCompiledFile().compiledCode(offset)
         }
     }
 
@@ -73,16 +127,17 @@ class SourcePath(private val cp: CompilerClassPath) {
      * Get parsed trees for all files on source path
      */
     fun all(): Collection<KtFile> =
-            files.values.map { it.parsed }
+            files.values.map { it.parseIfChanged().parsed!! }
 
     fun open(file: Path, content: String, version: Int) {
-        files[file] = createMemoryFile(content, version, file)
+        val open = createMemoryFile(content, version, file)
 
-        compileIfNull(file)
+        files += Pair(file, open)
+        open.compileIfNull()
     }
 
     fun close(file: Path) {
-        files[file] = openDiskFile(file)
+        files += Pair(file, openDiskFile(file))
     }
 
     /**
@@ -100,8 +155,8 @@ class SourcePath(private val cp: CompilerClassPath) {
                 else newText = patch(newText, change)
             }
 
-            existing.content = newText
-            existing.version = document.version
+            val edited = existing.edit(newText, document.version)
+            files += Pair(file, edited)
             lintLater()
         } else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
     }
@@ -145,57 +200,16 @@ class SourcePath(private val cp: CompilerClassPath) {
         this.client = client
     }
 
-    private fun parseIfChanged(file: Path): KtFile {
-        val open = files[file]!!
-
-        if (open.version != open.parsedVersion) {
-            open.parsed = cp.compiler.createFile(file, open.content)
-            open.parsedVersion = open.version
-        }
-
-        return open.parsed
-    }
-
-    private fun compileIfNull(file: Path): CompiledFile {
-        val open = files[file]!!
-
-        if (open.compiled == null) {
-            doCompile(file)
-        }
-
-        return CompiledFile(file, open.parsed, open.compiled!!, cp)
-    }
-
-    private fun compileIfChanged(file: Path): CompiledFile {
-        val open = files[file]!!
-
-        parseIfChanged(file)
-
-        if (open.parsedVersion != open.compiledVersion) {
-            doCompile(file)
-        }
-
-        return CompiledFile(file, open.parsed, open.compiled!!, cp)
-    }
-
-    private fun doCompile(file: Path) {
-        val open = files[file]!!
-
-        open.compiled = cp.compiler.compileFile(open.parsed, all())
-        open.compiledVersion = open.parsedVersion
-        reportDiagnostics(file, open.compiled!!.diagnostics.toList())
-    }
-
     private fun createMemoryFile(content: String, version: Int, file: Path): OpenFile {
         val parse = cp.compiler.createFile(file, content)
 
-        return OpenFile(content, version, true, parse, version)
+        return OpenFile(file, content, version, true, parse, version)
     }
 
     private fun openDiskFile(file: Path): OpenFile {
         val parse = cp.compiler.openFile(file)
 
-        return OpenFile(parse.text, -1, false, parse, -1)
+        return OpenFile(file, parse.text, -1, false, parse, -1)
     }
 
     var lintCount = 0
@@ -228,9 +242,9 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     private fun doLint() {
-        for ((file, open) in files) {
+        for (open in files.values) {
             if (open.open)
-                compileIfChanged(file)
+                open.compileIfChanged()
         }
     }
 
@@ -240,12 +254,12 @@ class SourcePath(private val cp: CompilerClassPath) {
 
     fun deletedOnDisk(file: Path) {
         if (isSource(file))
-            files.remove(file)
+            files -= file
     }
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            files[file] = openDiskFile(file)
+            files += Pair(file, openDiskFile(file))
     }
 
     private fun isSource(file: Path): Boolean {
@@ -260,10 +274,10 @@ class SourcePath(private val cp: CompilerClassPath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            files[file] = openDiskFile(file)
+            files += Pair(file, openDiskFile(file))
         }
 
-        workspaceRoots.add(root)
+        workspaceRoots += root
     }
 
     fun removeWorkspaceRoot(root: Path) {
@@ -271,11 +285,8 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         logRemoved(rmSources, root)
 
-        for (file in rmSources) {
-            files.remove(file)
-        }
-
-        workspaceRoots.remove(root)
+        files -= rmSources
+        workspaceRoots -= root
     }
 
     fun compileFiles(files: Collection<KtFile>): BindingContext =
