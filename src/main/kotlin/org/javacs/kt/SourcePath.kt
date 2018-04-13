@@ -11,7 +11,6 @@ import org.javacs.kt.diagnostic.convertDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import java.io.BufferedReader
-import java.io.IOException
 import java.io.StringReader
 import java.io.StringWriter
 import java.net.URI
@@ -32,7 +31,11 @@ class SourcePath(private val cp: CompilerClassPath) {
     private class SourceFiles {
         private val files = mutableMapOf<Path, OpenFile>()
 
-        operator fun get(file: Path): OpenFile = files[file]!!
+        operator fun get(file: Path): OpenFile {
+            synchronized(files) {
+                return files[file]!!
+            }
+        }
 
         operator fun plusAssign(new: OpenFile) {
             synchronized(files) {
@@ -57,9 +60,17 @@ class SourcePath(private val cp: CompilerClassPath) {
             }
         }
 
-        fun keys() = files.keys
+        fun keys(): List<Path> {
+            synchronized(files) {
+                return files.keys.asSequence().toList()
+            }
+        }
 
-        fun values() = files.values
+        fun values(): List<OpenFile> {
+            synchronized(files) {
+                return files.values.asSequence().toList()
+            }
+        }
     }
 
     private inner class OpenFile(
@@ -129,14 +140,14 @@ class SourcePath(private val cp: CompilerClassPath) {
      * Get the latest content of a file
      */
     fun content(file: Path): String {
-        return files[file]!!.content
+        return files[file].content
     }
 
     /**
      * Compile the latest version of a file
      */
     fun compiledFile(file: Path): Pair<KtFile, BindingContext> {
-        val compiled = files[file]!!.compileIfChanged()
+        val compiled = files[file].compileIfChanged()
 
         return Pair(compiled.compiledFile!!, compiled.compiledContext!!)
     }
@@ -145,7 +156,7 @@ class SourcePath(private val cp: CompilerClassPath) {
      * Compile the latest version of the region around `offset`
      */
     fun compiledCode(file: Path, offset: Int): CompiledCode {
-        val open = files[file]!!
+        val open = files[file]
         val compiled = open.prepareCompiledFile()
         val recompileStrategy = compiled.recompile(offset)
 
@@ -185,53 +196,47 @@ class SourcePath(private val cp: CompilerClassPath) {
     fun edit(params: DidChangeTextDocumentParams) {
         val document = params.textDocument
         val file = Paths.get(URI.create(document.uri))
-        val existing = files[file]!!
+        val existing = files[file]
         var newText = existing.content
 
-        if (document.version > existing.version) {
-            for (change in params.contentChanges) {
-                if (change.range == null) newText = change.text
-                else newText = patch(newText, change)
-            }
+        for (change in params.contentChanges) {
+            if (change.range == null) newText = change.text
+            else newText = patch(newText, change)
+        }
 
-            val edited = existing.edit(newText, document.version)
-            files += edited
-            lintLater()
-        } else LOG.warning("""Ignored change with version ${document.version} <= ${existing.version}""")
+        existing.edit(newText, document.version)
+        lintLater()
     }
 
     private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
-        try {
-            val range = change.range
-            val reader = BufferedReader(StringReader(sourceText))
-            val writer = StringWriter()
+        val range = change.range
+        val reader = BufferedReader(StringReader(sourceText))
+        val writer = StringWriter()
 
-            // Skip unchanged lines
-            var line = 0
+        // Skip unchanged lines
+        var line = 0
 
-            while (line < range.start.line) {
-                writer.write(reader.readLine() + '\n')
-                line++
-            }
+        while (line < range.start.line) {
+            writer.write(reader.readLine() + '\n')
+            line++
+        }
 
-            // Skip unchanged chars
-            for (character in 0 until range.start.character) writer.write(reader.read())
+        // Skip unchanged chars
+        for (character in 0 until range.start.character)
+            writer.write(reader.read())
 
-            // Write replacement text
-            writer.write(change.text)
+        // Write replacement text
+        writer.write(change.text)
 
-            // Skip replaced text
-            reader.skip(change.rangeLength!!.toLong())
+        // Skip replaced text
+        reader.skip(change.rangeLength!!.toLong())
 
-            // Write remaining text
-            while (true) {
-                val next = reader.read()
+        // Write remaining text
+        while (true) {
+            val next = reader.read()
 
-                if (next == -1) return writer.toString()
-                else writer.write(next)
-            }
-        } catch (e: IOException) {
-            throw RuntimeException(e)
+            if (next == -1) return writer.toString()
+            else writer.write(next)
         }
     }
 
