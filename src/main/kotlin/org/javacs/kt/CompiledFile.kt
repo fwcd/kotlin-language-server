@@ -43,7 +43,7 @@ class CompiledFile(
             return File
         }
         // If the expression that we're going to re-compile doesn't include all the changes, give up
-        val willRepair = surroundingFunction.bodyExpression!!.textRange
+        val willRepair = surroundingFunction.bodyExpression?.textRange ?: return File
         if (!willRepair.contains(oldChanged)) {
             LOG.info("Changed region ${compiledFile.name}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
             return File
