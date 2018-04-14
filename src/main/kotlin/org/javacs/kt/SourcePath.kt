@@ -62,7 +62,7 @@ class SourcePath(private val cp: CompilerClassPath) {
     fun put(file: Path, content: String) {
         assert(!content.contains('\r'))
 
-        if (file.contains(file))
+        if (files.contains(file))
             files[file]!!.put(content)
         else
             files[file] = SourceFile(file, content)
