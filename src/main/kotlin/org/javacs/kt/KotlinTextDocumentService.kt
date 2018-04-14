@@ -69,8 +69,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
             LOG.info("Go-to-definition at ${describePosition(position)}")
             
             val recover = recover(position)
-            val declaration = goToDefinition(recover) ?: return noDefinition(position)
-            val location = location(declaration) ?: return noDefinition(position)
+            val location = goToDefinition(recover) ?: return noDefinition(position)
 
             return CompletableFuture.completedFuture(listOf(location))
         }
