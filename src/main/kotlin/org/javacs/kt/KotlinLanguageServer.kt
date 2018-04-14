@@ -18,7 +18,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath)
 
     override fun connect(client: LanguageClient) {
-        sourcePath.connect(client)
+        textDocuments.connect(client)
 
         LOG.info("Connected to client")
     }

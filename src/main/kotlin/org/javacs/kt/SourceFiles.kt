@@ -1,16 +1,13 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
-import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
-import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.stream.Collectors
 
 private class SourceVersion(val content: String, val version: Int, val open: Boolean)
@@ -27,7 +24,7 @@ private class NotifySourcePath(private val sp: SourcePath) {
         val content = convertLineSeparators(source.content)
         
         files[file] = source
-        sp.put(file, content, source.version, source.open)
+        sp.put(file, content)
     }
 
     fun remove(file: Path) {
@@ -59,23 +56,21 @@ class SourceFiles(private val sp: SourcePath) {
         files[file] = readFromDisk(file)
     }
 
-    fun edit(params: DidChangeTextDocumentParams) {
-        val document = params.textDocument
-        val file = Paths.get(URI.create(document.uri))
+    fun edit(file: Path, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
         val existing = files[file]!!
         var newText = existing.content
 
-        if (document.version <= existing.version) {
-            LOG.warning("Ignored ${file.fileName} version ${document.version}")
+        if (newVersion <= existing.version) {
+            LOG.warning("Ignored ${file.fileName} version $newVersion")
             return
         }
 
-        for (change in params.contentChanges) {
+        for (change in contentChanges) {
             if (change.range == null) newText = change.text
             else newText = patch(newText, change)
         }
 
-        files[file] = SourceVersion(newText, document.version, true)
+        files[file] = SourceVersion(newText, newVersion, true)
     }
 
     fun createdOnDisk(file: Path) {
@@ -125,6 +120,7 @@ class SourceFiles(private val sp: SourcePath) {
         workspaceRoots.remove(root)
     }
 
+    fun isOpen(file: Path): Boolean = files[file]!!.open
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
@@ -165,11 +161,15 @@ private fun findSourceFiles(root: Path): Set<Path> {
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    if (sources.size > 5) LOG.info("Adding ${sources.size} files under $rootPath to source path")
-    else LOG.info("Adding ${sources.joinToString(", ")} to source path")
+    LOG.info("Adding ${describeFiles(sources)} under $rootPath to source path")
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    if (sources.size > 5) LOG.info("Removing ${sources.size} files under $rootPath to source path")
-    else LOG.info("Removing ${sources.joinToString(", ")} to source path")
+    LOG.info("Removing ${describeFiles(sources)} under $rootPath to source path")
+}
+
+fun describeFiles(files: Collection<Path>): String {
+    return if (files.isEmpty()) "0 files"
+    else if (files.size > 5) "${files.size} files"
+    else files.map { it.fileName }.joinToString(", ")
 }

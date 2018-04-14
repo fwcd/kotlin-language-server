@@ -5,6 +5,7 @@ import org.javacs.kt.LOG
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.location
 import org.javacs.kt.util.preOrderTraversal
+import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -30,7 +31,7 @@ private fun doFindReferences(file: Path, offset: Int, sp: SourcePath): Collectio
     val recover = sp.compiledCode(file, offset)
     val element = recover.parsed.findElementAt(recover.offset(0))?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.compiled.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element) ?: return emptyList()
-    val maybes = possibleReferences(declaration, sp)
+    val maybes = possibleReferences(declaration, sp).map { it.toPath() }
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sp.compileFiles(maybes)
 

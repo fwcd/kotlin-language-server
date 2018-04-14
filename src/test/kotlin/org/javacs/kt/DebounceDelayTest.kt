@@ -1,12 +1,12 @@
 package org.javacs.kt
 
 import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.lessThan
 import org.junit.Assert.assertThat
 import org.junit.Test
+import java.time.Duration
 
-class DebounceTest {
-    val debounce = Debounce(1.0)
+class DebounceDelayTest {
+    val debounce = DebounceDelay(Duration.ofSeconds(1))
     var counter = 0
 
     @Test fun callQuickly() {
@@ -18,6 +18,6 @@ class DebounceTest {
 
         debounce.waitForPendingTask()
 
-        assertThat(counter, lessThan(5))
+        assertThat(counter, equalTo(1))
     }
 }

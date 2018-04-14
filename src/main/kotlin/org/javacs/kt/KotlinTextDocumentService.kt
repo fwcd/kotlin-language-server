@@ -2,19 +2,30 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
+import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
+import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
+
+    private lateinit var client: LanguageClient
+
+    fun connect(client: LanguageClient) {
+        this.client = client
+    }
 
     private fun recover(position: TextDocumentPositionParams): CompiledCode {
         val file = Paths.get(URI.create(position.textDocument.uri))
@@ -115,6 +126,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         val file = Paths.get(URI.create(params.textDocument.uri))
 
         sf.open(file, params.textDocument.text, params.textDocument.version)
+        lintLater(file)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -141,6 +153,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         val file = Paths.get(URI.create(params.textDocument.uri))
 
         sf.close(file)
+        clearDiagnostics(file)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -148,7 +161,10 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        sf.edit(params)
+        val file = Paths.get(URI.create(params.textDocument.uri))
+
+        sf.edit(file,  params.textDocument.version, params.contentChanges)
+        lintLater(file)
     }
 
     override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {
@@ -166,6 +182,57 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     private fun describePosition(position: TextDocumentPositionParams) =
             "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
+
+    val debounceLint = DebounceDelay(Duration.ofSeconds(1))
+    val lintTodo = mutableSetOf<Path>()
+    var lintCount = 0
+
+    private fun lintLater(file: Path) {
+        lintTodo.add(file)
+
+        debounceLint.submit {
+            lintNow(lintTodo)
+            lintTodo.clear()
+            lintCount++
+        }
+    }
+
+    private fun lintNow(files: Set<Path>) {
+        LOG.info("Linting ${describeFiles(files)}")
+
+        val context = sp.compileFiles(files)
+
+        reportDiagnostics(files, context.diagnostics)
+    }
+
+    private fun reportDiagnostics(compiled: Set<Path>, kotlinDiagnostics: Diagnostics) {
+        val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
+        val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
+
+        for ((file, diagnostics) in byFile) {
+            if (sf.isOpen(file)) {
+                client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+
+                LOG.info("Reported ${diagnostics.size} diagnostics in $file")
+            }
+            else LOG.info("Ignore ${diagnostics.size} diagnostics in $file because it's not open")
+        }
+
+        val noErrors = compiled - byFile.keys
+        for (file in noErrors) {
+            clearDiagnostics(file)
+
+            LOG.info("No diagnostics in $file")
+        }
+
+        // LOG.log(Level.WARNING, "LINT", Exception())
+
+        lintCount++
+    }
+
+    private fun clearDiagnostics(file: Path) {
+        client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
+    }
 }
 
 private inline fun<T> reportTime(block: () -> T): T {
