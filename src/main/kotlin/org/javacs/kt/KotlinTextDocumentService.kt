@@ -6,10 +6,11 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.docs.findDoc
-import org.javacs.kt.hover.hovers
+import org.javacs.kt.hover.DECL_RENDERER
+import org.javacs.kt.hover.RenderCompletionItem
+import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
-import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.javacs.kt.symbols.documentSymbols
@@ -26,6 +27,14 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath) : TextDocumentService {
 
+    private fun recover(position: TextDocumentPositionParams): CompiledCode {
+        val file = Paths.get(URI.create(position.textDocument.uri))
+        val content = sourcePath.content(file)
+        val offset = offset(content, position.position.line, position.position.character)
+
+        return sourcePath.compiledCode(file, offset)
+    }
+
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
         TODO("not implemented")
     }
@@ -35,23 +44,10 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
             val recover = recover(position)
-            val (location, decl) = hovers(recover) ?: return noHover(position)
-            val hoverText = DECL_RENDERER.render(decl)
-            val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
-            val range = Range(
-                    position(recover.content, location.startOffset),
-                    position(recover.content, location.endOffset))
+            val hover = hoverAt(recover) ?: return noHover(position)
 
-            return CompletableFuture.completedFuture(Hover(listOf(hover), range))
+            return CompletableFuture.completedFuture(hover)
         }
-    }
-
-    private fun recover(position: TextDocumentPositionParams): CompiledCode {
-        val file = Paths.get(URI.create(position.textDocument.uri))
-        val content = sourcePath.content(file)
-        val offset = offset(content, position.position.line, position.position.character)
-
-        return sourcePath.compiledCode(file, offset)
     }
 
     private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
@@ -59,9 +55,6 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
 
         return CompletableFuture.completedFuture(null)
     }
-
-    private fun describePosition(position: TextDocumentPositionParams) =
-            "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
 
     override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>> {
         TODO("not implemented")
@@ -216,6 +209,9 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
     }
+
+    private fun describePosition(position: TextDocumentPositionParams) =
+            "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
 }
 
 private inline fun<T> reportTime(block: () -> T): T {

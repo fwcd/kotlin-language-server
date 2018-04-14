@@ -1,4 +1,4 @@
-package org.javacs.kt
+package org.javacs.kt.hover
 
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind.*
