@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledCode
+import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.position
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtDeclaration

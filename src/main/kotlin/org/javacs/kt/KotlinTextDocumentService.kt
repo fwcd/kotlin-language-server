@@ -3,11 +3,10 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.docs.findDoc
-import org.javacs.kt.hover.DECL_RENDERER
-import org.javacs.kt.hover.RenderCompletionItem
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
@@ -16,14 +15,11 @@ import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.symbols.symbolInformation
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
-
-private const val MAX_COMPLETION_ITEMS = 50
 
 class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath) : TextDocumentService {
 
@@ -99,17 +95,12 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
 
             val recover = recover(position)
             val completions = completions(recover)
-            val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
-            val isIncomplete = list.size == MAX_COMPLETION_ITEMS
 
-            LOG.info("Found ${list.size} items")
+            LOG.info("Found ${completions.items.size} items")
 
-            return CompletableFuture.completedFuture(Either.forRight(CompletionList(isIncomplete, list)))
+            return CompletableFuture.completedFuture(Either.forRight(completions))
         }
     }
-
-    private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
-            desc.accept(RenderCompletionItem(), null)
 
     override fun resolveCompletionItem(unresolved: CompletionItem): CompletableFuture<CompletionItem> {
         TODO("not implemented")

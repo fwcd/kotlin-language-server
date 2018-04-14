@@ -1,5 +1,7 @@
 package org.javacs.kt.completion
 
+import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
 import org.javacs.kt.position.findParent
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
@@ -18,7 +20,19 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 
-fun completions(code: CompiledCode): Sequence<DeclarationDescriptor> {
+private const val MAX_COMPLETION_ITEMS = 50
+
+fun completions(code: CompiledCode): CompletionList {
+    val completions = doCompletions(code)
+    val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
+    val isIncomplete = list.size == MAX_COMPLETION_ITEMS
+    return CompletionList(isIncomplete, list)
+}
+
+private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
+        desc.accept(RenderCompletionItem(), null)
+
+private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     val psi = code.parsed.findElementAt(code.offset(-1)) ?: return emptySequence()
     val expr = psi.findParent<KtExpression>() ?: return emptySequence()
     val typeParent = expr.findParent<KtTypeElement>()
