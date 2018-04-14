@@ -3,8 +3,8 @@ package org.javacs.kt.references
 import org.eclipse.lsp4j.Location
 import org.javacs.kt.LOG
 import org.javacs.kt.SourcePath
-import org.javacs.kt.docs.preOrderTraversal
 import org.javacs.kt.position.location
+import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor

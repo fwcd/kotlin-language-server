@@ -3,7 +3,7 @@ package org.javacs.kt.completion
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
-import org.javacs.kt.position.findParent
+import org.javacs.kt.util.findParent
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor

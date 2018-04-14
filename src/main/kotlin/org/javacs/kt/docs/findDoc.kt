@@ -1,6 +1,6 @@
 package org.javacs.kt.docs
 
-import com.intellij.psi.PsiElement
+import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.kdoc.parser.KDocKnownTag
 import org.jetbrains.kotlin.kdoc.psi.impl.KDocTag
@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.parents
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
-import kotlin.coroutines.experimental.buildSequence
 
 fun findDoc(desc: DeclarationDescriptorWithSource): KDocTag? {
     val source = DescriptorToSourceUtils.descriptorToDeclaration(desc)?.navigationElement
@@ -37,17 +36,5 @@ fun findDoc(desc: DeclarationDescriptorWithSource): KDocTag? {
             doc.getDefaultSection()
         }
         else -> null
-    }
-}
-
-fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
-    val root = this
-
-    return buildSequence {
-        yield(root)
-
-        for (child in root.children) {
-            yieldAll(child.preOrderTraversal())
-        }
     }
 }

@@ -8,7 +8,7 @@ import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.completion.identifierOverloads
 import org.javacs.kt.completion.memberOverloads
 import org.javacs.kt.docs.findDoc
-import org.javacs.kt.position.findParent
+import org.javacs.kt.util.findParent
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
@@ -17,10 +17,15 @@ import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 
-
 fun signatureHelpAt(code: CompiledCode): SignatureHelp? {
-    val (declarations, activeDeclaration, activeParameter) = doSignatureHelp(code) ?: return null
-    val signatures = declarations.map(::toSignature)
+    val psi = code.parsed.findElementAt(code.offset(0)) ?: return null
+    val call = psi.parentsWithSelf.filterIsInstance<KtCallExpression>().firstOrNull() ?: return null
+    val candidates = candidates(call, code)
+    val activeDeclaration = activeDeclaration(call, candidates)
+    val cursor = code.offset(0)
+    val activeParameter = activeParameter(call, cursor)
+    val signatures = candidates.map(::toSignature)
+
     return SignatureHelp(signatures, activeDeclaration, activeParameter)
 }
 
@@ -44,17 +49,6 @@ private fun docstring(desc: DeclarationDescriptorWithSource): String {
     val doc = findDoc(desc) ?: return ""
 
     return doc.getContent().trim()
-}
-
-private fun doSignatureHelp(code: CompiledCode): KotlinSignatureHelp? {
-    val psi = code.parsed.findElementAt(code.offset(0)) ?: return null
-    val call = psi.parentsWithSelf.filterIsInstance<KtCallExpression>().firstOrNull() ?: return null
-    val candidates = candidates(call, code)
-    val activeDeclaration = activeDeclaration(call, candidates)
-    val cursor = code.offset(0)
-    val activeParameter = activeParameter(call, cursor)
-
-    return KotlinSignatureHelp(candidates, activeDeclaration, activeParameter)
 }
 
 private fun candidates(call: KtCallExpression, code: CompiledCode): List<CallableDescriptor> {
@@ -105,4 +99,4 @@ private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
     return beforeCursor.count { it == ','}
 }
 
-data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)
+private data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)

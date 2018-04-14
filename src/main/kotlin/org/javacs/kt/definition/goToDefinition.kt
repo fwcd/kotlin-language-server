@@ -2,8 +2,8 @@ package org.javacs.kt.definition
 
 import org.eclipse.lsp4j.Location
 import org.javacs.kt.CompiledCode
-import org.javacs.kt.position.findParent
 import org.javacs.kt.position.location
+import org.javacs.kt.util.findParent
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.KtReferenceExpression
 import org.jetbrains.kotlin.resolve.BindingContext

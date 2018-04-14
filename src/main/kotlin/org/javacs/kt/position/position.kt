@@ -5,10 +5,9 @@ import com.intellij.psi.PsiElement
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
-import org.javacs.kt.diagnostic.toPath
+import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
-import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import kotlin.math.max
 
 /**
@@ -100,6 +99,3 @@ fun changedRegion(oldText: String, newText: String): Pair<TextRange, TextRange>?
 
     return Pair(TextRange(prefix, oldEnd), TextRange(prefix, newEnd))
 }
-
-inline fun<reified Find> PsiElement.findParent() =
-        this.parentsWithSelf.filterIsInstance<Find>().firstOrNull()

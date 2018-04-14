@@ -171,7 +171,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     }
 }
 
-fun DeclarationDescriptor.label(): String? {
+private fun DeclarationDescriptor.label(): String? {
     return when {
         this is ConstructorDescriptor -> this.containingDeclaration.name.identifier
         this.name.isSpecial -> null
