@@ -3,19 +3,14 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.TextDocumentService
-import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
-import org.javacs.kt.docs.findDoc
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
-import org.javacs.kt.signatureHelp.SignatureHelpSession
+import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -131,35 +126,10 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
             LOG.info("Signature help at ${describePosition(position)}")
 
             val recover = recover(position)
-            val help = SignatureHelpSession(recover)
-            val (declarations, activeDeclaration, activeParameter) = help.signatureHelp() ?: return noFunctionCall(position)
-            val signatures = declarations.map(::toSignature)
-            val result = SignatureHelp(signatures, activeDeclaration, activeParameter)
+            val result = signatureHelpAt(recover) ?: return noFunctionCall(position)
 
             return CompletableFuture.completedFuture(result)
         }
-    }
-
-    private fun toSignature(desc: CallableDescriptor): SignatureInformation {
-        val label = DECL_RENDERER.render(desc)
-        val params = desc.valueParameters.map(::toParameter)
-        val docstring = docstring(desc)
-
-        return SignatureInformation(label, docstring, params)
-    }
-
-    private fun toParameter(param: ValueParameterDescriptor): ParameterInformation {
-        val label = DECL_RENDERER.renderValueParameters(listOf(param), false)
-        val removeParens = label.substring(1, label.length - 1)
-        val docstring = docstring(param)
-
-        return ParameterInformation(removeParens, docstring)
-    }
-
-    private fun docstring(desc: DeclarationDescriptorWithSource): String {
-        val doc = findDoc(desc) ?: return ""
-
-        return doc.getContent().trim()
     }
 
     private fun<T> noFunctionCall(position: TextDocumentPositionParams): CompletableFuture<T?> {
