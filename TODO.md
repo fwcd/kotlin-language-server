@@ -1,0 +1,7 @@
+- Don't lint until user has stopped typing for a second
+- Only show errors for open files
+- Format-on-save
+- Fix imports on copy-paste
+  - See https://godoc.org/golang.org/x/tools/cmd/goimports
+- Make sure process quits
+- Support files that don't exist on disk

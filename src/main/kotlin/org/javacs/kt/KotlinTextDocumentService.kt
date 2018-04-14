@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocumentService {
+class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath) : TextDocumentService {
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
         TODO("not implemented")
@@ -140,7 +140,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
 
-        sourcePath.open(file, params.textDocument.text, params.textDocument.version)
+        sourceFiles.open(file, params.textDocument.text, params.textDocument.version)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -191,7 +191,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     override fun didClose(params: DidCloseTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
 
-        sourcePath.close(file)
+        sourceFiles.close(file)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -199,7 +199,7 @@ class KotlinTextDocumentService(private val sourcePath: SourcePath) : TextDocume
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        sourcePath.edit(params)
+        sourceFiles.edit(params)
     }
 
     override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {

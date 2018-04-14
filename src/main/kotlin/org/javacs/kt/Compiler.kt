@@ -30,6 +30,8 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import java.nio.file.Path
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Incrementally compiles files and expressions.
@@ -93,12 +95,17 @@ class Compiler(classPath: Set<Path>) {
     fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): BindingContext =
             compileFiles(listOf(file), sourcePath)
 
-    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingContext {
-        val (container, trace) = createContainer(sourcePath)
-        val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
-        val analyze = topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
+    // TODO lock at file-level
+    private val compileLock = ReentrantLock()
 
-        return trace.bindingContext
+    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingContext {
+        compileLock.withLock {
+            val (container, trace) = createContainer(sourcePath)
+            val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
+            val analyze = topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
+
+            return trace.bindingContext
+        }
     }
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): BindingContext {

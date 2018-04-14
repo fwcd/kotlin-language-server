@@ -9,7 +9,7 @@ import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-class KotlinWorkspaceService(private val sourcePath: SourcePath, private val classPath: CompilerClassPath) : WorkspaceService {
+class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath, private val classPath: CompilerClassPath) : WorkspaceService {
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         for (change in params.changes) {
@@ -17,15 +17,15 @@ class KotlinWorkspaceService(private val sourcePath: SourcePath, private val cla
 
             when (change.type) {
                 FileChangeType.Created -> {
-                    sourcePath.createdOnDisk(path)
+                    sourceFiles.createdOnDisk(path)
                     classPath.createdOnDisk(path)
                 }
                 FileChangeType.Deleted -> {
-                    sourcePath.deletedOnDisk(path)
+                    sourceFiles.deletedOnDisk(path)
                     classPath.deletedOnDisk(path)
                 }
                 FileChangeType.Changed -> {
-                    sourcePath.changedOnDisk(path)
+                    sourceFiles.changedOnDisk(path)
                     classPath.changedOnDisk(path)
                 }
                 null -> {
@@ -57,7 +57,7 @@ class KotlinWorkspaceService(private val sourcePath: SourcePath, private val cla
 
             val root = Paths.get(URI.create(change.uri))
 
-            sourcePath.addWorkspaceRoot(root)
+            sourceFiles.addWorkspaceRoot(root)
             classPath.addWorkspaceRoot(root)
         }
         for (change in params.event.removed) {
@@ -65,7 +65,7 @@ class KotlinWorkspaceService(private val sourcePath: SourcePath, private val cla
 
             val root = Paths.get(URI.create(change.uri))
 
-            sourcePath.removeWorkspaceRoot(root)
+            sourceFiles.removeWorkspaceRoot(root)
             classPath.removeWorkspaceRoot(root)
         }
     }

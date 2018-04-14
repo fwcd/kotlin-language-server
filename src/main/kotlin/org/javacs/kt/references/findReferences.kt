@@ -70,6 +70,7 @@ private fun findComponentReferences(element: KtNamedDeclaration, recompile: Bind
             .map { it.value.call.callElement }
 }
 
+// TODO use imports to limit search
 private fun possibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
     if (declaration is ClassConstructorDescriptor) {
         return possibleNameReferences(declaration.constructedClass.name, sources)
