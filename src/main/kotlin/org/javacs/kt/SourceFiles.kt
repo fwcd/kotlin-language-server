@@ -53,7 +53,12 @@ class SourceFiles(private val sp: SourcePath) {
     }
 
     fun close(file: Path) {
-        files[file] = readFromDisk(file)
+        val disk = readFromDisk(file)
+
+        if (disk != null)
+            files[file] = disk
+        else
+            files.remove(file)
     }
 
     fun edit(file: Path, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
@@ -84,10 +89,12 @@ class SourceFiles(private val sp: SourcePath) {
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            files[file] = readFromDisk(file)
+            files[file] = readFromDisk(file)!!
     }
 
-    private fun readFromDisk(file: Path): SourceVersion {
+    private fun readFromDisk(file: Path): SourceVersion? {
+        if (!Files.exists(file)) return null 
+
         val content = Files.readAllLines(file).joinToString("\n")
 
         return SourceVersion(content, -1, false)
@@ -105,7 +112,7 @@ class SourceFiles(private val sp: SourcePath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            files[file] = readFromDisk(file)
+            files[file] = readFromDisk(file)!!
         }
 
         workspaceRoots.add(root)
