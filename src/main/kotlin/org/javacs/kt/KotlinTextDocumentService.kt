@@ -180,8 +180,10 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    private fun describePosition(position: TextDocumentPositionParams) =
-            "${position.textDocument.uri} ${position.position.line}:${position.position.character}"
+    private fun describePosition(position: TextDocumentPositionParams): String {
+        val path = Paths.get(URI.create(position.textDocument.uri))
+        return "${path.fileName} ${position.position.line}:${position.position.character}"
+    }
 
     val debounceLint = DebounceDelay(Duration.ofSeconds(1))
     val lintTodo = mutableSetOf<Path>()
