@@ -2,8 +2,6 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
-import org.javacs.kt.completion.containsCharactersInOrder
-import org.javacs.kt.symbols.symbolInformation
 import org.javacs.kt.symbols.workspaceSymbols
 import java.net.URI
 import java.nio.file.Paths
@@ -39,14 +37,8 @@ class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val s
         LOG.info(params.toString())
     }
 
-    private val maxSymbols = 50
-
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
-        val result = workspaceSymbols(sourcePath)
-                .filter { containsCharactersInOrder(it.name!!, params.query, false) }
-                .mapNotNull(::symbolInformation)
-                .take(maxSymbols)
-                .toList()
+        val result = workspaceSymbols(params.query, sourcePath)
 
         return CompletableFuture.completedFuture(result)
     }

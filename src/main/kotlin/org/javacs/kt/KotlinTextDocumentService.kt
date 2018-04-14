@@ -13,7 +13,6 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.SignatureHelpSession
 import org.javacs.kt.symbols.documentSymbols
-import org.javacs.kt.symbols.symbolInformation
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
@@ -112,8 +111,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
         reportTime {
             val path = Paths.get(URI(params.textDocument.uri))
             val file = sourcePath.parsedFile(path)
-            val decls = documentSymbols(file)
-            val infos = decls.mapNotNull(::symbolInformation).toList()
+            val infos = documentSymbols(file)
 
             return CompletableFuture.completedFuture(infos)
         }

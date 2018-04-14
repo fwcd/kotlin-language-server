@@ -5,19 +5,32 @@ import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.SymbolInformation
 import org.eclipse.lsp4j.SymbolKind
 import org.javacs.kt.SourcePath
+import org.javacs.kt.completion.containsCharactersInOrder
 import org.javacs.kt.diagnostic.toPath
 import org.javacs.kt.docs.preOrderTraversal
 import org.javacs.kt.position.range
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
-fun documentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
+fun documentSymbols(file: KtFile): List<SymbolInformation> =
+    doDocumentSymbols(file).mapNotNull(::symbolInformation).toList()
+
+fun doDocumentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
         file.preOrderTraversal().mapNotNull { pickImportantElements(it, true) }
 
-fun workspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> =
-        sources.all().asSequence().flatMap(::doWorkspaceSymbols)
+private const val MAX_SYMBOLS = 50
 
-private fun doWorkspaceSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
+fun workspaceSymbols(query: String, sources: SourcePath): List<SymbolInformation> =
+        doWorkspaceSymbols(sources)
+                .filter { containsCharactersInOrder(it.name!!, query, false) }
+                .mapNotNull(::symbolInformation)
+                .take(MAX_SYMBOLS)
+                .toList()
+
+fun doWorkspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> =
+        sources.all().asSequence().flatMap(::fileSymbols)
+
+private fun fileSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
     file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
 
 private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtNamedDeclaration? =
