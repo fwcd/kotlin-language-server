@@ -21,7 +21,7 @@ object LogFormat: Formatter() {
         return result
     }
 
-    private const val format = "%1\$tF\t%1\$tT\t%4\$s\t%2\$s\t%5\$s%6\$s%n"
+    private const val format = "%1\$tF\t%1\$tT.%1\$tL\t%4\$s\t%2\$s\t%5\$s%6\$s%n"
     private val date = Date()
 
     override fun format(record: LogRecord): String {
@@ -45,6 +45,7 @@ object LogFormat: Formatter() {
             pw.close()
             throwable = sw.toString()
         }
+
         return String.format(
                 format, date, source, record.loggerName, record.level.localizedName, message, throwable)
     }
