@@ -18,8 +18,7 @@ private class FileToEdit {
     val someVal = 1
 }"""
 
-    @Test
-    fun compileFile() {
+    @Test fun compileFile() {
         val original = compiler.openFile(file)
         val context = compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(45)!!
@@ -28,8 +27,7 @@ private class FileToEdit {
         assertThat(context.getType(kt), hasToString("String"))
     }
 
-    @Test
-    fun newFile() {
+    @Test fun newFile() {
         val original = compiler.createFile(file, editedText)
         val context = compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(46)!!
@@ -38,8 +36,7 @@ private class FileToEdit {
         assertThat(context.getType(kt), hasToString("Int"))
     }
 
-    @Test
-    fun editFile() {
+    @Test fun editFile() {
         val original = compiler.openFile(file)
         var context = compiler.compileFile(original, listOf(original))
         var psi = original.findElementAt(46)!!
@@ -55,8 +52,7 @@ private class FileToEdit {
         assertThat(context.getType(kt), hasToString("Int"))
     }
 
-    @Test
-    fun editRef() {
+    @Test fun editRef() {
         val original = compiler.openFile(testResourcesRoot().resolve("hover/Recover.kt"))
         val context = compiler.compileFile(original, listOf(original))
         val function = original.findElementAt(49)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().first()

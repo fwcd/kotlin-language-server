@@ -6,13 +6,7 @@ import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
-class SignatureHelpTest: LanguageServerTestFixture("signatureHelp") {
-    private val file = "SignatureHelp.kt"
-
-    @Before fun `open SignatureHelp`() {
-        open(file)
-    }
-
+class SignatureHelpTest: SingleFileTestFixture("signatureHelp", "SignatureHelp.kt") {
     @Test fun `provide signature help for a function call`() {
         val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 3, 20)).get()!!
 

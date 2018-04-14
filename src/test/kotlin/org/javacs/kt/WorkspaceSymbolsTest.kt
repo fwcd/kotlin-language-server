@@ -8,13 +8,7 @@ import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
 
-class WorkspaceSymbolsTest: LanguageServerTestFixture("symbols") {
-    val file = "DocumentSymbols.kt"
-
-    @Before fun `open DocumentSymbols`() {
-        open(file)
-    }
-
+class WorkspaceSymbolsTest: SingleFileTestFixture("symbols", "DocumentSymbols.kt") {
     @Test fun `find symbols in OtherFileSymbols`() {
         val found = languageServer.workspaceService.symbol(WorkspaceSymbolParams("")).get()
         val byKind = found.groupBy({ it.kind }, { it.name })
