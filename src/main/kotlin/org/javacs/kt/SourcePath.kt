@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
@@ -94,7 +95,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         fun parseIfChanged(): OpenFile {
             if (version != parsedVersion) {
-                val reparse = cp.compiler.createFile(file, content)
+                val reparse = cp.compiler.createFile(file, convertLineSeparators(content))
                 val result = OpenFile(file, content, version, open, reparse, version, compiledFile, compiledContext, compiledVersion)
 
                 files += result
@@ -139,9 +140,8 @@ class SourcePath(private val cp: CompilerClassPath) {
     /**
      * Get the latest content of a file
      */
-    fun content(file: Path): String {
-        return files[file].content
-    }
+    fun content(file: Path): String =
+            convertLineSeparators(files[file].content)
 
     /**
      * Compile the latest version of a file
@@ -177,7 +177,7 @@ class SourcePath(private val cp: CompilerClassPath) {
             files.values().map { it.parseIfChanged().parsed!! }
 
     fun open(file: Path, content: String, version: Int) {
-        val open = createMemoryFile(content, version, file)
+        val open = createMemoryFile(convertLineSeparators(content), version, file)
 
         files += open
         open.compileIfNull()

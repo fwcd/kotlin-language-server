@@ -55,6 +55,8 @@ class Compiler(classPath: Set<Path>) {
     }
 
     fun createFile(file: Path, content: String): KtFile {
+        assert(!content.contains('\r'))
+
         val original = openFile(file)
         val new = PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
 
@@ -63,12 +65,16 @@ class Compiler(classPath: Set<Path>) {
         return new
     }
 
-    fun createExpression(text: String): KtExpression {
-        return parser.createExpression(text)
+    fun createExpression(content: String): KtExpression {
+        assert(!content.contains('\r'))
+
+        return parser.createExpression(content)
     }
 
-    fun createFunction(text: String): KtNamedFunction {
-        return parser.createFunction(text)
+    fun createFunction(content: String): KtNamedFunction {
+        assert(!content.contains('\r'))
+
+        return parser.createFunction(content)
     }
 
     private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {

@@ -15,6 +15,8 @@ import kotlin.math.max
  * Convert from 0-based line and column to 0-based offset
  */
 fun offset(content: String, line: Int, char: Int): Int {
+    assert(!content.contains('\r'))
+
     val reader = content.reader()
     var offset = 0
 
