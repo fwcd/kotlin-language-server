@@ -89,13 +89,13 @@ fun location(expr: PsiElement): Location {
 /**
  * Region that has been changed
  */
-fun changedRegion(oldText: String, newText: String): Pair<TextRange, TextRange>? {
-    if (oldText == newText) return null
+fun changedRegion(oldContent: String, newContent: String): Pair<TextRange, TextRange>? {
+    if (oldContent == newContent) return null
 
-    val prefix = oldText.commonPrefixWith(newText).length
-    val suffix = oldText.commonSuffixWith(newText).length
-    val oldEnd = max(oldText.length - suffix, prefix)
-    val newEnd = max(newText.length - suffix, prefix)
+    val prefix = oldContent.commonPrefixWith(newContent).length
+    val suffix = oldContent.commonSuffixWith(newContent).length
+    val oldEnd = max(oldContent.length - suffix, prefix)
+    val newEnd = max(newContent.length - suffix, prefix)
 
     return Pair(TextRange(prefix, oldEnd), TextRange(prefix, newEnd))
 }

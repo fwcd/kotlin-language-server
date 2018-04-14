@@ -20,31 +20,25 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
-fun findReferences(file: Path, offset: Int, sources: SourcePath): List<Location> {
-    return doFindReferences(file, offset, sources)
+fun findReferences(file: Path, offset: Int, sp: SourcePath): List<Location> {
+    return doFindReferences(file, offset, sp)
             .map { location(it) }
             .toList()
 }
 
-private fun doFindReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
-    val recover = sources.compiledCode(file, offset)
+private fun doFindReferences(file: Path, offset: Int, sp: SourcePath): Collection<KtElement> {
+    val recover = sp.compiledCode(file, offset)
     val element = recover.parsed.findElementAt(recover.offset(0))?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.compiled.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element) ?: return emptyList()
-    val maybes = possibleReferences(declaration, sources)
+    val maybes = possibleReferences(declaration, sp)
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
-    val recompile = sources.compileFiles(maybes)
+    val recompile = sp.compileFiles(maybes)
 
-    if (isComponent(declaration)) {
-        return findComponentReferences(element, recompile) + findNameReferences(element, recompile)
-    }
-    else if (isIterator(declaration)) {
-        return findIteratorReferences(element, recompile) + findNameReferences(element, recompile)
-    }
-    else if (isPropertyDelegate(declaration)) {
-        return findDelegateReferences(element, recompile) + findNameReferences(element, recompile)
-    }
-    else {
-        return findNameReferences(element, recompile)
+    return when {
+        isComponent(declaration) -> findComponentReferences(element, recompile) + findNameReferences(element, recompile)
+        isIterator(declaration) -> findIteratorReferences(element, recompile) + findNameReferences(element, recompile)
+        isPropertyDelegate(declaration) -> findDelegateReferences(element, recompile) + findNameReferences(element, recompile)
+        else -> findNameReferences(element, recompile)
     }
 }
 
@@ -79,31 +73,31 @@ private fun findComponentReferences(element: KtNamedDeclaration, recompile: Bind
 }
 
 // TODO use imports to limit search
-private fun possibleReferences(declaration: DeclarationDescriptor, sources: SourcePath): Set<KtFile> {
+private fun possibleReferences(declaration: DeclarationDescriptor, sp: SourcePath): Set<KtFile> {
     if (declaration is ClassConstructorDescriptor) {
-        return possibleNameReferences(declaration.constructedClass.name, sources)
+        return possibleNameReferences(declaration.constructedClass.name, sp)
     }
     if (isComponent(declaration)) {
-        return possibleComponentReferences(sources) + possibleNameReferences(declaration.name, sources)
+        return possibleComponentReferences(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (isPropertyDelegate(declaration)) {
-        return hasPropertyDelegates(sources) + possibleNameReferences(declaration.name, sources)
+        return hasPropertyDelegates(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (isGetSet(declaration)) {
-        return possibleGetSets(sources) + possibleNameReferences(declaration.name, sources)
+        return possibleGetSets(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (isIterator(declaration)) {
-        return hasForLoops(sources) + possibleNameReferences(declaration.name, sources)
+        return hasForLoops(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.INVOKE) {
-        return possibleInvokeReferences(declaration, sources) + possibleNameReferences(declaration.name, sources)
+        return possibleInvokeReferences(declaration, sp) + possibleNameReferences(declaration.name, sp)
     }
     if (declaration is FunctionDescriptor) {
         val operators = operatorNames(declaration.name)
 
-        return possibleTokenReferences(operators, sources) + possibleNameReferences(declaration.name, sources)
+        return possibleTokenReferences(operators, sp) + possibleNameReferences(declaration.name, sp)
     }
-    return possibleNameReferences(declaration.name, sources)
+    return possibleNameReferences(declaration.name, sp)
 }
 
 private fun isPropertyDelegate(declaration: DeclarationDescriptor) =
@@ -111,8 +105,8 @@ private fun isPropertyDelegate(declaration: DeclarationDescriptor) =
         declaration.isOperator &&
         (declaration.name == OperatorNameConventions.GET_VALUE || declaration.name == OperatorNameConventions.SET_VALUE)
 
-private fun hasPropertyDelegates(sources: SourcePath): Set<KtFile> =
-        sources.all().filter(::hasPropertyDelegate).toSet()
+private fun hasPropertyDelegates(sp: SourcePath): Set<KtFile> =
+        sp.all().filter(::hasPropertyDelegate).toSet()
 
 fun hasPropertyDelegate(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtPropertyDelegate>().any()
@@ -122,8 +116,8 @@ private fun isIterator(declaration: DeclarationDescriptor) =
         declaration.isOperator &&
         declaration.name == OperatorNameConventions.ITERATOR
 
-private fun hasForLoops(sources: SourcePath): Set<KtFile> =
-        sources.all().filter(::hasForLoop).toSet()
+private fun hasForLoops(sp: SourcePath): Set<KtFile> =
+        sp.all().filter(::hasForLoop).toSet()
 
 private fun hasForLoop(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
@@ -133,14 +127,14 @@ private fun isGetSet(declaration: DeclarationDescriptor) =
         declaration.isOperator &&
         (declaration.name == OperatorNameConventions.GET || declaration.name == OperatorNameConventions.SET)
 
-private fun possibleGetSets(sources: SourcePath): Set<KtFile> =
-        sources.all().filter(::possibleGetSet).toSet()
+private fun possibleGetSets(sp: SourcePath): Set<KtFile> =
+        sp.all().filter(::possibleGetSet).toSet()
 
 private fun possibleGetSet(source: KtFile) =
         source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
 
-private fun possibleInvokeReferences(declaration: FunctionDescriptor, sources: SourcePath) =
-        sources.all().filter { possibleInvokeReference(declaration, it) }.toSet()
+private fun possibleInvokeReferences(declaration: FunctionDescriptor, sp: SourcePath) =
+        sp.all().filter { possibleInvokeReference(declaration, it) }.toSet()
 
 // TODO this is not very selective
 private fun possibleInvokeReference(declaration: FunctionDescriptor, source: KtFile): Boolean =
@@ -151,24 +145,24 @@ private fun isComponent(declaration: DeclarationDescriptor): Boolean =
         declaration.isOperator &&
         OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)
 
-private fun possibleComponentReferences(sources: SourcePath): Set<KtFile> =
-        sources.all().filter { possibleComponentReference(it) }.toSet()
+private fun possibleComponentReferences(sp: SourcePath): Set<KtFile> =
+        sp.all().filter { possibleComponentReference(it) }.toSet()
 
 private fun possibleComponentReference(source: KtFile): Boolean =
         source.preOrderTraversal()
                 .filterIsInstance<KtDestructuringDeclarationEntry>()
                 .any()
 
-private fun possibleTokenReferences(find: List<KtSingleValueToken>, sources: SourcePath): Set<KtFile> =
-        sources.all().filter { possibleTokenReference(find, it) }.toSet()
+private fun possibleTokenReferences(find: List<KtSingleValueToken>, sp: SourcePath): Set<KtFile> =
+        sp.all().filter { possibleTokenReference(find, it) }.toSet()
 
 private fun possibleTokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
         source.preOrderTraversal()
                 .filterIsInstance<KtOperationReferenceExpression>()
                 .any { it.operationSignTokenType in find }
 
-private fun possibleNameReferences(declaration: Name, sources: SourcePath): Set<KtFile> =
-        sources.all().filter { possibleNameReference(declaration, it) }.toSet()
+private fun possibleNameReferences(declaration: Name, sp: SourcePath): Set<KtFile> =
+        sp.all().filter { possibleNameReference(declaration, it) }.toSet()
 
 private fun possibleNameReference(declaration: Name, source: KtFile): Boolean =
         source.preOrderTraversal()

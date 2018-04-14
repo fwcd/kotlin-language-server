@@ -29,12 +29,12 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
 
     private val result = CompletionItem()
 
-    private fun setDefaults(desc: DeclarationDescriptor) {
-        result.label = desc.label()
-        result.filterText = desc.label()
-        result.insertText = desc.label()
+    private fun setDefaults(declaration: DeclarationDescriptor) {
+        result.label = declaration.label()
+        result.filterText = declaration.label()
+        result.insertText = declaration.label()
         result.insertTextFormat = PlainText
-        result.detail = DECL_RENDERER.render(desc)
+        result.detail = DECL_RENDERER.render(declaration)
     }
 
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {

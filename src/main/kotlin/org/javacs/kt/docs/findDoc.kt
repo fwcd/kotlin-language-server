@@ -10,8 +10,8 @@ import org.jetbrains.kotlin.psi.KtPrimaryConstructor
 import org.jetbrains.kotlin.psi.psiUtil.parents
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
-fun findDoc(desc: DeclarationDescriptorWithSource): KDocTag? {
-    val source = DescriptorToSourceUtils.descriptorToDeclaration(desc)?.navigationElement
+fun findDoc(declaration: DeclarationDescriptorWithSource): KDocTag? {
+    val source = DescriptorToSourceUtils.descriptorToDeclaration(declaration)?.navigationElement
 
     return when (source) {
         is KtParameter -> {
@@ -22,7 +22,7 @@ fun findDoc(desc: DeclarationDescriptorWithSource): KDocTag? {
             val descendants = doc.preOrderTraversal()
             val tags = descendants.filterIsInstance<KDocTag>()
             val params = tags.filter { it.knownTag == KDocKnownTag.PARAM }
-            val matchName = params.filter { it.getSubjectName() == desc.name.toString() }
+            val matchName = params.filter { it.getSubjectName() == declaration.name.toString() }
 
             return matchName.firstOrNull()
         }

@@ -45,8 +45,8 @@ private fun toParameter(param: ValueParameterDescriptor): ParameterInformation {
     return ParameterInformation(removeParens, docstring)
 }
 
-private fun docstring(desc: DeclarationDescriptorWithSource): String {
-    val doc = findDoc(desc) ?: return ""
+private fun docstring(declaration: DeclarationDescriptorWithSource): String {
+    val doc = findDoc(declaration) ?: return ""
 
     return doc.getContent().trim()
 }
@@ -98,5 +98,3 @@ private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
 
     return beforeCursor.count { it == ','}
 }
-
-private data class KotlinSignatureHelp(val declarations: List<CallableDescriptor>, val activeDeclaration: Int, val activeParameter: Int)

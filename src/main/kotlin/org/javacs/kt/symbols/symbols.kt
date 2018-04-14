@@ -20,15 +20,15 @@ private fun doDocumentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
 
 private const val MAX_SYMBOLS = 50
 
-fun workspaceSymbols(query: String, sources: SourcePath): List<SymbolInformation> =
-        doWorkspaceSymbols(sources)
+fun workspaceSymbols(query: String, sp: SourcePath): List<SymbolInformation> =
+        doWorkspaceSymbols(sp)
                 .filter { containsCharactersInOrder(it.name!!, query, false) }
                 .mapNotNull(::symbolInformation)
                 .take(MAX_SYMBOLS)
                 .toList()
 
-private fun doWorkspaceSymbols(sources: SourcePath): Sequence<KtNamedDeclaration> =
-        sources.all().asSequence().flatMap(::fileSymbols)
+private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
+        sp.all().asSequence().flatMap(::fileSymbols)
 
 private fun fileSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
     file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
@@ -61,16 +61,16 @@ private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
             else -> throw IllegalArgumentException("Unexpected symbol $d")
         }
 
-private fun symbolLocation(declaration: KtNamedDeclaration): Location {
-    val file = declaration.containingFile
+private fun symbolLocation(d: KtNamedDeclaration): Location {
+    val file = d.containingFile
     val uri = file.toPath().toUri().toString()
-    val range = range(file.text, declaration.textRange)
+    val range = range(file.text, d.textRange)
 
     return Location(uri, range)
 }
 
-private fun symbolContainer(declaration: KtNamedDeclaration): String? =
-        declaration.parents
+private fun symbolContainer(d: KtNamedDeclaration): String? =
+        d.parents
                 .filterIsInstance<KtNamedDeclaration>()
                 .firstOrNull()
                 ?.fqName.toString()

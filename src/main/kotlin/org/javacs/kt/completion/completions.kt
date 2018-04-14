@@ -29,8 +29,8 @@ fun completions(code: CompiledCode): CompletionList {
     return CompletionList(isIncomplete, list)
 }
 
-private fun completionItem(desc: DeclarationDescriptor): CompletionItem =
-        desc.accept(RenderCompletionItem(), null)
+private fun completionItem(declaration: DeclarationDescriptor): CompletionItem =
+        declaration.accept(RenderCompletionItem(), null)
 
 private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     val psi = code.parsed.findElementAt(code.offset(-1)) ?: return emptySequence()
@@ -126,12 +126,12 @@ private fun scopeIdentifiers(scope: HierarchicalScope, nameFilter: (Name) -> Boo
     return locals + members
 }
 
-private fun explodeConstructors(desc: DeclarationDescriptor): Sequence<DeclarationDescriptor> {
-    return when (desc) {
+private fun explodeConstructors(declaration: DeclarationDescriptor): Sequence<DeclarationDescriptor> {
+    return when (declaration) {
         is ClassDescriptor ->
-            desc.constructors.asSequence() + desc
+            declaration.constructors.asSequence() + declaration
         else ->
-            sequenceOf(desc)
+            sequenceOf(declaration)
     }
 }
 
