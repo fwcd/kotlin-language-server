@@ -20,8 +20,8 @@ import java.nio.file.Path
 
 fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
     val recover = sources.compiledCode(file, offset)
-    val element = recover.exprAt(0)?.parent as? KtNamedDeclaration ?: return emptyList()
-    val declaration = recover.getDeclaration(element) ?: return emptyList()
+    val element = recover.parsed.findElementAt(recover.offset(0))?.parent as? KtNamedDeclaration ?: return emptyList()
+    val declaration = recover.compiled.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element) ?: return emptyList()
     val maybes = possibleReferences(declaration, sources)
     LOG.info("Scanning ${maybes.size} files for references to ${element.fqName}")
     val recompile = sources.compileFiles(maybes)

@@ -39,8 +39,8 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
             val hoverText = DECL_RENDERER.render(decl)
             val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
             val range = Range(
-                    position(recover.fileContent, location.startOffset),
-                    position(recover.fileContent, location.endOffset))
+                    position(recover.content, location.startOffset),
+                    position(recover.content, location.endOffset))
 
             return CompletableFuture.completedFuture(Hover(listOf(hover), range))
         }

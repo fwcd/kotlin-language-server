@@ -6,3 +6,5 @@
 - Support files that don't exist on disk
 - Jump to function name, not start of declaration
 - Complete getFoo() as foo
+- Javadoc comments
+- Rename

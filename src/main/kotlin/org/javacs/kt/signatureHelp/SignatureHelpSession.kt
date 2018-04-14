@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 
 class SignatureHelpSession(private val code: CompiledCode) {
     fun signatureHelp(): KotlinSignatureHelp? {
-        val psi = code.exprAt(0) ?: return null
+        val psi = code.parsed.findElementAt(code.offset(0)) ?: return null
         val call = psi.parentsWithSelf.filterIsInstance<KtCallExpression>().firstOrNull() ?: return null
         val candidates = candidates(call)
         val activeDeclaration = activeDeclaration(call, candidates)
@@ -26,7 +26,8 @@ class SignatureHelpSession(private val code: CompiledCode) {
         val identifier = target.text
         val dotParent = target.findParent<KtDotQualifiedExpression>()
         if (dotParent != null) {
-            val type = code.getType(dotParent.receiverExpression) ?: return emptyList()
+            val type = code.compiled.getType(dotParent.receiverExpression) ?: code.robustType(dotParent.receiverExpression)
+                       ?: return emptyList()
 
             return memberOverloads(type, identifier).toList()
         }
@@ -61,7 +62,7 @@ class SignatureHelpSession(private val code: CompiledCode) {
     }
 
     private fun activeParameter(call: KtCallExpression): Int {
-        val cursor = code.cursor()
+        val cursor = code.offset(0)
         val args = call.valueArgumentList ?: return -1
         val text = args.text
         val beforeCursor = text.subSequence(0, cursor - args.textRange.startOffset)

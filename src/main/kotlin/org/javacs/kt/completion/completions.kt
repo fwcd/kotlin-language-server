@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 
 fun completions(code: CompiledCode): Sequence<DeclarationDescriptor> {
-    val psi = code.exprAt(-1) ?: return emptySequence()
+    val psi = code.parsed.findElementAt(code.offset(-1)) ?: return emptySequence()
     val expr = psi.findParent<KtExpression>() ?: return emptySequence()
     val typeParent = expr.findParent<KtTypeElement>()
     if (typeParent != null) {
@@ -30,7 +30,8 @@ fun completions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     }
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
-        val type = code.getType(dotParent.receiverExpression) ?: return emptySequence()
+        val type = code.compiled.getType(dotParent.receiverExpression) ?: code.robustType(dotParent.receiverExpression)
+                   ?: return emptySequence()
         val partial = matchIdentifier(dotParent.selectorExpression)
 
         return completeMembers(type, partial)

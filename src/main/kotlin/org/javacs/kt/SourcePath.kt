@@ -203,7 +203,8 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     private fun clearDiagnostics(file: Path) {
-        client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
+        if (client != null)
+            client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
 
     val debounceLint = Debounce(1.0)
