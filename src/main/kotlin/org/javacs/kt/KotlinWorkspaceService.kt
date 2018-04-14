@@ -7,7 +7,7 @@ import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath, private val classPath: CompilerClassPath) : WorkspaceService {
+class KotlinWorkspaceService(private val sf: SourceFiles, private val sp: SourcePath, private val cp: CompilerClassPath) : WorkspaceService {
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         for (change in params.changes) {
@@ -15,16 +15,16 @@ class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val s
 
             when (change.type) {
                 FileChangeType.Created -> {
-                    sourceFiles.createdOnDisk(path)
-                    classPath.createdOnDisk(path)
+                    sf.createdOnDisk(path)
+                    cp.createdOnDisk(path)
                 }
                 FileChangeType.Deleted -> {
-                    sourceFiles.deletedOnDisk(path)
-                    classPath.deletedOnDisk(path)
+                    sf.deletedOnDisk(path)
+                    cp.deletedOnDisk(path)
                 }
                 FileChangeType.Changed -> {
-                    sourceFiles.changedOnDisk(path)
-                    classPath.changedOnDisk(path)
+                    sf.changedOnDisk(path)
+                    cp.changedOnDisk(path)
                 }
                 null -> {
                     // Nothing to do
@@ -38,7 +38,7 @@ class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val s
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
-        val result = workspaceSymbols(params.query, sourcePath)
+        val result = workspaceSymbols(params.query, sp)
 
         return CompletableFuture.completedFuture(result)
     }
@@ -49,16 +49,16 @@ class KotlinWorkspaceService(private val sourceFiles: SourceFiles, private val s
 
             val root = Paths.get(URI.create(change.uri))
 
-            sourceFiles.addWorkspaceRoot(root)
-            classPath.addWorkspaceRoot(root)
+            sf.addWorkspaceRoot(root)
+            cp.addWorkspaceRoot(root)
         }
         for (change in params.event.removed) {
             LOG.info("Dropping workspace ${change.uri} from source path")
 
             val root = Paths.get(URI.create(change.uri))
 
-            sourceFiles.removeWorkspaceRoot(root)
-            classPath.removeWorkspaceRoot(root)
+            sf.removeWorkspaceRoot(root)
+            cp.removeWorkspaceRoot(root)
         }
     }
 }

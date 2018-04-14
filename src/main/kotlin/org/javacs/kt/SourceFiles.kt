@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
@@ -19,7 +18,7 @@ private class SourceVersion(val content: String, val version: Int, val open: Boo
 /**
  * Notify SourcePath whenever a file changes
  */
-private class NotifySourcePath(private val sourcePath: SourcePath) {
+private class NotifySourcePath(private val sp: SourcePath) {
     private val files = mutableMapOf<Path, SourceVersion>()
 
     operator fun get(file: Path): SourceVersion? = files[file]
@@ -28,18 +27,18 @@ private class NotifySourcePath(private val sourcePath: SourcePath) {
         val content = convertLineSeparators(source.content)
         
         files[file] = source
-        sourcePath.put(file, content, source.version, source.open)
+        sp.put(file, content, source.version, source.open)
     }
 
     fun remove(file: Path) {
         files.remove(file)
-        sourcePath.delete(file)
+        sp.delete(file)
     }
 
     fun removeAll(rm: Collection<Path>) {
         files -= rm
 
-        rm.forEach(sourcePath::delete)
+        rm.forEach(sp::delete)
     }
 
     val keys get() = files.keys
@@ -48,9 +47,9 @@ private class NotifySourcePath(private val sourcePath: SourcePath) {
 /**
  * Keep track of the text of all files in the workspace
  */
-class SourceFiles(private val sourcePath: SourcePath) {
+class SourceFiles(private val sp: SourcePath) {
     private val workspaceRoots = mutableSetOf<Path>()
-    private val files = NotifySourcePath(sourcePath)
+    private val files = NotifySourcePath(sp)
 
     fun open(file: Path, content: String, version: Int) {
         files[file] = SourceVersion(content, version, true)

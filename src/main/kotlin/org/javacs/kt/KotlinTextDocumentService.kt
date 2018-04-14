@@ -14,14 +14,14 @@ import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private val sourcePath: SourcePath) : TextDocumentService {
+class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
 
     private fun recover(position: TextDocumentPositionParams): CompiledCode {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val content = sourcePath.content(file)
+        val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
 
-        return sourcePath.compiledCode(file, offset)
+        return sp.compiledCode(file, offset)
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
@@ -104,7 +104,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
 
         reportTime {
             val path = Paths.get(URI(params.textDocument.uri))
-            val file = sourcePath.parsedFile(path)
+            val file = sp.parsedFile(path)
             val infos = documentSymbols(file)
 
             return CompletableFuture.completedFuture(infos)
@@ -114,7 +114,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
 
-        sourceFiles.open(file, params.textDocument.text, params.textDocument.version)
+        sf.open(file, params.textDocument.text, params.textDocument.version)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -140,7 +140,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
     override fun didClose(params: DidCloseTextDocumentParams) {
         val file = Paths.get(URI.create(params.textDocument.uri))
 
-        sourceFiles.close(file)
+        sf.close(file)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -148,14 +148,14 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        sourceFiles.edit(params)
+        sf.edit(params)
     }
 
     override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {
         val file = Paths.get(URI.create(position.textDocument.uri))
-        val content = sourcePath.content(file)
+        val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val found = findReferences(file, offset, sourcePath)
+        val found = findReferences(file, offset, sp)
 
         return CompletableFuture.completedFuture(found)
     }
