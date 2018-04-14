@@ -1,9 +1,6 @@
 package org.javacs.kt
 
-import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
-import org.eclipse.lsp4j.DidChangeTextDocumentParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
-import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.eclipse.lsp4j.services.LanguageClient
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
@@ -11,15 +8,7 @@ import org.javacs.kt.diagnostic.KotlinDiagnostic
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
-import java.io.BufferedReader
-import java.io.StringReader
-import java.io.StringWriter
-import java.net.URI
-import java.nio.file.FileSystems
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.stream.Collectors
 
 class SourcePath(private val cp: CompilerClassPath) {
     private val files = SourceFiles()
@@ -110,7 +99,6 @@ class SourcePath(private val cp: CompilerClassPath) {
                 val result = OpenFile(file, content, version, open, parsed, parsedVersion, parsed, recompile, parsedVersion)
 
                 files += result
-                reportDiagnostics(file, recompile.diagnostics.toList())
 
                 return result
             }
@@ -132,11 +120,15 @@ class SourcePath(private val cp: CompilerClassPath) {
         else
             files += OpenFile(file, content, version, open)
 
+        if (!open)
+            clearDiagnostics(file)
+
         lintLater()
     }
 
     fun delete(file: Path) {
         files -= file
+        clearDiagnostics(file)
         // TODO flag all dependent files for linting
     }
 
@@ -185,25 +177,33 @@ class SourcePath(private val cp: CompilerClassPath) {
 
     var lintCount = 0
 
-    private fun reportDiagnostics(compiledFile: Path, kotlinDiagnostics: List<KotlinDiagnostic>) {
+    private fun reportDiagnostics(open: Set<Path>, kotlinDiagnostics: List<KotlinDiagnostic>) {
         val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((file, diagnostics) in byFile) {
-            client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+            if (open.contains(file)) {
+                client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
 
-            LOG.info("Reported ${diagnostics.size} diagnostics in $file")
+                LOG.info("Reported ${diagnostics.size} diagnostics in $file")
+            }
+            else LOG.info("Ignore ${diagnostics.size} diagnostics in $file because it's not open")
         }
 
-        if (!byFile.containsKey(compiledFile)) {
-            client!!.publishDiagnostics(PublishDiagnosticsParams(compiledFile.toUri().toString(), listOf()))
+        val noErrors = open - byFile.keys
+        for (file in noErrors) {
+            clearDiagnostics(file)
 
-            LOG.info("No diagnostics in $compiledFile")
+            LOG.info("No diagnostics in $file")
         }
 
         // LOG.log(Level.WARNING, "LINT", Exception())
 
         lintCount++
+    }
+
+    private fun clearDiagnostics(file: Path) {
+        client!!.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
 
     val debounceLint = Debounce(1.0)
@@ -213,10 +213,16 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     private fun doLint() {
-        for (open in files.values()) {
-            if (open.open)
-                open.compileIfChanged()
-        }
+        val open = files.values().filter { it.open }
+        val same = open.filter { it.version == it.compiledVersion }
+        val changed = open.filter { it.version != it.compiledVersion }
+        val parsed = changed.map { it.parseIfChanged().parsed!! }
+        // TODO save this info in each OpenFile
+        val compile = cp.compiler.compileFiles(parsed, all())
+        val errs = compile.diagnostics.toList()
+
+        for (f in same) reportDiagnostics(setOf(f.file), f.compiledContext!!.diagnostics.toList())
+        reportDiagnostics(changed.map { it.file }.toSet(), errs)
     }
 
     fun compileFiles(files: Collection<KtFile>): BindingContext =
