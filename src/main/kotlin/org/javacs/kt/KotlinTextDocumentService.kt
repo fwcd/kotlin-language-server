@@ -126,7 +126,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         val file = Paths.get(URI.create(params.textDocument.uri))
 
         sf.open(file, params.textDocument.text, params.textDocument.version)
-        lintLater(file)
+        lintNow(setOf(file))
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -215,9 +215,9 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
             if (sf.isOpen(file)) {
                 client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
 
-                LOG.info("Reported ${diagnostics.size} diagnostics in $file")
+                LOG.info("Reported ${diagnostics.size} diagnostics in ${file.fileName}")
             }
-            else LOG.info("Ignore ${diagnostics.size} diagnostics in $file because it's not open")
+            else LOG.info("Ignore ${diagnostics.size} diagnostics in ${file.fileName} because it's not open")
         }
 
         val noErrors = compiled - byFile.keys
