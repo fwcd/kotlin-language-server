@@ -138,6 +138,8 @@ class SourcePath(private val cp: CompilerClassPath) {
     fun content(file: Path): String =
             files[file].content
 
+    fun parsedFile(file: Path): KtFile = files[file].parseIfChanged().parsed!!
+
     /**
      * Compile the latest version of a file
      */

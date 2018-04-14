@@ -111,8 +111,7 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
 
         reportTime {
             val path = Paths.get(URI(params.textDocument.uri))
-            // TODO does this work without compiling?
-            val (file, _) = sourcePath.compiledFile(path)
+            val file = sourcePath.parsedFile(path)
             val decls = documentSymbols(file)
             val infos = decls.mapNotNull(::symbolInformation).toList()
 
