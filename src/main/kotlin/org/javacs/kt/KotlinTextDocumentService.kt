@@ -6,7 +6,6 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.hover.hoverAt
-import org.javacs.kt.position.location
 import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.signatureHelpAt
@@ -157,8 +156,6 @@ class KotlinTextDocumentService(private val sourceFiles: SourceFiles, private va
         val content = sourcePath.content(file)
         val offset = offset(content, position.position.line, position.position.character)
         val found = findReferences(file, offset, sourcePath)
-                .map { location(it) }
-                .toList()
 
         return CompletableFuture.completedFuture(found)
     }

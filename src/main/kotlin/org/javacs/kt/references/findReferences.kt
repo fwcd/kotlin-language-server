@@ -1,8 +1,10 @@
 package org.javacs.kt.references
 
+import org.eclipse.lsp4j.Location
 import org.javacs.kt.LOG
 import org.javacs.kt.SourcePath
 import org.javacs.kt.docs.preOrderTraversal
+import org.javacs.kt.position.location
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -18,7 +20,13 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
-fun findReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
+fun findReferences(file: Path, offset: Int, sources: SourcePath): List<Location> {
+    return doFindReferences(file, offset, sources)
+            .map { location(it) }
+            .toList()
+}
+
+private fun doFindReferences(file: Path, offset: Int, sources: SourcePath): Collection<KtElement> {
     val recover = sources.compiledCode(file, offset)
     val element = recover.parsed.findElementAt(recover.offset(0))?.parent as? KtNamedDeclaration ?: return emptyList()
     val declaration = recover.compiled.get(BindingContext.DECLARATION_TO_DESCRIPTOR, element) ?: return emptyList()
