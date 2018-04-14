@@ -16,6 +16,9 @@ import java.util.stream.Collectors
 
 private class SourceVersion(val content: String, val version: Int, val open: Boolean)
 
+/**
+ * Notify SourcePath whenever a file changes
+ */
 private class NotifySourcePath(private val sourcePath: SourcePath) {
     private val files = mutableMapOf<Path, SourceVersion>()
 
@@ -42,6 +45,9 @@ private class NotifySourcePath(private val sourcePath: SourcePath) {
     val keys get() = files.keys
 }
 
+/**
+ * Keep track of the text of all files in the workspace
+ */
 class SourceFiles(private val sourcePath: SourcePath) {
     private val workspaceRoots = mutableSetOf<Path>()
     private val files = NotifySourcePath(sourcePath)
