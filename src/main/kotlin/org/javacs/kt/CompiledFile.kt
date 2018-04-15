@@ -24,28 +24,28 @@ class CompiledFile(
     fun recompile(cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
         val (oldChanged, _) = changedRegion(compiledFile.text, content) ?: return run {
-            LOG.info("${compiledFile.name} has not changed")
+            LOG.info("${fileName(compiledFile)} has not changed")
             NoChanges
         }
         // Look for a recoverable expression around the cursor
         val oldCursor = oldCursor(cursor)
         val leaf = compiledFile.findElementAt(oldCursor) ?: run {
             return if (oldChanged.contains(oldCursor)) {
-                LOG.info("No element at ${compiledFile.name}:$cursor, inside changed region")
+                LOG.info("No element at ${fileName(compiledFile)}:$cursor, inside changed region")
                 File
             } else {
-                LOG.info("No element at ${compiledFile.name}:$cursor")
+                LOG.info("No element at ${fileName(compiledFile)}:$cursor")
                 Impossible
             }
         }
         val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: run {
-            LOG.info("No surrounding function at ${compiledFile.name}:$cursor")
+            LOG.info("No surrounding function at ${fileName(compiledFile)}:$cursor")
             return File
         }
         // If the expression that we're going to re-compile doesn't include all the changes, give up
         val willRepair = surroundingFunction.bodyExpression?.textRange ?: return File
         if (!willRepair.contains(oldChanged)) {
-            LOG.info("Changed region ${compiledFile.name}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
+            LOG.info("Changed region ${fileName(compiledFile)}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
             return File
         }
         // If the function body doesn't have scope, give up
@@ -54,7 +54,7 @@ class CompiledFile(
             return File
         }
 
-        LOG.info("Successfully recovered at ${compiledFile.name}:$cursor using ${surroundingFunction.name}")
+        LOG.info("Successfully recovered at ${fileName(compiledFile)}:$cursor using ${surroundingFunction.name}")
         return Function
     }
 
@@ -98,4 +98,10 @@ class CompiledFile(
                 cp.compiler,
                 sourcePath)
     }
+}
+
+private fun fileName(file: KtFile): String {
+    val parts = file.name.split('/')
+
+    return parts.last()
 }
