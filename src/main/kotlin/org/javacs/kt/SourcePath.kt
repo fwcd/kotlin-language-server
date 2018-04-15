@@ -133,7 +133,7 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     /**
-     * Get parsed trees for all files on source path
+     * Get parsed trees for all .kt files on source path
      */
     fun all(): Collection<KtFile> =
             files.values.map { it.parseIfChanged().parsed!! }

@@ -4,7 +4,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileFactory
-import com.intellij.psi.PsiManager
+import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
@@ -27,6 +28,8 @@ import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.TopLevelDeclarations
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.script.KotlinScriptDefinition
+import org.jetbrains.kotlin.script.ScriptDefinitionProvider
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import java.nio.file.Path
@@ -48,21 +51,19 @@ class Compiler(classPath: Set<Path>) {
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
     private val parser = KtPsiFactory(env.project)
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+    private val scripts = ScriptDefinitionProvider.getInstance(env.project) as CliScriptDefinitionProvider
 
-    fun openFile(path: Path): KtFile {
-        val absolutePath = path.toAbsolutePath().toString()
-        val virtualFile = localFileSystem.findFileByPath(absolutePath)
-                          ?: throw RuntimeException("Couldn't find $path")
-        return PsiManager.getInstance(env.project).findFile(virtualFile) as KtFile
+    init {
+        scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
     }
 
     fun createFile(file: Path, content: String): KtFile {
         assert(!content.contains('\r'))
 
-        val original = openFile(file)
-        val new = PsiFileFactory.getInstance(env.project).createFileFromText(content, original) as KtFile
+        val factory = PsiFileFactory.getInstance(env.project)
+        val new = factory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
 
-        new.originalFile = original
+        assert(new.virtualFile != null)
 
         return new
     }

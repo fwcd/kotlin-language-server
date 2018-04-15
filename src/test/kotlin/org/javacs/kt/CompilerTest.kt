@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.junit.Assert.assertThat
 import org.junit.Test
+import java.nio.file.Files
 
 class CompilerTest {
     val compiler = Compiler(setOf())
@@ -19,7 +20,8 @@ private class FileToEdit {
 }"""
 
     @Test fun compileFile() {
-        val original = compiler.openFile(file)
+        val content = Files.readAllLines(file).joinToString("\n")
+        val original = compiler.createFile(file, content)
         val context = compiler.compileFile(original, listOf(original))
         val psi = original.findElementAt(45)!!
         val kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
@@ -37,7 +39,8 @@ private class FileToEdit {
     }
 
     @Test fun editFile() {
-        val original = compiler.openFile(file)
+        val content = Files.readAllLines(file).joinToString("\n")
+        val original = compiler.createFile(file, content)
         var context = compiler.compileFile(original, listOf(original))
         var psi = original.findElementAt(46)!!
         var kt = psi.parentsWithSelf.filterIsInstance<KtExpression>().first()
@@ -53,7 +56,9 @@ private class FileToEdit {
     }
 
     @Test fun editRef() {
-        val original = compiler.openFile(testResourcesRoot().resolve("hover/Recover.kt"))
+        val file1 = testResourcesRoot().resolve("hover/Recover.kt")
+        val content = Files.readAllLines(file1).joinToString("\n")
+        val original = compiler.createFile(file1, content)
         val context = compiler.compileFile(original, listOf(original))
         val function = original.findElementAt(49)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().first()
         val scope = context.get(BindingContext.LEXICAL_SCOPE, function.bodyExpression)!!
