@@ -43,11 +43,11 @@
 		"grammars": [
 			{
 				"language": "kotlin",
-				"scopeName": "source.Kotlin",
-				"path": "./syntaxes/Kotlin.tmLanguage"
+				"scopeName": "source.kotlin",
+				"path": "./syntaxes/Kotlin.tmLanguage.json"
 			},
 			{
-				"scopeName": "markdown.Kotlin.codeblock",
+				"scopeName": "markdown.kotlin.codeblock",
 				"path": "./syntaxes/codeblock.json",
 				"injectTo": [
 					"text.html.markdown"
