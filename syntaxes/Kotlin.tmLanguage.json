@@ -6,40 +6,36 @@
 			"begin": "\\b(package)\\b\\s*",
 			"beginCaptures": {
 				"1": {
-					"name": "keyword.other.package.java"
+					"name": "keyword.other.package.kotlin"
 				}
 			},
-			"end": "\\s*(;)",
+			"end": "\\s*(;)|\\s*$\n?",
 			"endCaptures": {
 				"1": {
-					"name": "punctuation.terminator.java"
+					"name": "punctuation.terminator.kotlin"
 				}
 			},
-			"name": "meta.package.java",
-			"contentName": "storage.modifier.package.java",
+			"name": "meta.package.kotlin",
+			"contentName": "entity.name.package.kotlin",
 			"patterns": [
 				{
 					"include": "#comments"
 				},
 				{
 					"match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)",
-					"name": "invalid.illegal.character_not_allowed_here.java"
+					"name": "invalid.illegal.character_not_allowed_here.kotlin"
 				},
 				{
 					"match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+",
-					"name": "invalid.illegal.character_not_allowed_here.java"
-				},
-				{
-					"match": "[A-Z]+",
-					"name": "invalid.deprecated.package_name_not_lowercase.java"
+					"name": "invalid.illegal.character_not_allowed_here.kotlin"
 				},
 				{
 					"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
-					"name": "invalid.illegal.character_not_allowed_here.java"
+					"name": "invalid.illegal.character_not_allowed_here.kotlin"
 				},
 				{
 					"match": "\\.",
-					"name": "punctuation.separator.java"
+					"name": "punctuation.separator.kotlin"
 				}
 			]
 		},
