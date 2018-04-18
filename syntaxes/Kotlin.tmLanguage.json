@@ -87,6 +87,9 @@
 				},
 				{
 					"include": "#object-declaration"
+				},
+				{
+					"include": "#type-annotation"
 				}
 			]
 		},
@@ -307,6 +310,14 @@
 					"name": "storage.modifier.kotlin"
 				}
 			]
+		},
+		"type-annotation": {
+			"match": ":\\s+(\\w+)",
+			"captures": {
+				"1": {
+					"name": "entity.name.type.kotlin"
+				}
+			}
 		}
 	}
 }
