@@ -89,6 +89,9 @@
 					"include": "#object-declaration"
 				},
 				{
+					"include": "#function-declaration"
+				},
+				{
 					"include": "#type-annotation"
 				}
 			]
@@ -251,40 +254,20 @@
 			}
 		},
 		"class-declaration": {
-			"patterns": [
-				{
-					"include": "#class-simple"
-				},
-				{
-					"include": "#class-generic"
-				}
-			]
-		},
-		"class-simple": {
-			"match": "\\b(class|interface)\\s+(\\w+)\\b\\s*(?!<)",
-			"captures": {
-				"1": {
-					"name": "storage.type.class.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.class.kotlin"
-				}
-			}
-		},
-		"class-generic": {
-			"begin": "\\b(class|interface)\\s+(\\w+)\\b\\s*<",
-			"end": ">",
+			"begin": "\\b(class|interface)\\b",
+			"end": "\\(|$",
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.class.kotlin"
 				}
 			},
 			"patterns": [
 				{
-					"include": "#type-parameter"
+					"include": "#type-parameters"
+				},
+				{
+					"match": "\\b\\w+\\b",
+					"name": "entity.name.type.class.kotlin"
 				}
 			]
 		},
@@ -298,6 +281,33 @@
 					"name": "entity.name.type.object.kotlin"
 				}
 			}
+		},
+		"function-declaration": {
+			"begin": "\\b(fun)\\b",
+			"end": "\\(",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.type.function.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"match": "\\b\\w+\\b",
+					"name": "entity.name.type.function.kotlin"
+				}
+			]
+		},
+		"type-parameters": {
+			"begin": "<",
+			"end": ">",
+			"patterns": [
+				{
+					"include": "#type-parameter"
+				}
+			]
 		},
 		"type-parameter": {
 			"patterns": [
