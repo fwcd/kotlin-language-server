@@ -92,6 +92,9 @@
 					"include": "#function-declaration"
 				},
 				{
+					"include": "#variable-declaration"
+				},
+				{
 					"include": "#type-annotation"
 				}
 			]
@@ -297,6 +300,24 @@
 				{
 					"match": "\\b\\w+\\b",
 					"name": "entity.name.type.function.kotlin"
+				}
+			]
+		},
+		"variable-declaration": {
+			"begin": "\\b(val|var)\\b",
+			"end": "=",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.type.variable.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"match": "\\b\\w+\\b",
+					"name": "variable.kotlin"
 				}
 			]
 		},
