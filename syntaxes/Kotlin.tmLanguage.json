@@ -21,11 +21,6 @@
 				}
 			},
 			"end": "\\s*(;)|\\s*$\n?",
-			"endCaptures": {
-				"1": {
-					"name": "punctuation.terminator.java"
-				}
-			},
 			"name": "meta.import.java",
 			"contentName": "entity.name.package.java",
 			"patterns": [
@@ -49,10 +44,6 @@
 					"name": "invalid.illegal.character_not_allowed_here.java"
 				},
 				{
-					"match": "\\.",
-					"name": "punctuation.separator.java"
-				},
-				{
 					"match": "\\*",
 					"name": "variable.language.wildcard.java"
 				}
@@ -66,11 +57,6 @@
 				}
 			},
 			"end": "\\s*(;)|\\s*$\n?",
-			"endCaptures": {
-				"1": {
-					"name": "punctuation.terminator.java"
-				}
-			},
 			"name": "meta.package.java",
 			"contentName": "entity.name.package.java",
 			"patterns": [
@@ -88,10 +74,6 @@
 				{
 					"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
 					"name": "invalid.illegal.character_not_allowed_here.java"
-				},
-				{
-					"match": "\\.",
-					"name": "punctuation.separator.java"
 				}
 			]
 		},
@@ -99,6 +81,9 @@
 			"patterns": [
 				{
 					"include": "#annotations"
+				},
+				{
+					"include": "#class-declaration"
 				}
 			]
 		},
@@ -139,17 +124,9 @@
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.annotation.java"
-				},
-				"3": {
-					"name": "punctuation.definition.annotation-arguments.begin.bracket.round.java"
 				}
 			},
 			"end": "\\)",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.annotation-arguments.end.bracket.round.java"
-				}
-			},
 			"name": "meta.declaration.annotation.java",
 			"patterns": [
 				{
@@ -187,17 +164,9 @@
 				},
 				"2": {
 					"name": "storage.type.annotation.java"
-				},
-				"3": {
-					"name": "punctuation.definition.annotation-arguments.begin.bracket.round.java"
 				}
 			},
 			"end": "\\)",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.annotation-arguments.end.bracket.round.java"
-				}
-			},
 			"name": "meta.declaration.annotation.java",
 			"patterns": [
 				{
@@ -210,17 +179,9 @@
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.annotation.java"
-				},
-				"2": {
-					"name": "punctuation.definition.annotation-list.begin.bracket.square.java"
 				}
 			},
 			"end": "\\]",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.annotation-list.end.bracket.square.java"
-				}
-			},
 			"name": "meta.declaration.annotation.java",
 			"patterns": [
 				{
@@ -252,17 +213,9 @@
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.annotation.java"
-				},
-				"2": {
-					"name": "punctuation.definition.annotation-arguments.begin.bracket.round.java"
 				}
 			},
 			"end": "\\)",
-			"endCaptures": {
-				"0": {
-					"name": "punctuation.definition.annotation-arguments.end.bracket.round.java"
-				}
-			},
 			"name": "meta.declaration.annotation.java",
 			"patterns": [
 				{
@@ -290,6 +243,56 @@
 					"name": "keyword.operator.assignment.java"
 				}
 			}
+		},
+		"class-declaration": {
+			"patterns": [
+				{
+					"include": "#class-simple"
+				},
+				{
+					"include": "#class-generic"
+				}
+			]
+		},
+		"class-simple": {
+			"match": "\\b(class)\\s+(\\w+)\\b\\s*(?!<)",
+			"captures": {
+				"1": {
+					"name": "keyword.other.class.java"
+				},
+				"2": {
+					"name": "entity.name.type.class.java"
+				}
+			}
+		},
+		"class-generic": {
+			"begin": "\\b(class)\\s+(\\w+)\\b\\s*<",
+			"end": ">",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.other.class.java"
+				},
+				"2": {
+					"name": "entity.name.type.class.java"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameter"
+				}
+			]
+		},
+		"type-parameter": {
+			"patterns": [
+				{
+					"match": "\\b[A-Z]\\w*\\b",
+					"name": "storage.type.java"
+				},
+				{
+					"match": "in|out",
+					"name": "storage.modifier.java"
+				}
+			]
 		}
 	}
 }
