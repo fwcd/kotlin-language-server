@@ -86,6 +86,9 @@
 					"include": "#class-declaration"
 				},
 				{
+					"include": "#type-alias"
+				},
+				{
 					"include": "#object-declaration"
 				},
 				{
@@ -271,6 +274,24 @@
 				{
 					"match": "\\b\\w+\\b",
 					"name": "entity.name.type.class.kotlin"
+				}
+			]
+		},
+		"type-alias": {
+			"begin": "\\b(typealias)\\s+",
+			"end": "$",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.type.alias.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameters"
+				},
+				{
+					"match": "\\b\\w+\\b",
+					"name": "entity.name.type.kotlin"
 				}
 			]
 		},
