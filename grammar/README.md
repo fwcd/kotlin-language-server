@@ -1,0 +1,1 @@
+Copied from https://github.com/JetBrains/kotlin/blob/master/grammar/src for easy reference

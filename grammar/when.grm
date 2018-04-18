@@ -1,0 +1,22 @@
+/**
+#### When-expression
+
+See [When-expression](control-flow.html#when-expression)
+*/
+
+when
+  : "when" ("(" expression ")")? "{"
+        whenEntry*
+    "}"
+  ;
+
+whenEntry
+  : whenCondition{","} "->" controlStructureBody SEMI
+  : "else" "->" controlStructureBody SEMI
+  ;
+
+whenCondition
+  : expression
+  : ("in" | "!in") expression
+  : ("is" | "!is") type
+  ;
