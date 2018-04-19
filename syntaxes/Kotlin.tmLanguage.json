@@ -73,16 +73,25 @@
 					"include": "#class-declaration-generic"
 				},
 				{
-					"include": "#type-alias"
-				},
-				{
 					"include": "#object-declaration"
 				},
 				{
-					"include": "#function-declaration"
+					"include": "#type-alias-simple"
 				},
 				{
-					"include": "#variable-declaration"
+					"include": "#type-alias-generic"
+				},
+				{
+					"include": "#function-declaration-simple"
+				},
+				{
+					"include": "#function-declaration-generic"
+				},
+				{
+					"include": "#variable-declaration-simple"
+				},
+				{
+					"include": "#variable-declaration-generic"
 				},
 				{
 					"include": "#type-constraint"
@@ -146,7 +155,6 @@
 				}
 			]
 		},
-		
 		"comments": {
 			"patterns": [
 				{
@@ -290,7 +298,7 @@
 			"name": "entity.name.type.annotation.kotlin"
 		},
 		"class-declaration-simple": {
-			"match": "\\b(class|interface)\\s+(\\w+)\\b(?!<)",
+			"match": "\\b(class|interface)\\s+(\\w+)\\b\\s*(?!<)",
 			"captures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
@@ -324,24 +332,6 @@
 				}
 			]
 		},
-		"type-alias": {
-			"begin": "\\b(typealias)\\s+",
-			"end": "=",
-			"beginCaptures": {
-				"1": {
-					"name": "storage.type.alias.kotlin"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#type-parameters"
-				},
-				{
-					"match": "\\b\\w+\\b",
-					"name": "entity.name.type.kotlin"
-				}
-			]
-		},
 		"object-declaration": {
 			"match": "\\b(object)\\s+(\\w+)\\b",
 			"captures": {
@@ -353,9 +343,45 @@
 				}
 			}
 		},
-		"function-declaration": {
-			"begin": "\\b(fun)\\b",
-			"end": "\\(",
+		"type-alias-simple": {
+			"match": "\\b(typealias)\\s+(\\w+)\\b\\s*(?!<)",
+			"captures": {
+				"1": {
+					"name": "storage.type.alias.kotlin"
+				},
+				"2": {
+					"name": "entity.name.type.kotlin"
+				}
+			}
+		},
+		"type-alias-generic": {
+			"begin": "\\b(typealias)\\s+(\\w+)\\b\\s*<",
+			"end": ">",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.type.alias.kotlin"
+				},
+				"2": {
+					"name": "entity.name.type.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameter"
+				}
+			]
+		},
+		"function-declaration-simple": {
+			"match": "\\b(fun)\\b\\s*(?!<)",
+			"captures": {
+				"1": {
+					"name": "storage.type.function.kotlin"
+				}
+			}
+		},
+		"function-declaration-generic": {
+			"begin": "\\b(fun)\\b\\s*<",
+			"end": ">",
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
@@ -363,34 +389,20 @@
 			},
 			"patterns": [
 				{
-					"include": "#type-parameters"
-				},
-				{
-					"match": "\\b\\w+\\b",
-					"name": "entity.name.function.kotlin"
+					"include": "#type-parameter"
 				}
 			]
 		},
-		"variable-declaration": {
-			"begin": "\\b(val|var)\\b",
-			"end": "=",
-			"beginCaptures": {
+		"variable-declaration-simple": {
+			"match": "\\b(val|var)\\b\\s*(?!<)",
+			"captures": {
 				"1": {
 					"name": "storage.type.variable.kotlin"
 				}
-			},
-			"patterns": [
-				{
-					"include": "#type-annotation"
-				},
-				{
-					"match": "\\b\\w+\\b",
-					"name": "variable.kotlin"
-				}
-			]
+			}
 		},
-		"type-parameters": {
-			"begin": "<",
+		"variable-declaration-generic": {
+			"begin": "\\b(val|var)\\s*<",
 			"end": ">",
 			"patterns": [
 				{
@@ -401,8 +413,8 @@
 		"type-parameter": {
 			"patterns": [
 				{
-					"match": "\\b[A-Z]\\w*\\b",
-					"name": "entity.name.type.parameter.kotlin"
+					"match": "\\b\\w+\\b",
+					"name": "entity.name.type.kotlin"
 				},
 				{
 					"match": "\\b(in|out)\\b",
@@ -525,7 +537,7 @@
 		},
 		"string-escape-simple": {
 			"match": "(?<!\\\\)\\$\\w+\\b",
-			"name": "variable.kotlin"
+			"name": "variable.string-escape.kotlin"
 		},
 		"string-escape-bracketed": {
 			"begin": "(?<!\\\\)(\\$\\{)",
