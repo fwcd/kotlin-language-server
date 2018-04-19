@@ -88,7 +88,7 @@
 					"include": "#type-annotation"
 				},
 				{
-					"include": "#func/tion-call"
+					"include": "#function-call"
 				},
 				{
 					"include": "#method-reference"
