@@ -321,7 +321,7 @@
 			}
 		},
 		"function-declaration": {
-			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(\\b\\w+\\b|`[^`]+`)",
+			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?:(\\w+)\\.)?(\\b\\w+\\b|`[^`]+`)",
 			"captures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
@@ -334,6 +334,9 @@
 					]
 				},
 				"4": {
+					"name": "entity.name.type.class.extension.kotlin"
+				},
+				"5": {
 					"name": "entity.name.function.declaration.kotlin"
 				}
 			}
