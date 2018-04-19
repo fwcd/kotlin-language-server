@@ -143,6 +143,9 @@
 					"include": "#character"
 				},
 				{
+					"include": "#operators"
+				},
+				{
 					"include": "#modifiers"
 				},
 				{
@@ -397,7 +400,7 @@
 			}
 		},
 		"key": {
-			"match": "\\b(\\w*)\\s*(=)",
+			"match": "\\b(\\w=)\\s*(=)",
 			"captures": {
 				"1": {
 					"name": "variable.parameter.kotlin"
@@ -495,6 +498,10 @@
 		"null-literal": {
 			"match": "\\bnull\\b",
 			"name": "constant.language.null.kotlin"
+		},
+		"operators": {
+			"match": "<=|>=|===|==|=>|=|\\!==|\\!=|\\+=|\\+\\+|\\+|-=|--|-|\\*=|\\*|/=|/|%=|%|!|\\&\\&|\\&|\\|\\||\\|..",
+			"name": "keyword.operator.kotlin"
 		},
 		"modifiers": {
 			"match": "abstract|final|enum|open|annotation|sealed|data|override|open|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend",
