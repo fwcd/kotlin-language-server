@@ -140,6 +140,9 @@
 					"include": "#string-multiline"
 				},
 				{
+					"include": "#character"
+				},
+				{
 					"include": "#modifiers"
 				},
 				{
@@ -396,7 +399,7 @@
 			"name": "string.quoted.double.kotlin",
 			"patterns": [
 				{
-					"match": "\\.",
+					"match": "\\\\.",
 					"name": "constant.character.escape.kotlin"
 				},
 				{
@@ -413,7 +416,7 @@
 			"name": "string.quoted.double.kotlin",
 			"patterns": [
 				{
-					"match": "\\.",
+					"match": "\\\\.",
 					"name": "constant.character.escape.kotlin"
 				},
 				{
@@ -441,6 +444,17 @@
 			"patterns": [
 				{
 					"include": "#code"
+				}
+			]
+		},
+		"character": {
+			"begin": "'",
+			"end": "'",
+			"name": "string.quoted.single.kotlin",
+			"patterns": [
+				{
+					"match": "\\\\.",
+					"name": "constant.character.escape.kotlin"
 				}
 			]
 		},
