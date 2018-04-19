@@ -114,6 +114,15 @@
 				},
 				{
 					"include": "#key"
+				},
+				{
+					"include": "#string"
+				},
+				{
+					"include": "#string-empty"
+				},
+				{
+					"include": "#string-multiline"
 				}
 			]
 		},
@@ -292,6 +301,64 @@
 					"name": "keyword.operator.assignment.kotlin"
 				}
 			}
+		},
+		"string-empty": {
+			"match": "(?<!\")\"\"(?!\")",
+			"name": "string.quoted.double.kotlin"
+		},
+		"string": {
+			"begin": "(?<!\")\"(?!\")",
+			"end": "\"",
+			"name": "string.quoted.double.kotlin",
+			"patterns": [
+				{
+					"match": "\\.",
+					"name": "constant.character.escape.kotlin"
+				},
+				{
+					"include": "#string-escape-simple"
+				},
+				{
+					"include": "#string-escape-bracketed"
+				}
+			]
+		},
+		"string-multiline": {
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"name": "string.quoted.double.kotlin",
+			"patterns": [
+				{
+					"match": "\\.",
+					"name": "constant.character.escape.kotlin"
+				},
+				{
+					"include": "#string-escape-simple"
+				},
+				{
+					"include": "#string-escape-bracketed"
+				}
+			]
+		},
+		"string-escape-simple": {
+			"match": "(?<!\\\\)\\$\\w+\\b",
+			"name": "variable.kotlin"
+		},
+		"string-escape-bracketed": {
+			"begin": "(?<!\\\\)(\\$\\{)",
+			"end": "(\\})",
+			"name": "meta.template.expression.kotlin",
+			"beginCaptures": {
+				"1": "punctuation.definition.template-expression.begin"
+			},
+			"endCaptures": {
+				"1": "punctuation.definition.template-expression.begin"
+			},
+			"patterns": [
+				{
+					"include": "#code"
+				}
+			]
 		}
 	}
 }
