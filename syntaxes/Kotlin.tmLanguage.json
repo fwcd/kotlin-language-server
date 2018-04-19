@@ -260,10 +260,10 @@
 			}
 		},
 		"key": {
-			"match": "(\\w*)\\s*(=)",
+			"match": "\\b(\\w*)\\s*(=)",
 			"captures": {
 				"1": {
-					"name": "constant.other.key.kotlin"
+					"name": "variable.parameter.kotlin"
 				},
 				"2": {
 					"name": "keyword.operator.assignment.kotlin"
