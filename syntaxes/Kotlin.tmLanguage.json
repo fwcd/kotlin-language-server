@@ -113,6 +113,15 @@
 					"include": "#type-annotation"
 				},
 				{
+					"include": "#method-call"
+				},
+				{
+					"include": "#function-call"
+				},
+				{
+					"include": "#property-reference"
+				},
+				{
 					"include": "#key"
 				},
 				{
@@ -240,7 +249,7 @@
 				},
 				{
 					"match": "\\b\\w+\\b",
-					"name": "entity.name.type.function.kotlin"
+					"name": "entity.name.function.kotlin"
 				}
 			]
 		},
@@ -288,6 +297,30 @@
 			"captures": {
 				"1": {
 					"name": "entity.name.type.kotlin"
+				}
+			}
+		},
+		"method-call": {
+			"match": "\\??\\.(\\w+)\\b\\s*(?=\\(|\\{)",
+			"captures": {
+				"1": {
+					"name": "entity.name.function.kotlin"
+				}
+			}
+		},
+		"function-call": {
+			"match": "(?<!\\?|\\.)(\\w+)\\b\\s*(?=\\(|\\{)",
+			"captures": {
+				"1": {
+					"name": "entity.name.function.kotlin"
+				}
+			}
+		},
+		"property-reference": {
+			"match": "\\??\\.(\\w+)\\b",
+			"captures": {
+				"1": {
+					"name": "variable.other.property.kotlin"
 				}
 			}
 		},
