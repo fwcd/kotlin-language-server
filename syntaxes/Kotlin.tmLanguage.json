@@ -266,7 +266,7 @@
 			},
 			"patterns": [
 				{
-					"include": "#type-parameters"
+					"include": "#type-annotation"
 				},
 				{
 					"match": "\\b\\w+\\b",
@@ -290,18 +290,42 @@
 					"name": "entity.name.type.parameter.kotlin"
 				},
 				{
-					"match": "in|out",
+					"match": "\\b(in|out)\\b",
 					"name": "storage.modifier.kotlin"
 				}
 			]
 		},
 		"type-annotation": {
-			"match": ":\\s*(\\w+)\\b",
+			"patterns": [
+				{
+					"include": "#type-annotation-simple"
+				},
+				{
+					"include": "#type-annotation-generic"
+				}
+			]
+		},
+		"type-annotation-simple": {
+			"match": "(?<!:):\\s*([\\w\\.]+)\\b(?!<)",
 			"captures": {
 				"1": {
 					"name": "entity.name.type.kotlin"
 				}
 			}
+		},
+		"type-annotation-generic": {
+			"begin": "(?<!:):\\s*([\\w\\.]+)<",
+			"end": ">",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.type.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#type-parameter"
+				}
+			]
 		},
 		"method-call": {
 			"match": "\\??\\.(\\w+)\\b\\s*(?=\\(|\\{)",
