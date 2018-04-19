@@ -94,9 +94,6 @@
 					"include": "#method-reference"
 				},
 				{
-					"include": "#property-reference"
-				},
-				{
 					"include": "#key"
 				},
 				{
@@ -116,12 +113,6 @@
 				},
 				{
 					"include": "#self-reference"
-				},
-				{
-					"include": "#variable-reference"
-				},
-				{
-					"include": "#type-reference"
 				},
 				{
 					"include": "#decimal-literal"
@@ -330,7 +321,7 @@
 			}
 		},
 		"function-declaration": {
-			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
+			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(\\w+)\\b",
 			"captures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
@@ -341,6 +332,9 @@
 							"include": "#type-parameter"
 						}
 					]
+				},
+				"4": {
+					"name": "entity.name.function.declaration.kotlin"
 				}
 			}
 		},
@@ -387,7 +381,7 @@
 			}
 		},
 		"function-call": {
-			"match": "\\b(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?=\\(|\\{)",
+			"match": "\\??\\.?\\b(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?=\\(|\\{)",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.call.kotlin"
@@ -405,15 +399,7 @@
 			"match": "\\??::(\\w+)\\b",
 			"captures": {
 				"1": {
-					"name": "entity.name.function.kotlin"
-				}
-			}
-		},
-		"property-reference": {
-			"match": "\\??\\.(\\w+)\\b",
-			"captures": {
-				"1": {
-					"name": "variable.other.property.kotlin"
+					"name": "entity.name.function.reference.kotlin"
 				}
 			}
 		},
@@ -524,22 +510,6 @@
 		"self-reference": {
 			"match": "\\b(this|super)(@\\w+)?\\b",
 			"name": "variable.language.this.kotlin"
-		},
-		"variable-reference": {
-			"match": "\\b([a-z]\\w*)\\b",
-			"captures": {
-				"1": {
-					"name": "variable.unknown.kotlin"
-				}
-			}
-		},
-		"type-reference": {
-			"match": "\\b([A-Z]\\w*)\\b",
-			"captures": {
-				"1": {
-					"name": "entity.name.type.unknown.kotlin"
-				}
-			}
 		}
 	}
 }
