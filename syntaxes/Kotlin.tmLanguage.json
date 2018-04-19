@@ -146,6 +146,9 @@
 					"include": "#modifiers"
 				},
 				{
+					"include": "#self-reference"
+				},
+				{
 					"include": "#variable-reference"
 				},
 				{
@@ -154,11 +157,11 @@
 			]
 		},
 		"annotation-simple": {
-			"match": "@[\\w\\.]+\\b(?!:)",
+			"match": "(?<!\\w)@[\\w\\.]+\\b(?!:)",
 			"name": "entity.name.type.annotation.kotlin"
 		},
 		"annotation-site-list": {
-			"begin": "(@\\w+):\\s*\\[",
+			"begin": "(?<!\\w)(@\\w+):\\s*\\[",
 			"end": "\\]",
 			"beginCaptures": {
 				"1": {
@@ -172,7 +175,7 @@
 			]
 		},
 		"annotation-site": {
-			"begin": "(@\\w+):\\s*(?!\\[)",
+			"begin": "(?<!\\w)(@\\w+):\\s*(?!\\[)",
 			"end": "$",
 			"beginCaptures": {
 				"1": {
@@ -461,6 +464,10 @@
 		"modifiers": {
 			"match": "abstract|final|enum|open|annotation|sealed|data|override|open|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend",
 			"name": "storage.modifier.other.kotlin"
+		},
+		"self-reference": {
+			"match": "\\b(this|super)(@\\w+)?\\b",
+			"name": "variable.language.this.kotlin"
 		},
 		"variable-reference": {
 			"match": "\\b([a-z]\\w*)\\b",
