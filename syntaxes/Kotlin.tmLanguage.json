@@ -89,7 +89,10 @@
 					"include": "#annotation-site"
 				},
 				{
-					"include": "#class-declaration"
+					"include": "#class-declaration-simple"
+				},
+				{
+					"include": "#class-declaration-generic"
 				},
 				{
 					"include": "#type-alias"
@@ -102,6 +105,9 @@
 				},
 				{
 					"include": "#variable-declaration"
+				},
+				{
+					"include": "#type-constraint"
 				},
 				{
 					"include": "#type-annotation"
@@ -147,27 +153,44 @@
 			"match": "\\b[\\w\\.]+\\b",
 			"name": "entity.name.type.annotation.kotlin"
 		},
-		"class-declaration": {
-			"begin": "\\b(class|interface)\\b",
-			"end": "\\(|$",
-			"beginCaptures": {
+		"class-declaration-simple": {
+			"match": "\\b(class|interface)\\s+(\\w+)\\b(?!<)",
+			"captures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
+				},
+				"2": {
+					"name": "entity.name.type.class.kotlin"
+				}
+			}
+		},
+		"class-declaration-generic": {
+			"begin": "\\b(class|interface)\\s+(\\w+)<",
+			"end": ">",
+			"captures": {
+				"1": {
+					"name": "storage.type.class.kotlin"
+				},
+				"2": {
+					"name": "entity.name.type.class.kotlin"
 				}
 			},
 			"patterns": [
 				{
-					"include": "#type-parameters"
+					"include": "#type-parameter"
+				},
+				{
+					"include": "#type-annotation"
 				},
 				{
 					"match": "\\b\\w+\\b",
-					"name": "entity.name.type.class.kotlin"
+					"name": "entity.name.type.kotlin"
 				}
 			]
 		},
 		"type-alias": {
 			"begin": "\\b(typealias)\\s+",
-			"end": "$",
+			"end": "=",
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.alias.kotlin"
