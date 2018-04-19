@@ -76,4 +76,14 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
 
         assertThat(labels, hasItem("SomeConstructor"))
     }
+
+    @Test fun `complete in the middle of a function`() {
+        val file = "MiddleOfFunction.kt"
+        open(file)
+
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("subSequence"))
+    }
 }

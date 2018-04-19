@@ -6,11 +6,11 @@
   - Static members
   - getFoo(), setFoo() as foo
   - String templates
-  - something.? when there is a next line
   - import ?
   - `named function` with quotes
   - something as Outer.Inn?
   - X value.InnerClass
+  - editFoo?() should overwrite () instead of adding another ()
 - keywords
   - as
   - is

@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
 import org.javacs.kt.util.findParent
+import org.javacs.kt.LOG
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -44,9 +45,10 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     }
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
-        val type = code.compiled.getType(dotParent.receiverExpression) ?: code.robustType(dotParent.receiverExpression)
-                   ?: return emptySequence()
-        val partial = matchIdentifier(dotParent.selectorExpression)
+        val type = code.compiled.getType(dotParent.receiverExpression) 
+                    ?: code.robustType(dotParent.receiverExpression)
+                    ?: return cantFindType(expr)
+        val partial = matchIdentifier(dotParent)
 
         return completeMembers(type, partial)
     }
@@ -61,11 +63,18 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     return emptySequence()
 }
 
-private fun matchIdentifier(exprAtCursor: KtExpression?): String {
-    val select = exprAtCursor?.text ?: ""
-    val word = Regex("[^()]+")
+private fun <T> cantFindType(expr: KtExpression): Sequence<T> {
+    LOG.info("Can't find type of ${expr.text}")
 
-    return word.find(select)?.value ?: ""
+    return emptySequence()
+}
+
+private val FIND_ID = Regex("\\.(\\w+)")
+
+private fun matchIdentifier(dotExpr: KtExpression): String {
+    val match = FIND_ID.find(dotExpr.text) ?: return ""
+    val word = match.groups[1] ?: return ""
+    return word.value
 }
 
 fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDescriptor> {

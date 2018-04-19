@@ -1,5 +1,7 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.Position
+import org.javacs.kt.position.position
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtFile
@@ -26,7 +28,7 @@ class CompiledCode(
     /**
      * Convert an offset from relative-to-cursor to absolute-within-parsed, taking into consideration the weirdness of
      */
-    fun offset(relativeToCursor: Int) = cursor - textOffset + relativeToCursor
+    fun offset(relativeToCursor: Int): Int = cursor - textOffset + relativeToCursor
 
     /**
      * If we're having trouble figuring out the type of an expression,
