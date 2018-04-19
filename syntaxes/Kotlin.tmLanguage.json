@@ -119,6 +119,9 @@
 					"include": "#function-call"
 				},
 				{
+					"include": "#method-reference"
+				},
+				{
 					"include": "#property-reference"
 				},
 				{
@@ -310,6 +313,14 @@
 		},
 		"function-call": {
 			"match": "(?<!\\?|\\.)(\\w+)\\b\\s*(?=\\(|\\{)",
+			"captures": {
+				"1": {
+					"name": "entity.name.function.kotlin"
+				}
+			}
+		},
+		"method-reference": {
+			"match": "\\??::(\\w+)\\b",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.kotlin"
