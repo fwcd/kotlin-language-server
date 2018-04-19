@@ -95,6 +95,9 @@
 					"include": "#class-declaration-generic"
 				},
 				{
+					"include": "#where-declaration"
+				},
+				{
 					"include": "#type-alias"
 				},
 				{
@@ -135,6 +138,15 @@
 				},
 				{
 					"include": "#string-multiline"
+				},
+				{
+					"include": "#modifiers"
+				},
+				{
+					"include": "#variable-reference"
+				},
+				{
+					"include": "#type-reference"
 				}
 			]
 		},
@@ -208,6 +220,10 @@
 					"name": "entity.name.type.kotlin"
 				}
 			]
+		},
+		"where-declaration": {
+			"match": "\\bwhere\\b",
+			"name": "storage.modifier.where.kotlin"
 		},
 		"type-alias": {
 			"begin": "\\b(typealias)\\s+",
@@ -427,6 +443,26 @@
 					"include": "#code"
 				}
 			]
+		},
+		"modifiers": {
+			"match": "abstract|final|enum|open|annotation|sealed|data|override|open|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend",
+			"name": "storage.modifier.other.kotlin"
+		},
+		"variable-reference": {
+			"match": "\\b([a-z]\\w*)\\b",
+			"captures": {
+				"1": {
+					"name": "variable.unknown.kotlin"
+				}
+			}
+		},
+		"type-reference": {
+			"match": "\\b([A-Z]\\w*)\\b",
+			"captures": {
+				"1": {
+					"name": "entity.name.type.unknown.kotlin"
+				}
+			}
 		}
 	}
 }
