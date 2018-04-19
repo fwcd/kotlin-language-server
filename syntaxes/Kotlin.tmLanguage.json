@@ -274,7 +274,7 @@
 			"name": "entity.name.type.annotation.kotlin"
 		},
 		"class-declaration": {
-			"match": "\\b(class|interface)\\s+(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
+			"match": "\\b(class|interface)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
@@ -292,7 +292,7 @@
 			}
 		},
 		"object-declaration": {
-			"match": "\\b(object)\\s+(\\w+)\\b",
+			"match": "\\b(object)\\s+(\\b\\w+\\b|`[^`]+`)",
 			"captures": {
 				"1": {
 					"name": "storage.type.object.kotlin"
@@ -303,7 +303,7 @@
 			}
 		},
 		"type-alias": {
-			"match": "\\b(typealias)\\s+(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
+			"match": "\\b(typealias)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.alias.kotlin"
@@ -321,7 +321,7 @@
 			}
 		},
 		"function-declaration": {
-			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(\\w+)\\b",
+			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(\\b\\w+\\b|`[^`]+`)",
 			"captures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
@@ -381,7 +381,7 @@
 			}
 		},
 		"function-call": {
-			"match": "\\??\\.?\\b(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?=\\(|\\{)",
+			"match": "\\??\\.?(\\b\\w+\\b|`[^`]+`)\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?=\\(|\\{)",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.call.kotlin"
@@ -396,7 +396,7 @@
 			}
 		},
 		"method-reference": {
-			"match": "\\??::(\\w+)\\b",
+			"match": "\\??::(\\b\\w+\\b|`[^`]+`)",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.reference.kotlin"
