@@ -153,6 +153,21 @@
 				},
 				{
 					"include": "#type-reference"
+				},
+				{
+					"include": "#decimal-literal"
+				},
+				{
+					"include": "#hex-literal"
+				},
+				{
+					"include": "#binary-literal"
+				},
+				{
+					"include": "#boolean-literal"
+				},
+				{
+					"include": "#null-literal"
 				}
 			]
 		},
@@ -460,6 +475,26 @@
 					"name": "constant.character.escape.kotlin"
 				}
 			]
+		},
+		"decimal-literal": {
+			"match": "\\b\\d[\\d_]*(\\.[\\d_]+)?((e|E)\\d+)?(L|F|f)?\\b",
+			"name": "constant.numeric.decimal.kotlin"
+		},
+		"hex-literal": {
+			"match": "0(x|X)[A-Fa-f0-9][A-Fa-f0-9_]*",
+			"name": "constant.numeric.hex.kotlin"
+		},
+		"binary-literal": {
+			"match": "0(b|B)[01][01_]*",
+			"name": "constant.numeric.binary.kotlin"
+		},
+		"boolean-literal": {
+			"match": "\\b(true|false)\\b",
+			"name": "constant.language.boolean.kotlin"
+		},
+		"null-literal": {
+			"match": "\\bnull\\b",
+			"name": "constant.language.null.kotlin"
 		},
 		"modifiers": {
 			"match": "abstract|final|enum|open|annotation|sealed|data|override|open|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend",
