@@ -20,7 +20,7 @@
 					"name": "storage.type.import.kotlin"
 				}
 			},
-			"end": "\\s*(;)|\\s*$\n?",
+			"end": ";|$",
 			"name": "meta.import.kotlin",
 			"contentName": "entity.name.package.kotlin",
 			"patterns": [
@@ -56,7 +56,7 @@
 					"name": "storage.type.package.kotlin"
 				}
 			},
-			"end": "\\s*(;)|\\s*$\n?",
+			"end": ";|$",
 			"name": "meta.package.kotlin",
 			"contentName": "entity.name.package.kotlin",
 			"patterns": [
@@ -80,7 +80,13 @@
 		"code": {
 			"patterns": [
 				{
-					"include": "#annotations"
+					"include": "#annotation-simple"
+				},
+				{
+					"include": "#annotation-site-list"
+				},
+				{
+					"include": "#annotation-site"
 				},
 				{
 					"include": "#class-declaration"
@@ -99,105 +105,38 @@
 				},
 				{
 					"include": "#type-annotation"
-				}
-			]
-		},
-		"annotations": {
-			"patterns": [
-				{
-					"include": "#annotation"
 				},
 				{
-					"include": "#annotation-with-site"
-				},
-				{
-					"include": "#annotation-with-list"
-				}
-			]
-		},
-		"annotation": {
-			"patterns": [
-				{
-					"include": "#annotation-simple"
-				},
-				{
-					"include": "#annotation-call"
+					"include": "#key"
 				}
 			]
 		},
 		"annotation-simple": {
-			"match": "(@[\\w\\.]+)\\b(?!:|\\[|\\()",
-			"captures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"name": "meta.declaration.annotation.kotlin"
+			"match": "@[\\w\\.]+\\b(?!:)",
+			"name": "entity.name.type.annotation.kotlin"
 		},
-		"annotation-call": {
-			"begin": "(@[\\w\\.]+)(\\()",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"end": "\\)",
-			"name": "meta.declaration.annotation.kotlin",
-			"patterns": [
-				{
-					"include": "#annotation-args"
-				}
-			]
-		},
-		"annotation-with-site": {
-			"patterns": [
-				{
-					"include": "#annotation-with-site-simple"
-				},
-				{
-					"include": "#annotation-with-site-call"
-				}
-			]
-		},
-		"annotation-with-site-simple": {
-			"match": "(@\\w+):\\s*([\\w\\.]+)\\b(?!:|\\[|\\()",
-			"captures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"name": "meta.declaration.annotation.kotlin"
-		},
-		"annotation-with-site-call": {
-			"begin": "(@\\w+):\\s*([\\w\\.]+)(\\()",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"end": "\\)",
-			"name": "meta.declaration.annotation.kotlin",
-			"patterns": [
-				{
-					"include": "#annotation-args"
-				}
-			]
-		},
-		"annotation-with-list": {
-			"begin": "(@\\w+):\\s*(\\[)",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
+		"annotation-site-list": {
+			"begin": "(@\\w+):\\s*\\[",
 			"end": "\\]",
-			"name": "meta.declaration.annotation.kotlin",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.type.annotation-site.kotlin"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#unescaped-annotation"
+				}
+			]
+		},
+		"annotation-site": {
+			"begin": "(@\\w+):\\s*(?!\\[)",
+			"end": "$",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.type.annotation-site.kotlin"
+				}
+			},
 			"patterns": [
 				{
 					"include": "#unescaped-annotation"
@@ -205,59 +144,8 @@
 			]
 		},
 		"unescaped-annotation": {
-			"patterns": [
-				{
-					"include": "#unescaped-annotation-simple"
-				},
-				{
-					"include": "#unescaped-annotation-call"
-				}
-			]
-		},
-		"unescaped-annotation-simple": {
-			"match": "([\\w\\.]+)\\b(?!:|\\[|\\()",
-			"captures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"name": "meta.declaration.annotation.kotlin"
-		},
-		"unescaped-annotation-call": {
-			"begin": "([\\w\\.]+)(\\()",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"end": "\\)",
-			"name": "meta.declaration.annotation.kotlin",
-			"patterns": [
-				{
-					"include": "#annotation-args"
-				}
-			]
-		},
-		"annotation-args": {
-			"patterns": [
-				{
-					"include": "#annotation-key"
-				},
-				{
-					"include": "#code"
-				}
-			]
-		},
-		"annotation-key": {
-			"match": "(\\w*)\\s*(=)",
-			"captures": {
-				"1": {
-					"name": "constant.other.key.kotlin"
-				},
-				"2": {
-					"name": "keyword.operator.assignment.kotlin"
-				}
-			}
+			"match": "\\b[\\w\\.]+\\b",
+			"name": "entity.name.type.annotation.kotlin"
 		},
 		"class-declaration": {
 			"begin": "\\b(class|interface)\\b",
@@ -364,10 +252,21 @@
 			]
 		},
 		"type-annotation": {
-			"match": ":\\s+(\\w+)",
+			"match": ":\\s*(\\w+)\\b",
 			"captures": {
 				"1": {
 					"name": "entity.name.type.kotlin"
+				}
+			}
+		},
+		"key": {
+			"match": "(\\w*)\\s*(=)",
+			"captures": {
+				"1": {
+					"name": "constant.other.key.kotlin"
+				},
+				"2": {
+					"name": "keyword.operator.assignment.kotlin"
 				}
 			}
 		}
