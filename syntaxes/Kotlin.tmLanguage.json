@@ -28,22 +28,6 @@
 					"include": "#comments"
 				},
 				{
-					"match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
-					"match": "(?<!\\.)\\s*\\*",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
-					"match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
-					"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
 					"match": "\\*",
 					"name": "variable.language.wildcard.kotlin"
 				}
@@ -62,23 +46,14 @@
 			"patterns": [
 				{
 					"include": "#comments"
-				},
-				{
-					"match": "(?<=\\.)\\s*\\.|\\.(?=\\s*;)",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
-					"match": "(?<!_)_(?=\\s*(\\.|;))|\\b\\d+|-+",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
-				},
-				{
-					"match": "(?x)\\b(?<!\\$)\n(abstract|assert|boolean|break|byte|case|catch|char|class|\nconst|continue|default|do|double|else|enum|extends|final|\nfinally|float|for|goto|if|implements|import|instanceof|int|\ninterface|long|native|new|package|private|protected|public|\nreturn|short|static|strictfp|super|switch|syncronized|this|\nthrow|throws|transient|try|void|volatile|while|\ntrue|false|null)\\b",
-					"name": "invalid.illegal.character_not_allowed_here.kotlin"
 				}
 			]
 		},
 		"code": {
 			"patterns": [
+				{
+					"include": "#keywords"
+				},
 				{
 					"include": "#annotation-simple"
 				},
@@ -93,9 +68,6 @@
 				},
 				{
 					"include": "#class-declaration-generic"
-				},
-				{
-					"include": "#where-declaration"
 				},
 				{
 					"include": "#type-alias"
@@ -146,9 +118,6 @@
 					"include": "#operators"
 				},
 				{
-					"include": "#modifiers"
-				},
-				{
 					"include": "#self-reference"
 				},
 				{
@@ -173,6 +142,38 @@
 					"include": "#null-literal"
 				}
 			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"include": "#prefix-modifiers"
+				},
+				{
+					"include": "#postfix-modifiers"
+				},
+				{
+					"include": "#soft-keywords"
+				},
+				{
+					"include": "#hard-keywords"
+				}
+			]
+		},
+		"prefix-modifiers": {
+			"match": "\\b(abstract|final|enum|open|annotation|sealed|data|override|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend)\\b",
+			"name": "storage.modifier.other.kotlin"
+		},
+		"postfix-modifiers": {
+			"match": "\\b(where|by|get|set)\\b",
+			"name": "storage.modifier.other.kotlin"
+		},
+		"soft-keywords": {
+			"match": "\\b(catch|finally)\\b",
+			"name": "keyword.soft.kotlin"
+		},
+		"hard-keywords": {
+			"match": "\\b(as|for|typeof|is|in|throw|return|break|continue|if|else|while|do|when|try)\\b",
+			"name": "keyword.hard.kotlin"
 		},
 		"annotation-simple": {
 			"match": "(?<!\\w)@[\\w\\.]+\\b(?!:)",
@@ -244,10 +245,6 @@
 					"name": "entity.name.type.kotlin"
 				}
 			]
-		},
-		"where-declaration": {
-			"match": "\\bwhere\\b",
-			"name": "storage.modifier.where.kotlin"
 		},
 		"type-alias": {
 			"begin": "\\b(typealias)\\s+",
@@ -502,10 +499,6 @@
 		"operators": {
 			"match": "<=|>=|===|==|=>|=|\\!==|\\!=|\\+=|\\+\\+|\\+|-=|--|-|\\*=|\\*|/=|/|%=|%|!|\\&\\&|\\&|\\|\\||\\|..",
 			"name": "keyword.operator.kotlin"
-		},
-		"modifiers": {
-			"match": "abstract|final|enum|open|annotation|sealed|data|override|open|final|abstract|lateinit|private|protected|public|internal|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend",
-			"name": "storage.modifier.other.kotlin"
 		},
 		"self-reference": {
 			"match": "\\b(this|super)(@\\w+)?\\b",
