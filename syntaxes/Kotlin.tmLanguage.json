@@ -67,31 +67,19 @@
 					"include": "#annotation-site"
 				},
 				{
-					"include": "#class-declaration-simple"
-				},
-				{
-					"include": "#class-declaration-generic"
+					"include": "#class-declaration"
 				},
 				{
 					"include": "#object-declaration"
 				},
 				{
-					"include": "#type-alias-simple"
+					"include": "#type-alias"
 				},
 				{
-					"include": "#type-alias-generic"
+					"include": "#function-declaration"
 				},
 				{
-					"include": "#function-declaration-simple"
-				},
-				{
-					"include": "#function-declaration-generic"
-				},
-				{
-					"include": "#variable-declaration-simple"
-				},
-				{
-					"include": "#variable-declaration-generic"
+					"include": "#variable-declaration"
 				},
 				{
 					"include": "#type-constraint"
@@ -100,7 +88,7 @@
 					"include": "#type-annotation"
 				},
 				{
-					"include": "#function-call"
+					"include": "#func/tion-call"
 				},
 				{
 					"include": "#method-reference"
@@ -294,40 +282,23 @@
 			"match": "\\b[\\w\\.]+\\b",
 			"name": "entity.name.type.annotation.kotlin"
 		},
-		"class-declaration-simple": {
-			"match": "\\b(class|interface)\\s+(\\w+)\\b\\s*(?!<)",
+		"class-declaration": {
+			"match": "\\b(class|interface)\\s+(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
 				},
 				"2": {
 					"name": "entity.name.type.class.kotlin"
+				},
+				"3": {
+					"patterns": [
+						{ 
+							"include": "#type-parameter"
+						}
+					]
 				}
 			}
-		},
-		"class-declaration-generic": {
-			"begin": "\\b(class|interface)\\s+(\\w+)<",
-			"end": ">",
-			"captures": {
-				"1": {
-					"name": "storage.type.class.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.class.kotlin"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#type-parameter"
-				},
-				{
-					"include": "#type-annotation"
-				},
-				{
-					"match": "\\b\\w+\\b",
-					"name": "entity.name.type.kotlin"
-				}
-			]
 		},
 		"object-declaration": {
 			"match": "\\b(object)\\s+(\\w+)\\b",
@@ -340,72 +311,53 @@
 				}
 			}
 		},
-		"type-alias-simple": {
-			"match": "\\b(typealias)\\s+(\\w+)\\b\\s*(?!<)",
+		"type-alias": {
+			"match": "\\b(typealias)\\s+(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.alias.kotlin"
 				},
 				"2": {
 					"name": "entity.name.type.kotlin"
+				},
+				"3": {
+					"patterns": [
+						{ 
+							"include": "#type-parameter"
+						}
+					]
 				}
 			}
 		},
-		"type-alias-generic": {
-			"begin": "\\b(typealias)\\s+(\\w+)\\b\\s*<",
-			"end": ">",
-			"beginCaptures": {
-				"1": {
-					"name": "storage.type.alias.kotlin"
-				},
-				"2": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#type-parameter"
-				}
-			]
-		},
-		"function-declaration-simple": {
-			"match": "\\b(fun)\\b\\s*(?!<)",
+		"function-declaration": {
+			"match": "\\b(fun)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
+				},
+				"2": {
+					"patterns": [
+						{ 
+							"include": "#type-parameter"
+						}
+					]
 				}
 			}
 		},
-		"function-declaration-generic": {
-			"begin": "\\b(fun)\\b\\s*<",
-			"end": ">",
-			"beginCaptures": {
-				"1": {
-					"name": "storage.type.function.kotlin"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#type-parameter"
-				}
-			]
-		},
-		"variable-declaration-simple": {
-			"match": "\\b(val|var)\\b\\s*(?!<)",
+		"variable-declaration": {
+			"match": "\\b(val|var)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "storage.type.variable.kotlin"
+				},
+				"2": {
+					"patterns": [
+						{ 
+							"include": "#type-parameter"
+						}
+					]
 				}
 			}
-		},
-		"variable-declaration-generic": {
-			"begin": "\\b(val|var)\\s*<",
-			"end": ">",
-			"patterns": [
-				{
-					"include": "#type-parameter"
-				}
-			]
 		},
 		"type-parameter": {
 			"patterns": [
@@ -420,36 +372,19 @@
 			]
 		},
 		"type-annotation": {
-			"patterns": [
-				{
-					"include": "#type-annotation-simple"
-				},
-				{
-					"include": "#type-annotation-generic"
-				}
-			]
-		},
-		"type-annotation-simple": {
-			"match": "(?<!:):\\s*([\\w\\.]+)\\b(?!<)",
+			"match": "(?<!:):\\s*([\\w\\.]+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*",
 			"captures": {
 				"1": {
 					"name": "entity.name.type.kotlin"
+				},
+				"2": {
+					"patterns": [
+						{ 
+							"include": "#type-parameter"
+						}
+					]
 				}
 			}
-		},
-		"type-annotation-generic": {
-			"begin": "(?<!:):\\s*([\\w\\.]+)<",
-			"end": ">",
-			"beginCaptures": {
-				"1": {
-					"name": "entity.name.type.kotlin"
-				}
-			},
-			"patterns": [
-				{
-					"include": "#type-parameter"
-				}
-			]
 		},
 		"function-call": {
 			"match": "\\b(\\w+)\\b\\s*(?<type-args>\\s*<([^<>]|\\g<type-args>)+>\\s*)?\\s*(?=\\(|\\{)",
