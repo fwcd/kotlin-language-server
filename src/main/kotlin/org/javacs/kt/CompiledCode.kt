@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.Position
 import org.javacs.kt.position.position
 import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtExpression
@@ -50,4 +49,12 @@ class CompiledCode(
                     .filterIsInstance<KtElement>()
                     .mapNotNull { compiled.get(BindingContext.LEXICAL_SCOPE, it) }
                     .firstOrNull()
+
+    fun describePosition(relativeToCursor: Int): String {
+        val abs = offset(relativeToCursor)
+        val pos = position(content, abs)
+        val file = parsed.containingKtFile.name
+
+        return "$file ${pos.line}:${pos.character}"
+    }
 }

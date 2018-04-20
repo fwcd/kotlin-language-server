@@ -11,6 +11,7 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
+        assertThat(labels, hasItem("extensionFoo"))
         assertThat(labels, not(hasItem("privateInstanceFoo")))
     }
 }

@@ -3,7 +3,6 @@
 - Make sure process quits
 - open is always a keyword
 - Autocomplete
-  - private members
   - getFoo(), setFoo() as foo
   - String templates
   - import ?

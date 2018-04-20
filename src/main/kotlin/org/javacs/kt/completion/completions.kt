@@ -1,30 +1,32 @@
 package org.javacs.kt.completion
 
+import com.google.common.cache.CacheBuilder
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findParent
-import org.jetbrains.kotlin.descriptors.CallableDescriptor
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtTypeElement
+import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
 import org.jetbrains.kotlin.resolve.scopes.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
+import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(code: CompiledCode): CompletionList {
     val completions = doCompletions(code)
-    val list = completions.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
+    val visible = completions.filter(isVisible(code))
+    val list = visible.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
     return CompletionList(isIncomplete, list)
 }
@@ -45,7 +47,7 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
         val receiver = dotParent.receiverExpression
-        val scope = memberScope(receiver, code) ?: return cantFindType(receiver)
+        val scope = memberScope(receiver, code) ?: return cantFindMemberScope(receiver)
         val partial = matchIdentifier(dotParent)
 
         return completeMembers(scope, partial)
@@ -73,8 +75,8 @@ private fun robustType(expr: KtExpression, code: CompiledCode): KotlinType? =
 private fun staticScope(expr: KtExpression, context: BindingContext): MemberScope? =
         expr.getReferenceTargets(context).filterIsInstance<ClassDescriptor>().map { it.staticScope }.firstOrNull()
 
-private fun <T> cantFindType(expr: KtExpression): Sequence<T> {
-    LOG.info("Can't find type of ${expr.text}")
+private fun <T> cantFindMemberScope(expr: KtExpression): Sequence<T> {
+    LOG.info("Can't find member scope for ${expr.text}")
 
     return emptySequence()
 }
@@ -192,4 +194,43 @@ fun containsCharactersInOrder(
     }
 
     return iPattern == pattern.length
+}
+
+private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
+    val expr = code.parsed.findElementAt(code.offset(0)) ?: return noExpressionAtCursor(code)
+    val from = expr.parentsWithSelf
+                       .mapNotNull { code.compiled[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
+                       .firstOrNull() ?: return noDeclarationAroundCursor(code)
+
+    fun check(target: DeclarationDescriptor): Boolean {
+        val withVisibility = target as? DeclarationDescriptorWithVisibility ?: return true
+        val visible = Visibilities.isVisibleIgnoringReceiver(withVisibility, from)
+
+        if (!visible) logHidden(target, from)
+
+        return visible
+    }
+
+    return ::check
+}
+
+private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
+
+private fun logHidden(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor) {
+    val key = Pair(from.name, target.name)
+    val doLog = { LOG.info("Hiding ${target.name} because it's not visible from ${from.name}") }
+
+    loggedHidden.get(key, doLog)
+}
+
+private fun noExpressionAtCursor(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
+    LOG.info("Can't determine visibility because there is no expression at the cursor ${code.describePosition(0)}")
+
+    return { _ -> true }
+}
+
+private fun noDeclarationAroundCursor(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
+    LOG.info("Can't determine visibility because there is no declaration around the cursor ${code.describePosition(0)}")
+
+    return { _ -> true }
 }
