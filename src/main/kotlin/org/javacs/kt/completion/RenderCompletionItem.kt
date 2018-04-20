@@ -25,14 +25,20 @@ val DECL_RENDERER = DescriptorRenderer.withOptions {
     }
 }
 
+private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")
+
 class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
 
     private val result = CompletionItem()
 
+    private fun escape(id: String): String =
+        if (id.matches(GOOD_IDENTIFIER)) id 
+        else "`$id`"
+
     private fun setDefaults(declaration: DeclarationDescriptor) {
         result.label = declaration.label()
         result.filterText = declaration.label()
-        result.insertText = declaration.label()
+        result.insertText = escape(declaration.label()!!)
         result.insertTextFormat = PlainText
         result.detail = DECL_RENDERER.render(declaration)
     }
@@ -82,7 +88,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     }
 
     private fun functionInsertText(desc: FunctionDescriptor): String {
-        val name = desc.label()
+        val name = escape(desc.label()!!)
 
         return if (desc.valueParameters.isEmpty())
             "$name()"

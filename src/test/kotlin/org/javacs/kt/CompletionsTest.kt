@@ -86,4 +86,14 @@ class CompletionsTest: LanguageServerTestFixture("completions") {
 
         assertThat(labels, hasItem("subSequence"))
     }
+
+    @Test fun `complete with backquotes`() {
+        val file = "BackquotedFunction.kt"
+        open(file)
+
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 7)).get().right!!
+        val insertText = completions.items.map { it.insertText }
+
+        assertThat(insertText, hasItem("`fun that needs backquotes`()"))
+    }
 }

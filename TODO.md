@@ -7,7 +7,6 @@
   - getFoo(), setFoo() as foo
   - String templates
   - import ?
-  - `named function` with quotes
   - something as Outer.Inn?
   - X value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
