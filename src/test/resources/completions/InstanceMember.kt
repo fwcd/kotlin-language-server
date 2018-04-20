@@ -3,6 +3,7 @@ private fun foo() {
     instance.i
 }
 
-class SomeClass {
+private class SomeClass {
     fun instanceFoo() = "Foo"
+    private fun privateInstanceFoo() = "Foo"
 }

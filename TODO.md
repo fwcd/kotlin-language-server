@@ -3,12 +3,12 @@
 - Make sure process quits
 - open is always a keyword
 - Autocomplete
-  - Static members
+  - private members
   - getFoo(), setFoo() as foo
   - String templates
   - import ?
   - something as Outer.Inn?
-  - X value.InnerClass
+  - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
 - keywords
   - as

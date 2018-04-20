@@ -3,8 +3,8 @@ package org.javacs.kt.completion
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
-import org.javacs.kt.util.findParent
 import org.javacs.kt.LOG
+import org.javacs.kt.util.findParent
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -13,11 +13,10 @@ import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtTypeElement
-import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
+import org.jetbrains.kotlin.resolve.scopes.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
-import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
-import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 
@@ -45,12 +44,11 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     }
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
-        val type = code.compiled.getType(dotParent.receiverExpression) 
-                    ?: code.robustType(dotParent.receiverExpression)
-                    ?: return cantFindType(expr)
+        val receiver = dotParent.receiverExpression
+        val scope = memberScope(receiver, code) ?: return cantFindType(receiver)
         val partial = matchIdentifier(dotParent)
 
-        return completeMembers(type, partial)
+        return completeMembers(scope, partial)
     }
     val idParent = expr.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
@@ -62,6 +60,18 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
 
     return emptySequence()
 }
+
+private fun memberScope(expr: KtExpression, code: CompiledCode): MemberScope? =
+        typeScope(expr, code) ?: staticScope(expr, code.compiled)
+
+private fun typeScope(expr: KtExpression, code: CompiledCode): MemberScope? =
+        robustType(expr, code)?.memberScope
+
+private fun robustType(expr: KtExpression, code: CompiledCode): KotlinType? =
+        code.compiled.getType(expr) ?: code.robustType(expr)
+
+private fun staticScope(expr: KtExpression, context: BindingContext): MemberScope? =
+        expr.getReferenceTargets(context).filterIsInstance<ClassDescriptor>().map { it.staticScope }.firstOrNull()
 
 private fun <T> cantFindType(expr: KtExpression): Sequence<T> {
     LOG.info("Can't find type of ${expr.text}")
@@ -86,14 +96,14 @@ fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDesc
             .filterIsInstance<CallableDescriptor>()
 }
 
-fun completeMembers(type: KotlinType, partialIdentifier: String): Sequence<DeclarationDescriptor> {
+fun completeMembers(scope: MemberScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
     val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return doCompleteMembers(type, nameFilter)
+    return doCompleteMembers(scope, nameFilter)
 }
 
-private fun doCompleteMembers(type: KotlinType, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
-    return type.memberScope
+private fun doCompleteMembers(scope: MemberScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
+    return scope
             .getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter).asSequence()
             .filter { nameFilter(it.name) }
 }
@@ -148,7 +158,7 @@ private fun implicitMembers(scope: HierarchicalScope, nameFilter: (Name) -> Bool
     if (scope !is LexicalScope) return emptySequence()
     val implicit = scope.implicitReceiver ?: return emptySequence()
 
-    return doCompleteMembers(implicit.type, nameFilter)
+    return doCompleteMembers(implicit.type.memberScope, nameFilter)
 }
 
 private fun equalsIdentifier(identifier: String): (Name) -> Boolean {
