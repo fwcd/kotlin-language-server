@@ -1,7 +1,6 @@
 package org.javacs.kt
 
-import org.hamcrest.Matchers.hasItem
-import org.hamcrest.Matchers.not
+import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 
@@ -101,5 +100,27 @@ class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("companionFun"))
+    }
+}
+
+class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
+    @Test fun `find tricky visibility members`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 10)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
+        assertThat(labels, hasItems("protectedSuperFun", "publicSuperFun", "protectedSuperCompanionFun", "publicSuperCompanionFun"))
+        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun")))
+    }
+    
+    @Test fun `determine visibility after edits`() {
+        replace("Visibility.kt", 3, 9, "p", "/* break */ p")
+
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 10 + 12)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
+        assertThat(labels, hasItems("protectedSuperFun", "publicSuperFun", "protectedSuperCompanionFun", "publicSuperCompanionFun"))
+        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun")))
     }
 }

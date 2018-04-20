@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.position.changedRegion
+import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -86,7 +87,7 @@ class CompiledFile(
         val start = surroundingFunction.textRange.startOffset
         val end = surroundingFunction.textRange.endOffset + content.length - compiledFile.text.length
         val newFunctionText = content.substring(start, end)
-        val newFunction = cp.compiler.createFunction(newFunctionText)
+        val newFunction = cp.compiler.createFunction(newFunctionText, compiledFile.toPath())
         val newContext = cp.compiler.compileExpression(newFunction, scope, sourcePath)
 
         return CompiledCode(

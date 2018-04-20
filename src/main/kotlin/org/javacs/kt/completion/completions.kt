@@ -6,7 +6,9 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findParent
+import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtExpression
@@ -14,7 +16,10 @@ import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtTypeElement
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.scopes.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
@@ -203,8 +208,7 @@ private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
                        .firstOrNull() ?: return noDeclarationAroundCursor(code)
 
     fun check(target: DeclarationDescriptor): Boolean {
-        val withVisibility = target as? DeclarationDescriptorWithVisibility ?: return true
-        val visible = Visibilities.isVisibleIgnoringReceiver(withVisibility, from)
+        val visible = isDeclarationVisible(target, from)
 
         if (!visible) logHidden(target, from)
 
@@ -214,13 +218,74 @@ private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
     return ::check
 }
 
+// We can't use the implementations in Visibilities because they don't work with our type of incremental compilation
+// Instead, we implement our own "liberal" visibility checker that defaults to visible when in doubt
+private fun isDeclarationVisible(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean =
+    target.parentsWithSelf
+            .filterIsInstance<DeclarationDescriptorWithVisibility>()
+            .none { isNotVisible(it, from) }
+
+private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean {
+    when (target.visibility) {
+        Visibilities.PRIVATE, Visibilities.PRIVATE_TO_THIS -> {
+            if (DescriptorUtils.isTopLevelDeclaration(target))
+                return !sameFile(target, from)
+            else
+                return !sameParent(target, from)
+        }
+        Visibilities.PROTECTED -> {
+            return !subclassParent(target, from)
+        }
+        else -> return false
+    }
+}
+
+private fun sameFile(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {
+    val targetFile = DescriptorUtils.getContainingSourceFile(target)
+    val fromFile = DescriptorUtils.getContainingSourceFile(from)
+
+    if (targetFile == SourceFile.NO_SOURCE_FILE || fromFile == SourceFile.NO_SOURCE_FILE) return true
+    else return targetFile.name == fromFile.name
+}
+
+private fun sameParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {
+    val targetParent = target.parentsWithSelf.mapNotNull(::isParentClass).firstOrNull() ?: return true
+    val fromParents = from.parentsWithSelf.mapNotNull(::isParentClass).toList()
+
+    if (fromParents.isEmpty()) return true
+    else return fromParents.any { it.fqNameSafe == targetParent.fqNameSafe }
+}
+
+private fun subclassParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {
+    val targetParent = target.parentsWithSelf.mapNotNull(::isParentClass).firstOrNull() ?: return true
+    val fromParents = from.parentsWithSelf.mapNotNull(::isParentClass).toList()
+
+    if (fromParents.isEmpty()) return true
+    else return fromParents.any { DescriptorUtils.isSubclass(it, targetParent) }
+}
+
+private fun isParentClass(declaration: DeclarationDescriptor): ClassDescriptor? =
+    if (declaration is ClassDescriptor && !DescriptorUtils.isCompanionObject(declaration))
+        declaration
+    else null
+
 private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
 
-private fun logHidden(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor) {
+private fun logHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {
     val key = Pair(from.name, target.name)
-    val doLog = { LOG.info("Hiding ${target.name} because it's not visible from ${from.name}") }
 
-    loggedHidden.get(key, doLog)
+    loggedHidden.get(key, { doLogHidden(target, from )})
+}
+
+private fun doLogHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {
+    LOG.info("Hiding ${describeDeclaration(target)} because it's not visible from ${describeDeclaration(from)}")
+}
+
+private fun describeDeclaration(declaration: DeclarationDescriptor): String {
+    val file = declaration.findPsi()?.containingFile?.toPath()?.fileName?.toString() ?: "<unknown-file>"
+    val container = declaration.containingDeclaration?.name?.toString() ?: "<top-level>"
+
+    return "($file $container.${declaration.name})"
 }
 
 private fun noExpressionAtCursor(code: CompiledCode): (DeclarationDescriptor) -> Boolean {

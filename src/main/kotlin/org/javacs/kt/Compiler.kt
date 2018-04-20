@@ -17,10 +17,7 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.load.java.JvmAbi
-import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
@@ -33,6 +30,7 @@ import org.jetbrains.kotlin.script.ScriptDefinitionProvider
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -68,16 +66,22 @@ class Compiler(classPath: Set<Path>) {
         return new
     }
 
-    fun createExpression(content: String): KtExpression {
-        assert(!content.contains('\r'))
+    fun createExpression(content: String, file: Path = Paths.get("dummy.kt")): KtExpression {
+        val property = createDeclaration("val x = $content", file) as KtProperty
 
-        return parser.createExpression(content)
+        return property.initializer!!
     }
 
-    fun createFunction(content: String): KtNamedFunction {
-        assert(!content.contains('\r'))
+    fun createFunction(content: String, file: Path = Paths.get("dummy.kt")): KtNamedFunction =
+        createDeclaration(content, file) as KtNamedFunction
 
-        return parser.createFunction(content)
+    private fun createDeclaration(content: String, file: Path): KtDeclaration {
+        val parse = createFile(file, content)
+        val declarations = parse.declarations
+
+        assert(declarations.size == 1) { "${declarations.size} declarations in $content" }
+
+        return declarations.first()
     }
 
     private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
