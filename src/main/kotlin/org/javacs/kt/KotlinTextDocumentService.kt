@@ -185,7 +185,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         return "${path.fileName} ${position.position.line}:${position.position.character}"
     }
 
-    val debounceLint = DebounceDelay(Duration.ofSeconds(1))
+    val debounceLint = DebounceDelay(Duration.ofMillis(200))
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 
