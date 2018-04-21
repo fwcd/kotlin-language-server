@@ -369,7 +369,7 @@
 			]
 		},
 		"type-annotation": {
-			"match": "(?<!:):\\s*(?<TYPE>(<\\g<TYPE>>|\\(\\g<TYPE>\\)|-\\>|[^<>\\(\\)])+)",
+			"match": "(?<!:):\\s*(?<TYPE>(<\\g<TYPE>>|\\(\\g<TYPE>\\)|-\\>|[\\w,\\s:\\?])+)",
 			"captures": {
 				"0": {
 					"patterns": [
