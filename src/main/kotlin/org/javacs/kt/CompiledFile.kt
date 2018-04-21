@@ -1,5 +1,7 @@
 package org.javacs.kt
 
+import com.intellij.openapi.util.TextRange
+import org.javacs.kt.position.position
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.position.changedRegion
@@ -32,21 +34,21 @@ class CompiledFile(
         val oldCursor = oldCursor(cursor)
         val leaf = compiledFile.findElementAt(oldCursor) ?: run {
             return if (oldChanged.contains(oldCursor)) {
-                LOG.info("No element at ${fileName(compiledFile)}:$cursor, inside changed region")
+                LOG.info("No element at ${describePosition(cursor)}, inside changed region")
                 File
             } else {
-                LOG.info("No element at ${fileName(compiledFile)}:$cursor")
+                LOG.info("No element at ${describePosition(cursor)}")
                 Impossible
             }
         }
         val surroundingFunction = leaf.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull() ?: run {
-            LOG.info("No surrounding function at ${fileName(compiledFile)}:$cursor")
+            LOG.info("No surrounding function at ${describePosition(cursor)}")
             return File
         }
         // If the expression that we're going to re-compile doesn't include all the changes, give up
         val willRepair = surroundingFunction.bodyExpression?.textRange ?: return File
         if (!willRepair.contains(oldChanged)) {
-            LOG.info("Changed region ${fileName(compiledFile)}:$oldChanged is outside ${surroundingFunction.name} $willRepair")
+            LOG.info("Changed region ${describeRange(oldChanged)} is outside ${surroundingFunction.name} $willRepair")
             return File
         }
         // If the function body doesn't have scope, give up
@@ -55,7 +57,7 @@ class CompiledFile(
             return File
         }
 
-        LOG.info("Successfully recovered at ${fileName(compiledFile)}:$cursor using ${surroundingFunction.name}")
+        LOG.info("Successfully recovered at ${describePosition(cursor)} using ${surroundingFunction.name}")
         return Function
     }
 
@@ -98,6 +100,21 @@ class CompiledFile(
                 surroundingFunction.textRange.startOffset,
                 cp.compiler,
                 sourcePath)
+    }
+
+    fun describePosition(offset: Int): String {
+        val pos = position(content, offset)
+        val file = compiledFile.toPath().fileName
+
+        return "$file ${pos.line}:${pos.character}"
+    }
+
+    private fun describeRange(range: TextRange): String {
+        val start = position(content, range.startOffset)
+        val end = position(content, range.endOffset)
+        val file = compiledFile.name 
+
+        return "$file ${start.line}:${start.character}-${end.line}:${end.character}"
     }
 }
 

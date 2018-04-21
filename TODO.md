@@ -10,6 +10,7 @@
   - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
   - ::?
+  - rec|.otherStuff
 - keywords
   - as
   - is
