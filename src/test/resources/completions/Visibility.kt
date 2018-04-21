@@ -27,3 +27,5 @@ private open class VisibilitySuper {
 }
 
 private fun privateTopLevelFun() { }
+
+fun String.publicExtensionFun() { }

@@ -110,7 +110,7 @@ class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
 
         assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
         assertThat(labels, hasItems("protectedSuperFun", "publicSuperFun", "protectedSuperCompanionFun", "publicSuperCompanionFun"))
-        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun")))
+        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun", "publicExtensionFun")))
     }
     
     @Test fun `determine visibility after edits`() {
@@ -121,6 +121,6 @@ class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
 
         assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
         assertThat(labels, hasItems("protectedSuperFun", "publicSuperFun", "protectedSuperCompanionFun", "publicSuperCompanionFun"))
-        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun")))
+        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun", "publicExtensionFun")))
     }
 }
