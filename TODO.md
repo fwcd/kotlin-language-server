@@ -9,6 +9,7 @@
   - something as Outer.Inn?
   - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
+  - ::?
 - keywords
   - as
   - is

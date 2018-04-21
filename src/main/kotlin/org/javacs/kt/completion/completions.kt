@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
+import org.jetbrains.kotlin.resolve.descriptorUtil.isExtension
 import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
@@ -27,6 +28,7 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.TypeUtils
 import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
@@ -58,18 +60,31 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     // .?
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
+        // thingWithType.?
         val receiver = dotParent.receiverExpression
-        val scope = memberScope(receiver, code) ?: return cantFindMemberScope(receiver)
-        // TODO use CallableDescriptor.extensionReceiverParameter to find extension function
+        val type = robustType(receiver, code)
+        if (type != null) {
+            val members = type.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+            val lexicalScope = code.findScope(dotParent) ?: return cantFindLexicalScope(dotParent)
+            val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(type, it) }
 
-        return scope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+            return members + extensions
+        }
+        // JavaClass.?
+        val static = staticScope(receiver, code.compiled)
+        if (static != null) {
+            return static.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        }
+
+        LOG.info("Can't find member scope for ${dotParent.text}")
+        return emptySequence()
     }
     // ?
     val idParent = expr.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
-        val scope = code.findScope(idParent) ?: return emptySequence()
+        val scope = code.findScope(idParent) ?: return cantFindLexicalScope(idParent)
 
-        return scopeChainIdentifiers(scope)
+        return identifiers(scope)
     }
 
     LOG.info("$expr ${expr.text} didn't look like a type, a member, or an identifier")
@@ -79,20 +94,14 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
 private fun exprBeforeCursor(code: CompiledCode): KtExpression? =
     code.parsed.findElementAt(code.offset(-1))?.findParent<KtExpression>()
 
-private fun memberScope(expr: KtExpression, code: CompiledCode): MemberScope? =
-        typeScope(expr, code) ?: staticScope(expr, code.compiled)
-
-private fun typeScope(expr: KtExpression, code: CompiledCode): MemberScope? =
-        robustType(expr, code)?.memberScope
-
 private fun robustType(expr: KtExpression, code: CompiledCode): KotlinType? =
         code.compiled.getType(expr) ?: code.robustType(expr)
 
 private fun staticScope(expr: KtExpression, context: BindingContext): MemberScope? =
         expr.getReferenceTargets(context).filterIsInstance<ClassDescriptor>().map { it.staticScope }.firstOrNull()
 
-private fun <T> cantFindMemberScope(expr: KtExpression): Sequence<T> {
-    LOG.info("Can't find member scope for ${expr.text}")
+private fun <T> cantFindLexicalScope(expr: KtExpression): Sequence<T> {
+    LOG.info("Can't find lexical scope for ${expr.text}")
 
     return emptySequence()
 }
@@ -139,13 +148,20 @@ private fun scopeTypes(scope: HierarchicalScope): Sequence<DeclarationDescriptor
 fun identifierOverloads(scope: LexicalScope, identifier: String): Sequence<CallableDescriptor> {
     val nameFilter = equalsIdentifier(identifier)
 
-    return scopeChainIdentifiers(scope)
+    return identifiers(scope)
             .filterIsInstance<CallableDescriptor>()
             .filter(nameFilter)
 }
 
+private fun extensionFunctions(scope: LexicalScope): Sequence<CallableDescriptor> =
+    scope.parentsWithSelf.flatMap(::scopeExtensionFunctions)
 
-private fun scopeChainIdentifiers(scope: LexicalScope): Sequence<DeclarationDescriptor> =
+private fun scopeExtensionFunctions(scope: HierarchicalScope): Sequence<CallableDescriptor> =
+    scope.getContributedDescriptors(DescriptorKindFilter.CALLABLES).asSequence()
+            .filterIsInstance<CallableDescriptor>()
+            .filter { it.isExtension }
+
+private fun identifiers(scope: LexicalScope): Sequence<DeclarationDescriptor> =
     scope.parentsWithSelf
             .flatMap(::scopeIdentifiers)
             .flatMap(::explodeConstructors)
@@ -278,6 +294,11 @@ private fun isParentClass(declaration: DeclarationDescriptor): ClassDescriptor? 
     if (declaration is ClassDescriptor && !DescriptorUtils.isCompanionObject(declaration))
         declaration
     else null
+
+private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescriptor): Boolean {
+    val receiverType = extensionFunction.extensionReceiverParameter?.type ?: return false
+    return TypeUtils.contains(type, receiverType)
+}
 
 private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
 
