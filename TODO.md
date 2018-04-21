@@ -11,6 +11,7 @@
   - editFoo?() should overwrite () instead of adding another ()
   - ::?
   - rec|.otherStuff
+  - Many random extension functions are showing up
 - keywords
   - as
   - is

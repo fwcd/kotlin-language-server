@@ -81,7 +81,16 @@ class Compiler(classPath: Set<Path>) {
 
         assert(declarations.size == 1) { "${declarations.size} declarations in $content" }
 
-        return declarations.first()
+        val onlyDeclaration = declarations.first()
+
+        if (onlyDeclaration is KtScript) {
+            val scriptDeclarations = onlyDeclaration.declarations
+
+            assert(declarations.size == 1) { "${declarations.size} declarations in script in $content" }
+
+            return scriptDeclarations.first()
+        }
+        else return onlyDeclaration
     }
 
     private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
