@@ -20,8 +20,11 @@ import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
-import org.jetbrains.kotlin.resolve.scopes.*
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
+import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
+import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import java.util.concurrent.TimeUnit
@@ -30,9 +33,13 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(code: CompiledCode): CompletionList {
     val completions = doCompletions(code)
-    val visible = completions.filter(isVisible(code))
+    val partial = findPartialIdentifier(code)
+    val nameFilter = matchesPartialIdentifier(partial)
+    val matchesName = completions.filter(nameFilter)
+    val visible = matchesName.filter(isVisible(code))
     val list = visible.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
+    // TODO separate "get all candidates" from "filter by name"
     return CompletionList(isIncomplete, list)
 }
 
@@ -40,33 +47,37 @@ private fun completionItem(declaration: DeclarationDescriptor): CompletionItem =
         declaration.accept(RenderCompletionItem(), null)
 
 private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
-    val psi = code.parsed.findElementAt(code.offset(-1)) ?: return emptySequence()
-    val expr = psi.findParent<KtExpression>() ?: return emptySequence()
+    val expr = exprBeforeCursor(code) ?: return emptySequence()
+    // :?
     val typeParent = expr.findParent<KtTypeElement>()
     if (typeParent != null) {
         val scope = code.findScope(expr) ?: return emptySequence()
-        val partial = matchIdentifier(expr)
 
-        return completeTypes(scope, partial)
+        return scopeChainTypes(scope)
     }
+    // .?
     val dotParent = expr.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
         val receiver = dotParent.receiverExpression
         val scope = memberScope(receiver, code) ?: return cantFindMemberScope(receiver)
-        val partial = matchIdentifier(dotParent)
+        // TODO use CallableDescriptor.extensionReceiverParameter to find extension function
 
-        return completeMembers(scope, partial)
+        return scope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
     }
+    // ?
     val idParent = expr.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
         val scope = code.findScope(idParent) ?: return emptySequence()
-        val partial = matchIdentifier(expr)
 
-        return completeIdentifiers(scope, partial)
+        return scopeChainIdentifiers(scope)
     }
 
+    LOG.info("$expr ${expr.text} didn't look like a type, a member, or an identifier")
     return emptySequence()
 }
+
+private fun exprBeforeCursor(code: CompiledCode): KtExpression? =
+    code.parsed.findElementAt(code.offset(-1))?.findParent<KtExpression>()
 
 private fun memberScope(expr: KtExpression, code: CompiledCode): MemberScope? =
         typeScope(expr, code) ?: staticScope(expr, code.compiled)
@@ -86,10 +97,24 @@ private fun <T> cantFindMemberScope(expr: KtExpression): Sequence<T> {
     return emptySequence()
 }
 
-private val FIND_ID = Regex("\\.(\\w+)")
+private fun findPartialIdentifier(code: CompiledCode): String {
+    val expr = exprBeforeCursor(code) ?: return ""
+    val dotParent = expr.findParent<KtDotQualifiedExpression>()
+    if (dotParent != null) return findMember(dotParent)
+    else return findId(expr)
+}
 
-private fun matchIdentifier(dotExpr: KtExpression): String {
-    val match = FIND_ID.find(dotExpr.text) ?: return ""
+private val FIND_ID = Regex("\\w+")
+
+private fun findId(expr: KtExpression): String {
+    val match = FIND_ID.findAll(expr.text).firstOrNull() ?: return ""
+    return match.value
+}
+
+private val FIND_MEMBER = Regex("\\.(\\w+)")
+
+private fun findMember(dotExpr: KtDotQualifiedExpression): String {
+    val match = FIND_MEMBER.find(dotExpr.text) ?: return ""
     val word = match.groups[1] ?: return ""
     return word.value
 }
@@ -98,56 +123,36 @@ fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDesc
     val nameFilter = equalsIdentifier(identifier)
 
     return type.memberScope
-            .getDescriptorsFiltered(Companion.CALLABLES, nameFilter).asSequence()
-            .filter { nameFilter(it.name) }
+            .getContributedDescriptors(Companion.CALLABLES).asSequence()
             .filterIsInstance<CallableDescriptor>()
+            .filter(nameFilter)
 }
 
-fun completeMembers(scope: MemberScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
-    val nameFilter = matchesPartialIdentifier(partialIdentifier)
+private fun scopeChainTypes(scope: LexicalScope): Sequence<DeclarationDescriptor> =
+        scope.parentsWithSelf.flatMap(::scopeTypes)
 
-    return doCompleteMembers(scope, nameFilter)
-}
+private val TYPES_FILTER = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
 
-private fun doCompleteMembers(scope: MemberScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
-    return scope
-            .getDescriptorsFiltered(DescriptorKindFilter.ALL, nameFilter).asSequence()
-            .filter { nameFilter(it.name) }
-}
-
-fun completeTypes(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
-    val kindsFilter = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
-    val nameFilter = matchesPartialIdentifier(partialIdentifier)
-
-    return scope.parentsWithSelf
-            .flatMap { it.getContributedDescriptors(kindsFilter, nameFilter).asSequence() }
-            .filter { nameFilter(it.name) }
-}
+private fun scopeTypes(scope: HierarchicalScope): Sequence<DeclarationDescriptor> =
+        scope.getContributedDescriptors(TYPES_FILTER).asSequence()
 
 fun identifierOverloads(scope: LexicalScope, identifier: String): Sequence<CallableDescriptor> {
     val nameFilter = equalsIdentifier(identifier)
 
-    return allIdentifiers(scope, nameFilter)
+    return scopeChainIdentifiers(scope)
             .filterIsInstance<CallableDescriptor>()
+            .filter(nameFilter)
 }
 
-fun completeIdentifiers(scope: LexicalScope, partialIdentifier: String): Sequence<DeclarationDescriptor> {
-    val nameFilter = matchesPartialIdentifier(partialIdentifier)
 
-    return allIdentifiers(scope, nameFilter)
-}
+private fun scopeChainIdentifiers(scope: LexicalScope): Sequence<DeclarationDescriptor> =
+    scope.parentsWithSelf
+            .flatMap(::scopeIdentifiers)
+            .flatMap(::explodeConstructors)
 
-private fun allIdentifiers(scope: LexicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
-    val matchesName = scope.parentsWithSelf
-            .flatMap { scopeIdentifiers(it, nameFilter) }
-            .filter { nameFilter(it.name) }
-
-    return matchesName.flatMap(::explodeConstructors)
-}
-
-private fun scopeIdentifiers(scope: HierarchicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
-    val locals = scope.getContributedDescriptors(DescriptorKindFilter.ALL, nameFilter).asSequence()
-    val members = implicitMembers(scope, nameFilter)
+private fun scopeIdentifiers(scope: HierarchicalScope): Sequence<DeclarationDescriptor> {
+    val locals = scope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+    val members = implicitMembers(scope)
 
     return locals + members
 }
@@ -161,21 +166,28 @@ private fun explodeConstructors(declaration: DeclarationDescriptor): Sequence<De
     }
 }
 
-private fun implicitMembers(scope: HierarchicalScope, nameFilter: (Name) -> Boolean): Sequence<DeclarationDescriptor> {
+private fun implicitMembers(scope: HierarchicalScope): Sequence<DeclarationDescriptor> {
     if (scope !is LexicalScope) return emptySequence()
     val implicit = scope.implicitReceiver ?: return emptySequence()
 
-    return doCompleteMembers(implicit.type.memberScope, nameFilter)
+    return implicit.type.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
 }
 
-private fun equalsIdentifier(identifier: String): (Name) -> Boolean {
-    return { it.identifier == identifier }
+private fun equalsIdentifier(identifier: String): (DeclarationDescriptor) -> Boolean {
+    return { name(it) == identifier }
 }
 
-private fun matchesPartialIdentifier(partialIdentifier: String): (Name) -> Boolean {
+private fun matchesPartialIdentifier(partialIdentifier: String): (DeclarationDescriptor) -> Boolean {
     return {
-        containsCharactersInOrder(it.identifier, partialIdentifier, false)
+        containsCharactersInOrder(name(it), partialIdentifier, false)
     }
+}
+
+private fun name(d: DeclarationDescriptor): String {
+    if (d is ConstructorDescriptor)
+        return d.constructedClass.name.identifier
+    else
+        return d.name.identifier
 }
 
 fun containsCharactersInOrder(
@@ -206,7 +218,6 @@ private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
     val from = expr.parentsWithSelf
                        .mapNotNull { code.compiled[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
                        .firstOrNull() ?: return noDeclarationAroundCursor(code)
-
     fun check(target: DeclarationDescriptor): Boolean {
         val visible = isDeclarationVisible(target, from)
 
@@ -252,8 +263,7 @@ private fun sameParent(target: DeclarationDescriptor, from: DeclarationDescripto
     val targetParent = target.parentsWithSelf.mapNotNull(::isParentClass).firstOrNull() ?: return true
     val fromParents = from.parentsWithSelf.mapNotNull(::isParentClass).toList()
 
-    if (fromParents.isEmpty()) return true
-    else return fromParents.any { it.fqNameSafe == targetParent.fqNameSafe }
+    return fromParents.any { it.fqNameSafe == targetParent.fqNameSafe }
 }
 
 private fun subclassParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {
