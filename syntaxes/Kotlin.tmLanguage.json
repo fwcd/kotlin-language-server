@@ -274,7 +274,7 @@
 			"name": "entity.name.type.annotation.kotlin"
 		},
 		"class-declaration": {
-			"match": "\\b(class|interface)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(<(?<TYPE>(<\\g<TYPE>>|-\\>|[\\w,\\s:\\?\\(\\)\\.])+)>)?",
+			"match": "\\b(class|interface)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(?<GROUP><([^<>]|\\g<GROUP>)+>)?",
 			"captures": {
 				"1": {
 					"name": "storage.type.class.kotlin"
@@ -303,7 +303,7 @@
 			}
 		},
 		"type-alias": {
-			"match": "\\b(typealias)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(<(?<TYPE>(<\\g<TYPE>>|-\\>|[\\w,\\s:\\?\\(\\)\\.])+)>)?",
+			"match": "\\b(typealias)\\s+(\\b\\w+\\b|`[^`]+`)\\s*(?<GROUP><([^<>]|\\g<GROUP>)+>)?",
 			"captures": {
 				"1": {
 					"name": "storage.type.alias.kotlin"
@@ -321,7 +321,7 @@
 			}
 		},
 		"function-declaration": {
-			"match": "\\b(fun)\\b\\s*(?:<(?<TYPE>(<\\g<TYPE>>|-\\>|[\\w,\\s:\\?\\(\\)\\.])+)>)?\\s*(?:(\\w+)\\.)?(\\b\\w+\\b|`[^`]+`)",
+			"match": "\\b(fun)\\b\\s*(?<GROUP><([^<>]|\\g<GROUP>)+>)?\\s*(?:(\\w+)\\.)?(\\b\\w+\\b|`[^`]+`)",
 			"captures": {
 				"1": {
 					"name": "storage.type.function.kotlin"
@@ -342,7 +342,7 @@
 			}
 		},
 		"variable-declaration": {
-			"match": "\\b(val|var)\\b\\s*(<(?<TYPE>(<\\g<TYPE>>|-\\>|[\\w,\\s:\\?\\(\\)\\.])+)>)?",
+			"match": "\\b(val|var)\\b\\s*(?<GROUP><([^<>]|\\g<GROUP>)+>)?",
 			"captures": {
 				"1": {
 					"name": "storage.type.variable.kotlin"
@@ -369,7 +369,7 @@
 			]
 		},
 		"type-annotation": {
-			"match": "(?<!:):\\s*(?<TYPE>(<\\g<TYPE>>|\\(\\g<TYPE>\\)|-\\>|[\\w,\\s:\\?\\.])+)",
+			"match": "(?<![:?]):\\s*(\\w|\\?|\\s|->|(?<GROUP>[<(]([^<>()]|\\g<GROUP>)+[)>]))+",
 			"captures": {
 				"0": {
 					"patterns": [
@@ -381,7 +381,7 @@
 			}
 		},
 		"function-call": {
-			"match": "\\??\\.?(\\b\\w+\\b|`[^`]+`)\\s*(<(?<TYPE>(<\\g<TYPE>>|-\\>|[\\w,\\s:\\?\\(\\)\\.])+)>)?\\s*(?=\\(|\\{)",
+			"match": "\\??\\.?(\\b\\w+\\b|`[^`]+`)\\s*(?<GROUP><([^<>]|\\g<GROUP>)+>)?\\s*(?=[({])",
 			"captures": {
 				"1": {
 					"name": "entity.name.function.call.kotlin"
