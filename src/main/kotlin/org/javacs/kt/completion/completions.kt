@@ -36,6 +36,7 @@ private const val MAX_COMPLETION_ITEMS = 50
 fun completions(code: CompiledCode): CompletionList {
     val completions = doCompletions(code)
     val partial = findPartialIdentifier(code)
+    LOG.info("Looking for names that match '${partial}'")
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(code))
