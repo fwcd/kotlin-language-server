@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
 
-private class SourceVersion(val content: String, val version: Int, val open: Boolean)
+private class SourceVersion(val content: String, val version: Int)
 
 /**
  * Notify SourcePath whenever a file changes
@@ -47,12 +47,16 @@ private class NotifySourcePath(private val sp: SourcePath) {
 class SourceFiles(private val sp: SourcePath) {
     private val workspaceRoots = mutableSetOf<Path>()
     private val files = NotifySourcePath(sp)
+    private val open = mutableSetOf<Path>()
 
     fun open(file: Path, content: String, version: Int) {
-        files[file] = SourceVersion(content, version, true)
+        files[file] = SourceVersion(content, version)
+        open.add(file)
     }
 
     fun close(file: Path) {
+        open.remove(file)
+
         val disk = readFromDisk(file)
 
         if (disk != null)
@@ -75,7 +79,7 @@ class SourceFiles(private val sp: SourcePath) {
             else newText = patch(newText, change)
         }
 
-        files[file] = SourceVersion(newText, newVersion, true)
+        files[file] = SourceVersion(newText, newVersion)
     }
 
     fun createdOnDisk(file: Path) {
@@ -97,7 +101,7 @@ class SourceFiles(private val sp: SourcePath) {
 
         val content = Files.readAllLines(file).joinToString("\n")
 
-        return SourceVersion(content, -1, false)
+        return SourceVersion(content, -1)
     }
 
     private fun isSource(file: Path): Boolean {
@@ -127,7 +131,7 @@ class SourceFiles(private val sp: SourcePath) {
         workspaceRoots.remove(root)
     }
 
-    fun isOpen(file: Path): Boolean = files[file]!!.open
+    fun isOpen(file: Path): Boolean = open.contains(file)
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
