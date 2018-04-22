@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.*
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -7,25 +8,27 @@ import org.junit.Test
 class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.kt") {
     @Test fun `complete instance members`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 15)).get().right!!
-        val labels = completions.items.map { it.label }
-
-        assertThat(labels, hasItem("instanceFoo"))
-        assertThat(labels, hasItem("extensionFoo"))
-        assertThat(labels, not(hasItem("privateInstanceFoo")))
-
-        assertThat("Reports instanceFoo only once", completions.items.filter { it.label == "instanceFoo" }, hasSize(1))
-        assertThat("Reports extensionFoo only once", completions.items.filter { it.label == "extensionFoo" }, hasSize(1))
+        
+        checkResponse(completions)
     }
 
     @Test fun `complete instance members after editing`() {
         replace("InstanceMember.kt", 3, 5, "instance.f", "/* break */ instance.f")
 
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 27)).get().right!!
+
+        checkResponse(completions)
+    }
+
+    private fun checkResponse(completions: CompletionList) {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
         assertThat(labels, hasItem("extensionFoo"))
+        assertThat(labels, hasItem("fooVar"))
         assertThat(labels, not(hasItem("privateInstanceFoo")))
+        assertThat(labels, not(hasItem("getFooVar")))
+        assertThat(labels, not(hasItem("setFooVar")))
 
         assertThat("Reports instanceFoo only once", completions.items.filter { it.label == "instanceFoo" }, hasSize(1))
         assertThat("Reports extensionFoo only once", completions.items.filter { it.label == "extensionFoo" }, hasSize(1))

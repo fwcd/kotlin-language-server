@@ -11,6 +11,7 @@ private fun findListExtensionFunctions() {
 private class SomeClass {
     fun instanceFoo() = "Foo"
     private fun privateInstanceFoo() = "Foo"
+    var fooVar = 1
 }
 
 private fun SomeClass.extensionFoo() = "Bar"
