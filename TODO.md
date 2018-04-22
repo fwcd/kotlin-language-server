@@ -1,6 +1,5 @@
 ## Bugs
 - Jump to function name, not start of declaration
-- Make sure process quits
 - open is always a keyword
 - Autocomplete
   - String templates
