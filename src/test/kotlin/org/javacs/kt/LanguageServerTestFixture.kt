@@ -100,5 +100,8 @@ fun testResourcesRoot(): Path {
 open class SingleFileTestFixture(relativeWorkspaceRoot: String, val file: String): LanguageServerTestFixture(relativeWorkspaceRoot) {
     @Before fun openFile() {
         open(file)
+        
+        // Wait for lint, so subsequent replace(...) operations cause recovery
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
     }
 }

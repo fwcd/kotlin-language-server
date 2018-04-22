@@ -1,10 +1,10 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
-import org.javacs.kt.position.position
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.position.changedRegion
+import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
@@ -85,21 +85,31 @@ class CompiledFile(
     fun recompileFunction(cursor: Int): CompiledCode {
         val oldCursor = oldCursor(cursor)
         val surroundingFunction = compiledFile.findElementAt(oldCursor)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().firstOrNull()!!
-        val scope = compiledContext.get(BindingContext.LEXICAL_SCOPE, surroundingFunction.bodyExpression)!!
-        val start = surroundingFunction.textRange.startOffset
-        val end = surroundingFunction.textRange.endOffset + content.length - compiledFile.text.length
-        val newFunctionText = content.substring(start, end)
-        val newFunction = cp.compiler.createFunction(newFunctionText, compiledFile.toPath())
-        val newContext = cp.compiler.compileExpression(newFunction, scope, sourcePath)
-
-        return CompiledCode(
+        val body = surroundingFunction.bodyExpression!!
+        val scope = compiledContext.get(BindingContext.LEXICAL_SCOPE, body)!!
+        val start = body.textRange.startOffset
+        val end = body.textRange.endOffset + content.length - compiledFile.text.length
+        val newBodyText = content.substring(start, end)
+        val newBody = cp.compiler.createExpression(newBodyText, compiledFile.toPath())
+        val newContext = cp.compiler.compileExpression(newBody, scope, sourcePath)
+        val offset = body.textRange.startOffset
+        val result = CompiledCode(
                 content,
-                newFunction,
+                newBody,
                 newContext,
                 cursor,
-                surroundingFunction.textRange.startOffset,
+                offset,
                 cp.compiler,
                 sourcePath)
+
+        // Check that we compiled what we intended
+        assert(newBody.text == newBodyText)
+
+        val oldAfterCursor = content.substring(cursor)
+        val newAfterCursor = newBody.text.substring(result.offset(0))
+        assert(oldAfterCursor.startsWith(newAfterCursor))
+
+        return result
     }
 
     fun describePosition(offset: Int): String {

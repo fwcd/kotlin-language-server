@@ -62,7 +62,7 @@ private class FileToEdit {
         val context = compiler.compileFile(original, listOf(original))
         val function = original.findElementAt(49)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().first()
         val scope = context.get(BindingContext.LEXICAL_SCOPE, function.bodyExpression)!!
-        val recompile = compiler.createFunction("""private fun singleExpressionFunction() = intFunction()""")
+        val recompile = compiler.createDeclaration("""private fun singleExpressionFunction() = intFunction()""")
         val recompileContext = compiler.compileExpression(recompile, scope, setOf(original))
         val intFunctionRef = recompile.findElementAt(41)!!.parentsWithSelf.filterIsInstance<KtReferenceExpression>().first()
         val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!

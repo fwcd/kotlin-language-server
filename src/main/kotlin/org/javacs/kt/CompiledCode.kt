@@ -25,7 +25,10 @@ class CompiledCode(
         private val sourcePath: Collection<KtFile>) {
 
     /**
-     * Convert an offset from relative-to-cursor to absolute-within-parsed, taking into consideration the weirdness of
+     * Convert an offset from relative to the cursor, to relative to the start of parsed.
+     * The result of offset is suitable for calling parsed.findElementAt(offset(?))
+     * Note that this is NOT the same as the coordinate system of parsed,
+     * because parsed may be embedded in a synthetic surrounding expression for the purpose of compilation
      */
     fun offset(relativeToCursor: Int): Int = cursor - textOffset + relativeToCursor
 

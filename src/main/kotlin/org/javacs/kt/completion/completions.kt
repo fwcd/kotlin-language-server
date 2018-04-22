@@ -92,8 +92,12 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     return emptySequence()
 }
 
-private fun exprBeforeCursor(code: CompiledCode): KtExpression? =
-    code.parsed.findElementAt(code.offset(-1))?.findParent<KtExpression>()
+private fun exprBeforeCursor(code: CompiledCode): KtExpression? {
+    val cursor = code.offset(-1)
+    val psi = code.parsed.findElementAt(cursor) ?: return null
+    val result = psi.findParent<KtExpression>()
+    return result
+}
 
 private fun robustType(expr: KtExpression, code: CompiledCode): KotlinType? =
         code.compiled.getType(expr) ?: code.robustType(expr)

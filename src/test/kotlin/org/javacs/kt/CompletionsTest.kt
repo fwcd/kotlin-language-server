@@ -5,13 +5,30 @@ import org.junit.Assert.assertThat
 import org.junit.Test
 
 class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.kt") {
-    @Test fun `instance members`() {
+    @Test fun `complete instance members`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 15)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
         assertThat(labels, hasItem("extensionFoo"))
         assertThat(labels, not(hasItem("privateInstanceFoo")))
+
+        assertThat("Reports instanceFoo only once", completions.items.filter { it.label == "instanceFoo" }, hasSize(1))
+        assertThat("Reports extensionFoo only once", completions.items.filter { it.label == "extensionFoo" }, hasSize(1))
+    }
+
+    @Test fun `complete instance members after editing`() {
+        replace("InstanceMember.kt", 3, 5, "instance.f", "/* break */ instance.f")
+
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 27)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("instanceFoo"))
+        assertThat(labels, hasItem("extensionFoo"))
+        assertThat(labels, not(hasItem("privateInstanceFoo")))
+
+        assertThat("Reports instanceFoo only once", completions.items.filter { it.label == "instanceFoo" }, hasSize(1))
+        assertThat("Reports extensionFoo only once", completions.items.filter { it.label == "extensionFoo" }, hasSize(1))
     }
 }
 
@@ -26,6 +43,33 @@ class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt"
         assertThat(labels, hasItem("aClassFun"))
         assertThat(labels, hasItem("aCompanionVal"))
         assertThat(labels, hasItem("aCompanionFun"))
+
+        assertThat("Reports anArgument only once", completions.items.filter { it.label == "anArgument" }, hasSize(1))
+        assertThat("Reports aLocal only once", completions.items.filter { it.label == "aLocal" }, hasSize(1))
+        assertThat("Reports aClassVal only once", completions.items.filter { it.label == "aClassVal" }, hasSize(1))
+        assertThat("Reports aClassFun only once", completions.items.filter { it.label == "aClassFun" }, hasSize(1))
+        assertThat("Reports aCompanionVal only once", completions.items.filter { it.label == "aCompanionVal" }, hasSize(1))
+        assertThat("Reports aCompanionFun only once", completions.items.filter { it.label == "aCompanionFun" }, hasSize(1))
+    }
+
+    @Test fun `complete identifiers in function scope after editing`() {
+        replace("FunctionScope.kt", 4, 9, "a", "/* break */ a")
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 22)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("anArgument"))
+        assertThat(labels, hasItem("aLocal"))
+        assertThat(labels, hasItem("aClassVal"))
+        assertThat(labels, hasItem("aClassFun"))
+        assertThat(labels, hasItem("aCompanionVal"))
+        assertThat(labels, hasItem("aCompanionFun"))
+
+        assertThat("Reports anArgument only once", completions.items.filter { it.label == "anArgument" }, hasSize(1))
+        assertThat("Reports aLocal only once", completions.items.filter { it.label == "aLocal" }, hasSize(1))
+        assertThat("Reports aClassVal only once", completions.items.filter { it.label == "aClassVal" }, hasSize(1))
+        assertThat("Reports aClassFun only once", completions.items.filter { it.label == "aClassFun" }, hasSize(1))
+        assertThat("Reports aCompanionVal only once", completions.items.filter { it.label == "aCompanionVal" }, hasSize(1))
+        assertThat("Reports aCompanionFun only once", completions.items.filter { it.label == "aCompanionFun" }, hasSize(1))
     }
 }
 

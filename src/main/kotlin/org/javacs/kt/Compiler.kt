@@ -67,15 +67,15 @@ class Compiler(classPath: Set<Path>) {
     }
 
     fun createExpression(content: String, file: Path = Paths.get("dummy.kt")): KtExpression {
-        val property = createDeclaration("val x = $content", file) as KtProperty
+        val property = parseDeclaration("val x = $content", file) as KtProperty
 
         return property.initializer!!
     }
 
-    fun createFunction(content: String, file: Path = Paths.get("dummy.kt")): KtNamedFunction =
-        createDeclaration(content, file) as KtNamedFunction
+    fun createDeclaration(content: String, file: Path = Paths.get("dummy.kt")): KtDeclaration =
+            parseDeclaration(content, file)
 
-    private fun createDeclaration(content: String, file: Path): KtDeclaration {
+    private fun parseDeclaration(content: String, file: Path): KtDeclaration {
         val parse = createFile(file, content)
         val declarations = parse.declarations
 
