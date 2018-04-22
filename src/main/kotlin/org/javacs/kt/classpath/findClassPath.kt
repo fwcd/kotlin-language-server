@@ -1,5 +1,6 @@
 package org.javacs.kt.classpath
 
+import java.util.logging.Level
 import org.javacs.kt.LOG
 import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
@@ -41,6 +42,7 @@ private fun genDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val workingDirectory = pom.toAbsolutePath().parent.toFile()
     val cmd = "${mvnCommand()} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    LOG.info("Run ${cmd} in $workingDirectory")
     val status = Runtime.getRuntime().exec(cmd, null, workingDirectory).waitFor()
 
     assert(status == 0, { "$cmd failed" })
@@ -94,7 +96,16 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
         if (source) "${a.artifact}-${a.version}-sources.jar"
         else "${a.artifact}-${a.version}.jar"
 
-private fun mvnCommand() =
+private var cacheMvnCommand: Path? = null 
+
+private fun mvnCommand(): Path {
+    if (cacheMvnCommand == null) 
+        cacheMvnCommand = doMvnCommand()
+
+    return cacheMvnCommand!!
+}
+
+private fun doMvnCommand() =
         if (File.separatorChar == '\\') windowsMvnCommand()
         else unixMvnCommand()
 
