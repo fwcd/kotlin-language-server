@@ -6,6 +6,8 @@ import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
+import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -22,6 +24,7 @@ class CompiledFile(
         private val content: String,
         private val compiledFile: KtFile,
         private val compiledContext: BindingContext,
+        private val compiledContainer: ComponentProvider,
         private val sourcePath: Collection<KtFile>,
         private val cp: CompilerClassPath) {
     fun recompile(cursor: Int): RecompileStrategy {
@@ -76,7 +79,7 @@ class CompiledFile(
     }
 
     fun compiledCode(cursor: Int): CompiledCode {
-        return CompiledCode(compiledFile.text, compiledFile, compiledContext, cursor, 0, cp.compiler, sourcePath)
+        return CompiledCode(compiledFile.text, compiledFile, compiledContext, compiledContainer, cursor, 0, cp.compiler, sourcePath)
     }
 
     /**
@@ -91,12 +94,13 @@ class CompiledFile(
         val end = body.textRange.endOffset + content.length - compiledFile.text.length
         val newBodyText = content.substring(start, end)
         val newBody = cp.compiler.createExpression(newBodyText, compiledFile.toPath())
-        val newContext = cp.compiler.compileExpression(newBody, scope, sourcePath)
+        val (newContext, newContainer) = cp.compiler.compileExpression(newBody, scope, sourcePath)
         val offset = body.textRange.startOffset
         val result = CompiledCode(
                 content,
                 newBody,
                 newContext,
+                newContainer,
                 cursor,
                 offset,
                 cp.compiler,

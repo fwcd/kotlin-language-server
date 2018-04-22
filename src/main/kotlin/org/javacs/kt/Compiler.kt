@@ -15,6 +15,8 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
+import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.*
@@ -106,23 +108,23 @@ class Compiler(classPath: Set<Path>) {
         return Pair(container, trace)
     }
 
-    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): BindingContext =
+    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> =
             compileFiles(listOf(file), sourcePath)
 
     // TODO lock at file-level
     private val compileLock = ReentrantLock()
 
-    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingContext {
+    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
         compileLock.withLock {
             val (container, trace) = createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
-            val analyze = topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
+            topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
 
-            return trace.bindingContext
+            return Pair(trace.bindingContext, container)
         }
     }
 
-    fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): BindingContext {
+    fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
         val (container, trace) = createContainer(sourcePath)
         val incrementalCompiler = container.get<ExpressionTypingServices>()
         incrementalCompiler.getTypeInfo(
@@ -132,6 +134,6 @@ class Compiler(classPath: Set<Path>) {
                 DataFlowInfo.EMPTY,
                 trace,
                 true)
-        return trace.bindingContext
+        return Pair(trace.bindingContext, container)
     }
 }

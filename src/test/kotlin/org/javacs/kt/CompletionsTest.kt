@@ -188,3 +188,19 @@ class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
         assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun", "publicExtensionFun")))
     }
 }
+
+class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
+    @Test fun `complete import from java-nio-path-P`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 1, 23)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItems("Path", "Paths"))
+    }
+    
+    @Test fun `complete import from java-nio-`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 25)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItems("MethodHandle"))
+    }
+}

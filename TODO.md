@@ -3,7 +3,6 @@
 - open is always a keyword
 - Autocomplete
   - String templates
-  - import ?
   - something as Outer.Inn?
   - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()

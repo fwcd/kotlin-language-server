@@ -6,14 +6,14 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledCode
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findParent
+import org.javacs.kt.util.preOrderTraversal
 import org.javacs.kt.util.toPath
+import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
-import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.psi.KtNameReferenceExpression
-import org.jetbrains.kotlin.psi.KtTypeElement
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
@@ -36,8 +36,9 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(code: CompiledCode): CompletionList {
     val completions = doCompletions(code)
+    if (completions === NO_EXPR) return CompletionList(true, emptyList())
     val partial = findPartialIdentifier(code)
-    LOG.info("Looking for names that match '${partial}'")
+    LOG.info("Looking for names that match '$partial'")
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(code))
@@ -79,17 +80,30 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
         d.name.identifier.matches(Regex("set[A-Z]\\w+")) &&
         d.valueParameters.size == 1
 
+private val NO_EXPR = emptySequence<DeclarationDescriptor>()
+
 private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
-    val expr = exprBeforeCursor(code) ?: return emptySequence()
+    val el = beforeCursor(code) ?: return NO_EXPR
+    // import x.y.?
+    val import = el.findParent<KtImportDirective>()
+    if (import != null) {
+        val module = code.container.get<ModuleDescriptor>()
+        val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(import.text) ?: return doesntLookLikeImport(import)
+        val parentDot = match.groups[1]?.value ?: "."
+        val parent = parentDot.substring(0, parentDot.length - 1)
+        LOG.info("Looking for members of package '$parent'")
+        val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
+        return parentPackage.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+    }
     // :?
-    val typeParent = expr.findParent<KtTypeElement>()
+    val typeParent = el.findParent<KtTypeElement>()
     if (typeParent != null) {
-        val scope = code.findScope(expr) ?: return emptySequence()
+        val scope = code.findScope(el) ?: return emptySequence()
 
         return scopeChainTypes(scope)
     }
     // .?
-    val dotParent = expr.findParent<KtDotQualifiedExpression>()
+    val dotParent = el.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
         // thingWithType.?
         val receiver = dotParent.receiverExpression
@@ -111,21 +125,22 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
         return emptySequence()
     }
     // ?
-    val idParent = expr.findParent<KtNameReferenceExpression>()
+    val idParent = el.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
         val scope = code.findScope(idParent) ?: return cantFindLexicalScope(idParent)
 
         return identifiers(scope)
     }
 
-    LOG.info("$expr ${expr.text} didn't look like a type, a member, or an identifier")
+    LOG.info("$el ${el.text} didn't look like a type, a member, or an identifier")
     return emptySequence()
 }
 
-private fun exprBeforeCursor(code: CompiledCode): KtExpression? {
+private fun beforeCursor(code: CompiledCode): KtElement? {
     val cursor = code.offset(-1)
     val psi = code.parsed.findElementAt(cursor) ?: return null
-    val result = psi.findParent<KtExpression>()
+    val result = psi.findParent<KtElement>()
+    if (result == null) LOG.info("No element at cursor ${code.describePosition(-1)}")
     return result
 }
 
@@ -142,25 +157,10 @@ private fun <T> cantFindLexicalScope(expr: KtExpression): Sequence<T> {
 }
 
 private fun findPartialIdentifier(code: CompiledCode): String {
-    val expr = exprBeforeCursor(code) ?: return ""
-    val dotParent = expr.findParent<KtDotQualifiedExpression>()
-    if (dotParent != null) return findMember(dotParent)
-    else return findId(expr)
-}
-
-private val FIND_ID = Regex("\\w+")
-
-private fun findId(expr: KtExpression): String {
-    val match = FIND_ID.findAll(expr.text).firstOrNull() ?: return ""
-    return match.value
-}
-
-private val FIND_MEMBER = Regex("\\.(\\w+)")
-
-private fun findMember(dotExpr: KtDotQualifiedExpression): String {
-    val match = FIND_MEMBER.find(dotExpr.text) ?: return ""
-    val word = match.groups[1] ?: return ""
-    return word.value
+    val line = code.lineBeforeCursor()
+    if (line.matches(Regex(".*\\."))) return ""
+    else if (line.matches(Regex(".*\\.\\w+"))) return line.substringAfterLast(".")
+    else return Regex("\\w+").findAll(line).lastOrNull()?.value ?: ""
 }
 
 fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDescriptor> {
@@ -265,8 +265,8 @@ fun containsCharactersInOrder(
 }
 
 private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
-    val expr = code.parsed.findElementAt(code.offset(0)) ?: return noExpressionAtCursor(code)
-    val from = expr.parentsWithSelf
+    val el = beforeCursor(code) ?: return noExpressionAtCursor(code)
+    val from = el.parentsWithSelf
                        .mapNotNull { code.compiled[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
                        .firstOrNull() ?: return noDeclarationAroundCursor(code)
     fun check(target: DeclarationDescriptor): Boolean {
@@ -367,4 +367,10 @@ private fun noDeclarationAroundCursor(code: CompiledCode): (DeclarationDescripto
     LOG.info("Can't determine visibility because there is no declaration around the cursor ${code.describePosition(0)}")
 
     return { _ -> true }
+}
+
+private fun doesntLookLikeImport(import: KtImportDirective): Sequence<DeclarationDescriptor> {
+    LOG.info("${import.text} doesn't look like import a.b...")
+
+    return emptySequence()
 }

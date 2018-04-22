@@ -2,6 +2,8 @@ package org.javacs.kt
 
 import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
+import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
@@ -15,7 +17,8 @@ class SourcePath(private val cp: CompilerClassPath) {
             var content: String,
             var parsed: KtFile? = null,
             var compiledFile: KtFile? = null,
-            var compiledContext: BindingContext? = null) {
+            var compiledContext: BindingContext? = null,
+            var compiledContainer: ComponentProvider? = null) {
 
         fun put(newContent: String) {
             content = newContent
@@ -45,7 +48,9 @@ class SourcePath(private val cp: CompilerClassPath) {
             if (parsed?.text != compiledFile?.text) {
                 LOG.info("Compiling ${file.fileName}")
 
-                compiledContext = cp.compiler.compileFile(parsed!!, all())
+                val (context, container) = cp.compiler.compileFile(parsed!!, all())
+                compiledContext = context
+                compiledContainer = container
                 compiledFile = parsed
             }
 
@@ -56,7 +61,7 @@ class SourcePath(private val cp: CompilerClassPath) {
                 parseIfChanged().compileIfNull().doPrepareCompiledFile()
 
         private fun doPrepareCompiledFile(): CompiledFile =
-                CompiledFile(content, compiledFile!!, compiledContext!!, all(), cp)
+                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, all(), cp)
     }
 
     fun put(file: Path, content: String) {
@@ -98,16 +103,17 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         // Compile changed files
         val parse = changed.map { it.parseIfChanged().parsed!! }
-        val compile = cp.compiler.compileFiles(parse, all())
+        val (context, container) = cp.compiler.compileFiles(parse, all())
 
         // Update cache
         for (f in changed) {
             f.compiledFile = f.parsed
-            f.compiledContext = compile
+            f.compiledContext = context
+            f.compiledContainer = container
         }
 
         // Combine with past compilations
-        val combined = mutableListOf(compile)
+        val combined = mutableListOf(context)
         val same = sources - changed
         combined.addAll(same.map { it.compiledContext!! })
 
