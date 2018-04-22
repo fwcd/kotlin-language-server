@@ -3,6 +3,11 @@ private fun foo() {
     instance.f
 }
 
+private fun findListExtensionFunctions() {
+    val list = listOf(1, 2, 3)
+    list.coun
+}
+
 private class SomeClass {
     fun instanceFoo() = "Foo"
     private fun privateInstanceFoo() = "Foo"

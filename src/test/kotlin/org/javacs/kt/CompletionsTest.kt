@@ -30,6 +30,13 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
         assertThat("Reports instanceFoo only once", completions.items.filter { it.label == "instanceFoo" }, hasSize(1))
         assertThat("Reports extensionFoo only once", completions.items.filter { it.label == "extensionFoo" }, hasSize(1))
     }
+
+    @Test fun `find count extension function`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 8, 14)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("count"))
+    }
 }
 
 class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt") {
