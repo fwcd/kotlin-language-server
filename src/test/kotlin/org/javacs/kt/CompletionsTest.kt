@@ -42,6 +42,16 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
     }
 }
 
+class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
+    @Test fun `convert getFileName to fileName`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 14)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("fileName"))
+        assertThat(labels, not(hasItem("getFileName")))
+    }
+}
+
 class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt") {
     @Test fun `complete identifiers in function scope`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 10)).get().right!!

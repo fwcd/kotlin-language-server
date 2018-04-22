@@ -43,12 +43,41 @@ fun completions(code: CompiledCode): CompletionList {
     val visible = matchesName.filter(isVisible(code))
     val list = visible.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
-    // TODO separate "get all candidates" from "filter by name"
     return CompletionList(isIncomplete, list)
 }
 
-private fun completionItem(declaration: DeclarationDescriptor): CompletionItem =
-        declaration.accept(RenderCompletionItem(), null)
+private fun completionItem(d: DeclarationDescriptor): CompletionItem {
+    val result = d.accept(RenderCompletionItem(), null)
+
+    if (isGetter(d) || isSetter(d)) {
+        val name = extractVarName(d)
+
+        result.detail += " (from ${result.label})"
+        result.label = name
+        result.insertText = name
+        result.filterText = name 
+    }
+
+    return result
+}
+
+private fun extractVarName(d: DeclarationDescriptor): String {
+    val match = Regex("(get|is|set)([A-Z]\\w+)").matchEntire(d.name.identifier)!!
+    val upper = match.groups[2]!!.value
+    return upper[0].toLowerCase() + upper.substring(1)
+}
+
+private fun isGetter(d: DeclarationDescriptor): Boolean =
+        d is CallableDescriptor &&
+        !d.name.isSpecial &&
+        d.name.identifier.matches(Regex("(get|is)[A-Z]\\w+")) &&
+        d.valueParameters.isEmpty()
+
+private fun isSetter(d: DeclarationDescriptor): Boolean =
+        d is CallableDescriptor &&
+        !d.name.isSpecial &&
+        d.name.identifier.matches(Regex("set[A-Z]\\w+")) &&
+        d.valueParameters.size == 1
 
 private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     val expr = exprBeforeCursor(code) ?: return emptySequence()
