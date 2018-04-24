@@ -40,6 +40,18 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
 
         assertThat(labels, hasItem("count"))
     }
+
+    @Test fun `complete method reference`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 13, 16)).get().right!!
+        val labels = completions.items.map { it.label }
+        
+        assertThat(labels, hasItem("instanceFoo"))
+        assertThat(labels, not(hasItem("extensionFoo")))
+        assertThat(labels, hasItem("fooVar"))
+        assertThat(labels, not(hasItem("privateInstanceFoo")))
+        assertThat(labels, not(hasItem("getFooVar")))
+        assertThat(labels, not(hasItem("setFooVar")))
+    }
 }
 
 class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
