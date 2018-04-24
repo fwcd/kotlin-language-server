@@ -1,11 +1,22 @@
 package org.javacs.kt
 
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasToString
+import org.javacs.kt.util.findParent
+import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.psi.KtElement
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
+import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.LocalDeclarations
+import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.TopLevelDeclarations
+import org.jetbrains.kotlin.resolve.calls.callUtil.getType
+import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
+import org.jetbrains.kotlin.types.TypeUtils
+import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.junit.Assert.assertThat
 import org.junit.Test
 import java.nio.file.Files

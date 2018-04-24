@@ -5,13 +5,14 @@ import org.javacs.kt.RecompileStrategy.*
 import org.javacs.kt.RecompileStrategy.Function
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
-import org.javacs.kt.util.toPath
+import org.javacs.kt.util.*
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.types.KotlinType
 
 enum class RecompileStrategy {
     Function,
@@ -27,6 +28,33 @@ class CompiledFile(
         private val compiledContainer: ComponentProvider,
         private val sourcePath: Collection<KtFile>,
         private val cp: CompilerClassPath) {
+    fun typeAtPoint(cursor: Int): KotlinType? {
+        val scope = scopeAtPoint(cursor) ?: return noResult("Couldn't find scope at ${describePosition(cursor)}")
+        val expr = exprAtPoint(cursor) ?: return noResult("Couldn't find expression at ${describePosition(cursor)}")
+        val (context, _) = cp.compiler.compileExpression(expr, scope, sourcePath)
+        return context.getType(expr)
+    }
+
+    private fun exprAtPoint(cursor: Int): KtExpression? {
+        // TODO re-parse the smallest block that surrounds the changed region
+        val parse = cp.compiler.createFile(compiledFile.toPath(), content)
+        val psi = parse.findElementAt(cursor) ?: return noResult("Couldn't find anything at ${describePosition(cursor)}")
+        return psi.findParent<KtExpression>()
+    }
+
+    /**
+     * Find a lexical-scope surrounding `cursor`
+     */
+    private fun scopeAtPoint(cursor: Int): LexicalScope? {
+        val old = oldCursor(cursor)
+        val psi = compiledFile.findElementAt(old) ?: return noResult("Couldn't find element at ${describePosition(old)}")
+        return psi.parentsWithSelf.filterIsInstance<KtElement>().mapNotNull(::hasScope).firstOrNull()
+    }
+
+    private fun hasScope(el: KtElement): LexicalScope? {
+        return compiledContext.get(BindingContext.LEXICAL_SCOPE, el)
+    }
+
     fun recompile(cursor: Int): RecompileStrategy {
         // If there are no changes, we can use the existing analyze
         val (oldChanged, _) = changedRegion(compiledFile.text, content) ?: return run {
@@ -129,6 +157,12 @@ class CompiledFile(
         val file = compiledFile.name 
 
         return "$file ${start.line}:${start.character}-${end.line}:${end.character}"
+    }
+
+    private fun <T> noResult(message: String): T? {
+        LOG.info(message)
+
+        return null
     }
 }
 

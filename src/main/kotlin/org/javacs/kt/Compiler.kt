@@ -95,7 +95,7 @@ class Compiler(classPath: Set<Path>) {
         else return onlyDeclaration
     }
 
-    private fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
+    fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
         val trace = CliBindingTrace()
         val container = TopDownAnalyzerFacadeForJVM.createContainer(
                 project = env.project,
