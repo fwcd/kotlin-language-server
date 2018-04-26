@@ -15,8 +15,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.descriptors.PackageFragmentProvider
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.*
@@ -57,7 +55,7 @@ class Compiler(classPath: Set<Path>) {
         scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
     }
 
-    fun createFile(file: Path, content: String): KtFile {
+    fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
         assert(!content.contains('\r'))
 
         val factory = PsiFileFactory.getInstance(env.project)
@@ -78,7 +76,7 @@ class Compiler(classPath: Set<Path>) {
             parseDeclaration(content, file)
 
     private fun parseDeclaration(content: String, file: Path): KtDeclaration {
-        val parse = createFile(file, content)
+        val parse = createFile(content, file)
         val declarations = parse.declarations
 
         assert(declarations.size == 1) { "${declarations.size} declarations in $content" }

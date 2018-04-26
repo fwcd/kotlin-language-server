@@ -23,7 +23,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         fun parseIfChanged(): SourceFile {
             if (content != parsed?.text) {
-                parsed = cp.compiler.createFile(file, content)
+                parsed = cp.compiler.createFile(content, file)
             }
 
             return this

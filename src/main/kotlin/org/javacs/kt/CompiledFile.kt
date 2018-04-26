@@ -8,21 +8,11 @@ import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.psi.KtElement
-import org.jetbrains.kotlin.psi.KtExpression
-import org.jetbrains.kotlin.psi.KtFile
-import org.jetbrains.kotlin.psi.KtReferenceExpression
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
-
-enum class RecompileStrategy {
-    Function,
-    File,
-    NoChanges,
-    Impossible
-}
 
 class CompiledFile(
         val content: String,
@@ -67,10 +57,18 @@ class CompiledFile(
      * Parse the expression at `cursor`
      */
     fun parseAtPoint(cursor: Int): KtElement? {
-        // TODO re-parse the smallest block that surrounds the changed region
-        val parse = classPath.compiler.createFile(parse.toPath(), content)
-        val psi = parse.findElementAt(cursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
-        return psi.findParent<KtElement>()
+        val oldCursor = oldOffset(cursor)
+        val oldChanged = changedRegion(parse.text, content)?.first ?: TextRange(cursor, cursor)
+        val psi = parse.findElementAt(oldCursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
+        val oldParent = psi.parentsWithSelf
+                .filterIsInstance<KtDeclaration>()
+                .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
+        val recoveryRange = oldParent.textRange
+        LOG.info("Re-parsing ${describeRange(recoveryRange)}")
+        val surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
+        val padOffset = " ".repeat(recoveryRange.startOffset)
+        val recompile = classPath.compiler.createFile(padOffset + surroundingContent)
+        return recompile.findElementAt(cursor)?.findParent<KtElement>()
     }
 
     /**
@@ -78,8 +76,8 @@ class CompiledFile(
      * This may be out-of-date if the user is typing quickly.
      */
     fun elementAtPoint(cursor: Int): KtElement? {
-        val old = oldCursor(cursor)
-        val psi = parse.findElementAt(old) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
+        val oldCursor = oldOffset(cursor)
+        val psi = parse.findElementAt(oldCursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
         return psi.findParent<KtElement>()
     }
 
@@ -88,9 +86,9 @@ class CompiledFile(
      * This may be out-of-date if the user is typing quickly.
      */
     fun scopeAtPoint(cursor: Int): LexicalScope? {
-        val old = oldCursor(cursor)
+        val oldCursor = oldOffset(cursor)
         return compile.getSliceContents(BindingContext.LEXICAL_SCOPE).asSequence()
-                .filter { it.key.textRange.startOffset <= old && old <= it.key.textRange.endOffset }
+                .filter { it.key.textRange.startOffset <= oldCursor && oldCursor <= it.key.textRange.endOffset }
                 .sortedBy { it.key.textRange.length  }
                 .map { it.value }
                 .firstOrNull()
@@ -98,7 +96,7 @@ class CompiledFile(
 
     fun lineBefore(cursor: Int): String = content.substring(0, cursor).substringAfterLast('\n')
 
-    private fun oldCursor(cursor: Int): Int {
+    private fun oldOffset(cursor: Int): Int {
         val (oldChanged, newChanged) = changedRegion(parse.text, content) ?: return cursor
 
         return when {
@@ -116,15 +114,15 @@ class CompiledFile(
         val pos = position(content, offset)
         val file = parse.toPath().fileName
 
-        return "$file ${pos.line}:${pos.character}"
+        return "$file ${pos.line + 1}:${pos.character + 1}"
     }
 
     private fun describeRange(range: TextRange): String {
         val start = position(content, range.startOffset)
         val end = position(content, range.endOffset)
-        val file = parse.name 
+        val file = parse.toPath().fileName
 
-        return "$file ${start.line}:${start.character}-${end.line}:${end.character}"
+        return "$file ${start.line}:${start.character + 1}-${end.line + 1}:${end.character + 1}"
     }
 }
 

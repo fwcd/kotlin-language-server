@@ -9,13 +9,13 @@ import java.nio.file.Files
 
 class ClassPathTest {
     @Test fun findMavenClassPath() {
-        val workspaceRoot = testResourcesRoot().parent.parent
+        val workspaceRoot = testResourcesRoot().resolve("additionalWorkspace")
         val pom = workspaceRoot.resolve("pom.xml")
 
         assertTrue(Files.exists(pom))
 
         val classPath = findClassPath(listOf(workspaceRoot))
 
-        assertThat(classPath, hasItem(hasToString(containsString("guava"))))
+        assertThat(classPath, hasItem(hasToString(containsString("junit"))))
     }
 }

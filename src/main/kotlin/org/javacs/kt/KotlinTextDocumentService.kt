@@ -171,7 +171,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     private fun describePosition(position: TextDocumentPositionParams): String {
         val path = Paths.get(URI.create(position.textDocument.uri))
-        return "${path.fileName} ${position.position.line}:${position.position.character}"
+        return "${path.fileName} ${position.position.line + 1}:${position.position.character + 1}"
     }
 
     val debounceLint = DebounceDelay(Duration.ofMillis(200))
