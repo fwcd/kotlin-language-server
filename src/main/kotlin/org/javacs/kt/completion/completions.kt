@@ -107,18 +107,19 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
     if (dotParent != null) {
         return completeMemberReference(file, cursor, dotParent.receiverExpression)
     }
+    // ::?
     val methodReferenceParent = el.findParent<KtCallableReferenceExpression>()
     if (methodReferenceParent != null) {
         val receiver = methodReferenceParent.receiverExpression
         if (receiver != null) return completeMemberReference(file, cursor, receiver)
-        val scope = file.scopeAtPoint(cursor) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+        val scope = file.scopeAtPoint(methodReferenceParent.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
 
         return identifiers(scope)
     }
     // ?
     val idParent = el.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
-        val scope = file.scopeAtPoint(cursor) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+        val scope = file.scopeAtPoint(idParent.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
 
         return identifiers(scope)
     }
