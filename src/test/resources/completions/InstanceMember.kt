@@ -13,6 +13,10 @@ private fun findFunctionReference() {
     instance::f
 }
 
+private fun findUnqualifiedFunctionReference() {
+    ::f
+}
+
 private class SomeClass {
     fun instanceFoo() = "Foo"
     private fun privateInstanceFoo() = "Foo"

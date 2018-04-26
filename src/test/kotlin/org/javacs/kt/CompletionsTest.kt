@@ -1,6 +1,6 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.CompletionList
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -44,13 +44,20 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
     @Test fun `complete method reference`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 13, 16)).get().right!!
         val labels = completions.items.map { it.label }
-        
+
         assertThat(labels, hasItem("instanceFoo"))
-        assertThat(labels, not(hasItem("extensionFoo")))
+        // assertThat(labels, not(hasItem("extensionFoo"))) Kotlin will probably implement this later
         assertThat(labels, hasItem("fooVar"))
         assertThat(labels, not(hasItem("privateInstanceFoo")))
         assertThat(labels, not(hasItem("getFooVar")))
         assertThat(labels, not(hasItem("setFooVar")))
+    }
+
+    @Test fun `complete unqualified function reference`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 17, 8)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("findFunctionReference"))
     }
 }
 
@@ -159,6 +166,13 @@ class BackquotedFunctionTest: SingleFileTestFixture("completions", "BackquotedFu
 class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
     @Test fun `java static method`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 16)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("isNull"))
+    }
+
+    @Test fun `java static method reference`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 7, 17)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("isNull"))

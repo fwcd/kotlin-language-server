@@ -6,16 +6,14 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findParent
+import org.javacs.kt.util.noResult
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
-import org.jetbrains.kotlin.psi.KtImportDirective
-import org.jetbrains.kotlin.psi.KtNameReferenceExpression
-import org.jetbrains.kotlin.psi.KtTypeElement
+import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -107,33 +105,45 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
     // .?
     val dotParent = el.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
-        // thingWithType.?
-        val receiverType = file.typeAtPoint(dotParent.receiverExpression.startOffset)
-        if (receiverType != null) {
-            val members = receiverType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
-            val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
-            val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
+        return completeMemberReference(file, cursor, dotParent.receiverExpression)
+    }
+    val methodReferenceParent = el.findParent<KtCallableReferenceExpression>()
+    if (methodReferenceParent != null) {
+        val receiver = methodReferenceParent.receiverExpression
+        if (receiver != null) return completeMemberReference(file, cursor, receiver)
+        val scope = file.scopeAtPoint(cursor) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
 
-            return members + extensions
-        }
-        // JavaClass.?
-        val referenceTarget = file.referenceAtPoint(dotParent.receiverExpression.startOffset)?.second
-        if (referenceTarget is ClassDescriptor) {
-            return referenceTarget.staticScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
-        }
-
-        LOG.info("Can't find member scope for ${dotParent.text}")
-        return emptySequence()
+        return identifiers(scope)
     }
     // ?
     val idParent = el.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
-        val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
+        val scope = file.scopeAtPoint(cursor) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
 
         return identifiers(scope)
     }
 
     LOG.info("$el ${el.text} didn't look like a type, a member, or an identifier")
+    return emptySequence()
+}
+
+private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
+    // thingWithType.?
+    val receiverType = file.typeAtPoint(receiverExpr.startOffset)
+    if (receiverType != null) {
+        val members = receiverType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
+        val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
+
+        return members + extensions
+    }
+    // JavaClass.?
+    val referenceTarget = file.referenceAtPoint(receiverExpr.startOffset)?.second
+    if (referenceTarget is ClassDescriptor) {
+        return referenceTarget.staticScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+    }
+
+    LOG.info("Can't find member scope for ${receiverExpr.text}")
     return emptySequence()
 }
 

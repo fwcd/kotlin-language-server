@@ -4,6 +4,7 @@ private fun completeStatics() {
     Objects.isN
     MyObject.obj
     MyClass.com
+    Objects::isN
 }
 
 private object MyObject {

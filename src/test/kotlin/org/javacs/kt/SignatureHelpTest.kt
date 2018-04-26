@@ -2,7 +2,6 @@ package org.javacs.kt
 
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
-import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
@@ -31,7 +30,7 @@ class SignatureHelpTest: SingleFileTestFixture("signatureHelp", "SignatureHelp.k
         assertThat(help.signatures.flatMap { it.parameters.map { it.documentation }}, hasItems("String param", "Int param"))
     }
 
-    @Ignore @Test fun `find active parameter`() {
+    @Test fun `find active parameter`() {
         val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 5, 32)).get()!!
 
         assertThat(help.activeParameter, equalTo(1))
