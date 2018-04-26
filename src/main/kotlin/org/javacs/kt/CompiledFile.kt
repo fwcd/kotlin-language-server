@@ -35,9 +35,10 @@ class CompiledFile(
     fun referenceAtPoint(cursor: Int): Pair<KtReferenceExpression, DeclarationDescriptor>? {
         val expr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         return expr.parentsWithSelf
-                             .filterIsInstance<KtExpression>()
-                             .mapNotNull { tryFindReference(cursor, it) }
-                             .firstOrNull() ?: nullResult("${expr.text} does not contain a reference")
+                       .takeWhile { it !is KtDeclaration }
+                        .filterIsInstance<KtExpression>()
+                        .mapNotNull { tryFindReference(cursor, it) }
+                        .firstOrNull() ?: nullResult("${expr.text} does not contain a reference")
     }
 
     private fun tryFindReference(cursor: Int, surroundingExpr: KtExpression): Pair<KtReferenceExpression, DeclarationDescriptor>? {
