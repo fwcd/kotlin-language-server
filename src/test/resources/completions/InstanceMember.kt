@@ -17,6 +17,11 @@ private fun findUnqualifiedFunctionReference() {
     ::f
 }
 
+private fun completeIdentifierInsideCall() {
+    val instance = SomeClass()
+    instance.instanceFoo(f)
+}
+
 private class SomeClass {
     fun instanceFoo() = "Foo"
     private fun privateInstanceFoo() = "Foo"

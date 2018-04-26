@@ -96,19 +96,19 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
         return parentPackage.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
     }
     // :?
-    val typeParent = el.findParent<KtTypeElement>()
+    val typeParent = el.parent as? KtTypeElement
     if (typeParent != null) {
         val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
 
         return scopeChainTypes(scope)
     }
     // .?
-    val dotParent = el.findParent<KtDotQualifiedExpression>()
+    val dotParent = el as? KtDotQualifiedExpression ?: el.parent as? KtDotQualifiedExpression
     if (dotParent != null) {
         return completeMemberReference(file, cursor, dotParent.receiverExpression)
     }
     // ::?
-    val methodReferenceParent = el.findParent<KtCallableReferenceExpression>()
+    val methodReferenceParent = el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression
     if (methodReferenceParent != null) {
         val receiver = methodReferenceParent.receiverExpression
         if (receiver != null) return completeMemberReference(file, cursor, receiver)
@@ -117,7 +117,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
         return identifiers(scope)
     }
     // ?
-    val idParent = el.findParent<KtNameReferenceExpression>()
+    val idParent = el as? KtNameReferenceExpression
     if (idParent != null) {
         val scope = file.scopeAtPoint(idParent.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
 
@@ -129,6 +129,8 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
 }
 
 private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
+    LOG.info("Looking for members of ${receiverExpr.text}")
+
     // thingWithType.?
     val receiverType = file.typeAtPoint(receiverExpr.startOffset)
     if (receiverType != null) {

@@ -59,6 +59,14 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
 
         assertThat(labels, hasItem("findFunctionReference"))
     }
+
+    @Test fun `complete a function name within a call`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 22, 27)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("findFunctionReference"))
+        assertThat(labels, not(hasItem("instanceFoo")))
+    }
 }
 
 class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
