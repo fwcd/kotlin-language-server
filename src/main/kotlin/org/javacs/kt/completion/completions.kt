@@ -3,21 +3,23 @@ package org.javacs.kt.completion
 import com.google.common.cache.CacheBuilder
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
-import org.javacs.kt.CompiledCode
+import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findParent
-import org.javacs.kt.util.preOrderTraversal
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.KtImportDirective
+import org.jetbrains.kotlin.psi.KtNameReferenceExpression
+import org.jetbrains.kotlin.psi.KtTypeElement
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
+import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
-import org.jetbrains.kotlin.resolve.bindingContextUtil.getReferenceTargets
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.resolve.descriptorUtil.isExtension
 import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
@@ -25,7 +27,6 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
@@ -34,14 +35,14 @@ import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-fun completions(code: CompiledCode): CompletionList {
-    val completions = doCompletions(code)
+fun completions(file: CompiledFile, cursor: Int): CompletionList {
+    val completions = doCompletions(file, cursor)
     if (completions === NO_EXPR) return CompletionList(true, emptyList())
-    val partial = findPartialIdentifier(code)
+    val partial = findPartialIdentifier(file, cursor)
     LOG.info("Looking for names that match '$partial'")
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
-    val visible = matchesName.filter(isVisible(code))
+    val visible = matchesName.filter(isVisible(file, cursor))
     val list = visible.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
     return CompletionList(isIncomplete, list)
@@ -82,12 +83,13 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
 
 private val NO_EXPR = emptySequence<DeclarationDescriptor>()
 
-private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
-    val el = beforeCursor(code) ?: return NO_EXPR
+private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<DeclarationDescriptor> {
+    // TODO this would be simpler if we used regexes instead of parsing
+    val el = file.parseAtPoint(cursor - 1) ?: return NO_EXPR
     // import x.y.?
     val import = el.findParent<KtImportDirective>()
     if (import != null) {
-        val module = code.container.get<ModuleDescriptor>()
+        val module = file.container.get<ModuleDescriptor>()
         val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(import.text) ?: return doesntLookLikeImport(import)
         val parentDot = match.groups[1]?.value ?: "."
         val parent = parentDot.substring(0, parentDot.length - 1)
@@ -98,7 +100,7 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     // :?
     val typeParent = el.findParent<KtTypeElement>()
     if (typeParent != null) {
-        val scope = code.findScope(el) ?: return emptySequence()
+        val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
 
         return scopeChainTypes(scope)
     }
@@ -106,19 +108,18 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     val dotParent = el.findParent<KtDotQualifiedExpression>()
     if (dotParent != null) {
         // thingWithType.?
-        val receiver = dotParent.receiverExpression
-        val type = robustType(receiver, code)
-        if (type != null) {
-            val members = type.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
-            val lexicalScope = code.findScope(dotParent) ?: return cantFindLexicalScope(dotParent)
-            val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(type, it) }
+        val receiverType = file.typeAtPoint(dotParent.receiverExpression.startOffset)
+        if (receiverType != null) {
+            val members = receiverType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+            val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
+            val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
 
             return members + extensions
         }
         // JavaClass.?
-        val static = staticScope(receiver, code.compiled)
-        if (static != null) {
-            return static.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        val referenceTarget = file.referenceAtPoint(dotParent.receiverExpression.startOffset)?.second
+        if (referenceTarget is ClassDescriptor) {
+            return referenceTarget.staticScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
         }
 
         LOG.info("Can't find member scope for ${dotParent.text}")
@@ -127,7 +128,7 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     // ?
     val idParent = el.findParent<KtNameReferenceExpression>()
     if (idParent != null) {
-        val scope = code.findScope(idParent) ?: return cantFindLexicalScope(idParent)
+        val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
 
         return identifiers(scope)
     }
@@ -136,28 +137,8 @@ private fun doCompletions(code: CompiledCode): Sequence<DeclarationDescriptor> {
     return emptySequence()
 }
 
-private fun beforeCursor(code: CompiledCode): KtElement? {
-    val cursor = code.offset(-1)
-    val psi = code.parsed.findElementAt(cursor) ?: return null
-    val result = psi.findParent<KtElement>()
-    if (result == null) LOG.info("No element at cursor ${code.describePosition(-1)}")
-    return result
-}
-
-private fun robustType(expr: KtExpression, code: CompiledCode): KotlinType? =
-        code.compiled.getType(expr) ?: code.robustType(expr)
-
-private fun staticScope(expr: KtExpression, context: BindingContext): MemberScope? =
-        expr.getReferenceTargets(context).filterIsInstance<ClassDescriptor>().map { it.staticScope }.firstOrNull()
-
-private fun <T> cantFindLexicalScope(expr: KtExpression): Sequence<T> {
-    LOG.info("Can't find lexical scope for ${expr.text}")
-
-    return emptySequence()
-}
-
-private fun findPartialIdentifier(code: CompiledCode): String {
-    val line = code.lineBeforeCursor()
+private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String {
+    val line = file.lineBefore(cursor)
     if (line.matches(Regex(".*\\."))) return ""
     else if (line.matches(Regex(".*\\.\\w+"))) return line.substringAfterLast(".")
     else return Regex("\\w+").findAll(line).lastOrNull()?.value ?: ""
@@ -264,11 +245,11 @@ fun containsCharactersInOrder(
     return iPattern == pattern.length
 }
 
-private fun isVisible(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
-    val el = beforeCursor(code) ?: return noExpressionAtCursor(code)
+private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) -> Boolean {
+    val el = file.elementAtPoint(cursor) ?: return { true }
     val from = el.parentsWithSelf
-                       .mapNotNull { code.compiled[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
-                       .firstOrNull() ?: return noDeclarationAroundCursor(code)
+                       .mapNotNull { file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
+                       .firstOrNull() ?: return { true }
     fun check(target: DeclarationDescriptor): Boolean {
         val visible = isDeclarationVisible(target, from)
 
@@ -357,20 +338,14 @@ private fun describeDeclaration(declaration: DeclarationDescriptor): String {
     return "($file $container.${declaration.name})"
 }
 
-private fun noExpressionAtCursor(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
-    LOG.info("Can't determine visibility because there is no expression at the cursor ${code.describePosition(0)}")
-
-    return { _ -> true }
-}
-
-private fun noDeclarationAroundCursor(code: CompiledCode): (DeclarationDescriptor) -> Boolean {
-    LOG.info("Can't determine visibility because there is no declaration around the cursor ${code.describePosition(0)}")
-
-    return { _ -> true }
-}
-
 private fun doesntLookLikeImport(import: KtImportDirective): Sequence<DeclarationDescriptor> {
     LOG.info("${import.text} doesn't look like import a.b...")
 
     return emptySequence()
+}
+
+private fun empty(message: String): CompletionList {
+    LOG.info(message)
+
+    return CompletionList(true, emptyList())
 }

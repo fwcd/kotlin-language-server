@@ -12,6 +12,7 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
+import org.javacs.kt.util.noFuture
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.nio.file.Path
@@ -27,12 +28,12 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         this.client = client
     }
 
-    private fun recover(position: TextDocumentPositionParams): CompiledCode {
+    private fun recover(position: TextDocumentPositionParams, recompile: Boolean): Pair<CompiledFile, Int> {
         val file = Paths.get(URI.create(position.textDocument.uri))
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-
-        return sp.compiledCode(file, offset)
+        val compiled = if(recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        return Pair(compiled, offset)
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
@@ -43,17 +44,11 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         reportTime {
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
-            val recover = recover(position)
-            val hover = hoverAt(recover) ?: return noHover(position)
+            val (file, cursor) = recover(position, true)
+            val hover = hoverAt(file, cursor) ?: return noFuture("No hover found at ${describePosition(position)}", null)
 
             return CompletableFuture.completedFuture(hover)
         }
-    }
-
-    private fun noHover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
-        LOG.info("No hover found at ${describePosition(position)}")
-
-        return CompletableFuture.completedFuture(null)
     }
 
     override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>> {
@@ -67,18 +62,12 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
-            
-            val recover = recover(position)
-            val location = goToDefinition(recover) ?: return noDefinition(position)
+
+            val (file, cursor) = recover(position, false)
+            val location = goToDefinition(file, cursor) ?: return noFuture("Couldn't find definition at ${describePosition(position)}", emptyList())
 
             return CompletableFuture.completedFuture(listOf(location))
         }
-    }
-
-    private fun<T> noDefinition(position: TextDocumentPositionParams): CompletableFuture<T> {
-        LOG.info("Couldn't find definition at ${describePosition(position)}")
-
-        return CompletableFuture.completedFuture(null)
     }
 
     override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -97,8 +86,8 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
-            val recover = recover(position)
-            val completions = completions(recover)
+            val (file, cursor) = recover(position, false)
+            val completions = completions(file, cursor)
 
             LOG.info("Found ${completions.items.size} items")
 
@@ -136,8 +125,8 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         reportTime {
             LOG.info("Signature help at ${describePosition(position)}")
 
-            val recover = recover(position)
-            val result = signatureHelpAt(recover) ?: return noFunctionCall(position)
+            val (file, cursor) = recover(position, false)
+            val result = signatureHelpAt(file, cursor) ?: return noFunctionCall(position)
 
             return CompletableFuture.completedFuture(result)
         }

@@ -1,9 +1,6 @@
 package org.javacs.kt
 
-import org.javacs.kt.RecompileStrategy.*
-import org.javacs.kt.RecompileStrategy.Function
 import org.jetbrains.kotlin.container.ComponentProvider
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
@@ -87,11 +84,14 @@ class SourcePath(private val cp: CompilerClassPath) {
     /**
      * Compile the latest version of a file
      */
-    fun compiledFile(file: Path): Pair<KtFile, BindingContext> {
-        val compiled = files[file]!!.compileIfChanged()
+    fun currentVersion(file: Path): CompiledFile =
+            files[file]!!.compileIfChanged().prepareCompiledFile()
 
-        return Pair(compiled.compiledFile!!, compiled.compiledContext!!)
-    }
+    /**
+     * Return whatever is the most-recent already-compiled version of `file`
+     */
+    fun latestCompiledVersion(file: Path): CompiledFile =
+            files[file]!!.prepareCompiledFile()
 
     /**
      * Compile changed files
@@ -118,24 +118,6 @@ class SourcePath(private val cp: CompilerClassPath) {
         combined.addAll(same.map { it.compiledContext!! })
 
         return CompositeBindingContext.create(combined)
-    }
-
-    /**
-     * Compile the latest version of the region around `offset`
-     */
-    fun compiledCode(file: Path, offset: Int): CompiledCode {
-        val open = files[file]!!
-        val compiled = open.prepareCompiledFile()
-        val recompileStrategy = compiled.recompile(offset)
-
-        return when (recompileStrategy) {
-            NoChanges ->
-                compiled.compiledCode(offset)
-            Function ->
-                compiled.recompileFunction(offset)
-            File, Impossible ->
-                open.compileIfChanged().prepareCompiledFile().compiledCode(offset)
-        }
     }
 
     /**

@@ -1,8 +1,8 @@
 package org.javacs.kt
 
+import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Test
-import org.hamcrest.Matchers.*
 import java.nio.file.Files
 
 class CompiledFileTest {
@@ -22,6 +22,6 @@ class CompiledFileTest {
     @Test fun `typeAtPoint should return type for x`() {
         val type = compiledFile.typeAtPoint(87)!!
 
-        assertThat(type.toString(), equalTo(""))
+        assertThat(type.toString(), equalTo("Int"))
     }
 }
