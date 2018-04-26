@@ -35,10 +35,10 @@ class CompiledFile(
     fun referenceAtPoint(cursor: Int): Pair<KtReferenceExpression, DeclarationDescriptor>? {
         val expr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         return expr.parentsWithSelf
-                       .takeWhile { it !is KtDeclaration }
-                        .filterIsInstance<KtExpression>()
-                        .mapNotNull { tryFindReference(cursor, it) }
-                        .firstOrNull() ?: nullResult("${expr.text} does not contain a reference")
+                .takeWhile { it !is KtDeclaration }
+                .filterIsInstance<KtExpression>()
+                .mapNotNull { tryFindReference(cursor, it) }
+                .firstOrNull() ?: nullResult("${expr.text} does not contain a reference")
     }
 
     private fun tryFindReference(cursor: Int, surroundingExpr: KtExpression): Pair<KtReferenceExpression, DeclarationDescriptor>? {
@@ -47,11 +47,11 @@ class CompiledFile(
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val (context, _) = classPath.compiler.compileExpression(surroundingExpr, scope, sourcePath)
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
-        for ((ref, target) in targets) {
-            if (cursor in ref.textRange)
-                return Pair(ref, target)
-        }
-        return null
+        return targets.asSequence()
+                .filter { cursor in it.key.textRange }
+                .sortedBy { it.key.textRange.length }
+                .map { it.toPair() }
+                .firstOrNull()
     }
 
     /**
