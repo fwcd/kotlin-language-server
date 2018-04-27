@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
-import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.jetbrains.kotlin.psi.psiUtil.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
@@ -132,7 +132,7 @@ private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExp
     LOG.info("Looking for members of ${receiverExpr.text}")
 
     // thingWithType.?
-    val receiverType = file.typeAtPoint(receiverExpr.startOffset)
+    val receiverType = file.typeAtPoint(receiverExpr.endOffset - 1)
     if (receiverType != null) {
         val members = receiverType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
         val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
@@ -141,7 +141,7 @@ private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExp
         return members + extensions
     }
     // JavaClass.?
-    val referenceTarget = file.referenceAtPoint(receiverExpr.startOffset)?.second
+    val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {
         return referenceTarget.staticScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
     }

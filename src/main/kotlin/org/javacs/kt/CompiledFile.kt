@@ -26,24 +26,39 @@ class CompiledFile(
      * Find the type of the expression at `cursor`
      */
     fun typeAtPoint(cursor: Int): KotlinType? {
+        var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
+        val surroundingExpr = expandSelection(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
-        val expr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
-        val (context, _) = classPath.compiler.compileExpression(expr, scope, sourcePath)
-        return context.getType(expr)
+        val (context, _) = classPath.compiler.compileExpression(surroundingExpr, scope, sourcePath)
+        return context.getType(surroundingExpr)
+    }
+
+    private fun expandSelection(cursor: Int, surroundingExpr: KtExpression): KtExpression {
+        val dotParent = surroundingExpr.parent as? KtDotQualifiedExpression
+        if (dotParent != null && dotParent.selectorExpression?.textRange?.contains(cursor) ?: false) {
+            return expandSelection(cursor, dotParent)
+        }
+        else return surroundingExpr
     }
 
     fun referenceAtPoint(cursor: Int): Pair<KtReferenceExpression, DeclarationDescriptor>? {
+        // TODO consider using expandSelection instead
+        return compileRepeatedly(cursor, ::tryFindReference) ?: nullResult("No reference at ${describePosition(cursor)}")
+    }
+
+    /**
+     * Compile progressively larger expressions until `action` returns non-null
+     */
+    private fun <T: Any> compileRepeatedly(cursor: Int, action: (cursor: Int, expr: KtExpression) -> T?): T? {
         val expr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         return expr.parentsWithSelf
                 .takeWhile { it !is KtDeclaration }
                 .filterIsInstance<KtExpression>()
-                .mapNotNull { tryFindReference(cursor, it) }
-                .firstOrNull() ?: nullResult("${expr.text} does not contain a reference")
+                .mapNotNull { action(cursor, it) }
+                .firstOrNull()
     }
 
     private fun tryFindReference(cursor: Int, surroundingExpr: KtExpression): Pair<KtReferenceExpression, DeclarationDescriptor>? {
-        LOG.info("Compiling ${surroundingExpr.text}")
-
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val (context, _) = classPath.compiler.compileExpression(surroundingExpr, scope, sourcePath)
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)

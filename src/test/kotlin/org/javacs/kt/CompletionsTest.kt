@@ -238,3 +238,13 @@ class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
         assertThat(labels, hasItems("MethodHandle"))
     }
 }
+
+class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
+    @Test fun `complete nested select`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 15)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, not(hasItem("chars")))
+        assertThat(labels, hasItem("anyMatch"))
+    }
+}
