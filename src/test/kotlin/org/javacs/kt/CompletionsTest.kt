@@ -8,19 +8,6 @@ import org.junit.Test
 class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.kt") {
     @Test fun `complete instance members`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 15)).get().right!!
-        
-        checkResponse(completions)
-    }
-
-    @Test fun `complete instance members after editing`() {
-        replace("InstanceMember.kt", 3, 5, "instance.f", "/* break */ instance.f")
-
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 27)).get().right!!
-
-        checkResponse(completions)
-    }
-
-    private fun checkResponse(completions: CompletionList) {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
@@ -82,26 +69,6 @@ class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembers
 class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt") {
     @Test fun `complete identifiers in function scope`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 10)).get().right!!
-        val labels = completions.items.map { it.label }
-
-        assertThat(labels, hasItem("anArgument"))
-        assertThat(labels, hasItem("aLocal"))
-        assertThat(labels, hasItem("aClassVal"))
-        assertThat(labels, hasItem("aClassFun"))
-        assertThat(labels, hasItem("aCompanionVal"))
-        assertThat(labels, hasItem("aCompanionFun"))
-
-        assertThat("Reports anArgument only once", completions.items.filter { it.label == "anArgument" }, hasSize(1))
-        assertThat("Reports aLocal only once", completions.items.filter { it.label == "aLocal" }, hasSize(1))
-        assertThat("Reports aClassVal only once", completions.items.filter { it.label == "aClassVal" }, hasSize(1))
-        assertThat("Reports aClassFun only once", completions.items.filter { it.label == "aClassFun" }, hasSize(1))
-        assertThat("Reports aCompanionVal only once", completions.items.filter { it.label == "aCompanionVal" }, hasSize(1))
-        assertThat("Reports aCompanionFun only once", completions.items.filter { it.label == "aCompanionFun" }, hasSize(1))
-    }
-
-    @Test fun `complete identifiers in function scope after editing`() {
-        replace("FunctionScope.kt", 4, 9, "a", "/* break */ a")
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 22)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("anArgument"))
@@ -204,17 +171,6 @@ class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
 class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
     @Test fun `find tricky visibility members`() {
         val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 10)).get().right!!
-        val labels = completions.items.map { it.label }
-
-        assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
-        assertThat(labels, hasItems("protectedSuperFun", "publicSuperFun", "protectedSuperCompanionFun", "publicSuperCompanionFun"))
-        assertThat(labels, not(hasItems("privateSuperFun", "privateSuperCompanionFun", "publicExtensionFun")))
-    }
-    
-    @Test fun `determine visibility after edits`() {
-        replace("Visibility.kt", 3, 9, "p", "/* break */ p")
-
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 10 + 12)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
