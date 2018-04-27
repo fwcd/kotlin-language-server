@@ -6,6 +6,7 @@
   - something as Outer.Inn?
   - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
+  - ::f should complete as ::foo not ::foo()
 - keywords
   - as
   - is

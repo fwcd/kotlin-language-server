@@ -1,14 +1,14 @@
 package org.javacs.kt
 
 import org.hamcrest.Matchers.*
-import org.javacs.kt.classpath.findClassPath
+import org.javacs.kt.classpath.*
 import org.junit.Assert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
 
 class ClassPathTest {
-    @Test fun findMavenClassPath() {
+    @Test fun `find maven classpath`() {
         val workspaceRoot = testResourcesRoot().resolve("additionalWorkspace")
         val pom = workspaceRoot.resolve("pom.xml")
 
@@ -17,5 +17,9 @@ class ClassPathTest {
         val classPath = findClassPath(listOf(workspaceRoot))
 
         assertThat(classPath, hasItem(hasToString(containsString("junit"))))
+    }
+
+    @Test fun `find kotlin stdlib in maven repo`() {
+        assertThat(findKotlinStdlib(), notNullValue())
     }
 }

@@ -7,7 +7,10 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
+import java.util.function.BiPredicate
+import java.util.Comparator
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
         workspaceRoots
@@ -16,9 +19,8 @@ fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
                 .toSet()
                 .ifEmpty { backupClassPath() }
 
-// TODO find latest available version of stdlib
 private fun backupClassPath() =
-    listOfNotNull(findArtifact(Artifact("org.jetbrains.kotlin", "kotlin-stdlib", "1.2.31"), false)).toSet()
+    listOfNotNull(findKotlinStdlib()).toSet()
 
 private fun pomFiles(workspaceRoot: Path): Set<Path> =
         Files.walk(workspaceRoot)
@@ -75,6 +77,44 @@ private data class Artifact(val group: String, val artifact: String, val version
 
 private val userHome = Paths.get(System.getProperty("user.home"))
 private val mavenHome = userHome.resolve(".m2")
+
+fun findKotlinStdlib(): Path? {
+    val group = "org.jetbrains.kotlin"
+    val artifact = "kotlin-stdlib"
+    val artifactDir = mavenHome.resolve("repository")
+            .resolve(group.replace('.', File.separatorChar))
+            .resolve(artifact)
+    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, attr -> 
+        val name = file.fileName.toString()
+        val version = file.parent.fileName.toString()
+        val expected = "kotlin-stdlib-${version}.jar"
+        name == expected
+    }
+    val found = Files.find(artifactDir, 2, isKotlinStdlib)
+            .sorted(::compareVersions).findFirst().orElse(null)
+    if (found == null) LOG.warning("Couldn't find kotlin stdlib in ${artifactDir}")
+    else LOG.info("Found kotlin stdlib ${found}")
+    return found
+}
+
+private fun compareVersions(left: Path, right: Path): Int {
+    val leftVersion = extractVersion(left)
+    val rightVersion = extractVersion(right)
+
+    for (i in 0 until Math.min(leftVersion.size, rightVersion.size)) {
+        val leftRev = leftVersion[i].reversed()
+        val rightRev = rightVersion[i].reversed()
+        val compare = leftRev.compareTo(rightRev)
+        if (compare != 0)
+            return -compare
+    }
+
+    return -leftVersion.size.compareTo(rightVersion.size)
+}
+
+private fun extractVersion(artifact: Path): List<String> {
+    return artifact.parent.toString().split(".")
+}
 
 private fun findArtifact(a: Artifact, source: Boolean): Path? {
     val result = mavenHome.resolve("repository")
