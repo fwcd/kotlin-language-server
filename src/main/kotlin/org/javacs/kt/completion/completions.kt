@@ -103,7 +103,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
         return scopeChainTypes(scope)
     }
     // .?
-    val dotParent = el as? KtDotQualifiedExpression ?: el.parent as? KtDotQualifiedExpression
+    val dotParent = el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression
     if (dotParent != null) {
         return completeMemberReference(file, cursor, dotParent.receiverExpression)
     }
@@ -124,7 +124,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<Declaration
         return identifiers(scope)
     }
 
-    LOG.info("$el ${el.text} didn't look like a type, a member, or an identifier")
+    LOG.info("${el::class.simpleName} ${el.text} didn't look like a type, a member, or an identifier")
     return emptySequence()
 }
 

@@ -248,3 +248,12 @@ class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
         assertThat(labels, hasItem("anyMatch"))
     }
 }
+
+class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
+    @Test fun `complete null-safe select`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 8)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("chars"))
+    }
+}
