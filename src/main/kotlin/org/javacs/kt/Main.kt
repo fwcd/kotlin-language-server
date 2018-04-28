@@ -1,12 +1,14 @@
 package org.javacs.kt
 
 import java.io.InputStream
+import java.util.concurrent.Executors
 import org.eclipse.lsp4j.launch.LSPLauncher
 
 fun main(args: Array<String>) {
     val server = KotlinLanguageServer()
     val input = ExitOnClose(System.`in`)
-    val launcher = LSPLauncher.createServerLauncher(server, input, System.out)
+    val threads = Executors.newSingleThreadExecutor({ Thread(it, "client")})
+    val launcher = LSPLauncher.createServerLauncher(server, input, System.out, threads, { it })
     server.connect(launcher.remoteProxy)
     launcher.startListening()
 }

@@ -4,8 +4,10 @@ import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+private var threadCount = 0
+
 class DebounceDelay(private val delay: Duration) {
-    private val workerThread = Executors.newScheduledThreadPool(1)
+    private val workerThread = Executors.newScheduledThreadPool(1, { Thread(it, "debounce-${threadCount++}")})
     private var pendingTask = workerThread.submit({})
 
     fun submitImmediately(task: () -> Unit) {
