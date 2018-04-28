@@ -8,6 +8,7 @@
         "url": "https://github.com/georgewfraser/kotlin-language-server.git"
     },
     "version": "0.1.0",
+    "preview": true,
     "publisher": "georgewfraser",
     "engines": {
         "vscode": "^1.21.0"
@@ -56,16 +57,7 @@
                     "meta.embedded.block.kotlin": "kotlin"
                 }
             }
-        ],
-        "configuration": {
-            "title": "Java configuration",
-            "properties": {
-                "java.home": {
-                    "type": "string",
-                    "description": "Installation directory of Java"
-                }
-            }
-        }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
