@@ -38,6 +38,8 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
         assertThat(labels, not(hasItem("privateInstanceFoo")))
         assertThat(labels, not(hasItem("getFooVar")))
         assertThat(labels, not(hasItem("setFooVar")))
+
+        assertThat(completions.items.filter { it.label == "instanceFoo" }.firstOrNull(), hasProperty("insertText", equalTo("instanceFoo")))
     }
 
     @Test fun `complete unqualified function reference`() {

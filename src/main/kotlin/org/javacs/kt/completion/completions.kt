@@ -34,19 +34,19 @@ import java.util.concurrent.TimeUnit
 private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(file: CompiledFile, cursor: Int): CompletionList {
-    val completions = doCompletions(file, cursor)
-    if (completions === NO_EXPR) return CompletionList(true, emptyList())
+    val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
+    val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
     LOG.info("Looking for names that match '$partial'")
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    val list = visible.map(::completionItem).take(MAX_COMPLETION_ITEMS).toList()
+    val list = visible.map { completionItem(it, surroundingElement) }.take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
     return CompletionList(isIncomplete, list)
 }
 
-private fun completionItem(d: DeclarationDescriptor): CompletionItem {
+private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement): CompletionItem {
     val result = d.accept(RenderCompletionItem(), null)
 
     if (isGetter(d) || isSetter(d)) {
@@ -56,6 +56,10 @@ private fun completionItem(d: DeclarationDescriptor): CompletionItem {
         result.label = name
         result.insertText = name
         result.filterText = name 
+    }
+
+    if (surroundingElement is KtCallableReferenceExpression && result.insertText.endsWith("()")) {
+        result.insertText = result.insertText.removeSuffix("()")
     }
 
     return result
@@ -79,55 +83,62 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
         d.name.identifier.matches(Regex("set[A-Z]\\w+")) &&
         d.valueParameters.size == 1
 
-private val NO_EXPR = emptySequence<DeclarationDescriptor>()
+private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
+    val el = file.parseAtPoint(cursor - 1) ?: return null 
+            // import x.y.?
+    return el.findParent<KtImportDirective>() ?: 
+            // :?
+            el.parent as? KtTypeElement ?:
+            // .?
+            el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression ?:
+            // something::?
+            el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression ?: 
+            // ?
+            el as? KtNameReferenceExpression
+}
 
-private fun doCompletions(file: CompiledFile, cursor: Int): Sequence<DeclarationDescriptor> {
-    // TODO this would be simpler if we used regexes instead of parsing
-    val el = file.parseAtPoint(cursor - 1) ?: return NO_EXPR
-    // import x.y.?
-    val import = el.findParent<KtImportDirective>()
-    if (import != null) {
-        val module = file.container.get<ModuleDescriptor>()
-        val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(import.text) ?: return doesntLookLikeImport(import)
-        val parentDot = match.groups[1]?.value ?: "."
-        val parent = parentDot.substring(0, parentDot.length - 1)
-        LOG.info("Looking for members of package '$parent'")
-        val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
-        return parentPackage.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
+    return when (surroundingElement) {
+        // import x.y.?
+        is KtImportDirective -> {
+            val module = file.container.get<ModuleDescriptor>()
+            val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
+            val parentDot = match.groups[1]?.value ?: "."
+            val parent = parentDot.substring(0, parentDot.length - 1)
+            LOG.info("Looking for members of package '$parent'")
+            val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
+            parentPackage.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        }
+        // :?
+        is KtTypeElement -> {
+            val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
+            scopeChainTypes(scope)
+        }
+        // .?
+        is KtQualifiedExpression -> {
+            completeMemberReference(file, cursor, surroundingElement.receiverExpression)
+        }
+        is KtCallableReferenceExpression -> {
+            // something::?
+            if (surroundingElement.receiverExpression != null) {
+                completeMemberReference(file, cursor, surroundingElement.receiverExpression!!)
+            }
+            // ::?
+            else {
+                val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+                identifiers(scope)
+            }
+        }
+        // ?
+        is KtNameReferenceExpression -> {
+            val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+            identifiers(scope)
+        }
+        else -> {
+            LOG.info("${surroundingElement::class.simpleName} ${surroundingElement.text} didn't look like a type, a member, or an identifier")
+            emptySequence()
+        }
     }
-    // :?
-    val typeParent = el.parent as? KtTypeElement
-    if (typeParent != null) {
-        val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
-
-        return scopeChainTypes(scope)
-    }
-    // .?
-    val dotParent = el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression
-    if (dotParent != null) {
-        return completeMemberReference(file, cursor, dotParent.receiverExpression)
-    }
-    // something::?
-    val methodReferenceParent = el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression
-    if (methodReferenceParent != null && methodReferenceParent.receiverExpression != null) {
-        return completeMemberReference(file, cursor, methodReferenceParent.receiverExpression!!)
-    }
-    // ::?
-    if (methodReferenceParent != null && methodReferenceParent.receiverExpression == null) {
-        val scope = file.scopeAtPoint(methodReferenceParent.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
-
-        return identifiers(scope)
-    }
-    // ?
-    val idParent = el as? KtNameReferenceExpression
-    if (idParent != null) {
-        val scope = file.scopeAtPoint(idParent.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
-
-        return identifiers(scope)
-    }
-
-    LOG.info("${el::class.simpleName} ${el.text} didn't look like a type, a member, or an identifier")
-    return emptySequence()
 }
 
 private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
