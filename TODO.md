@@ -1,7 +1,6 @@
 ## Bugs
 - Jump to function name, not start of declaration
 - Autocomplete
-  - something as Outer.Inn?
   - value.InnerClass
   - editFoo?() should overwrite () instead of adding another ()
 

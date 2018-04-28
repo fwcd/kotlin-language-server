@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
@@ -35,7 +36,6 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
-    LOG.info("Completing '${surroundingElement.text}")
     val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
     LOG.info("Looking for names that match '$partial'")
@@ -102,6 +102,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {
+            LOG.info("Completing import '${surroundingElement.text}'")
             val module = file.container.get<ModuleDescriptor>()
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = match.groups[1]?.value ?: "."
@@ -112,26 +113,46 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
         }
         // :?
         is KtTypeElement -> {
-            val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
-            scopeChainTypes(scope)
+            // : Outer.?
+            if (surroundingElement is KtUserType && surroundingElement.qualifier != null) {
+                val referenceTarget = file.referenceAtPoint(surroundingElement.qualifier!!.startOffset)?.second
+                if (referenceTarget is ClassDescriptor) {
+                    LOG.info("Completing members of ${referenceTarget.fqNameSafe}")
+                    return referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+                }
+                else {
+                    LOG.warning("No type reference in '${surroundingElement.text}'")
+                    return emptySequence()
+                }
+            }
+            // : ?
+            else {
+                LOG.info("Completing type identifier '${surroundingElement.text}'")
+                val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
+                scopeChainTypes(scope)
+            }
         }
         // .?
         is KtQualifiedExpression -> {
+            LOG.info("Completing member expression '${surroundingElement.text}'")
             completeMemberReference(file, cursor, surroundingElement.receiverExpression)
         }
         is KtCallableReferenceExpression -> {
             // something::?
             if (surroundingElement.receiverExpression != null) {
+                LOG.info("Completing method reference '${surroundingElement.text}'")
                 completeMemberReference(file, cursor, surroundingElement.receiverExpression!!)
             }
             // ::?
             else {
+                LOG.info("Completing function reference '${surroundingElement.text}'")
                 val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
                 identifiers(scope)
             }
         }
         // ?
         is KtNameReferenceExpression -> {
+            LOG.info("Completing identifier '${surroundingElement.text}'")
             val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
             identifiers(scope)
         }
@@ -179,6 +200,9 @@ fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDesc
             .filterIsInstance<CallableDescriptor>()
             .filter(nameFilter)
 }
+
+private fun completeTypeMembers(type: KotlinType): Sequence<DeclarationDescriptor> =
+    type.memberScope.getDescriptorsFiltered(TYPES_FILTER).asSequence()
 
 private fun scopeChainTypes(scope: LexicalScope): Sequence<DeclarationDescriptor> =
         scope.parentsWithSelf.flatMap(::scopeTypes)

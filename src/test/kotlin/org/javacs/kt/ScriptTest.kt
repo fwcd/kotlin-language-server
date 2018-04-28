@@ -10,7 +10,7 @@ class ScriptTest: LanguageServerTestFixture("script") {
     }
 }
 
-class EditFunction: SingleFileTestFixture("script", "FunctionScript.kts") {
+class EditFunctionTest: SingleFileTestFixture("script", "FunctionScript.kts") {
     @Test fun `edit a function in a script`() {
         replace("FunctionScript.kts", 3, 18, "2", "f")
         
