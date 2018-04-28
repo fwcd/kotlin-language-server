@@ -76,7 +76,7 @@ class CompiledFile(
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
         val recoveryRange = oldParent.textRange
-        LOG.info("Re-parsing ${describeRange(recoveryRange)}")
+        LOG.info("Re-parsing ${describeRange(recoveryRange, true)}")
         val surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
         val padOffset = " ".repeat(recoveryRange.startOffset)
         val recompile = classPath.compiler.createFile(padOffset + surroundingContent)
@@ -122,16 +122,18 @@ class CompiledFile(
         }
     }
 
-    fun describePosition(offset: Int): String {
-        val pos = position(content, offset)
+    fun describePosition(offset: Int, oldContent: Boolean = false): String {
+        val c = if (oldContent) parse.text else content 
+        val pos = position(c, offset)
         val file = parse.toPath().fileName
 
         return "$file ${pos.line + 1}:${pos.character + 1}"
     }
 
-    private fun describeRange(range: TextRange): String {
-        val start = position(content, range.startOffset)
-        val end = position(content, range.endOffset)
+    private fun describeRange(range: TextRange, oldContent: Boolean = false): String {
+        val c = if (oldContent) parse.text else content 
+        val start = position(c, range.startOffset)
+        val end = position(c, range.endOffset)
         val file = parse.toPath().fileName
 
         return "$file ${start.line}:${start.character + 1}-${end.line + 1}:${end.character + 1}"
