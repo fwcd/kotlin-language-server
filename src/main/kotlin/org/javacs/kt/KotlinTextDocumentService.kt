@@ -115,7 +115,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         val file = Paths.get(URI.create(params.textDocument.uri))
 
         sf.open(file, params.textDocument.text, params.textDocument.version)
-        lintNow(setOf(file))
+        lintNow(file)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
@@ -178,29 +178,28 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 
+    private fun clearLint(): List<Path> {
+        val result = lintTodo.toList()
+        lintTodo.clear()
+        return result
+    }
+
     private fun lintLater(file: Path) {
         lintTodo.add(file)
-
-        debounceLint.submit {
-            val capture = lintTodo.toList()
-            lintTodo.clear()
-            doLint(capture)
-            lintCount++
-        }
+        debounceLint.submit(::doLint)
     }
 
-    private fun lintNow(files: Set<Path>) {
-        debounceLint.submitImmediately {
-            doLint(files)
-        }
+    private fun lintNow(file: Path) {
+        lintTodo.add(file)
+        debounceLint.submitImmediately(::doLint)
     }
 
-    private fun doLint(files: Collection<Path>) {
-        LOG.info("Linting ${describeFiles(files)}")
-
+    private fun doLint() {
+        LOG.info("Linting ${describeFiles(lintTodo)}")
+        val files = clearLint()
         val context = sp.compileFiles(files)
-
         reportDiagnostics(files, context.diagnostics)
+        lintCount++
     }
 
     private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {

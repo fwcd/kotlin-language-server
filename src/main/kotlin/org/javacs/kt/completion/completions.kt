@@ -35,6 +35,7 @@ private const val MAX_COMPLETION_ITEMS = 50
 
 fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
+    LOG.info("Completing '${surroundingElement.text}")
     val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
     LOG.info("Looking for names that match '$partial'")
