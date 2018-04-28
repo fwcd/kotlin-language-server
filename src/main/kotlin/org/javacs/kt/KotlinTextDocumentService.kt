@@ -182,8 +182,9 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         lintTodo.add(file)
 
         debounceLint.submit {
-            doLint(lintTodo)
+            val capture = lintTodo.toList()
             lintTodo.clear()
+            doLint(capture)
             lintCount++
         }
     }
@@ -194,7 +195,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         }
     }
 
-    private fun doLint(files: Set<Path>) {
+    private fun doLint(files: Collection<Path>) {
         LOG.info("Linting ${describeFiles(files)}")
 
         val context = sp.compileFiles(files)
@@ -202,7 +203,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         reportDiagnostics(files, context.diagnostics)
     }
 
-    private fun reportDiagnostics(compiled: Set<Path>, kotlinDiagnostics: Diagnostics) {
+    private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {
         val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
