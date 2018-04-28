@@ -8,6 +8,11 @@ class DebounceDelay(private val delay: Duration) {
     private val workerThread = Executors.newScheduledThreadPool(1)
     private var pendingTask = workerThread.submit({})
 
+    fun submitImmediately(task: () -> Unit) {
+        pendingTask.cancel(false)
+        pendingTask = workerThread.submit(task)
+    }
+
     fun submit(task: () -> Unit) {
         pendingTask.cancel(false)
         pendingTask = workerThread.schedule(task, delay.toMillis(), TimeUnit.MILLISECONDS)

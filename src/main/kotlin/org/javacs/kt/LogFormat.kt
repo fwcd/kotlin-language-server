@@ -21,20 +21,22 @@ object LogFormat: Formatter() {
         return result
     }
 
-    private const val format = "%1\$tF\t%1\$tT.%1\$tL\t%4\$s\t%2\$s\t%5\$s%6\$s%n"
+    private const val format = "%1\$tT.%1\$tL %2\$s %3\$s %4\$s %5\$s%6\$s%n"
     private val date = Date()
 
     override fun format(record: LogRecord): String {
         date.time = record.millis
         var source: String
         if (record.sourceClassName != null) {
-            source = record.sourceClassName
+            source = record.sourceClassName.split(".").last()
             if (record.sourceMethodName != null) {
-                source += " " + record.sourceMethodName
+                source += "#" + record.sourceMethodName
             }
         } else {
             source = record.loggerName
         }
+        source = source.padEnd(50, ' ')
+
         val message = formatMessage(record)
         var throwable = ""
         if (record.thrown != null) {
@@ -46,7 +48,10 @@ object LogFormat: Formatter() {
             throwable = sw.toString()
         }
 
+        var thread = Thread.currentThread().name
+        thread = thread.padEnd(20, ' ')
+
         return String.format(
-                format, date, source, record.loggerName, record.level.localizedName, message, throwable)
+                format, date, record.level.localizedName, thread, source, message, throwable)
     }
 }

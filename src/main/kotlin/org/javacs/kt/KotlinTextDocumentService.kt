@@ -182,13 +182,19 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         lintTodo.add(file)
 
         debounceLint.submit {
-            lintNow(lintTodo)
+            doLint(lintTodo)
             lintTodo.clear()
             lintCount++
         }
     }
 
     private fun lintNow(files: Set<Path>) {
+        debounceLint.submitImmediately {
+            doLint(files)
+        }
+    }
+
+    private fun doLint(files: Set<Path>) {
         LOG.info("Linting ${describeFiles(files)}")
 
         val context = sp.compileFiles(files)
@@ -213,7 +219,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         for (file in noErrors) {
             clearDiagnostics(file)
 
-            LOG.info("No diagnostics in $file")
+            LOG.info("No diagnostics in ${file.fileName}")
         }
 
         // LOG.log(Level.WARNING, "LINT", Exception())
