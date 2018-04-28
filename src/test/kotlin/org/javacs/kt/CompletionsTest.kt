@@ -216,9 +216,16 @@ class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
     }
 }
 
-class AsOuterDotInnerTest: SingleFileTestFixture("completions", "AsOuterDotInner.kt") {
+class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt") {
     @Test fun `complete as OuterClass-InnerClass`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 22)).get().right!!
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 24)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("InnerClass"))
+    }
+
+    @Test fun `complete static OuterClass-InnerClass`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 6, 19)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("InnerClass"))

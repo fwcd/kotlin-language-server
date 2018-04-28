@@ -109,7 +109,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.info("Looking for members of package '$parent'")
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
-            parentPackage.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+            parentPackage.memberScope.getContributedDescriptors().asSequence()
         }
         // :?
         is KtTypeElement -> {
@@ -135,13 +135,13 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
         // .?
         is KtQualifiedExpression -> {
             LOG.info("Completing member expression '${surroundingElement.text}'")
-            completeMemberReference(file, cursor, surroundingElement.receiverExpression)
+            completeMembers(file, cursor, surroundingElement.receiverExpression)
         }
         is KtCallableReferenceExpression -> {
             // something::?
             if (surroundingElement.receiverExpression != null) {
                 LOG.info("Completing method reference '${surroundingElement.text}'")
-                completeMemberReference(file, cursor, surroundingElement.receiverExpression!!)
+                completeMembers(file, cursor, surroundingElement.receiverExpression!!)
             }
             // ::?
             else {
@@ -163,22 +163,23 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
     }
 }
 
-private fun completeMemberReference(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
-    LOG.info("Looking for members of ${receiverExpr.text}")
-
+private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
     // thingWithType.?
     val receiverType = file.typeAtPoint(receiverExpr.endOffset - 1)
     if (receiverType != null) {
-        val members = receiverType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        LOG.info("Completing members of instance '${receiverType}'")
+        val members = receiverType.memberScope.getContributedDescriptors().asSequence()
         val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
         val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
-
         return members + extensions
     }
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {
-        return referenceTarget.staticScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+        LOG.info("Completing static members of '${referenceTarget.fqNameSafe}'")
+        val statics = referenceTarget.staticScope.getContributedDescriptors().asSequence()
+        val classes = referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+        return statics + classes
     }
 
     LOG.info("Can't find member scope for ${receiverExpr.text}")
@@ -234,7 +235,7 @@ private fun identifiers(scope: LexicalScope): Sequence<DeclarationDescriptor> =
             .flatMap(::explodeConstructors)
 
 private fun scopeIdentifiers(scope: HierarchicalScope): Sequence<DeclarationDescriptor> {
-    val locals = scope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+    val locals = scope.getContributedDescriptors().asSequence()
     val members = implicitMembers(scope)
 
     return locals + members
@@ -253,7 +254,7 @@ private fun implicitMembers(scope: HierarchicalScope): Sequence<DeclarationDescr
     if (scope !is LexicalScope) return emptySequence()
     val implicit = scope.implicitReceiver ?: return emptySequence()
 
-    return implicit.type.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL).asSequence()
+    return implicit.type.memberScope.getContributedDescriptors().asSequence()
 }
 
 private fun equalsIdentifier(identifier: String): (DeclarationDescriptor) -> Boolean {
