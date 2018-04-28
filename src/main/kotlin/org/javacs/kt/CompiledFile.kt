@@ -108,6 +108,8 @@ class CompiledFile(
 
     fun lineBefore(cursor: Int): String = content.substring(0, cursor).substringAfterLast('\n')
 
+    fun lineAfter(cursor: Int): String = content.substring(cursor).substringBefore('\n')
+
     private fun oldOffset(cursor: Int): Int {
         val (oldChanged, newChanged) = changedRegion(parse.text, content) ?: return cursor
 

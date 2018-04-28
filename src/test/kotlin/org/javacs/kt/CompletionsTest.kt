@@ -231,3 +231,13 @@ class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt"
         assertThat(labels, hasItem("InnerClass"))
     }
 }
+
+class EditCallTest: SingleFileTestFixture("completions", "EditCall.kt") {
+    @Test fun `edit existing function`() {
+        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("println"))
+        assertThat(completions.items.filter { it.label == "println" }.firstOrNull(), hasProperty("insertText", equalTo("println")))
+    }
+}

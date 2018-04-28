@@ -42,12 +42,14 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    val list = visible.map { completionItem(it, surroundingElement) }.take(MAX_COMPLETION_ITEMS).toList()
+    val list = visible.map { completionItem(it, surroundingElement, file) }.take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = list.size == MAX_COMPLETION_ITEMS
     return CompletionList(isIncomplete, list)
 }
 
-private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement): CompletionItem {
+private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
+
+private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile): CompletionItem {
     val result = d.accept(RenderCompletionItem(), null)
 
     if (isGetter(d) || isSetter(d)) {
@@ -61,6 +63,11 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
 
     if (surroundingElement is KtCallableReferenceExpression && result.insertText.endsWith("()")) {
         result.insertText = result.insertText.removeSuffix("()")
+    }
+
+    val matchCall = callPattern.matchEntire(result.insertText)
+    if (file.lineAfter(surroundingElement.endOffset).startsWith("(") && matchCall != null) {
+        result.insertText = matchCall.groups[1]!!.value
     }
 
     return result
