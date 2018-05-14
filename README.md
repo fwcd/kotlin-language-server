@@ -2,7 +2,7 @@
 
 I created this project while I was considering using Kotlin in my work. I ended up deciding not to and I'm not really using Kotlin these days, but this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
 
-This project implements a [language server](https://microsoft.github.io/language-server-protocol/) using the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler. There are two hard parts of implementing a language server:
+This project implements a [language server](https://microsoft.github.io/language-server-protocol/) using the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler). There are two hard parts of implementing a language server:
 - Figuring out the dependencies
 - Incrementally re-compiling as the user types
 
