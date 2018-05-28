@@ -28,6 +28,7 @@ repositories {
 }
 
 dependencies {
+	compile "org.gradle:gradle-tooling-api:${toolingApiVersion}"
 	compile 'com.google.guava:guava:23.0'
 	compile group: 'org.eclipse.lsp4j', name: 'org.eclipse.lsp4j', version: '0.4.0.M6'
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.2.31'
@@ -51,5 +52,13 @@ jar {
 		exclude 'META-INF/*.SF'
 		exclude 'META-INF/*.DSA'
 		exclude 'META-INF/*.RSA'
+	}
+}
+
+task printDependencies {
+	doLast {
+		configurations.runtime.resolve().each {
+			println it.getAbsolutePath()
+		}
 	}
 }

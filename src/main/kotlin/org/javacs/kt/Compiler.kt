@@ -43,10 +43,17 @@ class Compiler(classPath: Set<Path>) {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
         addAll(JVMConfigurationKeys.CONTENT_ROOTS, classPath.map { JvmClasspathRoot(it.toFile())})
     }
-    private val env = KotlinCoreEnvironment.createForProduction(
+    private val env: KotlinCoreEnvironment
+
+    init {
+        System.setProperty("idea.io.use.fallback", "true")
+        env = KotlinCoreEnvironment.createForProduction(
             parentDisposable = Disposable { },
             configuration = config,
-            configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES)
+            configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
+        )
+    }
+
     private val parser = KtPsiFactory(env.project)
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
     private val scripts = ScriptDefinitionProvider.getInstance(env.project) as CliScriptDefinitionProvider

@@ -24,8 +24,7 @@ fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
     }
 }
 
-fun PsiFile.toPath(): Path {
-    val path = this.originalFile.viewProvider.virtualFile.path
+fun winCompatiblePathOf(path: String): Path {
     if (path.get(2) == ':' && path.get(0) == '/') {
         // Strip leading '/' when dealing with paths on Windows
         return Paths.get(path.substring(1));
@@ -33,6 +32,9 @@ fun PsiFile.toPath(): Path {
         return Paths.get(path)
     }
 }
+
+fun PsiFile.toPath(): Path =
+        winCompatiblePathOf(this.originalFile.viewProvider.virtualFile.path)
 
 fun <T> noResult(message: String, result: T): T {
     LOG.info(message)

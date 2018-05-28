@@ -2,8 +2,10 @@ package org.javacs.kt.classpath
 
 import java.util.logging.Level
 import org.javacs.kt.LOG
+import org.javacs.kt.util.winCompatiblePathOf
 import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -11,25 +13,73 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 import java.util.function.BiPredicate
 import java.util.Comparator
+import java.util.concurrent.TimeUnit
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
         workspaceRoots
-                .flatMap { pomFiles(it) }
-                .flatMap { readPom(it) }
+                .flatMap { projectFiles(it) }
+                .flatMap { readProjectFile(it) }
                 .toSet()
                 .ifEmpty { backupClassPath() }
 
 private fun backupClassPath() =
     listOfNotNull(findKotlinStdlib()).toSet()
 
-private fun pomFiles(workspaceRoot: Path): Set<Path> =
-        Files.walk(workspaceRoot)
-                .filter { it.endsWith("pom.xml") }
-                .collect(Collectors.toSet())
+private fun projectFiles(workspaceRoot: Path): Set<Path> {
+    return Files.walk(workspaceRoot)
+            .filter { it.endsWith("pom.xml") || it.endsWith("build.gradle") }
+            .collect(Collectors.toSet())
+}
+
+private fun readProjectFile(file: Path): Set<Path> {
+    if (file.endsWith("pom.xml")) {
+        // Project uses a Maven model
+        return readPom(file)
+    } else if (file.endsWith("build.gradle")) {
+        // Project uses a Gradle model
+        return readBuildGradle(file)
+    } else {
+        throw IllegalArgumentException("$file is not a valid project configuration file (pom.xml or build.gradle)")
+    }
+}
+
+private fun readBuildGradle(buildFile: Path): Set<Path> {
+    try {
+        appendPrintDependenciesTaskTo(buildFile)
+        val workingDirectory = buildFile.getParent().toFile()
+        val cmd = "${gradleCommand()} printDependencies"
+        val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
+        process.waitFor(60, TimeUnit.MINUTES)
+        var dependencyPaths = mutableSetOf<String>()
+
+        process.inputStream
+                .bufferedReader()
+                .useLines { lines -> lines.forEach {
+                    dependencyPaths.add(it)
+                }}
+
+        return dependencyPaths.map { winCompatiblePathOf(it) }.toSet()
+    } catch (e: IOException) {
+        throw IllegalArgumentException("$buildFile could not be read", e)
+    }
+}
+
+private fun appendPrintDependenciesTaskTo(buildFile: Path) {
+    val file = buildFile.toFile()
+    val alreadyHasTask = file
+            .inputStream()
+            .bufferedReader()
+            .use { it.readText() }
+            .contains("task printDependencies")
+
+    if (!alreadyHasTask) {
+        file.appendText("task printDependencies {doLast {configurations.runtime.resolve().each {println it.getAbsolutePath()}}}")
+    }
+}
 
 private fun readPom(pom: Path): Set<Path> {
-    val mavenOutput = genDependencyList(pom)
-    val artifacts = readDependencyList(mavenOutput)
+    val mavenOutput = generateMavenDependencyList(pom)
+    val artifacts = readMavenDependencyList(mavenOutput)
 
     when {
         artifacts.isEmpty() -> LOG.warning("No artifacts found in $pom")
@@ -40,7 +90,7 @@ private fun readPom(pom: Path): Set<Path> {
     return artifacts.mapNotNull({ findArtifact(it, false) }).toSet()
 }
 
-private fun genDependencyList(pom: Path): Path {
+private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val workingDirectory = pom.toAbsolutePath().parent.toFile()
     val cmd = "${mvnCommand()} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
@@ -54,14 +104,14 @@ private fun genDependencyList(pom: Path): Path {
 
 private val artifact = Regex(".*:.*:.*:.*:.*")
 
-private fun readDependencyList(mavenOutput: Path): Set<Artifact> =
+private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
         mavenOutput.toFile()
                 .readLines()
                 .filter { it.matches(artifact) }
-                .map(::parseArtifact)
+                .map(::parseMavenArtifact)
                 .toSet()
 
-private fun parseArtifact(string: String): Artifact {
+private fun parseMavenArtifact(string: String): Artifact {
     val parts = string.trim().split(':')
 
     return when (parts.size) {
@@ -137,6 +187,14 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
         else "${a.artifact}-${a.version}.jar"
 
 private var cacheMvnCommand: Path? = null
+private var cacheGradleCommand: Path? = null
+
+private fun gradleCommand(): Path {
+    if (cacheGradleCommand == null)
+        cacheGradleCommand = doGradleCommand()
+
+    return cacheGradleCommand!!
+}
 
 private fun mvnCommand(): Path {
     if (cacheMvnCommand == null)
@@ -145,8 +203,20 @@ private fun mvnCommand(): Path {
     return cacheMvnCommand!!
 }
 
+private fun isOSWindows() = (File.separatorChar == '\\')
+
+private fun doGradleCommand() =
+        if (isOSWindows()) windowsGradleCommand()
+        else unixGradleCommand()
+
+private fun windowsGradleCommand() =
+        findExecutableOnPath("gradle.cmd") ?: findExecutableOnPath("gradle.bat")
+
+private fun unixGradleCommand() =
+        findExecutableOnPath("gradle")
+
 private fun doMvnCommand() =
-        if (File.separatorChar == '\\') windowsMvnCommand()
+        if (isOSWindows()) windowsMvnCommand()
         else unixMvnCommand()
 
 private fun windowsMvnCommand() =

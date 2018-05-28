@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.kotlin.config.CommonConfigurationKeys;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.container.ComponentProvider;
+import org.jetbrains.kotlin.container.ValueDescriptor;
 import org.jetbrains.kotlin.descriptors.CallableDescriptor;
 import org.jetbrains.kotlin.load.java.JvmAbi;
 import org.jetbrains.kotlin.psi.KtElement;
@@ -33,6 +34,7 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,6 +65,22 @@ public class OneFilePerformance {
 
         BindingTraceContext compile(Collection<KtFile> compile, Collection<KtFile> sourcePath) {
             BindingTraceContext trace = new CliLightClassGenerationSupport.CliBindingTrace();
+            new ComponentProvider(){
+
+                @Override
+                public ValueDescriptor resolve(Type arg0) {
+                    return null;
+                }
+
+                @Override
+                public <T> T create(Class<T> arg0) {
+                    return null;
+                }
+            };
+
+            // CompilerFixtures is a Kotlin class in this package
+            // and thus might generate an error when using a Java linter.
+            // It is safe to ignore that error.
             ComponentProvider container = CompilerFixtures.createContainer(
                     env.getProject(),
                     sourcePath,

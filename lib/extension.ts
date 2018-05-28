@@ -12,13 +12,13 @@ export function activate(context: VSCode.ExtensionContext) {
     console.log('Activating Kotlin language server...');
 
     let javaExecutablePath = findJavaExecutable('java');
-    
+
     if (javaExecutablePath == null) {
         VSCode.window.showErrorMessage("Couldn't locate java in $JAVA_HOME or $PATH");
-        
+
         return;
     }
-                    
+
     // Options to control the language client
     let clientOptions: LanguageClientOptions = {
         // Register the server for java documents
@@ -33,12 +33,14 @@ export function activate(context: VSCode.ExtensionContext) {
                 VSCode.workspace.createFileSystemWatcher('**/*.kt'),
                 VSCode.workspace.createFileSystemWatcher('**/*.kts'),
                 VSCode.workspace.createFileSystemWatcher('**/pom.xml'),
+                VSCode.workspace.createFileSystemWatcher('**/build.gradle'),
+                VSCode.workspace.createFileSystemWatcher('**/settings.gradle')
             ]
         },
         outputChannelName: 'Kotlin',
         revealOutputChannelOn: 4 // never
     }
-    let fatJar = Path.resolve(context.extensionPath, "target", "KotlinLanguageServer.jar");
+    let fatJar = Path.resolve(context.extensionPath, "build", "libs", "KotlinLanguageServer.jar");
     let args = [
         '-Xverify:none', // helps VisualVM avoid 'error 62'
         '-jar', fatJar
@@ -56,7 +58,7 @@ export function activate(context: VSCode.ExtensionContext) {
     let languageClient = new LanguageClient('kotlin', 'Kotlin Language Server', serverOptions, clientOptions);
     let disposable = languageClient.start();
 
-    // Push the disposable to the context's subscriptions so that the 
+    // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);
 }
@@ -95,7 +97,7 @@ function findJavaExecutable(binname: string) {
 	// Then search PATH parts
 	if (process.env['PATH']) {
         console.log('Looking for java in PATH');
-        
+
 		let pathparts = process.env['PATH'].split(Path.delimiter);
 		for (let i = 0; i < pathparts.length; i++) {
 			let binpath = Path.join(pathparts[i], binname);
@@ -104,8 +106,8 @@ function findJavaExecutable(binname: string) {
 			}
 		}
 	}
-    
-	// Else return the binary name directly (this will likely always fail downstream) 
+
+	// Else return the binary name directly (this will likely always fail downstream)
 	return null;
 }
 
@@ -122,7 +124,7 @@ function findJavaExecutableInJavaHome(javaHome: string, binname: string) {
     for (let i = 0; i < workspaces.length; i++) {
         let binpath = Path.join(workspaces[i], 'bin', binname);
 
-        if (FS.existsSync(binpath)) 
+        if (FS.existsSync(binpath))
             return binpath;
     }
 }
