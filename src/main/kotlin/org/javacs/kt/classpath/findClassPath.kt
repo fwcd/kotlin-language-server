@@ -14,6 +14,9 @@ import java.util.stream.Collectors
 import java.util.function.BiPredicate
 import java.util.Comparator
 import java.util.concurrent.TimeUnit
+import org.gradle.tooling.*;
+import org.gradle.tooling.model.*;
+import org.gradle.tooling.model.eclipse.*;
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
         workspaceRoots
@@ -44,37 +47,19 @@ private fun readProjectFile(file: Path): Set<Path> {
 }
 
 private fun readBuildGradle(buildFile: Path): Set<Path> {
-    try {
-        appendPrintDependenciesTaskTo(buildFile)
-        val workingDirectory = buildFile.getParent().toFile()
-        val cmd = "${gradleCommand()} printDependencies"
-        val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
-        process.waitFor(60, TimeUnit.MINUTES)
-        var dependencyPaths = mutableSetOf<String>()
+    val projectDirectory = buildFile.getParent().toFile()
+    val connection = GradleConnector.newConnector()
+            .forProjectDirectory(projectDirectory)
+            .connect()
+    var dependencies = mutableSetOf<Path>()
+    val project: EclipseProject = connection.getModel(EclipseProject::class.java)
 
-        process.inputStream
-                .bufferedReader()
-                .useLines { lines -> lines.forEach {
-                    dependencyPaths.add(it)
-                }}
-
-        return dependencyPaths.map { winCompatiblePathOf(it) }.toSet()
-    } catch (e: IOException) {
-        throw IllegalArgumentException("$buildFile could not be read", e)
+    for (dependency in project.getClasspath()) {
+        dependencies.add(dependency.getFile().toPath())
     }
-}
 
-private fun appendPrintDependenciesTaskTo(buildFile: Path) {
-    val file = buildFile.toFile()
-    val alreadyHasTask = file
-            .inputStream()
-            .bufferedReader()
-            .use { it.readText() }
-            .contains("task printDependencies")
-
-    if (!alreadyHasTask) {
-        file.appendText("task printDependencies {doLast {configurations.runtime.resolve().each {println it.getAbsolutePath()}}}")
-    }
+    connection.close()
+    return dependencies
 }
 
 private fun readPom(pom: Path): Set<Path> {
