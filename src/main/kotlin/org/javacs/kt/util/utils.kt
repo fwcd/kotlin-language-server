@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import org.javacs.kt.LOG
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.experimental.buildSequence
@@ -23,8 +24,15 @@ fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
     }
 }
 
-fun PsiFile.toPath() =
-        Paths.get(this.originalFile.viewProvider.virtualFile.path)
+fun PsiFile.toPath(): Path {
+    val path = this.originalFile.viewProvider.virtualFile.path
+    if (path.get(2) == ':' && path.get(0) == '/') {
+        // Strip leading '/' when dealing with paths on Windows
+        return Paths.get(path.substring(1));
+    } else {
+        return Paths.get(path)
+    }
+}
 
 fun <T> noResult(message: String, result: T): T {
     LOG.info(message)

@@ -84,7 +84,7 @@ fun findKotlinStdlib(): Path? {
     val artifactDir = mavenHome.resolve("repository")
             .resolve(group.replace('.', File.separatorChar))
             .resolve(artifact)
-    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, attr -> 
+    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, attr ->
         val name = file.fileName.toString()
         val version = file.parent.fileName.toString()
         val expected = "kotlin-stdlib-${version}.jar"
@@ -136,10 +136,10 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
         if (source) "${a.artifact}-${a.version}-sources.jar"
         else "${a.artifact}-${a.version}.jar"
 
-private var cacheMvnCommand: Path? = null 
+private var cacheMvnCommand: Path? = null
 
 private fun mvnCommand(): Path {
-    if (cacheMvnCommand == null) 
+    if (cacheMvnCommand == null)
         cacheMvnCommand = doMvnCommand()
 
     return cacheMvnCommand!!

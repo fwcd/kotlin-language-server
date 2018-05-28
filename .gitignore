@@ -1,6 +1,14 @@
+.settings/
+.classpath
+.project
+.factorypath
+.gradle
+
 .idea/
 *.iml
 
+bin/
+build/
 target/
 out/
 *.vsix
