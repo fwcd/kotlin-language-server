@@ -1,3 +1,5 @@
+# TODO
+
 ## Bugs
 
 ## Features
@@ -5,3 +7,7 @@
   - See https://godoc.org/golang.org/x/tools/cmd/goimports
 - Rename
 - .kts support with eval
+
+## Requirements
+
+## Known Issues

@@ -125,7 +125,7 @@ class CompiledFile(
     }
 
     fun describePosition(offset: Int, oldContent: Boolean = false): String {
-        val c = if (oldContent) parse.text else content 
+        val c = if (oldContent) parse.text else content
         val pos = position(c, offset)
         val file = parse.toPath().fileName
 
@@ -133,7 +133,7 @@ class CompiledFile(
     }
 
     private fun describeRange(range: TextRange, oldContent: Boolean = false): String {
-        val c = if (oldContent) parse.text else content 
+        val c = if (oldContent) parse.text else content
         val start = position(c, range.startOffset)
         val end = position(c, range.endOffset)
         val file = parse.toPath().fileName

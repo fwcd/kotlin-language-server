@@ -2,6 +2,7 @@
 Contains the commands require to build this project. Note that you might need to use `gradlew` instead of `./gradlew` when running on `cmd.exe`.
 
 ## Setting up the development environment
+* Java should be installed and located under JAVA_HOME or PATH
 
 ### For language server development
 * `./gradlew install`
