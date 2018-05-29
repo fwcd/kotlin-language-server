@@ -14,9 +14,9 @@ import java.util.stream.Collectors
 import java.util.function.BiPredicate
 import java.util.Comparator
 import java.util.concurrent.TimeUnit
-import org.gradle.tooling.*;
-import org.gradle.tooling.model.*;
-import org.gradle.tooling.model.eclipse.*;
+import org.gradle.tooling.*
+import org.gradle.tooling.model.*
+import org.gradle.tooling.model.eclipse.*
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> =
         workspaceRoots
@@ -162,7 +162,6 @@ private fun findArtifact(a: Artifact, source: Boolean): Path? {
         return result
     else {
         LOG.warning("Couldn't find $a in $result")
-
         return null
     }
 }

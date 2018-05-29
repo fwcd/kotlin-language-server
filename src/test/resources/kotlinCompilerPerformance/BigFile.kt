@@ -62,7 +62,7 @@ object BigFile {
 
     fun main10(args: Array<String>) {
         if (args.size < 2) {
-            println("No number supplied");
+            println("No number supplied")
         } else {
             val x = parseInt(args[0])
             val y = parseInt(args[1])

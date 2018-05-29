@@ -4,7 +4,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
-import org.javacs.kt.completion.completions
+import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.hover.hoverAt
@@ -21,7 +21,6 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
 class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
-
     private lateinit var client: LanguageClient
 
     fun connect(client: LanguageClient) {
@@ -82,7 +81,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun completion(position: TextDocumentPositionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
+    override fun completion(position: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 

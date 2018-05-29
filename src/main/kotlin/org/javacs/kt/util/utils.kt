@@ -27,7 +27,7 @@ fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
 fun winCompatiblePathOf(path: String): Path {
     if (path.get(2) == ':' && path.get(0) == '/') {
         // Strip leading '/' when dealing with paths on Windows
-        return Paths.get(path.substring(1));
+        return Paths.get(path.substring(1))
     } else {
         return Paths.get(path)
     }
@@ -47,3 +47,9 @@ fun <T> noFuture(message: String, contents: T): CompletableFuture<T> = noResult(
 fun <T> emptyResult(message: String): List<T> = noResult(message, emptyList())
 
 fun <T> nullResult(message: String): T? = noResult(message, null)
+
+public class KotlinLSException: RuntimeException {
+	constructor(msg: String) : super(msg) {}
+
+	constructor(msg: String, cause: Throwable) : super(msg, cause) {}
+}

@@ -8,8 +8,8 @@ pom.xml
 
 out/test/**
 out/**/*.map
-target/**
-!target/KotlinLanguageServer.jar
+build/**
+!build/libs/KotlinLanguageServer.jar
 
 src/**
 lib/**

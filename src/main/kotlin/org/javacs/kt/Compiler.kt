@@ -29,10 +29,12 @@ import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.ScriptDefinitionProvider
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
+import org.jetbrains.kotlin.util.KotlinFrontEndException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import org.javacs.kt.util.KotlinLSException
 
 /**
  * Incrementally compiles files and expressions.
@@ -131,15 +133,19 @@ class Compiler(classPath: Set<Path>) {
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
         LOG.info("Compiling ${expression.text}")
-        val (container, trace) = createContainer(sourcePath)
-        val incrementalCompiler = container.get<ExpressionTypingServices>()
-        incrementalCompiler.getTypeInfo(
-                scopeWithImports,
-                expression,
-                TypeUtils.NO_EXPECTED_TYPE,
-                DataFlowInfo.EMPTY,
-                trace,
-                true)
-        return Pair(trace.bindingContext, container)
+        try {
+            val (container, trace) = createContainer(sourcePath)
+            val incrementalCompiler = container.get<ExpressionTypingServices>()
+            incrementalCompiler.getTypeInfo(
+                    scopeWithImports,
+                    expression,
+                    TypeUtils.NO_EXPECTED_TYPE,
+                    DataFlowInfo.EMPTY,
+                    trace,
+                    true)
+            return Pair(trace.bindingContext, container)
+        } catch (e: KotlinFrontEndException) {
+            throw KotlinLSException("Error while analyzing: ${expression.text}", e)
+        }
     }
 }

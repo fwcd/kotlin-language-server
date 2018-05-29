@@ -23,6 +23,12 @@ description = "kotlin-language-server"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+kotlin {
+	experimental {
+		coroutines 'enable'
+	}
+}
+
 repositories {
 	maven { url "http://repo.maven.apache.org/maven2" }
 	maven { url 'https://repo.gradle.org/gradle/libs-releases' }
@@ -30,8 +36,8 @@ repositories {
 
 dependencies {
 	compile "org.gradle:gradle-tooling-api:4.3"
-	compile 'com.google.guava:guava:23.0'
-	compile group: 'org.eclipse.lsp4j', name: 'org.eclipse.lsp4j', version: '0.4.0.M6'
+	// compile 'com.google.guava:guava:25.0-jre'
+	compile group: 'org.eclipse.lsp4j', name: 'org.eclipse.lsp4j', version: '0.4.1'
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version: '1.2.31'
 	compile group: 'org.jetbrains.kotlin', name: 'kotlin-compiler', version: '1.2.31'
 	testCompile group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.20'
