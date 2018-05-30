@@ -28,6 +28,14 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): Languag
         return languageServer
     }
 
+    fun completionParams(relativePath: String, line: Int, column: Int): CompletionParams {
+        val file = workspaceRoot.resolve(relativePath)
+        val fileId = TextDocumentIdentifier(file.toUri().toString())
+        val position = position(line, column)
+
+        return CompletionParams(fileId, position)
+    }
+
     fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
@@ -100,7 +108,7 @@ fun testResourcesRoot(): Path {
 open class SingleFileTestFixture(relativeWorkspaceRoot: String, val file: String): LanguageServerTestFixture(relativeWorkspaceRoot) {
     @Before fun openFile() {
         open(file)
-        
+
         // Wait for lint, so subsequent replace(...) operations cause recovery
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
     }

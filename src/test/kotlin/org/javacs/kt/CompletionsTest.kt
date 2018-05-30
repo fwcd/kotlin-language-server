@@ -7,7 +7,7 @@ import org.junit.Test
 
 class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.kt") {
     @Test fun `complete instance members`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 15)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 15)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
@@ -22,14 +22,14 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
     }
 
     @Test fun `find count extension function`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 8, 14)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 8, 14)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("count"))
     }
 
     @Test fun `complete method reference`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 13, 16)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 13, 16)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("instanceFoo"))
@@ -43,14 +43,14 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
     }
 
     @Test fun `complete unqualified function reference`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 17, 8)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 17, 8)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("findFunctionReference"))
     }
 
     @Test fun `complete a function name within a call`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 22, 27)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 22, 27)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("findFunctionReference"))
@@ -60,7 +60,7 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
 
 class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
     @Test fun `convert getFileName to fileName`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 14)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 14)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("fileName"))
@@ -70,7 +70,7 @@ class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembers
 
 class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt") {
     @Test fun `complete identifiers in function scope`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 10)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("anArgument"))
@@ -91,7 +91,7 @@ class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt"
 
 class TypesTest: SingleFileTestFixture("completions", "Types.kt") {
     @Test fun `complete a type name`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 25)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 25)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("SomeInnerClass"))
@@ -106,7 +106,7 @@ class FillEmptyBodyTest: SingleFileTestFixture("completions", "FillEmptyBody.kt"
         replace(file, 2, 16, "", """"
             Callee.
 """)
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 20)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 20)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("bar"))
@@ -115,7 +115,7 @@ class FillEmptyBodyTest: SingleFileTestFixture("completions", "FillEmptyBody.kt"
 
 class ConstructorTest: SingleFileTestFixture("completions", "Constructor.kt") {
     @Test fun `complete a constructor`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 10)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("SomeConstructor"))
@@ -124,7 +124,7 @@ class ConstructorTest: SingleFileTestFixture("completions", "Constructor.kt") {
 
 class MiddleOfFunctionTest: SingleFileTestFixture("completions", "MiddleOfFunction.kt") {
     @Test fun `complete in the middle of a function`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 11)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 11)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("subSequence"))
@@ -133,7 +133,7 @@ class MiddleOfFunctionTest: SingleFileTestFixture("completions", "MiddleOfFuncti
 
 class BackquotedFunctionTest: SingleFileTestFixture("completions", "BackquotedFunction.kt") {
     @Test fun `complete with backquotes`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 7)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 7)).get().right!!
         val insertText = completions.items.map { it.insertText }
 
         assertThat(insertText, hasItem("`fun that needs backquotes`()"))
@@ -142,28 +142,28 @@ class BackquotedFunctionTest: SingleFileTestFixture("completions", "BackquotedFu
 
 class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
     @Test fun `java static method`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 4, 16)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 16)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("isNull"))
     }
 
     @Test fun `java static method reference`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 7, 17)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 7, 17)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("isNull"))
     }
 
     @Test fun `object method`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 5, 17)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 5, 17)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("objectFun"))
     }
 
     @Test fun `companion object method`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 6, 16)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 6, 16)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("companionFun"))
@@ -172,7 +172,7 @@ class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
 
 class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
     @Test fun `find tricky visibility members`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 10)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItems("privateThisFun", "protectedThisFun", "publicThisFun", "privateThisCompanionFun", "protectedThisCompanionFun", "publicThisCompanionFun", "privateTopLevelFun"))
@@ -183,14 +183,14 @@ class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
 
 class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
     @Test fun `complete import from java-nio-path-P`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 1, 23)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 1, 23)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItems("Path", "Paths"))
     }
-    
+
     @Test fun `complete import from java-nio-`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 3, 25)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 25)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItems("MethodHandle"))
@@ -199,7 +199,7 @@ class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
 
 class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
     @Test fun `complete nested select`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 15)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 15)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, not(hasItem("chars")))
@@ -209,7 +209,7 @@ class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
 
 class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
     @Test fun `complete null-safe select`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 8)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 8)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("chars"))
@@ -218,14 +218,14 @@ class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
 
 class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt") {
     @Test fun `complete as OuterClass-InnerClass`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 24)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 24)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("InnerClass"))
     }
 
     @Test fun `complete static OuterClass-InnerClass`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 6, 19)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 6, 19)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("InnerClass"))
@@ -234,7 +234,7 @@ class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt"
 
 class EditCallTest: SingleFileTestFixture("completions", "EditCall.kt") {
     @Test fun `edit existing function`() {
-        val completions = languageServer.textDocumentService.completion(textDocumentPosition(file, 2, 11)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 11)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("println"))
