@@ -9,7 +9,7 @@ pom.xml
 out/test/**
 out/**/*.map
 build/**
-!build/libs/KotlinLanguageServer.jar
+!build/install/**
 
 src/**
 lib/**

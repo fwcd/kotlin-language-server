@@ -40,19 +40,16 @@ export function activate(context: VSCode.ExtensionContext) {
         outputChannelName: 'Kotlin',
         revealOutputChannelOn: 4 // never
     }
-    let fatJar = Path.resolve(context.extensionPath, "build", "libs", "KotlinLanguageServer.jar");
-    let args = [
-        '-Xverify:none', // helps VisualVM avoid 'error 62'
-        '-jar', fatJar
-    ];
+    let startScriptPath = Path.resolve(context.extensionPath, "build", "install", "kotlin-language-server", "bin", correctScriptName("kotlin-language-server"))
+    let args = [];
     // Start the child java process
     let serverOptions: ServerOptions = {
-        command: javaExecutablePath,
+        command: startScriptPath,
         args: args,
         options: { cwd: VSCode.workspace.rootPath }
     }
 
-    console.log(javaExecutablePath + ' ' + args.join(' '));
+    console.log(startScriptPath + ' ' + args.join(' '));
 
     // Create the language client and start the client.
     let languageClient = new LanguageClient('kotlin', 'Kotlin Language Server', serverOptions, clientOptions);
@@ -114,6 +111,13 @@ function findJavaExecutable(binname: string) {
 function correctBinname(binname: string) {
 	if (process.platform === 'win32')
 		return binname + '.exe';
+	else
+		return binname;
+}
+
+function correctScriptName(binname: string) {
+	if (process.platform === 'win32')
+		return binname + '.bat';
 	else
 		return binname;
 }
