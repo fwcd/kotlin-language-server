@@ -41,21 +41,25 @@ private fun backupClassPath() =
 
 private fun projectFiles(workspaceRoot: Path): Set<Path> {
     return Files.walk(workspaceRoot)
-            .filter { it.endsWith("pom.xml") || it.endsWith("build.gradle") }
+            .filter { isMavenBuildFile(it) || isGradleBuildFile(it) }
             .collect(Collectors.toSet())
 }
 
 private fun readProjectFile(file: Path): Set<Path> {
-    if (file.endsWith("pom.xml")) {
+    if (isMavenBuildFile(file)) {
         // Project uses a Maven model
         return readPom(file)
-    } else if (file.endsWith("build.gradle")) {
+    } else if (isGradleBuildFile(file)) {
         // Project uses a Gradle model
         return readBuildGradle(file)
     } else {
         throw IllegalArgumentException("$file is not a valid project configuration file (pom.xml or build.gradle)")
     }
 }
+
+private fun isMavenBuildFile(file: Path) = file.endsWith("pom.xml")
+
+private fun isGradleBuildFile(file: Path) = file.endsWith("build.gradle") || file.endsWith("build.gradle.kts")
 
 private fun readBuildGradle(buildFile: Path): Set<Path> {
     val projectDirectory = buildFile.getParent().toFile()
