@@ -22,7 +22,7 @@ private class NotifySourcePath(private val sp: SourcePath) {
 
     operator fun set(file: Path, source: SourceVersion) {
         val content = convertLineSeparators(source.content)
-        
+
         files[file] = source
         sp.put(file, content)
     }
@@ -46,40 +46,47 @@ private class NotifySourcePath(private val sp: SourcePath) {
  */
 class SourceFiles(private val sp: SourcePath) {
     private val workspaceRoots = mutableSetOf<Path>()
+    private var exclusions = SourceExclusions(workspaceRoots)
     private val files = NotifySourcePath(sp)
     private val open = mutableSetOf<Path>()
 
     fun open(file: Path, content: String, version: Int) {
-        files[file] = SourceVersion(content, version)
-        open.add(file)
+        if (exclusions.isIncluded(file)) {
+            files[file] = SourceVersion(content, version)
+            open.add(file)
+        }
     }
 
     fun close(file: Path) {
-        open.remove(file)
+        if (exclusions.isIncluded(file)) {
+            open.remove(file)
 
-        val disk = readFromDisk(file)
+            val disk = readFromDisk(file)
 
-        if (disk != null)
-            files[file] = disk
-        else
-            files.remove(file)
+            if (disk != null)
+                files[file] = disk
+            else
+                files.remove(file)
+        }
     }
 
     fun edit(file: Path, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
-        val existing = files[file]!!
-        var newText = existing.content
+        if (exclusions.isIncluded(file)) {
+            val existing = files[file]!!
+            var newText = existing.content
 
-        if (newVersion <= existing.version) {
-            LOG.warning("Ignored ${file.fileName} version $newVersion")
-            return
+            if (newVersion <= existing.version) {
+                LOG.warning("Ignored ${file.fileName} version $newVersion")
+                return
+            }
+
+            for (change in contentChanges) {
+                if (change.range == null) newText = change.text
+                else newText = patch(newText, change)
+            }
+
+            files[file] = SourceVersion(newText, newVersion)
         }
-
-        for (change in contentChanges) {
-            if (change.range == null) newText = change.text
-            else newText = patch(newText, change)
-        }
-
-        files[file] = SourceVersion(newText, newVersion)
     }
 
     fun createdOnDisk(file: Path) {
@@ -97,7 +104,7 @@ class SourceFiles(private val sp: SourcePath) {
     }
 
     private fun readFromDisk(file: Path): SourceVersion? {
-        if (!Files.exists(file)) return null 
+        if (!Files.exists(file)) return null
 
         val content = Files.readAllLines(file).joinToString("\n")
 
@@ -106,8 +113,7 @@ class SourceFiles(private val sp: SourcePath) {
 
     private fun isSource(file: Path): Boolean {
         val name = file.fileName.toString()
-
-        return name.endsWith(".kt") || name.endsWith(".kts")
+        return (name.endsWith(".kt") || name.endsWith(".kts")) && exclusions.isIncluded(file)
     }
 
     fun addWorkspaceRoot(root: Path) {
@@ -120,6 +126,7 @@ class SourceFiles(private val sp: SourcePath) {
         }
 
         workspaceRoots.add(root)
+        updateExclusions()
     }
 
     fun removeWorkspaceRoot(root: Path) {
@@ -129,6 +136,11 @@ class SourceFiles(private val sp: SourcePath) {
 
         files.removeAll(rmSources)
         workspaceRoots.remove(root)
+        updateExclusions()
+    }
+
+    private fun updateExclusions() {
+        exclusions = SourceExclusions(workspaceRoots)
     }
 
     fun isOpen(file: Path): Boolean = open.contains(file)
@@ -168,7 +180,10 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
 
 private fun findSourceFiles(root: Path): Set<Path> {
     val pattern = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
-    return Files.walk(root).filter { pattern.matches(it.fileName) } .collect(Collectors.toSet())
+    val exclusions = SourceExclusions(root)
+    return Files.walk(root)
+            .filter { pattern.matches(it.fileName) && exclusions.isIncluded(it) }
+            .collect(Collectors.toSet())
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
@@ -182,5 +197,5 @@ private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
 fun describeFiles(files: Collection<Path>): String {
     return if (files.isEmpty()) "0 files"
     else if (files.size > 5) "${files.size} files"
-    else files.map { it.fileName }.joinToString(", ")
+    else files.map { ".../" + it.parent.fileName + "/" + it.fileName }.joinToString(", ")
 }

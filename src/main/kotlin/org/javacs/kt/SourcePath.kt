@@ -62,6 +62,7 @@ class SourcePath(private val cp: CompilerClassPath) {
     }
 
     fun put(file: Path, content: String) {
+        LOG.info("Putting ${file.toAbsolutePath()} on source path") // DEBUG
         assert(!content.contains('\r'))
 
         if (files.contains(file))

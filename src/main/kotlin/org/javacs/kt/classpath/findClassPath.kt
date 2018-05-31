@@ -18,23 +18,13 @@ import org.gradle.tooling.*
 import org.gradle.tooling.model.*
 import org.gradle.tooling.model.eclipse.*
 
-// TODO: Read exclusions from gitignore/settings.json/... instead of
-// hardcoding them
-private val excludedFolders = listOf("bin", "build", "target")
-
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
-    val excludedBranches = workspaceRoots.flatMap { root -> excludedFolders.map { root.resolve(it) } }
     return workspaceRoots
             .flatMap { projectFiles(it) }
-            .filter { isIncluded(it, excludedBranches) }
             .flatMap { readProjectFile(it) }
             .toSet()
             .ifEmpty { backupClassPath() }
 }
-
-private fun isIncluded(file: Path, excludedBranches: Collection<Path>) =
-        excludedBranches.filter { file.startsWith(it) }
-            .isEmpty()
 
 private fun backupClassPath() =
     listOfNotNull(findKotlinStdlib()).toSet()
