@@ -52,18 +52,22 @@ private fun isMavenBuildFile(file: Path) = file.endsWith("pom.xml")
 private fun isGradleBuildFile(file: Path) = file.endsWith("build.gradle") || file.endsWith("build.gradle.kts")
 
 private fun readBuildGradle(buildFile: Path): Set<Path> {
-    val projectDirectory = buildFile.getParent().toFile()
-    val connection = GradleConnector.newConnector()
-            .forProjectDirectory(projectDirectory)
-            .connect()
     var dependencies = mutableSetOf<Path>()
-    val project: EclipseProject = connection.getModel(EclipseProject::class.java)
+    try {
+        val projectDirectory = buildFile.getParent().toFile()
+        val connection = GradleConnector.newConnector()
+                .forProjectDirectory(projectDirectory)
+                .connect()
+        val project: EclipseProject = connection.getModel(EclipseProject::class.java)
 
-    for (dependency in project.getClasspath()) {
-        dependencies.add(dependency.getFile().toPath())
+        for (dependency in project.getClasspath()) {
+            dependencies.add(dependency.getFile().toPath())
+        }
+
+        connection.close()
+    } catch (e: BuildException) {
+        LOG.warning("BuildException while collecting Gradle dependencies: ${e.message}")
     }
-
-    connection.close()
     return dependencies
 }
 
