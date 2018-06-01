@@ -25,7 +25,7 @@
     ],
     "main": "./out/extension",
     "files": [
-        "target/KotlinLanguageServer.jar"
+        "build/install/**"
     ],
     "contributes": {
         "languages": [

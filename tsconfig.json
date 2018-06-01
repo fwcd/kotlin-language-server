@@ -7,7 +7,7 @@
             "es6"
         ],
         "sourceMap": true,
-        "rootDir": "lib",
+        "rootDir": "vscode-extension-src",
         /* Strict Type-Checking Option */
         // "strict": true,   /* enable all strict type-checking options */
         /* Additional Checks */

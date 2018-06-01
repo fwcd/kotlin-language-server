@@ -27,5 +27,5 @@ Contains the commands require to build this project. Note that you might need to
 * Run the `Extension (kotlin-language-server)` launch configuration
 
 ## Packaging the VSCode extension
-* `vsce package`
-* The extension is located as a .vsix file in the repository folder
+* `vsce package -o build.vsix`
+* The extension is located as `build.vsix` in the repository folder

@@ -7,8 +7,8 @@ set -e
 # Needed once
 npm install
 
-# Build fat jar
-mvn clean package 
+# Build jar
+./../gradlew build
 
 # Build vsix
 vsce package -o build.vsix

@@ -13,10 +13,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 import java.util.function.BiPredicate
 import java.util.Comparator
-import java.util.concurrent.TimeUnit
-import org.gradle.tooling.*
-import org.gradle.tooling.model.*
-import org.gradle.tooling.model.eclipse.*
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
     return workspaceRoots
@@ -50,26 +46,6 @@ private fun readProjectFile(file: Path): Set<Path> {
 private fun isMavenBuildFile(file: Path) = file.endsWith("pom.xml")
 
 private fun isGradleBuildFile(file: Path) = file.endsWith("build.gradle") || file.endsWith("build.gradle.kts")
-
-private fun readBuildGradle(buildFile: Path): Set<Path> {
-    var dependencies = mutableSetOf<Path>()
-    try {
-        val projectDirectory = buildFile.getParent().toFile()
-        val connection = GradleConnector.newConnector()
-                .forProjectDirectory(projectDirectory)
-                .connect()
-        val project: EclipseProject = connection.getModel(EclipseProject::class.java)
-
-        for (dependency in project.getClasspath()) {
-            dependencies.add(dependency.getFile().toPath())
-        }
-
-        connection.close()
-    } catch (e: BuildException) {
-        LOG.warning("BuildException while collecting Gradle dependencies: ${e.message}")
-    }
-    return dependencies
-}
 
 private fun readPom(pom: Path): Set<Path> {
     val mavenOutput = generateMavenDependencyList(pom)
@@ -180,14 +156,6 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
         else "${a.artifact}-${a.version}.jar"
 
 private var cacheMvnCommand: Path? = null
-private var cacheGradleCommand: Path? = null
-
-private fun gradleCommand(): Path {
-    if (cacheGradleCommand == null)
-        cacheGradleCommand = doGradleCommand()
-
-    return cacheGradleCommand!!
-}
 
 private fun mvnCommand(): Path {
     if (cacheMvnCommand == null)
@@ -197,16 +165,6 @@ private fun mvnCommand(): Path {
 }
 
 private fun isOSWindows() = (File.separatorChar == '\\')
-
-private fun doGradleCommand() =
-        if (isOSWindows()) windowsGradleCommand()
-        else unixGradleCommand()
-
-private fun windowsGradleCommand() =
-        findExecutableOnPath("gradle.cmd") ?: findExecutableOnPath("gradle.bat")
-
-private fun unixGradleCommand() =
-        findExecutableOnPath("gradle")
 
 private fun doMvnCommand() =
         if (isOSWindows()) windowsMvnCommand()
