@@ -7,15 +7,14 @@
         "type": "git",
         "url": "https://github.com/georgewfraser/kotlin-language-server.git"
     },
-    "version": "0.1.2",
+    "version": "0.1.3",
     "preview": true,
     "publisher": "georgewfraser",
     "engines": {
         "vscode": "^1.21.0"
     },
     "categories": [
-        "Languages",
-        "Linters"
+        "Programming Languages"
     ],
     "keywords": [
         "kotlin"
@@ -60,6 +59,7 @@
         ]
     },
     "scripts": {
+        "package-with-lsp": "gradle build && vsce package -o build.vsix",
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
