@@ -148,10 +148,11 @@ private fun createTemporaryGradleFile(): File {
 private var cacheGradleCommand: Path? = null
 
 private fun getGradleCommand(workspace: Path): Path {
-    if (cacheGradleCommand == null)
+    if (cacheGradleCommand == null) {
         cacheGradleCommand = workspace.resolve("gradlew").toAbsolutePath()
+    }
 
-    return workspace.resolve("gradlew").toAbsolutePath()
+    return cacheGradleCommand!!
 }
 
 private fun readDependenciesViaTask(directory: Path): Set<Path> {
@@ -159,10 +160,10 @@ private fun readDependenciesViaTask(directory: Path): Set<Path> {
     if (!gradle.toFile().exists()) return mutableSetOf<Path>()
     val config = createTemporaryGradleFile()
 
-    val gradleCommand = String.format("%s -I %s classpath", gradle.toString(), config.getAbsolutePath().toString())
+    val gradleCommand = String.format("${gradle} -I ${config.absolutePath} classpath")
     val classpathCommand = Runtime.getRuntime().exec(gradleCommand, null, directory.toFile())
 
-    val stdout = classpathCommand.getInputStream()
+    val stdout = classpathCommand.inputStream
     val reader = stdout.bufferedReader()
 
     classpathCommand.waitFor()

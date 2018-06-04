@@ -43,7 +43,7 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
     val list = visible.map { completionItem(it, surroundingElement, file) }.take(MAX_COMPLETION_ITEMS).toList()
-    val isIncomplete = list.size == MAX_COMPLETION_ITEMS
+    val isIncomplete = (list.size == MAX_COMPLETION_ITEMS)
     return CompletionList(isIncomplete, list)
 }
 
@@ -58,7 +58,7 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
         result.detail += " (from ${result.label})"
         result.label = name
         result.insertText = name
-        result.filterText = name 
+        result.filterText = name
     }
 
     if (surroundingElement is KtCallableReferenceExpression && result.insertText.endsWith("()")) {
@@ -92,15 +92,15 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
         d.valueParameters.size == 1
 
 private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
-    val el = file.parseAtPoint(cursor - 1) ?: return null 
+    val el = file.parseAtPoint(cursor - 1) ?: return null
             // import x.y.?
-    return el.findParent<KtImportDirective>() ?: 
+    return el.findParent<KtImportDirective>() ?:
             // :?
             el.parent as? KtTypeElement ?:
             // .?
             el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression ?:
             // something::?
-            el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression ?: 
+            el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression ?:
             // ?
             el as? KtNameReferenceExpression
 }
