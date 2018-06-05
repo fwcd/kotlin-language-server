@@ -1,4 +1,4 @@
-# kotlin-language-server
+# KotlinLanguageServer
 This project implements a [language server](https://microsoft.github.io/language-server-protocol/) using the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler) and a VSCode extension using the language server.
 
 ## Getting Started
