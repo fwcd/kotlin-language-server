@@ -5,11 +5,11 @@
     "icon": "Icon128.png",
     "repository": {
         "type": "git",
-        "url": "https://github.com/georgewfraser/kotlin-language-server.git"
+        "url": "https://github.com/fwcd/KotlinLanguageServer.git"
     },
     "version": "0.1.3",
     "preview": true,
-    "publisher": "georgewfraser",
+    "publisher": "fwcd",
     "engines": {
         "vscode": "^1.21.0"
     },
