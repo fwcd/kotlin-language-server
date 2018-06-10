@@ -28,11 +28,10 @@ val DECL_RENDERER = DescriptorRenderer.withOptions {
 private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")
 
 class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
-
     private val result = CompletionItem()
 
     private fun escape(id: String): String =
-        if (id.matches(GOOD_IDENTIFIER)) id 
+        if (id.matches(GOOD_IDENTIFIER)) id
         else "`$id`"
 
     private fun setDefaults(declaration: DeclarationDescriptor) {
