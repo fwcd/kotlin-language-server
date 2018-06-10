@@ -53,3 +53,13 @@ public class KotlinLSException: RuntimeException {
 
 	constructor(msg: String, cause: Throwable) : super(msg, cause) {}
 }
+
+fun <T> optionalOr(vararg optionals: () -> T?): T? {
+    for (optional in optionals) {
+        val result = optional()
+        if (result != null) {
+            return result
+        }
+    }
+    return null;
+}

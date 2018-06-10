@@ -1,6 +1,7 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
+import org.javacs.kt.util.optionalOr
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,32 +18,43 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
     val connection = GradleConnector.newConnector()
             .forProjectDirectory(projectDirectory)
             .connect()
-    var dependencies: Set<Path> = emptySet()
-
-    try {
-        dependencies = readDependenciesViaTask(projectDirectory.toPath())
-        LOG.info("Resolved Gradle dependencies using task")
-    } catch (e: Exception) {
-        try {
-            dependencies = readDependenciesViaEclipseProject(connection)
-            LOG.info("Resolved Gradle dependencies using Eclipse project model")
-        } catch (f: Exception) {
-            try {
-                dependencies = readDependenciesViaKotlinDSL(connection)
-                LOG.info("Resolved Gradle dependencies using Kotlin DSL model")
-            } catch (g: Exception) {
-                try {
-                    dependencies = readDependenciesViaIdeaProject(connection)
-                    LOG.info("Resolved Gradle dependencies using IDEA project model")
-                } catch (h: Exception) {
-                    LOG.warning("BuildExceptions while collecting Gradle dependencies: ${e.message} and ${f.message} and ${g.message} and ${h.message}")
-                }
-            }
+    var dependencies: Set<Path> = optionalOr<Set<Path>>(
+        {
+            LOG.info("Resolving Gradle dependencies using task...")
+            tryResolvingDependencies { readDependenciesViaTask(projectDirectory.toPath()) }
+        },
+        {
+            LOG.info("Resolving Gradle dependencies using Eclipse project model...")
+            tryResolvingDependencies { readDependenciesViaEclipseProject(connection) }
+        },
+        {
+            LOG.info("Resolving Gradle dependencies using Kotlin DSL model...")
+            tryResolvingDependencies { readDependenciesViaKotlinDSL(connection) }
+        },
+        {
+            LOG.info("Resolving Gradle dependencies using IDEA project model...")
+            tryResolvingDependencies { readDependenciesViaIdeaProject(connection) }
         }
+    ).orEmpty()
+
+    if (dependencies.isEmpty()) {
+        LOG.warning("Could not resolve Gradle dependencies using any resolution strategy!")
+    } else {
+        LOG.info("Successfully found dependencies")
     }
 
     connection.close()
     return dependencies
+}
+
+private fun tryResolvingDependencies(resolver: () -> Set<Path>?): Set<Path>? {
+    try {
+        val resolved = resolver()
+        if (resolved != null) {
+            return resolved;
+        }
+    } catch (e: Exception) {}
+    return null
 }
 
 private fun createTemporaryGradleFile(): File {
@@ -155,7 +167,7 @@ private fun getGradleCommand(workspace: Path): Path {
     return cacheGradleCommand!!
 }
 
-private fun readDependenciesViaTask(directory: Path): Set<Path> {
+private fun readDependenciesViaTask(directory: Path): Set<Path>? {
     val gradle = getGradleCommand(directory)
     if (!gradle.toFile().exists()) return mutableSetOf<Path>()
     val config = createTemporaryGradleFile()
@@ -178,7 +190,11 @@ private fun readDependenciesViaTask(directory: Path): Set<Path> {
         }
     }
 
-    return dependencies
+    if (dependencies.size > 0) {
+        return dependencies
+    } else {
+        return null
+    }
 }
 
 private fun readDependenciesViaEclipseProject(connection: ProjectConnection): Set<Path> {
