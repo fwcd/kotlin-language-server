@@ -12,6 +12,17 @@ import kotlin.coroutines.experimental.buildSequence
 inline fun<reified Find> PsiElement.findParent() =
         this.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
 
+fun execAndReadStdout(shellCommand: String, directory: Path): String {
+    val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
+    val stdout = process.inputStream
+    process.waitFor()
+    var result = ""
+    stdout.bufferedReader().use {
+        result = it.readText()
+    }
+    return result
+}
+
 fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
     val root = this
 
@@ -54,7 +65,7 @@ public class KotlinLSException: RuntimeException {
 	constructor(msg: String, cause: Throwable) : super(msg, cause) {}
 }
 
-fun <T> optionalOr(vararg optionals: () -> T?): T? {
+fun <T> firstNonNull(vararg optionals: () -> T?): T? {
     for (optional in optionals) {
         val result = optional()
         if (result != null) {

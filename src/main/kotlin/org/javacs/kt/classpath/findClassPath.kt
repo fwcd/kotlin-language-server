@@ -57,7 +57,7 @@ private fun readPom(pom: Path): Set<Path> {
         else -> LOG.info("Found ${artifacts.size} artifacts in $pom")
     }
 
-    return artifacts.mapNotNull({ findArtifact(it, false) }).toSet()
+    return artifacts.mapNotNull({ findMavenArtifact(it, false) }).toSet()
 }
 
 private fun generateMavenDependencyList(pom: Path): Path {
@@ -72,16 +72,16 @@ private fun generateMavenDependencyList(pom: Path): Path {
     return mavenOutput
 }
 
-private val artifact = Regex(".*:.*:.*:.*:.*")
+private val artifact = ".*:.*:.*:.*:.*".toRegex()
 
 private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
         mavenOutput.toFile()
                 .readLines()
                 .filter { it.matches(artifact) }
-                .map(::parseMavenArtifact)
+                .map(::parseArtifact)
                 .toSet()
 
-private fun parseMavenArtifact(string: String): Artifact {
+fun parseArtifact(string: String): Artifact {
     val parts = string.trim().split(':')
 
     return when (parts.size) {
@@ -91,7 +91,7 @@ private fun parseMavenArtifact(string: String): Artifact {
     }
 }
 
-private data class Artifact(val group: String, val artifact: String, val version: String) {
+data class Artifact(val group: String, val artifact: String, val version: String) {
     override fun toString() = "$group:$artifact:$version"
 }
 
@@ -136,7 +136,7 @@ private fun extractVersion(artifact: Path): List<String> {
     return artifact.parent.toString().split(".")
 }
 
-private fun findArtifact(a: Artifact, source: Boolean): Path? {
+private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
     val result = mavenHome.resolve("repository")
             .resolve(a.group.replace('.', File.separatorChar))
             .resolve(a.artifact)
@@ -166,15 +166,18 @@ private fun mvnCommand(): Path {
 
 private fun isOSWindows() = (File.separatorChar == '\\')
 
-private fun doMvnCommand() =
-        if (isOSWindows()) windowsMvnCommand()
-        else unixMvnCommand()
+private fun doMvnCommand() = findCommandOnPath("mvn")
 
-private fun windowsMvnCommand() =
-        findExecutableOnPath("mvn.cmd") ?: findExecutableOnPath("mvn.bat")
+fun findCommandOnPath(name: String): Path? =
+        if (isOSWindows()) windowsCommand(name)
+        else unixCommand(name)
 
-private fun unixMvnCommand() =
-        findExecutableOnPath("mvn")
+private fun windowsCommand(name: String) =
+        findExecutableOnPath("$name.cmd")
+        ?: findExecutableOnPath("$name.bat")
+        ?: findExecutableOnPath("$name.exe")
+
+private fun unixCommand(name: String) = findExecutableOnPath(name)
 
 private fun findExecutableOnPath(fileName: String): Path? {
     for (dir in System.getenv("PATH").split(File.pathSeparator)) {
