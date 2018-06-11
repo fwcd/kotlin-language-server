@@ -19,38 +19,25 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
             .forProjectDirectory(projectDirectory)
             .connect()
     var dependencies: Set<Path> = optionalOr<Set<Path>>(
-        {
-            LOG.info("Resolving Gradle dependencies using task...")
-            tryResolvingDependencies { readDependenciesViaTask(projectDirectory.toPath()) }
-        },
-        {
-            LOG.info("Resolving Gradle dependencies using Eclipse project model...")
-            tryResolvingDependencies { readDependenciesViaEclipseProject(connection) }
-        },
-        {
-            LOG.info("Resolving Gradle dependencies using Kotlin DSL model...")
-            tryResolvingDependencies { readDependenciesViaKotlinDSL(connection) }
-        },
-        {
-            LOG.info("Resolving Gradle dependencies using IDEA project model...")
-            tryResolvingDependencies { readDependenciesViaIdeaProject(connection) }
-        }
+        { tryResolvingDependencies("Gradle task") { readDependenciesViaTask(projectDirectory.toPath()) } },
+        { tryResolvingDependencies("Eclipse project model") { readDependenciesViaEclipseProject(connection) } },
+        { tryResolvingDependencies("Kotlin DSL model") { readDependenciesViaKotlinDSL(connection) } },
+        { tryResolvingDependencies("IDEA model") { readDependenciesViaIdeaProject(connection) } }
     ).orEmpty()
 
     if (dependencies.isEmpty()) {
         LOG.warning("Could not resolve Gradle dependencies using any resolution strategy!")
-    } else {
-        LOG.info("Successfully found dependencies")
     }
 
     connection.close()
     return dependencies
 }
 
-private fun tryResolvingDependencies(resolver: () -> Set<Path>?): Set<Path>? {
+private fun tryResolvingDependencies(modelName: String, resolver: () -> Set<Path>?): Set<Path>? {
     try {
         val resolved = resolver()
         if (resolved != null) {
+            LOG.info("Successfully resolved dependencies using " + modelName)
             return resolved;
         }
     } catch (e: Exception) {}
