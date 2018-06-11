@@ -48,15 +48,15 @@ private fun createTemporaryGradleFile(): File {
     val temp = File.createTempFile("tempGradle", ".config")
     val config = File.createTempFile("classpath", ".gradle")
 
-    LOG.info("Reading classpathFinder.gradle")
-    ClassLoader.getSystemResourceAsStream("classpathFinder.gradle")
-            .bufferedReader()
-            .copyTo(config.bufferedWriter())
-    LOG.info("Successfully read classpathFinder.gradle")
+    config.bufferedWriter().use { configWriter ->
+        ClassLoader.getSystemResourceAsStream("classpathFinder.gradle").bufferedReader().use { configReader ->
+            configReader.copyTo(configWriter)
+        }
+    }
 
-    val tempWriter = temp.bufferedWriter()
-    tempWriter.write("rootProject { apply from: '${config.absolutePath}'} ")
-    tempWriter.close()
+    temp.bufferedWriter().use {
+        it.write("rootProject { apply from: '${config.absolutePath}'} ")
+    }
 
     return temp
 }
