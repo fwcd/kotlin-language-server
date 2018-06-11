@@ -4,7 +4,8 @@ This project implements a [language server](https://microsoft.github.io/language
 ![Icon](Icon128.png)
 
 ## Getting Started
-See [BUILDING.md](BUILDING.md) for build instructions.
+* See [BUILDING.md](BUILDING.md) for build instructions.
+* See [Roadmap](https://github.com/fwcd/KotlinLanguageServer/projects/1) for features, planned additions, bugfixes and changes
 
 ## This repository needs your help!
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
