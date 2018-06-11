@@ -38,7 +38,7 @@ private fun tryResolvingDependencies(modelName: String, resolver: () -> Set<Path
         val resolved = resolver()
         if (resolved != null) {
             LOG.info("Successfully resolved dependencies using " + modelName)
-            return resolved;
+            return resolved
         }
     } catch (e: Exception) {}
     return null
@@ -47,101 +47,18 @@ private fun tryResolvingDependencies(modelName: String, resolver: () -> Set<Path
 private fun createTemporaryGradleFile(): File {
     val temp = File.createTempFile("tempGradle", ".config")
     val config = File.createTempFile("classpath", ".gradle")
-    val classPathGradleConfig = """
-        boolean isResolvable(Configuration conf) {
-            // isCanBeResolved was added in Gradle 3.3. Previously, all configurations were resolvable
-            if (Configuration.class.declaredMethods.any { it.name == 'isCanBeResolved' }) {
-                return conf.canBeResolved
-            }
-            return true
-        }
 
-        File getBuildCacheForDependency(File dependency) {
-            String name = dependency.getName()
-            String home = System.getProperty("user.home")
-            String gradleCache = home + File.separator + '.gradle' + File.separator + 'caches' + File.separator
-            if (file(gradleCache).exists()) {
-                String include = 'transforms*' + File.separator + '**' + File.separator + name + File.separator + '**' + File.separator + 'classes.jar'
-                return fileTree(dir: gradleCache, include: include).files.find { it.isFile() }
-            } else {
-                return zipTree(dependency).files.find { it.isFile() && it.name.endsWith('jar') }
-            }
-        }
-
-        task classpath {
-            doLast {
-                HashSet<String> classpathFiles = new HashSet<String>()
-                for (proj in allprojects) {
-                    for (conf in proj.configurations) {
-                        if (isResolvable(conf)) {
-                            for (dependency in conf) {
-                                classpathFiles += dependency
-                            }
-                        }
-                    }
-
-                    def rjava = proj.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
-                    def rFiles = new File(rjava)
-                    if (rFiles.exists()) {
-                        classpathFiles += rFiles
-                    }
-
-                    if (proj.hasProperty("android")) {
-                        classpathFiles += proj.android.getBootClasspath()
-                        if (proj.android.hasProperty("applicationVariants")) {
-                            proj.android.applicationVariants.all { v ->
-                                if (v.hasProperty("javaCompile")) {
-                                    classpathFiles += v.javaCompile.classpath
-                                }
-                                if (v.hasProperty("compileConfiguration")) {
-                                    v.compileConfiguration.each { dependency ->
-                                        classpathFiles += dependency
-                                    }
-                                }
-                                if (v.hasProperty("runtimeConfiguration")) {
-                                    v.runtimeConfiguration.each { dependency ->
-                                        classpathFiles += dependency
-                                    }
-                                }
-                                if (v.hasProperty("getApkLibraries")) {
-                                    println v.getApkLibraries()
-                                    classpathFiles += v.getApkLibraries()
-                                }
-                                if (v.hasProperty("getCompileLibraries")) {
-                                    classpathFiles += v.getCompileLibraries()
-                                }
-                            }
-                        }
-
-                        if (proj.android.hasProperty("libraryVariants")) {
-                            proj.android.libraryVariants.all { v ->
-                                classpathFiles += v.javaCompile.classpath.files
-                            }
-                        }
-                    }
-
-                HashSet<String> computedPaths = new HashSet<String>()
-                for (dependency in classpathFiles) {
-                    if (dependency.name.endsWith("jar")) {
-                        println dependency
-                    } else if (dependency != null) {
-                        println getBuildCacheForDependency(dependency)
-                    }
-                }
-
-            }
-        }
-    }
-    """
-    val bw = config.bufferedWriter()
-    bw.write(classPathGradleConfig)
-    bw.close()
+    LOG.info("Reading classpathFinder.gradle")
+    ClassLoader.getSystemResourceAsStream("classpathFinder.gradle")
+            .bufferedReader()
+            .copyTo(config.bufferedWriter())
+    LOG.info("Successfully read classpathFinder.gradle")
 
     val tempWriter = temp.bufferedWriter()
-    tempWriter.write(String.format("rootProject{ apply from: '%s'} ", config.getAbsolutePath()));
-    tempWriter.close();
+    tempWriter.write("rootProject { apply from: '${config.absolutePath}'} ")
+    tempWriter.close()
 
-    return temp;
+    return temp
 }
 
 private var cacheGradleCommand: Path? = null
@@ -159,7 +76,7 @@ private fun readDependenciesViaTask(directory: Path): Set<Path>? {
     if (!gradle.toFile().exists()) return mutableSetOf<Path>()
     val config = createTemporaryGradleFile()
 
-    val gradleCommand = String.format("${gradle} -I ${config.absolutePath} classpath")
+    val gradleCommand = "${gradle} -I ${config.absolutePath} classpath"
     val classpathCommand = Runtime.getRuntime().exec(gradleCommand, null, directory.toFile())
 
     val stdout = classpathCommand.inputStream
@@ -167,13 +84,13 @@ private fun readDependenciesViaTask(directory: Path): Set<Path>? {
 
     classpathCommand.waitFor()
 
-    val artifact = Pattern.compile("^.+?\\.jar$");
+    val artifact = Pattern.compile("^.+?\\.jar$")
     val dependencies = mutableSetOf<Path>()
     for (dependency in reader.lines()) {
         val line = dependency.toString().trim()
 
         if (artifact.matcher(line).matches()) {
-            dependencies.add(Paths.get(line));
+            dependencies.add(Paths.get(line))
         }
     }
 
@@ -192,7 +109,7 @@ private fun readDependenciesViaEclipseProject(connection: ProjectConnection): Se
         dependencies.add(dependency.file.toPath())
     }
 
-    return dependencies;
+    return dependencies
 }
 
 private fun readDependenciesViaIdeaProject(connection: ProjectConnection): Set<Path> {
@@ -207,7 +124,7 @@ private fun readDependenciesViaIdeaProject(connection: ProjectConnection): Set<P
         }
     }
 
-    return dependencies;
+    return dependencies
 }
 
 private fun readDependenciesViaKotlinDSL(connection: ProjectConnection): Set<Path> {

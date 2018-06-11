@@ -61,5 +61,5 @@ fun <T> optionalOr(vararg optionals: () -> T?): T? {
             return result
         }
     }
-    return null;
+    return null
 }

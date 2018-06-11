@@ -1,0 +1,83 @@
+boolean isResolvable(Configuration conf) {
+	// isCanBeResolved was added in Gradle 3.3. Previously, all configurations were resolvable
+	if (Configuration.class.declaredMethods.any { it.name == 'isCanBeResolved' }) {
+		return conf.canBeResolved
+	}
+	return true
+}
+
+File getBuildCacheForDependency(File dependency) {
+	String name = dependency.getName()
+	String home = System.getProperty("user.home")
+	String gradleCache = home + File.separator + '.gradle' + File.separator + 'caches' + File.separator
+	if (file(gradleCache).exists()) {
+		String include = 'transforms*' + File.separator + '**' + File.separator + name + File.separator + '**' + File.separator + 'classes.jar'
+		return fileTree(dir: gradleCache, include: include).files.find { it.isFile() }
+	} else {
+		return zipTree(dependency).files.find { it.isFile() && it.name.endsWith('jar') }
+	}
+}
+
+task classpath {
+	doLast {
+		HashSet<String> classpathFiles = new HashSet<String>()
+		for (proj in allprojects) {
+			for (conf in proj.configurations) {
+				if (isResolvable(conf)) {
+					for (dependency in conf) {
+						classpathFiles += dependency
+					}
+				}
+			}
+
+			def rjava = proj.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
+			def rFiles = new File(rjava)
+			if (rFiles.exists()) {
+				classpathFiles += rFiles
+			}
+
+			if (proj.hasProperty("android")) {
+				classpathFiles += proj.android.getBootClasspath()
+				if (proj.android.hasProperty("applicationVariants")) {
+					proj.android.applicationVariants.all { v ->
+						if (v.hasProperty("javaCompile")) {
+							classpathFiles += v.javaCompile.classpath
+						}
+						if (v.hasProperty("compileConfiguration")) {
+							v.compileConfiguration.each { dependency ->
+								classpathFiles += dependency
+							}
+						}
+						if (v.hasProperty("runtimeConfiguration")) {
+							v.runtimeConfiguration.each { dependency ->
+								classpathFiles += dependency
+							}
+						}
+						if (v.hasProperty("getApkLibraries")) {
+							println v.getApkLibraries()
+							classpathFiles += v.getApkLibraries()
+						}
+						if (v.hasProperty("getCompileLibraries")) {
+							classpathFiles += v.getCompileLibraries()
+						}
+					}
+				}
+
+				if (proj.android.hasProperty("libraryVariants")) {
+					proj.android.libraryVariants.all { v ->
+						classpathFiles += v.javaCompile.classpath.files
+					}
+				}
+			}
+
+			HashSet<String> computedPaths = new HashSet<String>()
+			for (dependency in classpathFiles) {
+				if (dependency.name.endsWith("jar")) {
+					println dependency
+				} else if (dependency != null) {
+					println getBuildCacheForDependency(dependency)
+				}
+			}
+		}
+	}
+}
