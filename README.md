@@ -14,7 +14,7 @@ There are two hard parts of implementing a language server:
 - Figuring out the dependencies
 - Incrementally re-compiling as the user types
 
-Dependencies are determined by the [findClassPath](src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or the Gradle and tells it to output a list of dependencies in a temporary folder. Currently, Maven and Gradle projects are supported.
+Dependencies are determined by the [findClassPath](src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or Gradle and tells it to output a list of dependencies. Currently, both Maven and Gradle projects are supported.
 
 I get incremental compilation at the file-level by keeping the same `KotlinCoreEnvironment` alive between compilations in [Compiler.kt](src/main/kotlin/org/javacs/kt/Compiler.kt). There is a performance benchmark in [OneFilePerformance.java](src/test/java/org/javacs/kt/OneFilePerformance.java) that verifies this works.
 
