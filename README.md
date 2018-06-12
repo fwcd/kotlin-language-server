@@ -21,7 +21,7 @@ I get incremental compilation at the file-level by keeping the same `KotlinCoreE
 Getting incremental compilation at the expression level is a bit more complicated:
 - Fully compile a file and store in [CompiledFile](src/main/kotlin/org/javacs/kt/CompiledFile.kt):
     - `val content: String` A snapshot of the source code
-    - `val parse: KtFil` The parsed AST
+    - `val parse: KtFile` The parsed AST
     - `val compile: BindingContext` Additional information about the AST from typechecking
 - After the user edits the file:
     - Find the smallest section the encompasses all the user changes
