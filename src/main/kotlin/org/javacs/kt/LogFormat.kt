@@ -6,6 +6,7 @@ import java.util.*
 import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import java.util.logging.Logger
+import jline.TerminalFactory
 
 val LOG = LogFormat.createLogger()
 
@@ -21,26 +22,25 @@ object LogFormat: Formatter() {
         return result
     }
 
-    private const val format = "%1\$tT.%1\$tL %2\$s %3\$s %4\$s %5\$s%6\$s%n"
+    private const val logTime = false
+    private var newline = System.lineSeparator()
     private val date = Date()
-
     private var maxSource = 0
     private var maxThread = 0
 
     override fun format(record: LogRecord): String {
         date.time = record.millis
+        val time = if (logTime) "$date " else ""
+
         var source: String
         if (record.sourceClassName != null) {
             source = record.sourceClassName.split(".").last()
             if (record.sourceMethodName != null) {
-                source += "#" + record.sourceMethodName
+                source += "." + record.sourceMethodName
             }
         } else {
             source = record.loggerName
         }
-        maxSource = Math.max(maxSource, source.length + 1)
-        maxSource = Math.min(maxSource, 50)
-        source = source.padEnd(maxSource, ' ')
 
         val message = formatMessage(record)
         var throwable = ""
@@ -50,15 +50,68 @@ object LogFormat: Formatter() {
             pw.println()
             record.thrown.printStackTrace(pw)
             pw.close()
-            throwable = sw.toString()
+            throwable = sw.toString() + newline
         }
 
         var thread = Thread.currentThread().name
-        maxThread = Math.max(maxThread, thread.length + 1)
-        maxThread = Math.min(maxThread, 20)
-        thread = thread.padEnd(maxThread, ' ')
+        val prefix = "$time[${record.level.localizedName}]"
 
-        return String.format(
-                format, date, record.level.localizedName, thread, source, message, throwable)
+        // TODO: Query the terminal width somehow instead of hardcoding it
+        val totalWidth = 95 // In columns
+        val prefixWidth = 8
+        val sourceWidth = (0.24 * totalWidth).toInt()
+        val messageWidth = (0.48 * totalWidth).toInt()
+        val threadWidth = (0.1 * totalWidth).toInt()
+
+        return multiLineFormat(
+            4, // padding between columns
+            FormatValue(prefix, prefixWidth),
+            FormatValue(source, sourceWidth),
+            FormatValue(message, messageWidth),
+            FormatValue(thread, threadWidth)
+        ) + throwable
+    }
+
+    data class FormatValue(val str: String, val charsPerLine: Int = str.length)
+
+    private fun multiLineFormat(padding: Int, vararg values: FormatValue): String {
+        val splittedValues = values.map { createLineBreaks(it.str, it.charsPerLine) }
+        return mergeSplittedLines(splittedValues, padding)
+    }
+
+    private fun mergeSplittedLines(splittedValues: List<List<String>>, padding: Int): String {
+        var charOffset = 0
+        val lines = mutableListOf<String>()
+        for (splittedValue in splittedValues) {
+            var lineIndex = 0
+            var maxOffset = 0
+            for (valueLine in splittedValue) {
+                while (lineIndex >= lines.size) lines.add("")
+
+                lines[lineIndex] = lines[lineIndex].padEnd(charOffset, ' ') + valueLine
+
+                maxOffset = Math.max(maxOffset, valueLine.length)
+                lineIndex++
+            }
+            charOffset += maxOffset + padding
+        }
+        return lines.reduce { prev, current -> prev + newline + current } + newline
+    }
+
+    private fun createLineBreaks(str: String, maxLength: Int): List<String> {
+        var current = ""
+        var lines = mutableListOf<String>()
+        var i = maxLength
+        for (character in str) {
+            if (i == 0) {
+                lines.add(current.trim())
+                current = ""
+                i = maxLength
+            }
+            current += character
+            i--
+        }
+        if (current.length > 0) lines.add(current.trim().padEnd(maxLength, ' '))
+        return lines
     }
 }

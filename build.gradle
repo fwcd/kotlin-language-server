@@ -40,6 +40,7 @@ dependencies {
 	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1"
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.2.31"
 	implementation "org.jetbrains.kotlin:kotlin-compiler:1.2.31"
+	implementation "jline:jline:2.14.2"
 	implementation fileTree(dir: "lib", include: ["*.jar"])
 	testImplementation "org.openjdk.jmh:jmh-core:1.20"
 	testImplementation "org.hamcrest:hamcrest-all:1.3"

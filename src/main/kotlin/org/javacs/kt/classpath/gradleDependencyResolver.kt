@@ -165,7 +165,10 @@ private fun parseGradleCLIDependencies(output: String): Set<Path>? {
 }
 
 private fun findGradleArtifact(artifact: Artifact): Path? {
-    // FIXME: This does not work yet.....
+    LOG.info("Gradle caches: ${gradleCaches.value}")
+    LOG.info("Gradle artifact group: ${gradleCaches.value?.resolve(artifact.group)}")
+    LOG.info("Gradle artifact artifact: ${gradleCaches.value?.resolve(artifact.group)?.resolve(artifact.artifact)}")
+    LOG.info("Gradle artifact version: ${gradleCaches.value?.resolve(artifact.group)?.resolve(artifact.artifact)?.resolve(artifact.version)}")
     val jarPath = gradleCaches.value
             ?.resolve(artifact.group)
             ?.resolve(artifact.artifact)
@@ -176,5 +179,6 @@ private fun findGradleArtifact(artifact: Artifact): Path? {
                         .findFirst()
             }
             ?.orElse(null)
+    LOG.info("jarPath: $jarPath")
     return jarPath
 }
