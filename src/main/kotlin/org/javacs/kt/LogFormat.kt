@@ -6,7 +6,6 @@ import java.util.*
 import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import java.util.logging.Logger
-import jline.TerminalFactory
 
 val LOG = LogFormat.createLogger()
 
@@ -103,12 +102,15 @@ object LogFormat: Formatter() {
         var lines = mutableListOf<String>()
         var i = maxLength
         for (character in str) {
-            if (i == 0) {
+            val isNewline = character == '\n'
+            if (i == 0 || isNewline) {
                 lines.add(current.trim())
                 current = ""
                 i = maxLength
             }
-            current += character
+            if (!isNewline) {
+                current += character
+            }
             i--
         }
         if (current.length > 0) lines.add(current.trim().padEnd(maxLength, ' '))

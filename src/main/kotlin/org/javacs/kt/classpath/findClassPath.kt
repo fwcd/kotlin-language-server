@@ -78,16 +78,16 @@ private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
         mavenOutput.toFile()
                 .readLines()
                 .filter { it.matches(artifact) }
-                .map(::parseArtifact)
+                .map { parseArtifact(it) }
                 .toSet()
 
-fun parseArtifact(string: String): Artifact {
-    val parts = string.trim().split(':')
+fun parseArtifact(rawArtifact: String, version: String? = null): Artifact {
+    val parts = rawArtifact.trim().split(':')
 
     return when (parts.size) {
-        3 -> Artifact(parts[0], parts[1], parts[2])
-        5 -> Artifact(parts[0], parts[1], parts[3])
-        else -> throw IllegalArgumentException("$string is not a properly formed maven artifact")
+        3 -> Artifact(parts[0], parts[1], version ?: parts[2])
+        5 -> Artifact(parts[0], parts[1], version ?: parts[3])
+        else -> throw IllegalArgumentException("$rawArtifact is not a properly formed Maven/Gradle artifact")
     }
 }
 

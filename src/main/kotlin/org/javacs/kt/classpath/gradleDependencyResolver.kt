@@ -5,6 +5,7 @@ import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.execAndReadStdout
 import org.javacs.kt.util.KotlinLSException
 import java.io.File
+import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -137,7 +138,7 @@ private fun readDependenciesViaKotlinDSL(connection: ProjectConnection): Set<Pat
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.info("Attempting dependency resolution through CLI...") // FIXME
+    LOG.info("Attempting dependency resolution through CLI...")
     val gradle = getGradleCommand(projectDirectory)
     val classpathCommand = "$gradle dependencies --configuration=compileClasspath --console=plain"
     val testClasspathCommand = "$gradle dependencies --configuration=testCompileClasspath --console=plain"
@@ -151,34 +152,30 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
     return parseGradleCLIDependencies(execAndReadStdout(command, projectDirectory))
 }
 
-private val artifactPattern = lazy { "[\\S]+:[\\S]+:[\\S]+".toRegex() }
+private val artifactPattern by lazy { "[\\S]+:[\\S]+:[\\S]+( -> )*([\\d.]+)*".toRegex() }
 private val userHome = Paths.get(System.getProperty("user.home"))
 private val gradleHome = userHome.resolve(".gradle")
 // TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
-private val gradleCaches = lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
+private val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
+private val jarMatcher by lazy { FileSystems.getDefault().getPathMatcher("glob:**.jar") }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
-    return artifactPattern.value.findAll(output)
-            .map { findGradleArtifact(parseArtifact(it.value)) }
-            .filterNotNull()
-            .toSet()
+    val artifacts = artifactPattern.findAll(output)
+        .map { findGradleArtifact(parseArtifact(it.value, it.groups[2]?.value)) }
+        .filterNotNull()
+    return artifacts.toSet()
 }
 
 private fun findGradleArtifact(artifact: Artifact): Path? {
-    LOG.info("Gradle caches: ${gradleCaches.value}")
-    LOG.info("Gradle artifact group: ${gradleCaches.value?.resolve(artifact.group)}")
-    LOG.info("Gradle artifact artifact: ${gradleCaches.value?.resolve(artifact.group)?.resolve(artifact.artifact)}")
-    LOG.info("Gradle artifact version: ${gradleCaches.value?.resolve(artifact.group)?.resolve(artifact.artifact)?.resolve(artifact.version)}")
-    val jarPath = gradleCaches.value
+    val jarPath = gradleCaches
             ?.resolve(artifact.group)
             ?.resolve(artifact.artifact)
             ?.resolve(artifact.version)
             ?.let { dependencyFolder ->
                 Files.walk(dependencyFolder)
-                        .filter { it.endsWith("jar") }
+                        .filter { jarMatcher.matches(it) }
                         .findFirst()
             }
             ?.orElse(null)
-    LOG.info("jarPath: $jarPath")
     return jarPath
 }
