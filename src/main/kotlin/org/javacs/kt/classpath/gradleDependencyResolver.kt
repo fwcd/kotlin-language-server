@@ -138,7 +138,7 @@ private fun readDependenciesViaKotlinDSL(connection: ProjectConnection): Set<Pat
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.info("Attempting dependency resolution through CLI...")
+    LOG.fine("Attempting dependency resolution through CLI...")
     val gradle = getGradleCommand(projectDirectory)
     val classpathCommand = "$gradle dependencies --configuration=compileClasspath --console=plain"
     val testClasspathCommand = "$gradle dependencies --configuration=testCompileClasspath --console=plain"

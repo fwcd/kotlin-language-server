@@ -48,7 +48,7 @@ fun PsiFile.toPath(): Path =
         winCompatiblePathOf(this.originalFile.viewProvider.virtualFile.path)
 
 fun <T> noResult(message: String, result: T): T {
-    LOG.info(message)
+    LOG.fine(message)
 
     return result
 }

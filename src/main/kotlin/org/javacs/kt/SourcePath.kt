@@ -43,7 +43,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         private fun doCompileIfChanged(): SourceFile {
             if (parsed?.text != compiledFile?.text) {
-                LOG.info("Compiling ${file.fileName}")
+                LOG.fine("Compiling ${file.fileName}")
 
                 val (context, container) = cp.compiler.compileFile(parsed!!, all())
                 compiledContext = context

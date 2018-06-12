@@ -57,7 +57,7 @@ object LogFormat: Formatter() {
 
         // TODO: Query the terminal width somehow instead of hardcoding it
         val totalWidth = 95 // In columns
-        val prefixWidth = 8
+        val prefixWidth = 9
         val sourceWidth = (0.24 * totalWidth).toInt()
         val messageWidth = (0.48 * totalWidth).toInt()
         val threadWidth = (0.1 * totalWidth).toInt()
