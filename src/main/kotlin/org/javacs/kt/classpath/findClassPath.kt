@@ -73,7 +73,8 @@ private fun generateMavenDependencyList(pom: Path): Path? {
 
     process.inputStream.bufferedReader().use { reader ->
         while (process.isAlive()) {
-            val line = reader.readLine().trim()
+            val line = reader.readLine()?.trim()
+            if (line == null) break
             if ((line.length > 0) && !line.startsWith("Progress")) {
                 LOG.info("Maven: $line")
             }
