@@ -153,8 +153,6 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
 }
 
 private val artifactPattern by lazy { "[\\S]+:[\\S]+:[\\S]+( -> )*([\\d.]+)*".toRegex() }
-private val userHome = Paths.get(System.getProperty("user.home"))
-private val gradleHome = userHome.resolve(".gradle")
 // TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
 private val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
 private val jarMatcher by lazy { FileSystems.getDefault().getPathMatcher("glob:**.jar") }

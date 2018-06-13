@@ -96,7 +96,8 @@ data class Artifact(val group: String, val artifact: String, val version: String
 }
 
 private val userHome = Paths.get(System.getProperty("user.home"))
-private val mavenHome = userHome.resolve(".m2")
+val mavenHome = userHome.resolve(".m2")
+val gradleHome = userHome.resolve(".gradle")
 
 fun findKotlinStdlib(): Path? {
     val group = "org.jetbrains.kotlin"
@@ -104,7 +105,7 @@ fun findKotlinStdlib(): Path? {
     val artifactDir = mavenHome.resolve("repository")
             .resolve(group.replace('.', File.separatorChar))
             .resolve(artifact)
-    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, attr ->
+    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
         val version = file.parent.fileName.toString()
         val expected = "kotlin-stdlib-${version}.jar"
