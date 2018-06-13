@@ -17,7 +17,7 @@ Contains the commands require to build this project. Note that you might need to
     * `./gradlew build`
 * Without Testing:
     * `./gradlew build -x test`
-* The JAR archive is located under build/libs/KotlinLanguageServer.jar
+* Start scripts for the language server are located under `build/install/kotlin-language-server/bin/`
 
 ## Testing the Language Server
 * `./gradlew test`
