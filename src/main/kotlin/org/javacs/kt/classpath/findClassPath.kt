@@ -127,15 +127,20 @@ fun findKotlinStdlib(): Path? {
             }
 }
 
+private fun Path.existsOrNull() =
+        if (Files.exists(this)) this else null
+
 private fun findKotlinStdlibArtifactDirUsingMaven(group: String, artifact: String) =
         mavenHome.resolve("repository")
             ?.resolve(group.replace('.', File.separatorChar))
             ?.resolve(artifact)
+            ?.existsOrNull()
 
 private fun findKotlinStdlibArtifactDirUsingGradle(group: String, artifact: String) =
         gradleCaches
             ?.resolve(group)
             ?.resolve(artifact)
+            ?.existsOrNull()
 
 private fun compareVersions(left: Path, right: Path): Int {
     val leftVersion = extractVersion(left)
