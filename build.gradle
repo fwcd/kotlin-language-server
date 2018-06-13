@@ -53,4 +53,11 @@ configurations.all { config ->
 	}
 }
 
+test {
+	testLogging {
+		events "failed"
+		exceptionFormat "short"
+	}
+}
+
 build.finalizedBy(installDist)
