@@ -71,12 +71,13 @@ private fun generateMavenDependencyList(pom: Path): Path? {
     LOG.info("Run ${cmd} in $workingDirectory")
     val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
 
-    val timeout = 60000 // ms
-    val startTime = System.currentTimeMillis()
-
-    while (process.isAlive()) {
-        Thread.sleep(100)
-        if ((System.currentTimeMillis() - startTime) > timeout) return null
+    process.inputStream.bufferedReader().use { reader ->
+        while (process.isAlive()) {
+            val line = reader.readLine()
+            if (!line.startsWith("Progress")) {
+                LOG.info("Maven: $line")
+            }
+        }
     }
 
     return mavenOutput
