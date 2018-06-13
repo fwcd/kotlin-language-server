@@ -15,6 +15,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.stream.Collectors
 import java.util.function.BiPredicate
 import java.util.Comparator
+import java.util.concurrent.TimeUnit
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
     return workspaceRoots
@@ -51,27 +52,25 @@ private fun isGradleBuildFile(file: Path) = file.endsWith("build.gradle") || fil
 
 private fun readPom(pom: Path): Set<Path> {
     val mavenOutput = generateMavenDependencyList(pom)
-    val artifacts = readMavenDependencyList(mavenOutput)
+    val artifacts = mavenOutput?.let(::readMavenDependencyList)
 
     when {
+        artifacts == null -> LOG.warning("No artifacts could be read from $pom")
         artifacts.isEmpty() -> LOG.warning("No artifacts found in $pom")
         artifacts.size < 5 -> LOG.info("Found ${artifacts.joinToString(", ")} in $pom")
         else -> LOG.info("Found ${artifacts.size} artifacts in $pom")
     }
 
-    return artifacts.mapNotNull({ findMavenArtifact(it, false) }).toSet()
+    return artifacts?.mapNotNull { findMavenArtifact(it, false) }?.toSet() ?: emptySet()
 }
 
-private fun generateMavenDependencyList(pom: Path): Path {
+private fun generateMavenDependencyList(pom: Path): Path? {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val workingDirectory = pom.toAbsolutePath().parent.toFile()
     val cmd = "${mvnCommand()} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
     LOG.info("Run ${cmd} in $workingDirectory")
-    val status = Runtime.getRuntime().exec(cmd, null, workingDirectory).waitFor()
-
-    assert(status == 0, { "$cmd failed" })
-
-    return mavenOutput
+    val sucess = Runtime.getRuntime().exec(cmd, null, workingDirectory).waitFor(30, TimeUnit.SECONDS)
+    return if (sucess) mavenOutput else null
 }
 
 private val artifact = ".*:.*:.*:.*:.*".toRegex()
