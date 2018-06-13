@@ -74,3 +74,16 @@ fun <T> firstNonNull(vararg optionals: () -> T?): T? {
     }
     return null
 }
+
+fun <T> tryResolving(what: String, resolver: () -> T?): T? {
+    try {
+        val resolved = resolver()
+        if (resolved != null) {
+            LOG.info("Successfully resolved $what")
+            return resolved
+        }
+    } catch (e: Exception) {
+        LOG.info("Could not resolve $what due to ${e.message}")
+    }
+    return null
+}

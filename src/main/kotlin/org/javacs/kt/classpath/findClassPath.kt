@@ -3,6 +3,8 @@ package org.javacs.kt.classpath
 import java.util.logging.Level
 import org.javacs.kt.LOG
 import org.javacs.kt.util.winCompatiblePathOf
+import org.javacs.kt.util.tryResolving
+import org.javacs.kt.util.firstNonNull
 import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
 import java.io.IOException
@@ -98,25 +100,42 @@ data class Artifact(val group: String, val artifact: String, val version: String
 private val userHome = Paths.get(System.getProperty("user.home"))
 val mavenHome = userHome.resolve(".m2")
 val gradleHome = userHome.resolve(".gradle")
+// TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
+val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
 
 fun findKotlinStdlib(): Path? {
     val group = "org.jetbrains.kotlin"
     val artifact = "kotlin-stdlib"
-    val artifactDir = mavenHome.resolve("repository")
-            .resolve(group.replace('.', File.separatorChar))
-            .resolve(artifact)
+    val artifactDir = firstNonNull<Path>(
+        { tryResolving("kotlin stdlib artifact folder using Maven") { findKotlinStdlibArtifactDirUsingMaven(group, artifact) } },
+        { tryResolving("kotlin stdlib artifact folder using Gradle") { findKotlinStdlibArtifactDirUsingGradle(group, artifact) } }
+    )
     val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
         val version = file.parent.fileName.toString()
         val expected = "kotlin-stdlib-${version}.jar"
         name == expected
     }
-    val found = Files.find(artifactDir, 2, isKotlinStdlib)
-            .sorted(::compareVersions).findFirst().orElse(null)
-    if (found == null) LOG.warning("Couldn't find kotlin stdlib in ${artifactDir}")
-    else LOG.info("Found kotlin stdlib ${found}")
-    return found
+    return Files.list(artifactDir)
+            .sorted(::compareVersions)
+            .findFirst()
+            .orElse(null)
+            ?.let {
+                Files.find(artifactDir, 3, isKotlinStdlib)
+                    .findFirst()
+                    .orElse(null)
+            }
 }
+
+private fun findKotlinStdlibArtifactDirUsingMaven(group: String, artifact: String) =
+        mavenHome.resolve("repository")
+            ?.resolve(group.replace('.', File.separatorChar))
+            ?.resolve(artifact)
+
+private fun findKotlinStdlibArtifactDirUsingGradle(group: String, artifact: String) =
+        gradleCaches
+            ?.resolve(group)
+            ?.resolve(artifact)
 
 private fun compareVersions(left: Path, right: Path): Int {
     val leftVersion = extractVersion(left)
@@ -133,8 +152,8 @@ private fun compareVersions(left: Path, right: Path): Int {
     return -leftVersion.size.compareTo(rightVersion.size)
 }
 
-private fun extractVersion(artifact: Path): List<String> {
-    return artifact.parent.toString().split(".")
+private fun extractVersion(artifactVersionDir: Path): List<String> {
+    return artifactVersionDir.toString().split(".")
 }
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {

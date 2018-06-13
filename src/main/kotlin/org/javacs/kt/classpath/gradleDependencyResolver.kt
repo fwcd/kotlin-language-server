@@ -2,6 +2,7 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import org.javacs.kt.util.firstNonNull
+import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.execAndReadStdout
 import org.javacs.kt.util.KotlinLSException
 import java.io.File
@@ -25,11 +26,11 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
     // The first successful dependency resolver is used
     // (evaluating them from top to bottom)
     var dependencies = firstNonNull<Set<Path>>(
-        { tryResolvingDependencies("Gradle task") { readDependenciesViaTask(projectDirectory) } },
-        { tryResolvingDependencies("Eclipse project model") { readDependenciesViaEclipseProject(connection) } },
-        { tryResolvingDependencies("Kotlin DSL model") { readDependenciesViaKotlinDSL(connection) } },
-        { tryResolvingDependencies("IDEA model") { readDependenciesViaIdeaProject(connection) } },
-        { tryResolvingDependencies("Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
+        { tryResolving("dependencies using Gradle task") { readDependenciesViaTask(projectDirectory) } },
+        { tryResolving("dependencies using Eclipse project model") { readDependenciesViaEclipseProject(connection) } },
+        { tryResolving("dependencies using Kotlin DSL model") { readDependenciesViaKotlinDSL(connection) } },
+        { tryResolving("dependencies using IDEA model") { readDependenciesViaIdeaProject(connection) } },
+        { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
     ).orEmpty()
 
     if (dependencies.isEmpty()) {
@@ -38,17 +39,6 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
 
     connection.close()
     return dependencies
-}
-
-private fun tryResolvingDependencies(modelName: String, resolver: () -> Set<Path>?): Set<Path>? {
-    try {
-        val resolved = resolver()
-        if (resolved != null) {
-            LOG.info("Successfully resolved dependencies using " + modelName)
-            return resolved
-        }
-    } catch (e: Exception) {}
-    return null
 }
 
 private fun createTemporaryGradleFile(): File {
@@ -153,8 +143,6 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
 }
 
 private val artifactPattern by lazy { "[\\S]+:[\\S]+:[\\S]+( -> )*([\\d.]+)*".toRegex() }
-// TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
-private val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
 private val jarMatcher by lazy { FileSystems.getDefault().getPathMatcher("glob:**.jar") }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
