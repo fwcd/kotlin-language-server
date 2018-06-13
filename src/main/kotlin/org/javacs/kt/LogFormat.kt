@@ -55,19 +55,12 @@ object LogFormat: Formatter() {
         var thread = Thread.currentThread().name
         val prefix = "$time[${record.level.localizedName}]"
 
-        // TODO: Query the terminal width somehow instead of hardcoding it
-        val totalWidth = 95 // In columns
-        val prefixWidth = 9
-        val sourceWidth = (0.24 * totalWidth).toInt()
-        val messageWidth = (0.48 * totalWidth).toInt()
-        val threadWidth = (0.1 * totalWidth).toInt()
-
         return multiLineFormat(
-            4, // padding between columns
-            FormatValue(prefix, prefixWidth),
-            FormatValue(source, sourceWidth),
-            FormatValue(message, messageWidth),
-            FormatValue(thread, threadWidth)
+            2, // padding between columns
+            FormatValue(prefix, 10),
+            FormatValue(thread, 10),
+            FormatValue(source, 45),
+            FormatValue(message)
         ) + throwable
     }
 

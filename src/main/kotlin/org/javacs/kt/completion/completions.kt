@@ -109,7 +109,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {
-            LOG.fine("Completing import '${surroundingElement.text}'")
+            LOG.info("Completing import '${surroundingElement.text}'")
             val module = file.container.get<ModuleDescriptor>()
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = match.groups[1]?.value ?: "."
@@ -124,47 +124,45 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
             if (surroundingElement is KtUserType && surroundingElement.qualifier != null) {
                 val referenceTarget = file.referenceAtPoint(surroundingElement.qualifier!!.startOffset)?.second
                 if (referenceTarget is ClassDescriptor) {
-                    LOG.fine("Completing members of ${referenceTarget.fqNameSafe}")
+                    LOG.info("Completing members of ${referenceTarget.fqNameSafe}")
                     return referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
-                }
-                else {
+                } else {
                     LOG.warning("No type reference in '${surroundingElement.text}'")
                     return emptySequence()
                 }
-            }
-            // : ?
-            else {
-                LOG.fine("Completing type identifier '${surroundingElement.text}'")
+            } else {
+                // : ?
+                LOG.info("Completing type identifier '${surroundingElement.text}'")
                 val scope = file.scopeAtPoint(cursor) ?: return emptySequence()
                 scopeChainTypes(scope)
             }
         }
         // .?
         is KtQualifiedExpression -> {
-            LOG.fine("Completing member expression '${surroundingElement.text}'")
+            LOG.info("Completing member expression '${surroundingElement.text}'")
             completeMembers(file, cursor, surroundingElement.receiverExpression)
         }
         is KtCallableReferenceExpression -> {
             // something::?
             if (surroundingElement.receiverExpression != null) {
-                LOG.fine("Completing method reference '${surroundingElement.text}'")
+                LOG.info("Completing method reference '${surroundingElement.text}'")
                 completeMembers(file, cursor, surroundingElement.receiverExpression!!)
             }
             // ::?
             else {
-                LOG.fine("Completing function reference '${surroundingElement.text}'")
+                LOG.info("Completing function reference '${surroundingElement.text}'")
                 val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
                 identifiers(scope)
             }
         }
         // ?
         is KtNameReferenceExpression -> {
-            LOG.fine("Completing identifier '${surroundingElement.text}'")
+            LOG.info("Completing identifier '${surroundingElement.text}'")
             val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
             identifiers(scope)
         }
         else -> {
-            LOG.fine("${surroundingElement::class.simpleName} ${surroundingElement.text} didn't look like a type, a member, or an identifier")
+            LOG.info("${surroundingElement::class.simpleName} ${surroundingElement.text} didn't look like a type, a member, or an identifier")
             emptySequence()
         }
     }
