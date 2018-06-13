@@ -71,15 +71,15 @@ private fun generateMavenDependencyList(pom: Path): Path? {
     LOG.info("Run ${cmd} in $workingDirectory")
     val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
 
-    process.inputStream.bufferedReader().use { reader ->
-        while (process.isAlive()) {
-            LOG.info("Maven process: ${reader.readLine()}")
-        }
+    val timeout = 60000 // ms
+    val startTime = System.currentTimeMillis()
+
+    while (process.isAlive()) {
+        Thread.sleep(100)
+        if ((System.currentTimeMillis() - startTime) > timeout) return null
     }
 
     return mavenOutput
-    // val sucess = process.waitFor(30, TimeUnit.SECONDS)
-    //return if (sucess) mavenOutput else null
 }
 
 private val artifact = ".*:.*:.*:.*:.*".toRegex()
