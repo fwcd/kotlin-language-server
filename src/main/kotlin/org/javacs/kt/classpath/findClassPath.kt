@@ -114,16 +114,18 @@ val gradleHome = userHome.resolve(".gradle")
 val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
 
 fun findKotlinStdlib(): Path? {
-    val group = "org.jetbrains.kotlin"
-    val artifact = "kotlin-stdlib"
+    return findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
+}
+
+private fun findLocalArtifact(group: String, artifact: String): Path? {
     val artifactDir = firstNonNull<Path>(
-        { tryResolving("kotlin stdlib artifact folder using Maven") { findKotlinStdlibArtifactDirUsingMaven(group, artifact) } },
-        { tryResolving("kotlin stdlib artifact folder using Gradle") { findKotlinStdlibArtifactDirUsingGradle(group, artifact) } }
+        { tryResolving("$artifact folder using Maven") { findLocalArtifactDirUsingMaven(group, artifact) } },
+        { tryResolving("$artifact folder using Gradle") { findLocalArtifactDirUsingGradle(group, artifact) } }
     )
-    val isKotlinStdlib = BiPredicate<Path, BasicFileAttributes> { file, _ ->
+    val isCorrectArtifact = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
         val version = file.parent.fileName.toString()
-        val expected = "kotlin-stdlib-${version}.jar"
+        val expected = "${artifact}-${version}.jar"
         name == expected
     }
     return Files.list(artifactDir)
@@ -131,7 +133,7 @@ fun findKotlinStdlib(): Path? {
             .findFirst()
             .orElse(null)
             ?.let {
-                Files.find(artifactDir, 3, isKotlinStdlib)
+                Files.find(artifactDir, 3, isCorrectArtifact)
                     .findFirst()
                     .orElse(null)
             }
@@ -140,13 +142,13 @@ fun findKotlinStdlib(): Path? {
 private fun Path.existsOrNull() =
         if (Files.exists(this)) this else null
 
-private fun findKotlinStdlibArtifactDirUsingMaven(group: String, artifact: String) =
+private fun findLocalArtifactDirUsingMaven(group: String, artifact: String) =
         mavenHome.resolve("repository")
             ?.resolve(group.replace('.', File.separatorChar))
             ?.resolve(artifact)
             ?.existsOrNull()
 
-private fun findKotlinStdlibArtifactDirUsingGradle(group: String, artifact: String) =
+private fun findLocalArtifactDirUsingGradle(group: String, artifact: String) =
         gradleCaches
             ?.resolve(group)
             ?.resolve(artifact)
