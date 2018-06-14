@@ -170,13 +170,15 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
 
 private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
     // thingWithType.?
-    val receiverType = file.typeAtPoint(receiverExpr.endOffset - 1)
-    if (receiverType != null) {
-        LOG.fine("Completing members of instance '${receiverType}'")
-        val members = receiverType.memberScope.getContributedDescriptors().asSequence()
-        val lexicalScope = file.scopeAtPoint(cursor) ?: return emptySequence()
-        val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
-        return members + extensions
+    val lexicalScope = file.scopeAtPoint(cursor)
+    if (lexicalScope != null) {
+        val receiverType = file.typeOfExpression(receiverExpr, lexicalScope)
+        if (receiverType != null) {
+            LOG.fine("Completing members of instance '${receiverType}'")
+            val members = receiverType.memberScope.getContributedDescriptors().asSequence()
+            val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
+            return members + extensions
+        }
     }
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second

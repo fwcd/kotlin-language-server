@@ -29,8 +29,12 @@ class CompiledFile(
         var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForType(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
-        val (context, _) = classPath.compiler.compileExpression(surroundingExpr, scope, sourcePath)
-        return context.getType(surroundingExpr)
+        return typeOfExpression(surroundingExpr, scope)
+    }
+
+    fun typeOfExpression(expression: KtExpression, scopeWithImports: LexicalScope): KotlinType? {
+        val (context, _) = classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath)
+        return context.getType(expression)
     }
 
     private fun expandForType(cursor: Int, surroundingExpr: KtExpression): KtExpression {
