@@ -1,7 +1,7 @@
 {
     "name": "kotlin",
     "displayName": "Kotlin",
-    "description": "Kotlin language support",
+    "description": "Smart code completion, diagnostics, syntax highlighting and more for Kotlin",
     "icon": "Icon128.png",
     "repository": {
         "type": "git",
