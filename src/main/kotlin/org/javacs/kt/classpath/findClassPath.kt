@@ -117,21 +117,38 @@ fun findKotlinStdlib(): Path? {
     return findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
 }
 
+private data class LocalArtifactResolution(
+    val artifactDir: Path?,
+    val buildTool: String
+)
+
 private fun findLocalArtifact(group: String, artifact: String): Path? {
-    val artifactDir = firstNonNull<Path>(
+    val resolution = firstNonNull<LocalArtifactResolution>(
         { tryResolving("$artifact folder using Maven") { findLocalArtifactDirUsingMaven(group, artifact) } },
         { tryResolving("$artifact folder using Gradle") { findLocalArtifactDirUsingGradle(group, artifact) } }
     )
     val isCorrectArtifact = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
-        name.startsWith(artifact) && name.endsWith(".jar")
+        when (resolution?.buildTool) {
+            "Maven" -> {
+                val version = file.parent.fileName.toString()
+                val expected = "${artifact}-${version}.jar"
+                name == expected
+            }
+            "Gradle" -> {
+                val version = file.parent.parent.fileName.toString()
+                val expected = "${artifact}-${version}.jar"
+                name == expected
+            }
+            else -> name.startsWith(artifact) && name.endsWith(".jar")
+        }
     }
-    return Files.list(artifactDir)
+    return Files.list(resolution?.artifactDir)
             .sorted(::compareVersions)
             .findFirst()
             .orElse(null)
             ?.let {
-                Files.find(artifactDir, 3, isCorrectArtifact)
+                Files.find(resolution?.artifactDir, 3, isCorrectArtifact)
                     .findFirst()
                     .orElse(null)
             }
@@ -141,16 +158,16 @@ private fun Path.existsOrNull() =
         if (Files.exists(this)) this else null
 
 private fun findLocalArtifactDirUsingMaven(group: String, artifact: String) =
-        mavenHome.resolve("repository")
+        LocalArtifactResolution(mavenHome.resolve("repository")
             ?.resolve(group.replace('.', File.separatorChar))
             ?.resolve(artifact)
-            ?.existsOrNull()
+            ?.existsOrNull(), "Maven")
 
 private fun findLocalArtifactDirUsingGradle(group: String, artifact: String) =
-        gradleCaches
+        LocalArtifactResolution(gradleCaches
             ?.resolve(group)
             ?.resolve(artifact)
-            ?.existsOrNull()
+            ?.existsOrNull(), "Gradle")
 
 private fun compareVersions(left: Path, right: Path): Int {
     val leftVersion = extractVersion(left)
