@@ -111,7 +111,13 @@ private val userHome = Paths.get(System.getProperty("user.home"))
 val mavenHome = userHome.resolve(".m2")
 val gradleHome = userHome.resolve(".gradle")
 // TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
-val gradleCaches by lazy { gradleHome.resolve("caches").resolve("modules-2").resolve("files-2.1") }
+val gradleCaches by lazy {
+    gradleHome.resolve("caches")
+            .resolveStartingWith("modules")
+            .resolveStartingWith("files")
+}
+
+private fun Path.resolveStartingWith(prefix: String) = Files.list(this).filter { it.fileName.toString().startsWith(prefix) }.findFirst().orElse(null)
 
 fun findKotlinStdlib(): Path? {
     return findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
@@ -132,11 +138,6 @@ private fun findLocalArtifact(group: String, artifact: String): Path? {
         when (resolution?.buildTool) {
             "Maven" -> {
                 val version = file.parent.fileName.toString()
-                val expected = "${artifact}-${version}.jar"
-                name == expected
-            }
-            "Gradle" -> {
-                val version = file.parent.parent.fileName.toString()
                 val expected = "${artifact}-${version}.jar"
                 name == expected
             }
