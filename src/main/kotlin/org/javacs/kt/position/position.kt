@@ -2,12 +2,15 @@ package org.javacs.kt.position
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.resolve.source.PsiSourceFile
 import kotlin.math.max
 
 fun extractRange(content: String, range: Range) =
@@ -83,17 +86,30 @@ fun range(content: String, range: TextRange) =
         Range(position(content, range.startOffset), position(content, range.endOffset))
 
 fun location(declaration: DeclarationDescriptor): Location? {
-    val target = declaration.findPsi() ?: return null
+    val psiLocation = declaration.findPsi()?.let(::location)
+    if (psiLocation != null) return psiLocation
 
-    return location(target)
+    if (declaration is DeclarationDescriptorWithSource) {
+        val sourceFile = declaration.source.containingFile
+        when (sourceFile) {
+            is PsiSourceFile -> {
+                val file = sourceFile.psiFile.toURIString()
+                // TODO: Find the correct position
+                return Location(file, Range(Position(0, 0), Position(0, 0)))
+            }
+        }
+    }
+
+    return null
 }
 
-fun location(expr: PsiElement): Location {
-    val content = expr.containingFile.text
-    val file = expr.containingFile.toPath().toUri().toString()
-
-    return Location(file, range(content, expr.textRange))
+fun location(expr: PsiElement): Location? {
+    val content = try { expr.containingFile?.text } catch (e: NullPointerException) { null }
+    val file = expr.containingFile.toURIString()
+    return content?.let { Location(file, range(it, expr.textRange)) }
 }
+
+fun PsiFile.toURIString() = toPath().toUri().toString()
 
 /**
  * Region that has been changed

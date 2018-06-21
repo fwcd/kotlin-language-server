@@ -51,8 +51,6 @@ fun convertJavaToKotlin(environment: KotlinCoreEnvironment, javaCode: String): S
 		inputElements = Arrays.asList(*childrenWithoutBraces)
 	}
 
-	LOG.info("Input elements: $inputElements")
-
 	val resultFormConverter = converter.elementsToKotlin(inputElements!!).results
 	var textResult = ""
 	resultFormConverter
