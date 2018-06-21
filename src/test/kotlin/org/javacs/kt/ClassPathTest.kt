@@ -8,11 +8,11 @@ import org.junit.Test
 import java.nio.file.Files
 
 class ClassPathTest {
-    @Test fun `find maven classpath`() {
+    @Test fun `find gradle classpath`() {
         val workspaceRoot = testResourcesRoot().resolve("additionalWorkspace")
-        val pom = workspaceRoot.resolve("pom.xml")
+        val buildFile = workspaceRoot.resolve("build.gradle")
 
-        assertTrue(Files.exists(pom))
+        assertTrue(Files.exists(buildFile))
 
         val classPath = findClassPath(listOf(workspaceRoot))
 
