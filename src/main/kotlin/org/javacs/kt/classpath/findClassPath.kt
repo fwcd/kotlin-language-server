@@ -123,19 +123,17 @@ fun findKotlinStdlib(): Path? {
     return findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
 }
 
-private data class LocalArtifactResolution(
-    val artifactDir: Path?,
-    val buildTool: String
+private data class LocalArtifactDirectoryResolution(val artifactDir: Path?, val buildTool: String)
+
+private fun findLocalArtifact(group: String, artifact: String) = firstNonNull<Path>(
+        { tryResolving("$artifact using Maven") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingMaven(group, artifact)) } },
+        { tryResolving("$artifact using Gradle") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingGradle(group, artifact)) } }
 )
 
-private fun findLocalArtifact(group: String, artifact: String): Path? {
-    val resolution = firstNonNull<LocalArtifactResolution>(
-        { tryResolving("$artifact folder using Maven") { findLocalArtifactDirUsingMaven(group, artifact) } },
-        { tryResolving("$artifact folder using Gradle") { findLocalArtifactDirUsingGradle(group, artifact) } }
-    )
+private fun tryFindingLocalArtifactUsing(group: String, artifact: String, artifactDirResolution: LocalArtifactDirectoryResolution): Path? {
     val isCorrectArtifact = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
-        when (resolution?.buildTool) {
+        when (artifactDirResolution.buildTool) {
             "Maven" -> {
                 val version = file.parent.fileName.toString()
                 val expected = "${artifact}-${version}.jar"
@@ -144,12 +142,12 @@ private fun findLocalArtifact(group: String, artifact: String): Path? {
             else -> name.startsWith(artifact) && name.endsWith(".jar")
         }
     }
-    return Files.list(resolution?.artifactDir)
+    return Files.list(artifactDirResolution.artifactDir)
             .sorted(::compareVersions)
             .findFirst()
             .orElse(null)
             ?.let {
-                Files.find(resolution?.artifactDir, 3, isCorrectArtifact)
+                Files.find(artifactDirResolution.artifactDir, 3, isCorrectArtifact)
                     .findFirst()
                     .orElse(null)
             }
@@ -159,13 +157,13 @@ private fun Path.existsOrNull() =
         if (Files.exists(this)) this else null
 
 private fun findLocalArtifactDirUsingMaven(group: String, artifact: String) =
-        LocalArtifactResolution(mavenHome.resolve("repository")
+        LocalArtifactDirectoryResolution(mavenHome.resolve("repository")
             ?.resolve(group.replace('.', File.separatorChar))
             ?.resolve(artifact)
             ?.existsOrNull(), "Maven")
 
 private fun findLocalArtifactDirUsingGradle(group: String, artifact: String) =
-        LocalArtifactResolution(gradleCaches
+        LocalArtifactDirectoryResolution(gradleCaches
             ?.resolve(group)
             ?.resolve(artifact)
             ?.existsOrNull(), "Gradle")
