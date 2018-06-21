@@ -3,6 +3,9 @@ All notable changes to the "kotlin" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.5]
+- Bugfixes related to Kotlin stdlib resolution through Gradle
+
 ## [0.1.4]
 - Async language server operations
 
