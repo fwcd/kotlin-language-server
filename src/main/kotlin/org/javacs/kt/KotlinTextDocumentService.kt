@@ -13,6 +13,7 @@ import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noFuture
+import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.nio.file.Path
@@ -27,16 +28,27 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         this.client = client
     }
 
+    private val TextDocumentIdentifier.filePath
+        get() = Paths.get(URI.create(uri))
+
+    private val TextDocumentIdentifier.content
+        get() = sp.content(filePath)
+
     private fun recover(position: TextDocumentPositionParams, recompile: Boolean): Pair<CompiledFile, Int> {
-        val file = Paths.get(URI.create(position.textDocument.uri))
+        val file = position.textDocument.filePath
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val compiled = if(recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        val compiled = if (recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
         return Pair(compiled, offset)
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
-        TODO("not implemented")
+        return CompletableFuture.completedFuture(listOf(
+            Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
+                params.textDocument.uri,
+                params.range
+            ))
+        ))
     }
 
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
@@ -102,7 +114,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         LOG.info("Find symbols in ${params.textDocument}")
 
         reportTime {
-            val path = Paths.get(URI(params.textDocument.uri))
+            val path = params.textDocument.filePath
             val file = sp.parsedFile(path)
             val infos = documentSymbols(file)
 
@@ -138,7 +150,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        val file = Paths.get(URI.create(params.textDocument.uri))
+        val file = params.textDocument.filePath
 
         sf.close(file)
         clearDiagnostics(file)
@@ -149,7 +161,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        val file = Paths.get(URI.create(params.textDocument.uri))
+        val file = params.textDocument.filePath
 
         sf.edit(file,  params.textDocument.version, params.contentChanges)
         lintLater(file)
