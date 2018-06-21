@@ -124,9 +124,7 @@ private fun findLocalArtifact(group: String, artifact: String): Path? {
     )
     val isCorrectArtifact = BiPredicate<Path, BasicFileAttributes> { file, _ ->
         val name = file.fileName.toString()
-        val version = file.parent.fileName.toString()
-        val expected = "${artifact}-${version}.jar"
-        name == expected
+        name.startsWith(artifact) && name.endsWith(".jar")
     }
     return Files.list(artifactDir)
             .sorted(::compareVersions)

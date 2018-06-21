@@ -19,7 +19,7 @@ class ClassPathTest {
         assertThat(classPath, hasItem(hasToString(containsString("junit"))))
     }
 
-    @Test fun `find kotlin stdlib in maven repo`() {
+    @Test fun `find kotlin stdlib`() {
         assertThat(findKotlinStdlib(), notNullValue())
     }
 }
