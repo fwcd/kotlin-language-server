@@ -12,7 +12,9 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
-import org.javacs.kt.util.noFuture
+import org.javacs.kt.util.noResult
+import org.javacs.kt.util.computeAsync
+import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.nio.file.Path
@@ -27,26 +29,35 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         this.client = client
     }
 
+    private val TextDocumentIdentifier.filePath
+        get() = Paths.get(URI.create(uri))
+
+    private val TextDocumentIdentifier.content
+        get() = sp.content(filePath)
+
     private fun recover(position: TextDocumentPositionParams, recompile: Boolean): Pair<CompiledFile, Int> {
-        val file = Paths.get(URI.create(position.textDocument.uri))
+        val file = position.textDocument.filePath
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val compiled = if(recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        val compiled = if (recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
         return Pair(compiled, offset)
     }
 
-    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> {
-        TODO("not implemented")
+    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> = computeAsync {
+        listOf(
+            Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
+                params.textDocument.uri,
+                params.range
+            ))
+        )
     }
 
-    override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> {
+    override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = computeAsync {
         reportTime {
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
             val (file, cursor) = recover(position, true)
-            val hover = hoverAt(file, cursor) ?: return noFuture("No hover found at ${describePosition(position)}", null)
-
-            return CompletableFuture.completedFuture(hover)
+            hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
         }
     }
 
@@ -58,14 +69,12 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> {
+    override fun definition(position: TextDocumentPositionParams) = computeAsync {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
 
             val (file, cursor) = recover(position, false)
-            val location = goToDefinition(file, cursor) ?: return noFuture("Couldn't find definition at ${describePosition(position)}", emptyList())
-
-            return CompletableFuture.completedFuture(listOf(location))
+            goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
         }
     }
 
@@ -81,7 +90,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun completion(position: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> {
+    override fun completion(position: CompletionParams) = computeAsync {
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
@@ -90,7 +99,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
             LOG.info("Found ${completions.items.size} items")
 
-            return CompletableFuture.completedFuture(Either.forRight(completions))
+            Either.forRight<List<CompletionItem>, CompletionList>(completions)
         }
     }
 
@@ -98,15 +107,13 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<SymbolInformation>> {
+    override fun documentSymbol(params: DocumentSymbolParams) = computeAsync {
         LOG.info("Find symbols in ${params.textDocument}")
 
         reportTime {
-            val path = Paths.get(URI(params.textDocument.uri))
+            val path = params.textDocument.filePath
             val file = sp.parsedFile(path)
-            val infos = documentSymbols(file)
-
-            return CompletableFuture.completedFuture(infos)
+            documentSymbols(file)
         }
     }
 
@@ -117,28 +124,19 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         lintNow(file)
     }
 
-    override fun didSave(params: DidSaveTextDocumentParams) {
-    }
+    override fun didSave(params: DidSaveTextDocumentParams) {}
 
-    override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> {
+    override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = computeAsync {
         reportTime {
             LOG.info("Signature help at ${describePosition(position)}")
 
             val (file, cursor) = recover(position, false)
-            val result = signatureHelpAt(file, cursor) ?: return noFunctionCall(position)
-
-            return CompletableFuture.completedFuture(result)
+            signatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)
         }
     }
 
-    private fun<T> noFunctionCall(position: TextDocumentPositionParams): CompletableFuture<T?> {
-        LOG.info("No function call around ${describePosition(position)}")
-
-        return CompletableFuture.completedFuture(null)
-    }
-
     override fun didClose(params: DidCloseTextDocumentParams) {
-        val file = Paths.get(URI.create(params.textDocument.uri))
+        val file = params.textDocument.filePath
 
         sf.close(file)
         clearDiagnostics(file)
@@ -149,19 +147,17 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        val file = Paths.get(URI.create(params.textDocument.uri))
+        val file = params.textDocument.filePath
 
         sf.edit(file,  params.textDocument.version, params.contentChanges)
         lintLater(file)
     }
 
-    override fun references(position: ReferenceParams): CompletableFuture<List<Location>> {
+    override fun references(position: ReferenceParams) = computeAsync {
         val file = Paths.get(URI.create(position.textDocument.uri))
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val found = findReferences(file, offset, sp)
-
-        return CompletableFuture.completedFuture(found)
+        findReferences(file, offset, sp)
     }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {

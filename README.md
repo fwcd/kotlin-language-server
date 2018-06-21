@@ -1,5 +1,5 @@
 # KotlinLanguageServer
-This project implements a [language server](https://microsoft.github.io/language-server-protocol/) using the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler) and a VSCode extension using the language server.
+A [language server](https://microsoft.github.io/language-server-protocol/) featuring smart code completion, diagnostics, hover, document symbols, method signature help and more for Kotlin and a VSCode extension that uses the language server.
 
 [![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
 
@@ -15,6 +15,8 @@ This project implements a [language server](https://microsoft.github.io/language
 There are two hard parts of implementing a language server:
 - Figuring out the dependencies
 - Incrementally re-compiling as the user types
+
+The project uses the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler).
 
 Dependencies are determined by the [findClassPath](src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or Gradle and tells it to output a list of dependencies. Currently, both Maven and Gradle projects are supported.
 

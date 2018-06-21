@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
+import org.javacs.kt.commands.ALL_COMMANDS
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -18,6 +19,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath)
 
     override fun connect(client: LanguageClient) {
+        workspaces.connect(client)
         textDocuments.connect(client)
 
         LOG.info("Connected to client")
@@ -48,6 +50,8 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.documentSymbolProvider = true
         capabilities.workspaceSymbolProvider = true
         capabilities.referencesProvider = true
+        capabilities.codeActionProvider = true
+        capabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace ${params.rootUri} to source path")

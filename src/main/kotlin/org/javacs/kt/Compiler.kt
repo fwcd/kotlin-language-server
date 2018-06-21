@@ -45,20 +45,20 @@ class Compiler(classPath: Set<Path>) {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
         addAll(JVMConfigurationKeys.CONTENT_ROOTS, classPath.map { JvmClasspathRoot(it.toFile())})
     }
-    private val env: KotlinCoreEnvironment
+    val environment: KotlinCoreEnvironment
 
     init {
         System.setProperty("idea.io.use.fallback", "true")
-        env = KotlinCoreEnvironment.createForProduction(
+        environment = KotlinCoreEnvironment.createForProduction(
             parentDisposable = Disposable { },
             configuration = config,
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
     }
 
-    private val parser = KtPsiFactory(env.project)
+    private val parser = KtPsiFactory(environment.project)
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-    private val scripts = ScriptDefinitionProvider.getInstance(env.project) as CliScriptDefinitionProvider
+    private val scripts = ScriptDefinitionProvider.getInstance(environment.project) as CliScriptDefinitionProvider
 
     init {
         scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
@@ -67,7 +67,7 @@ class Compiler(classPath: Set<Path>) {
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
         assert(!content.contains('\r'))
 
-        val factory = PsiFileFactory.getInstance(env.project)
+        val factory = PsiFileFactory.getInstance(environment.project)
         val new = factory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
 
         assert(new.virtualFile != null)
@@ -105,11 +105,11 @@ class Compiler(classPath: Set<Path>) {
     fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
         val trace = CliBindingTrace()
         val container = TopDownAnalyzerFacadeForJVM.createContainer(
-                project = env.project,
+                project = environment.project,
                 files = listOf(),
                 trace = trace,
-                configuration = env.configuration,
-                packagePartProvider = env::createPackagePartProvider,
+                configuration = environment.configuration,
+                packagePartProvider = environment::createPackagePartProvider,
                 // TODO FileBasedDeclarationProviderFactory keeps indices, re-use it across calls
                 declarationProviderFactory = { storageManager, _ ->  FileBasedDeclarationProviderFactory(storageManager, sourcePath) })
         return Pair(container, trace)

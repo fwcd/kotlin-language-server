@@ -26,6 +26,7 @@ import java.nio.file.Path
 fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
     return doFindReferences(file, cursor, sp)
             .map { location(it) }
+            .filterNotNull()
             .toList()
 }
 
