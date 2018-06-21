@@ -3,6 +3,9 @@ All notable changes to the "kotlin" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.4]
+- Async language server operations
+
 ## [0.1.3]
 - Java to Kotlin converter
 
