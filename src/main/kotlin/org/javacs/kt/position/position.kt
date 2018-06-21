@@ -10,6 +10,15 @@ import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import kotlin.math.max
 
+fun extractRange(content: String, range: Range) =
+    content.substring(
+        offset(content, range.start),
+        offset(content, range.end)
+    )
+
+fun offset(content: String, position: Position) =
+    offset(content, position.line, position.character)
+
 /**
  * Convert from 0-based line and column to 0-based offset
  */
