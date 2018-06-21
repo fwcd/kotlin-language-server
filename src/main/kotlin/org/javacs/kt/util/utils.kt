@@ -49,7 +49,6 @@ fun PsiFile.toPath(): Path =
 
 fun <T> noResult(message: String, result: T): T {
     LOG.fine(message)
-
     return result
 }
 
