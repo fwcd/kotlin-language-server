@@ -58,7 +58,7 @@ object LogFormat: Formatter() {
         return multiLineFormat(
             2, // padding between columns
             FormatValue(prefix, 10),
-            FormatValue(thread, 10),
+            FormatValue(shortenOrPad(thread, 10)),
             FormatValue(source, 45),
             FormatValue(message)
         ) + throwable
@@ -109,4 +109,11 @@ object LogFormat: Formatter() {
         if (current.length > 0) lines.add(current.trim().padEnd(maxLength, ' '))
         return lines
     }
+
+    private fun shortenOrPad(str: String, length: Int): String =
+            if (str.length <= length) {
+                str.padEnd(length, ' ')
+            } else {
+                ".." + str.substring(str.length - length + 2)
+            }
 }

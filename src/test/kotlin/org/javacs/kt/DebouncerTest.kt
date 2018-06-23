@@ -3,10 +3,11 @@ package org.javacs.kt
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Test
+import org.javacs.kt.util.Debouncer
 import java.time.Duration
 
-class DebounceDelayTest {
-    val debounce = DebounceDelay(Duration.ofSeconds(1))
+class DebouncerTest {
+    val debounce = Debouncer(Duration.ofSeconds(1))
     var counter = 0
 
     @Test fun callQuickly() {

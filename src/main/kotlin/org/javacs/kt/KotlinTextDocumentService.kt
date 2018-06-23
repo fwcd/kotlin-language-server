@@ -14,6 +14,7 @@ import org.javacs.kt.signatureHelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.computeAsync
+import org.javacs.kt.util.Debouncer
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -169,7 +170,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         return "${path.fileName} ${position.position.line + 1}:${position.position.character + 1}"
     }
 
-    val debounceLint = DebounceDelay(Duration.ofMillis(250))
+    val debounceLint = Debouncer(Duration.ofMillis(250))
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 

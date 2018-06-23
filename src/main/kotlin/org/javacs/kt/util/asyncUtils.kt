@@ -1,7 +1,11 @@
 package org.javacs.kt.util
 
+import java.time.Duration
+import java.util.function.Supplier
 import java.util.concurrent.CompletableFuture
-import org.eclipse.lsp4j.jsonrpc.CompletableFutures
+import java.util.concurrent.Executors
 
-fun <R> computeAsync(code: () -> R): CompletableFuture<R> =
-		CompletableFutures.computeAsync { _ -> code() }
+private val workerThread = Executors.newSingleThreadExecutor { Thread(it, "async") }
+
+fun <R> computeAsync(code: () -> R) =
+		CompletableFuture.supplyAsync(Supplier(code), workerThread)
