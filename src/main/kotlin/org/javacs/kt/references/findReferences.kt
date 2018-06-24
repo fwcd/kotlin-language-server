@@ -1,7 +1,8 @@
 package org.javacs.kt.references
 
 import org.eclipse.lsp4j.Location
-import org.javacs.kt.LOG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.location
 import org.javacs.kt.util.emptyResult
@@ -23,6 +24,8 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.references.FindReferencesKt")
+
 fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
     return doFindReferences(file, cursor, sp)
             .map { location(it) }
@@ -35,7 +38,7 @@ private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collectio
     val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
     val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
     val maybes = possibleReferences(declaration, sp).map { it.toPath() }
-    LOG.fine("Scanning ${maybes.size} files for references to ${element.fqName}")
+    LOG.debug("Scanning {} files for references to {}", maybes.size, element.fqName)
     val recompile = sp.compileFiles(maybes)
 
     return when {
@@ -94,7 +97,7 @@ private fun possibleReferences(declaration: DeclarationDescriptor, sp: SourcePat
         return hasForLoops(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (declaration is FunctionDescriptor && declaration.isOperator && declaration.name == OperatorNameConventions.INVOKE) {
-        return possibleInvokeReferences(declaration, sp) + possibleNameReferences(declaration.name, sp)
+        return possibleInvokeReferences(sp) + possibleNameReferences(declaration.name, sp)
     }
     if (declaration is FunctionDescriptor) {
         val operators = operatorNames(declaration.name)
@@ -137,11 +140,11 @@ private fun possibleGetSets(sp: SourcePath): Set<KtFile> =
 private fun possibleGetSet(source: KtFile) =
         source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
 
-private fun possibleInvokeReferences(declaration: FunctionDescriptor, sp: SourcePath) =
-        sp.all().filter { possibleInvokeReference(declaration, it) }.toSet()
+private fun possibleInvokeReferences(sp: SourcePath) =
+        sp.all().filter(::possibleInvokeReference).toSet()
 
 // TODO this is not very selective
-private fun possibleInvokeReference(declaration: FunctionDescriptor, source: KtFile): Boolean =
+private fun possibleInvokeReference(source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtCallExpression>().any()
 
 private fun isComponent(declaration: DeclarationDescriptor): Boolean =

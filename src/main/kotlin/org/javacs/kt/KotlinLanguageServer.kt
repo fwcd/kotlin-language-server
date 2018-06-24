@@ -1,5 +1,7 @@
 package org.javacs.kt
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
@@ -10,6 +12,8 @@ import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.KotlinLanguageServer")
 
 class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     val classPath = CompilerClassPath()
@@ -54,7 +58,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         if (params.rootUri != null) {
-            LOG.info("Adding workspace ${params.rootUri} to source path")
+            LOG.info("Adding workspace {} to source path", params.rootUri)
 
             val root = Paths.get(URI.create(params.rootUri))
 

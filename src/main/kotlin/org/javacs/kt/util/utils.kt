@@ -2,12 +2,15 @@ package org.javacs.kt.util
 
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import org.javacs.kt.LOG
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.experimental.buildSequence
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.util.UtilsKt")
 
 inline fun<reified Find> PsiElement.findParent() =
         this.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
@@ -48,7 +51,7 @@ fun PsiFile.toPath(): Path =
         winCompatiblePathOf(this.originalFile.viewProvider.virtualFile.path)
 
 fun <T> noResult(message: String, result: T): T {
-    LOG.fine(message)
+    LOG.info(message)
     return result
 }
 
@@ -78,11 +81,11 @@ fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     try {
         val resolved = resolver()
         if (resolved != null) {
-            LOG.info("Successfully resolved $what")
+            LOG.info("Successfully resolved {}", what)
             return resolved
         }
     } catch (e: Exception) {
-        LOG.info("Could not resolve $what due to ${e.message}")
+        LOG.info("Could not resolve {} due to {}", what, e.message)
     }
     return null
 }

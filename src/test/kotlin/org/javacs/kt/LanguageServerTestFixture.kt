@@ -2,10 +2,14 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.LanguageClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.junit.Before
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.LanguageServerTestFixture")
 
 abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
@@ -82,21 +86,20 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): Languag
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {
-        LOG.info(request.toString())
-
+        LOG.info("{}", request)
         return null
     }
 
     override fun telemetryEvent(`object`: Any?) {
-        LOG.info(`object`.toString())
+        LOG.info("{}", `object`)
     }
 
     override fun logMessage(message: MessageParams?) {
-        LOG.info(message.toString())
+        LOG.info("{}", message)
     }
 
     override fun showMessage(message: MessageParams?) {
-        LOG.info(message.toString())
+        LOG.info("{}", message)
     }
 }
 

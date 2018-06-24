@@ -4,6 +4,8 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.symbols.workspaceSymbols
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.javaToKotlin.convertJavaToKotlin
@@ -13,6 +15,8 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import com.google.gson.JsonElement
 import com.google.gson.Gson
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.KotlinWorkspaceService")
 
 class KotlinWorkspaceService(
     private val sf: SourceFiles,
@@ -28,7 +32,7 @@ class KotlinWorkspaceService(
 
     override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> {
         val args = params.arguments
-        LOG.info("Executing command: ${params.command} with ${params.arguments}")
+        LOG.debug("Executing command: {} with {}", params.command, params.arguments)
 
         when (params.command) {
             JAVA_TO_KOTLIN_COMMAND -> {
@@ -74,7 +78,7 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-        LOG.info(params.toString())
+        LOG.info("{}", params)
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
@@ -85,7 +89,7 @@ class KotlinWorkspaceService(
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
         for (change in params.event.added) {
-            LOG.info("Adding workspace ${change.uri} to source path")
+            LOG.info("Adding workspace {} to source path", change.uri)
 
             val root = Paths.get(URI.create(change.uri))
 
@@ -93,7 +97,7 @@ class KotlinWorkspaceService(
             cp.addWorkspaceRoot(root)
         }
         for (change in params.event.removed) {
-            LOG.info("Dropping workspace ${change.uri} from source path")
+            LOG.info("Dropping workspace {} from source path", change.uri)
 
             val root = Paths.get(URI.create(change.uri))
 

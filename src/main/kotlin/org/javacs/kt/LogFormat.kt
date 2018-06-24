@@ -7,21 +7,8 @@ import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import java.util.logging.Logger
 
-val LOG = LogFormat.createLogger()
-
-object LogFormat: Formatter() {
-    fun createLogger(): Logger {
-        val result = Logger.getLogger("main")
-        val root = Logger.getLogger("")
-
-        for (each in root.handlers) {
-            each.formatter = LogFormat
-        }
-
-        return result
-    }
-
-    private const val logTime = false
+class LogFormat: Formatter() {
+    private val logTime = false
     private var newline = System.lineSeparator()
     private val date = Date()
     private var maxSource = 0

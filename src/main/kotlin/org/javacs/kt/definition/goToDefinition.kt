@@ -1,9 +1,10 @@
 package org.javacs.kt.definition
 
 import org.eclipse.lsp4j.Location
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.location
-import org.javacs.kt.LOG
 import org.javacs.kt.util.KotlinLSException
 import java.util.jar.JarFile
 import java.net.URI
@@ -11,10 +12,12 @@ import java.nio.file.Paths
 import java.nio.file.Files
 import java.io.File
 
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.definition.GoToDefinitionKt")
+
 fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
     // TODO go to declaration name rather than beginning of javadoc comment
-    LOG.info("Found declaration descriptor $target")
+    LOG.info("Found declaration descriptor {}", target)
     val destination = location(target)
 
     if (destination != null) {

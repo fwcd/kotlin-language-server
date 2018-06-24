@@ -4,6 +4,8 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -35,6 +37,8 @@ import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import org.javacs.kt.util.KotlinLSException
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.Compiler")
 
 /**
  * Incrementally compiles files and expressions.
@@ -132,7 +136,7 @@ class Compiler(classPath: Set<Path>) {
     }
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
-        LOG.info("Compiling ${expression.text}")
+        LOG.info("Compiling {}", expression.text)
         try {
             val (container, trace) = createContainer(sourcePath)
             val incrementalCompiler = container.get<ExpressionTypingServices>()

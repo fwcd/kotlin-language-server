@@ -1,6 +1,7 @@
 package org.javacs.kt.classpath
 
-import org.javacs.kt.LOG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.execAndReadStdout
@@ -16,6 +17,8 @@ import org.gradle.tooling.model.*
 import org.gradle.tooling.model.eclipse.*
 import org.gradle.tooling.model.idea.*
 import org.gradle.kotlin.dsl.tooling.models.*
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.classpath.GradleDependencyResolverKt")
 
 fun readBuildGradle(buildFile: Path): Set<Path> {
     val projectDirectory = buildFile.getParent()
@@ -34,7 +37,7 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
     ).orEmpty()
 
     if (dependencies.isEmpty()) {
-        LOG.warning("Could not resolve Gradle dependencies using any resolution strategy!")
+        LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
     }
 
     connection.close()
@@ -128,7 +131,7 @@ private fun readDependenciesViaKotlinDSL(connection: ProjectConnection): Set<Pat
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.fine("Attempting dependency resolution through CLI...")
+    LOG.debug("Attempting dependency resolution through CLI...")
     val gradle = getGradleCommand(projectDirectory)
     val classpathCommand = "$gradle dependencies --configuration=compileClasspath --console=plain"
     val testClasspathCommand = "$gradle dependencies --configuration=testCompileClasspath --console=plain"

@@ -2,7 +2,11 @@ package org.javacs.kt
 
 import java.io.InputStream
 import java.util.concurrent.Executors
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.eclipse.lsp4j.launch.LSPLauncher
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.MainKt")
 
 fun main(args: Array<String>) {
     val server = KotlinLanguageServer()

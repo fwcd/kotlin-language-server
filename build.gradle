@@ -18,6 +18,7 @@ group = 'org.javacs'
 version = '0.1.1'
 
 mainClassName = "org.javacs.kt.MainKt"
+applicationDefaultJvmArgs = ['-Djava.util.logging.config.file="logging.properties"']
 description = "kotlin-language-server"
 
 sourceCompatibility = 1.8
@@ -40,6 +41,8 @@ dependencies {
 	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1"
 	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.2.31"
 	implementation "org.jetbrains.kotlin:kotlin-compiler:1.2.31"
+	implementation "org.slf4j:slf4j-api:1.7.+"
+	implementation "org.slf4j:slf4j-jdk14:1.7+"
 	implementation fileTree(dir: "lib", include: ["*.jar"])
 	testImplementation "org.openjdk.jmh:jmh-core:1.20"
 	testImplementation "org.hamcrest:hamcrest-all:1.3"

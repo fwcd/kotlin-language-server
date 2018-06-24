@@ -2,6 +2,8 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
@@ -9,6 +11,8 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.stream.Collectors
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.SourceFilesKt")
 
 private class SourceVersion(val content: String, val version: Int)
 
@@ -76,7 +80,7 @@ class SourceFiles(private val sp: SourcePath) {
             var newText = existing.content
 
             if (newVersion <= existing.version) {
-                LOG.warning("Ignored ${file.fileName} version $newVersion")
+                LOG.warn("Ignored {} version {}", file.fileName, newVersion)
                 return
             }
 
@@ -187,11 +191,11 @@ private fun findSourceFiles(root: Path): Set<Path> {
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Adding ${describeFiles(sources)} under $rootPath to source path")
+    LOG.info("Adding {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Removing ${describeFiles(sources)} under $rootPath to source path")
+    LOG.info("Removing {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 fun describeFiles(files: Collection<Path>): String {

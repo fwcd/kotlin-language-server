@@ -4,6 +4,8 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
@@ -22,6 +24,8 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.KotlinTextDocumentService")
 
 class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
     private lateinit var client: LanguageClient
@@ -55,7 +59,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = computeAsync {
         reportTime {
-            LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
+            LOG.info("Hovering at {} {}:{}", position.textDocument.uri, position.position.line, position.position.character)
 
             val (file, cursor) = recover(position, true)
             hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
@@ -72,7 +76,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     override fun definition(position: TextDocumentPositionParams) = computeAsync {
         reportTime {
-            LOG.info("Go-to-definition at ${describePosition(position)}")
+            LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, false)
             goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
@@ -93,12 +97,12 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     override fun completion(position: CompletionParams) = computeAsync {
         reportTime {
-            LOG.info("Completing at ${describePosition(position)}")
+            LOG.info("Completing at {}", describePosition(position))
 
             val (file, cursor) = recover(position, false)
             val completions = completions(file, cursor)
 
-            LOG.info("Found ${completions.items.size} items")
+            LOG.info("Found {} items", completions.items.size)
 
             Either.forRight<List<CompletionItem>, CompletionList>(completions)
         }
@@ -109,7 +113,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     override fun documentSymbol(params: DocumentSymbolParams) = computeAsync {
-        LOG.info("Find symbols in ${params.textDocument}")
+        LOG.info("Find symbols in {}", params.textDocument)
 
         reportTime {
             val path = params.textDocument.filePath
@@ -129,7 +133,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = computeAsync {
         reportTime {
-            LOG.info("Signature help at ${describePosition(position)}")
+            LOG.info("Signature help at {}", describePosition(position))
 
             val (file, cursor) = recover(position, false)
             signatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)
@@ -191,7 +195,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
     }
 
     private fun doLint() {
-        LOG.info("Linting ${describeFiles(lintTodo)}")
+        LOG.info("Linting {}", describeFiles(lintTodo))
         val files = clearLint()
         val context = sp.compileFiles(files)
         reportDiagnostics(files, context.diagnostics)
@@ -206,19 +210,17 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
             if (sf.isOpen(file)) {
                 client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
 
-                LOG.info("Reported ${diagnostics.size} diagnostics in ${file.fileName}")
+                LOG.info("Reported {} diagnostics in {}", diagnostics.size, file.fileName)
             }
-            else LOG.info("Ignore ${diagnostics.size} diagnostics in ${file.fileName} because it's not open")
+            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, file.fileName)
         }
 
         val noErrors = compiled - byFile.keys
         for (file in noErrors) {
             clearDiagnostics(file)
 
-            LOG.info("No diagnostics in ${file.fileName}")
+            LOG.info("No diagnostics in {}", file.fileName)
         }
-
-        // LOG.log(Level.WARNING, "LINT", Exception())
 
         lintCount++
     }
@@ -234,6 +236,6 @@ private inline fun<T> reportTime(block: () -> T): T {
         return block()
     } finally {
         val finished = System.currentTimeMillis()
-        LOG.info("Finished in ${finished - started} ms")
+        LOG.info("Finished in {} ms", finished - started)
     }
 }

@@ -1,6 +1,8 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
@@ -13,6 +15,8 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.CompiledFile")
 
 class CompiledFile(
         val content: String,
@@ -80,7 +84,7 @@ class CompiledFile(
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
         val recoveryRange = oldParent.textRange
-        LOG.info("Re-parsing ${describeRange(recoveryRange, true)}")
+        LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
         val surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
         val padOffset = " ".repeat(recoveryRange.startOffset)
         val recompile = classPath.compiler.createFile(padOffset + surroundingContent)

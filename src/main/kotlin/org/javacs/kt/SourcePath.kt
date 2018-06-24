@@ -1,10 +1,14 @@
 package org.javacs.kt
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import java.nio.file.Path
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.SourcePath")
 
 class SourcePath(private val cp: CompilerClassPath) {
     private val files = mutableMapOf<Path, SourceFile>()
@@ -43,7 +47,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         private fun doCompileIfChanged(): SourceFile {
             if (parsed?.text != compiledFile?.text) {
-                LOG.fine("Compiling ${file.fileName}")
+                LOG.debug("Compiling {}", file.fileName)
 
                 val (context, container) = cp.compiler.compileFile(parsed!!, all())
                 compiledContext = context

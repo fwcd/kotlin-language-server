@@ -8,7 +8,10 @@ import org.jetbrains.kotlin.j2k.JavaToKotlinConverter
 import org.jetbrains.kotlin.j2k.JavaToKotlinTranslator
 import org.jetbrains.kotlin.j2k.ConverterSettings
 import org.jetbrains.kotlin.j2k.EmptyJavaToKotlinServices
-import org.javacs.kt.LOG
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+private val LOG = LoggerFactory.getLogger("org.javacs.kt.javaToKotlin.JavaToKotlinConverterKt")
 
 /**
  * Source: https://github.com/JetBrains/kotlin-web-demo/blob/master/versions/1.2.50/src/main/java/org/jetbrains/webdemo/kotlin/impl/converter/WebDemoJavaToKotlinConverter.kt
@@ -17,7 +20,7 @@ import org.javacs.kt.LOG
 
 /** Converts a Java code snippet to Kotlin */
 fun convertJavaToKotlin(environment: KotlinCoreEnvironment, javaCode: String): String {
-	LOG.info("Converting to Kotlin: $javaCode")
+	LOG.debug("Converting to Kotlin: {}", javaCode)
 
 	val project = environment.project
 	val converter = JavaToKotlinConverter(
