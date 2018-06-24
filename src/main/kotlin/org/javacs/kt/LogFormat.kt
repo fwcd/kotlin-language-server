@@ -22,6 +22,7 @@ object LogFormat: Formatter() {
     }
 
     private const val logTime = false
+    private const val logCaller = false
     private var newline = System.lineSeparator()
     private val date = Date()
     private var maxSource = 0
@@ -32,13 +33,16 @@ object LogFormat: Formatter() {
         val time = if (logTime) "$date " else ""
 
         var source: String
-        if (record.sourceClassName != null) {
+        val sourceWidth: Int
+        if (logCaller && record.sourceClassName != null) {
             source = record.sourceClassName.split(".").last()
             if (record.sourceMethodName != null) {
                 source += "." + record.sourceMethodName
             }
+            sourceWidth = 45
         } else {
             source = record.loggerName
+            sourceWidth = 6
         }
 
         val message = formatMessage(record)
@@ -59,7 +63,7 @@ object LogFormat: Formatter() {
             2, // padding between columns
             FormatValue(prefix, 10),
             FormatValue(shortenOrPad(thread, 10)),
-            FormatValue(source, 45),
+            FormatValue(source, sourceWidth),
             FormatValue(message)
         ) + throwable
     }
