@@ -24,7 +24,7 @@ Contains the commands require to build this project. Note that you might need to
 
 ## Running/Debugging the VSCode extension
 * Open the debug tab in VSCode
-* Run the `Extension (kotlin-language-server)` launch configuration
+* Run the `Extension` launch configuration
 
 ## Packaging the VSCode extension
 * `vsce package -o build.vsix`

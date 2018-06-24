@@ -4,12 +4,15 @@
 import * as vscode from 'vscode';
 import * as path from "path";
 import * as fs from "fs";
-import {LanguageClient, LanguageClientOptions, ServerOptions} from "vscode-languageclient";
+import * as child_process from "child_process";
+import { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient";
+import { isOSUnixoid } from './osUtils';
+import { LOG } from './logger';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Activating Kotlin language server...');
+    LOG.info('Activating Kotlin language server...');
 
     let javaExecutablePath = findJavaExecutable('java');
 
@@ -42,6 +45,12 @@ export function activate(context: vscode.ExtensionContext) {
     }
     let startScriptPath = path.resolve(context.extensionPath, "build", "install", "kotlin-language-server", "bin", correctScriptName("kotlin-language-server"))
     let args = [];
+    
+    // Ensure that start script can be executed
+    if (isOSUnixoid()) {
+        child_process.exec("chmod +x " + startScriptPath)
+    }
+    
     // Start the child java process
     let serverOptions: ServerOptions = {
         command: startScriptPath,
@@ -49,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
         options: { cwd: vscode.workspace.rootPath }
     }
 
-    console.log(startScriptPath + ' ' + args.join(' '));
+    LOG.info("Launching {} with args {}", startScriptPath, args.join(' '));
 
     // Create the language client and start the client.
     let languageClient = new LanguageClient('kotlin', 'Kotlin Language Server', serverOptions, clientOptions);
@@ -64,14 +73,14 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {
 }
 
-function findJavaExecutable(binname: string) {
-	binname = correctBinname(binname);
+function findJavaExecutable(rawBinname: string) {
+	let binname = correctBinname(rawBinname);
 
 	// First search java.home setting
     let userJavaHome = vscode.workspace.getConfiguration('java').get('home') as string;
 
 	if (userJavaHome != null) {
-        console.log('Looking for java in settings java.home ' + userJavaHome + '...');
+        LOG.debug("Looking for Java in java.home (settings): {}", userJavaHome);
 
         let candidate = findJavaExecutableInJavaHome(userJavaHome, binname);
 
@@ -83,7 +92,7 @@ function findJavaExecutable(binname: string) {
     let envJavaHome = process.env['JAVA_HOME'];
 
 	if (envJavaHome) {
-        console.log('Looking for java in environment variable JAVA_HOME ' + envJavaHome + '...');
+        LOG.debug("Looking for Java in JAVA_HOME (environment variable): {}", envJavaHome);
 
         let candidate = findJavaExecutableInJavaHome(envJavaHome, binname);
 
@@ -93,7 +102,7 @@ function findJavaExecutable(binname: string) {
 
 	// Then search PATH parts
 	if (process.env['PATH']) {
-        console.log('Looking for java in PATH');
+        LOG.debug("Looking for Java in PATH");
 
 		let pathparts = process.env['PATH'].split(path.delimiter);
 		for (let i = 0; i < pathparts.length; i++) {
@@ -104,8 +113,9 @@ function findJavaExecutable(binname: string) {
 		}
 	}
 
-	// Else return the binary name directly (this will likely always fail downstream)
-	return null;
+    // Else return the binary name directly (this will likely always fail downstream)
+    LOG.debug("Could not find Java, will try using binary name directly");
+	return binname;
 }
 
 function correctBinname(binname: string) {
