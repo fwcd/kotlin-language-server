@@ -44,6 +44,12 @@ fun winCompatiblePathOf(path: String): Path {
     }
 }
 
+fun Path.replaceExtensionWith(newExtension: String): Path {
+	val oldName = fileName.toString()
+	val newName = oldName.substring(0, oldName.lastIndexOf(".")) + newExtension
+	return resolveSibling(newName)
+}
+
 fun PsiFile.toPath(): Path =
         winCompatiblePathOf(this.originalFile.viewProvider.virtualFile.path)
 

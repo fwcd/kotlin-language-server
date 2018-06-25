@@ -1,4 +1,4 @@
-package org.javacs.kt.javaToKotlin
+package org.javacs.kt.j2k
 
 import java.util.Arrays
 import com.intellij.psi.*

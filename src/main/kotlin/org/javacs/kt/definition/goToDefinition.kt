@@ -4,12 +4,14 @@ import org.eclipse.lsp4j.Location
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.location
 import org.javacs.kt.LOG
-import org.javacs.kt.util.KotlinLSException
-import java.util.jar.JarFile
-import java.net.URI
-import java.nio.file.Paths
-import java.nio.file.Files
-import java.io.File
+import org.javacs.kt.externalsources.parseUriAsClassInJar
+import org.javacs.kt.externalsources.ClassInJar
+import org.javacs.kt.externalsources.Decompiler
+import org.javacs.kt.externalsources.FernflowerDecompiler
+import org.javacs.kt.util.replaceExtensionWith
+
+private val decompiler: Decompiler = FernflowerDecompiler()
+private val decompiledClassesCache = mutableMapOf<String, String>()
 
 fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
@@ -18,9 +20,9 @@ fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
     val destination = location(target)
 
     if (destination != null) {
-        val rawURI = destination.uri
-        if (isInsideJar(rawURI)) {
-            destination.uri = readCompiledClassToTemporaryFile(rawURI)
+        val rawClassURI = destination.uri
+        if (isInsideJar(rawClassURI)) {
+            destination.uri = cachedDecompile(rawClassURI)
         }
     }
 
@@ -29,38 +31,13 @@ fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
 
 private fun isInsideJar(uri: String) = uri.contains(".jar!")
 
-private fun readCompiledClassToTemporaryFile(uriWithJar: String): String {
-    val splittedUri = uriWithJar.split(".jar!")
-    val jarUri = splittedUri[0] + ".jar"
-    val jarPath = Paths.get(URI.create(jarUri))
-    val classInJarPath = Paths.get(trimLeadingPathSeparator(splittedUri[1]))
-    val className = classInJarPath.fileName.toString().trimSuffixIfPresent(".class")
+private fun cachedDecompile(uri: String) = decompiledClassesCache[uri] ?: decompile(uri)
 
-    JarFile(jarPath.toFile()).use { jarFile ->
-        for (jarEntry in jarFile.entries()) {
-            val jarEntryPath = Paths.get(jarEntry.name)
-
-            if (classInJarPath.equals(jarEntryPath)) {
-                // Found the correct class inside of the JAR file
-                val tmp = Files.createTempFile(className, ".class").toFile()
-                tmp.deleteOnExit() // Make sure the file is deleted upon exit
-
-                tmp.outputStream().use {
-                    jarFile.getInputStream(jarEntry).copyTo(it)
-                }
-
-                return tmp.toURI().toString()
-            }
-        }
-    }
-
-    throw KotlinLSException("Could not find $classInJarPath in ${jarPath.fileName}")
+private fun decompile(uri: String): String {
+    val decompiledUri = parseUriAsClassInJar(uri)
+            .decompile(decompiler)
+            .toUri()
+            .toString()
+    decompiledClassesCache[uri] = decompiledUri
+    return decompiledUri
 }
-
-private fun trimLeadingPathSeparator(path: String): String {
-    val firstChar = path[0]
-    return if (firstChar == '/' || firstChar == '\\') path.substring(1) else path
-}
-
-private fun String.trimSuffixIfPresent(suffix: String) =
-        if (endsWith(suffix)) substring(0, length - suffix.length) else this

@@ -10,7 +10,7 @@ import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
 import org.javacs.kt.references.findReferences
-import org.javacs.kt.signatureHelp.signatureHelpAt
+import org.javacs.kt.signaturehelp.signatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.computeAsync
