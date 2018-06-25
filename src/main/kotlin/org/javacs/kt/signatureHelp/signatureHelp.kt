@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
-fun signatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
+fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
     val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return nullResult("No call around ${file.describePosition(cursor)}")
     val candidates = candidates(call, file)
     val activeDeclaration = activeDeclaration(call, candidates)
