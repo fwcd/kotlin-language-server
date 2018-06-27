@@ -10,7 +10,13 @@
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
-            },
+            }
+        },
+        {
+            "label": "Build with Gradle",
+            "type": "shell",
+            "command": "gradle build -x test",
+            "problemMatcher": [],
             "group": {
                 "kind": "build",
                 "isDefault": true
