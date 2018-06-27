@@ -11,6 +11,7 @@ bin/
 build/
 target/
 out/
+lib-kotlin/
 *.vsix
 
 node_modules/

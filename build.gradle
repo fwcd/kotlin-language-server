@@ -1,13 +1,24 @@
-buildscript {
-	ext.kotlin_version = '1.2.31'
+/**
+ * Main buildfile for the KotlinLanguageServer
+ * ===========================================
+ *
+ * This buildfile contains source code from https://github.com/JetBrains/kotlin-web-demo/blob/master/versions/1.2.50/build.gradle
+ * licensed under http://www.apache.org/licenses/LICENSE-2.0
+ */
 
+buildscript {
 	repositories {
 		mavenCentral()
 	}
 
 	dependencies {
-		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 	}
+}
+
+plugins {
+	id "org.jetbrains.kotlin.jvm" version "1.2.50"
+	id "com.github.jk1.tcdeps" version "0.17"
 }
 
 apply plugin: 'kotlin'
@@ -32,18 +43,42 @@ kotlin {
 repositories {
 	mavenCentral()
 	maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+	teamcityServer {
+		url = 'http://teamcity.jetbrains.com'
+		credentials {
+			username = 'guest'
+			password = 'guest'
+		}
+	}
+}
+
+configurations {
+	kotlinJVM
+	kotlinJS
 }
 
 dependencies {
+	def kotlinRoot = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
+
 	implementation "com.google.guava:guava:21.0"
 	implementation "org.gradle:gradle-tooling-api:4.3"
 	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1"
-	implementation "org.jetbrains.kotlin:kotlin-stdlib:1.2.31"
-	implementation "org.jetbrains.kotlin:kotlin-compiler:1.2.31"
 	implementation fileTree(dir: "lib", include: ["*.jar"])
+	implementation fileTree(dir: "lib-kotlin", include: ["*.jar"])
+
+	kotlinJVM tc("$kotlinRoot/kotlinc/lib/kotlin-compiler.jar")
+	kotlinJVM tc("$kotlinRoot/kotlinc/lib/kotlin-script-runtime.jar")
+	kotlinJVM tc("$kotlinRoot/kotlinc/lib/kotlin-runtime.jar")
+	kotlinJVM tc("$kotlinRoot/kotlinc/lib/kotlin-stdlib-jdk8.jar")
+	kotlinJVM tc("$kotlinRoot/lib/kotlin-plugin.jar")
+
+	// TODO: Future support for Kotlin/JS that uses the following dependency
+	// kotlinJS tc("$kotlinRoot/kotlinc/lib/kotlin-jslib.jar")
+
 	testImplementation "org.openjdk.jmh:jmh-core:1.20"
 	testImplementation "org.hamcrest:hamcrest-all:1.3"
 	testImplementation "junit:junit:4.10"
+
 	compileOnly "org.openjdk.jmh:jmh-generator-annprocess:1.20"
 }
 
@@ -60,4 +95,10 @@ test {
 	}
 }
 
+task copyKotlinLibs(type: Copy) {
+	from configurations.kotlinJVM
+	into projectDir.toString() + File.separator + "lib-kotlin"
+}
+
+compileKotlin.dependsOn copyKotlinLibs
 build.finalizedBy(installDist)
