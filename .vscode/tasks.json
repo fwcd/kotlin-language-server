@@ -10,7 +10,12 @@
             "isBackground": true,
             "presentation": {
                 "reveal": "never"
-            },
+            }
+        },
+        {
+            "label": "Gradle Build",
+            "type": "shell",
+            "command": "gradle build -x test",
             "group": {
                 "kind": "build",
                 "isDefault": true
