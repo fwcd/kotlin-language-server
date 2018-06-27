@@ -6,7 +6,9 @@ import com.intellij.psi.PsiFile
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
+import org.javacs.kt.LOG
 import org.javacs.kt.util.toPath
+import org.jetbrains.kotlin.descriptors.SourceFile
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptorWithSource
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
@@ -97,7 +99,11 @@ fun location(declaration: DeclarationDescriptor): Location? {
                 // TODO: Find the correct position
                 return Location(file, Range(Position(0, 0), Position(0, 0)))
             }
+            SourceFile.NO_SOURCE_FILE -> Unit // If no source file is present, do nothing
+            else -> LOG.info("Source type of $sourceFile not recognized")
         }
+    } else {
+        LOG.info("$declaration does not have a source")
     }
 
     return null
