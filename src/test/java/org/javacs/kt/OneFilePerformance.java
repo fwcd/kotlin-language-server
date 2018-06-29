@@ -7,7 +7,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import org.jetbrains.kotlin.cli.jvm.compiler.CliLightClassGenerationSupport;
+import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace;
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.kotlin.config.CommonConfigurationKeys;
@@ -64,7 +64,7 @@ public class OneFilePerformance {
         }
 
         BindingTraceContext compile(Collection<KtFile> compile, Collection<KtFile> sourcePath) {
-            BindingTraceContext trace = new CliLightClassGenerationSupport.CliBindingTrace();
+            BindingTraceContext trace = new CliBindingTrace();
             new ComponentProvider(){
 
                 @Override
