@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.eclipse.lsp4j.services.LanguageClient
@@ -37,7 +38,7 @@ class KotlinWorkspaceService(
                 val range = gson.fromJson(args[1] as JsonElement, Range::class.java)
 
                 val selectedJavaCode = extractRange(sp.content(filePath), range)
-                val kotlinCode = convertJavaToKotlin(cp.compiler.environment, selectedJavaCode)
+                val kotlinCode = convertJavaToKotlin(selectedJavaCode, cp.compiler)
 
                 languageClient?.applyEdit(ApplyWorkspaceEditParams(WorkspaceEdit(listOf(TextDocumentEdit(
                     VersionedTextDocumentIdentifier().apply { uri = fileUri },

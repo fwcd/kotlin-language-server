@@ -1,15 +1,17 @@
 package org.javacs.kt
 
+import com.intellij.codeInsight.NullableNotNullManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileFactory
+import com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
-import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
+import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
@@ -35,6 +37,7 @@ import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import org.javacs.kt.util.KotlinLSException
+import org.javacs.kt.util.KotlinNullableNotNullManager
 
 /**
  * Incrementally compiles files and expressions.
@@ -43,7 +46,7 @@ import org.javacs.kt.util.KotlinLSException
 class Compiler(classPath: Set<Path>) {
     private val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
-        addAll(JVMConfigurationKeys.CONTENT_ROOTS, classPath.map { JvmClasspathRoot(it.toFile())})
+        addJvmClasspathRoots(classPath.map { it.toFile() })
     }
     val environment: KotlinCoreEnvironment
 
@@ -54,6 +57,10 @@ class Compiler(classPath: Set<Path>) {
             configuration = config,
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
+        val project = environment.project
+        if (project is MockProject) {
+            project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
+        }
     }
 
     private val parser = KtPsiFactory(environment.project)

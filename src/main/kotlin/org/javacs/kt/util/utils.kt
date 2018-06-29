@@ -64,12 +64,6 @@ fun <T> emptyResult(message: String): List<T> = noResult(message, emptyList())
 
 fun <T> nullResult(message: String): T? = noResult(message, null)
 
-public class KotlinLSException: RuntimeException {
-	constructor(msg: String) : super(msg) {}
-
-	constructor(msg: String, cause: Throwable) : super(msg, cause) {}
-}
-
 fun <T> firstNonNull(vararg optionals: () -> T?): T? {
     for (optional in optionals) {
         val result = optional()
@@ -79,6 +73,11 @@ fun <T> firstNonNull(vararg optionals: () -> T?): T? {
     }
     return null
 }
+
+fun <T> nonNull(item: T?, errorMsgIfNull: String): T =
+    if (item == null) {
+        throw NullPointerException(errorMsgIfNull)
+    } else item
 
 fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     try {
