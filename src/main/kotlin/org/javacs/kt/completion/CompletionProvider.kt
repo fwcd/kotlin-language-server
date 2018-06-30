@@ -103,29 +103,36 @@ class CompletionProvider(
 					emptySet()
 			)
 
-			if (element is KtSimpleNameExpression) {
-				descriptors = helper.getReferenceVariants(element, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
-			} else if (element.parent is KtSimpleNameExpression) {
-				descriptors = helper.getReferenceVariants(element.parent as KtSimpleNameExpression, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
-			} else {
-				isTipsManagerCompletion = false
-				val resolutionScope: LexicalScope?
-				val parent = element.parent
-				if (parent is KtQualifiedExpression) {
-					val receiverExpression = parent.receiverExpression
+			when {
+				element is KtSimpleNameExpression -> {
+					descriptors = helper.getReferenceVariants(element, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
+				}
+				element.parent is KtSimpleNameExpression -> {
+					descriptors = helper.getReferenceVariants(element.parent as KtSimpleNameExpression, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
+				}
+				else -> {
+					isTipsManagerCompletion = false
+					val resolutionScope: LexicalScope?
+					val parent = element.parent
 
-					val expressionType = bindingContext.get<KtExpression, KotlinTypeInfo>(BindingContext.EXPRESSION_TYPE_INFO, receiverExpression)!!.type
-					resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, receiverExpression)
+					when (parent) {
+						is KtQualifiedExpression -> {
+							val receiverExpression = parent.receiverExpression
+							val expressionType = bindingContext.get<KtExpression, KotlinTypeInfo>(BindingContext.EXPRESSION_TYPE_INFO, receiverExpression)!!.type
+							resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, receiverExpression)
 
-					if (expressionType != null && resolutionScope != null) {
-						descriptors = expressionType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
-					}
-				} else {
-					resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, element as KtExpression)
-					if (resolutionScope != null) {
-						descriptors = resolutionScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
-					} else {
-						return emptyList()
+							if (expressionType != null && resolutionScope != null) {
+								descriptors = expressionType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
+							}
+						}
+						else -> {
+							resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, element as KtExpression)
+							if (resolutionScope != null) {
+								descriptors = resolutionScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
+							} else {
+								return emptyList()
+							}
+						}
 					}
 				}
 			}
@@ -161,11 +168,11 @@ class CompletionProvider(
 					var completionText = fullName
 					var position = completionText.indexOf('(')
 					if (position != -1) {
-						//If this is a string with a package after
+						// If this is a string with a package after
 						if (completionText[position - 1] == ' ') {
 							position -= 2
 						}
-						//if this is a method without args
+						// If this is a method without args
 						if (completionText[position + 1] == ')') {
 							position++
 						}
