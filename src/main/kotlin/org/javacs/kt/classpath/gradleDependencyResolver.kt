@@ -77,8 +77,6 @@ private fun readDependenciesViaTask(directory: Path): Set<Path>? {
     val artifact = Pattern.compile("^.+?\\.jar$")
     val dependencies = mutableSetOf<Path>()
 
-    classpathCommand.waitFor()
-
     stdout.bufferedReader().use { reader ->
         for (dependency in reader.lines()) {
             val line = dependency.toString().trim()
@@ -88,6 +86,8 @@ private fun readDependenciesViaTask(directory: Path): Set<Path>? {
             }
         }
     }
+
+    classpathCommand.waitFor()
 
     if (dependencies.size > 0) {
         return dependencies
