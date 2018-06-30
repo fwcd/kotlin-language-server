@@ -51,6 +51,8 @@ import org.javacs.kt.Compiler
 import java.beans.PropertyDescriptor
 import java.util.Collections
 
+private const val DELIMITER = "KtD3l1m1t3r"
+
 class CompletionProvider(
 	private val psiFiles: MutableList<KtFile>,
 	private var currentPsiFile: KtFile?,
@@ -137,7 +139,7 @@ class CompletionProvider(
 				} else {
 					prefix = element.text
 				}
-				prefix = prefix.substringBefore("IntellijIdeaRulezzz", prefix)
+				prefix = prefix.substringBefore(DELIMITER, prefix)
 				if (prefix.endsWith(".")) {
 					prefix = ""
 				}
@@ -201,7 +203,7 @@ class CompletionProvider(
 		val text = currentPsiFile!!.text
 		if (caretPositionOffset != 0) {
 			val buffer = StringBuilder(text.substring(0, caretPositionOffset))
-			buffer.append("IntellijIdeaRulezzz ")
+			buffer.append("$DELIMITER ")
 			buffer.append(text.substring(caretPositionOffset))
 			psiFiles.remove(currentPsiFile!!)
 			currentPsiFile = JetPsiFactoryUtil.createFile(currentProject, currentPsiFile!!.name, buffer.toString())

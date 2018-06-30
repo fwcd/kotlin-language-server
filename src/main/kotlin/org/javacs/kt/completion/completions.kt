@@ -5,6 +5,7 @@ package org.javacs.kt.completion
 import com.google.common.cache.CacheBuilder
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
+import org.eclipse.lsp4j.InsertTextFormat.PlainText
 import org.eclipse.lsp4j.Position
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
@@ -35,18 +36,24 @@ import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.util.concurrent.TimeUnit
 
-private const val MAX_COMPLETION_ITEMS = 50
-
 fun completions(file: CompiledFile, position: Position): CompletionList {
     val compiler = file.classPath.compiler
     val provider = CompletionProvider(file.sourcePath.toMutableList(), file.parse, position.line, position.character, compiler)
     val list = provider
             .getResult()
-            .map { it.descriptor?.accept(RenderCompletionItem(), Unit) }
-            .filterNotNull() // TODO: This will filter out all keyword completions that do not have a descriptor which might not be desirable
-            .take(MAX_COMPLETION_ITEMS)
+            .map {
+                it.descriptor?.accept(RenderCompletionItem(), Unit)
+                ?: CompletionItem().apply {
+                    // A completion without a description (for example a keyword completion)
+                    label = it.displayText
+                    filterText = it.displayText
+                    insertText = it.displayText
+                    insertTextFormat = PlainText
+                }
+            }
+            // .take(MAX_COMPLETION_ITEMS)
             .toList()
-    val isIncomplete = (list.size == MAX_COMPLETION_ITEMS)
+    val isIncomplete = false /* (list.size == MAX_COMPLETION_ITEMS) */
     return CompletionList(isIncomplete, list)
 }
 
