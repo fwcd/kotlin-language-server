@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
-import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.config.JvmClasspathRoot
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
@@ -46,7 +46,7 @@ import org.javacs.kt.util.KotlinNullableNotNullManager
 class Compiler(classPath: Set<Path>) {
     private val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
-        addJvmClasspathRoots(classPath.map { it.toFile() })
+        addAll(JVMConfigurationKeys.CONTENT_ROOTS, classPath.map { JvmClasspathRoot(it.toFile()) })
     }
     val environment: KotlinCoreEnvironment
 
