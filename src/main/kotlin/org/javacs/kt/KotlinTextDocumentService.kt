@@ -91,12 +91,13 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun completion(position: CompletionParams) = computeAsync {
+    override fun completion(params: CompletionParams) = computeAsync {
         reportTime {
-            LOG.info("Completing at ${describePosition(position)}")
+            LOG.info("Completing at ${describePosition(params)}")
 
-            val (file, cursor) = recover(position, false)
-            val completions = completions(file, cursor)
+            val (file, _) = recover(params, false)
+            val position = params.position
+            val completions = completions(file, position)
 
             LOG.info("Found ${completions.items.size} items")
 
