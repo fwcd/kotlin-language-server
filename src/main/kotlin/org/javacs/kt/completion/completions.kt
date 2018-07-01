@@ -36,9 +36,9 @@ import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.typeUtil.supertypes
 import java.util.concurrent.TimeUnit
 
-fun completions(file: CompiledFile, position: Position): CompletionList {
+fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val compiler = file.classPath.compiler
-    val provider = CompletionProvider(file.sourcePath.toMutableList(), file.parse, position.line, position.character, compiler)
+    val provider = CompletionProvider(file, cursor, compiler)
     val list = provider
             .getResult()
             .map {

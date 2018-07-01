@@ -95,9 +95,8 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         reportTime {
             LOG.info("Completing at ${describePosition(params)}")
 
-            val (file, _) = recover(params, false)
-            val position = params.position
-            val completions = completions(file, position)
+            val (file, cursor) = recover(params, false)
+            val completions = completions(file, cursor)
 
             LOG.info("Found ${completions.items.size} items")
 

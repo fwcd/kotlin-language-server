@@ -48,40 +48,82 @@ import org.javacs.kt.util.JetPsiFactoryUtil
 import org.javacs.kt.util.ResolveUtils
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.Compiler
+import org.javacs.kt.CompiledFile
+import org.javacs.kt.LOG
 import java.beans.PropertyDescriptor
 import java.util.Collections
 
 private const val DELIMITER = "KtD3l1m1t3r"
 
 class CompletionProvider(
-	private val psiFiles: MutableList<KtFile>,
-	private var currentPsiFile: KtFile?,
-	private val lineNumber: Int,
-	private val charNumber: Int,
-	private val compiler: Compiler
+	private val file: CompiledFile,
+	private val caretPositionOffset: Int,
+	private val compiler: Compiler,
+	private val psiFiles: MutableList<KtFile> = file.sourcePath.toMutableList(),
+	private var currentPsiFile: KtFile? = file.parse
 ) {
 	private val NUMBER_OF_CHAR_IN_COMPLETION_NAME = 40
 	private val currentProject: Project
 	private var currentDocument: Document? = null
-	private var caretPositionOffset: Int = 0
-
-	private val expressionForScope: PsiElement?
-		get() {
-			var element = currentPsiFile!!.findElementAt(caretPositionOffset)
-			while (element !is KtExpression && element != null) {
-				element = element.parent
-			}
-			return element
-		}
 
 	init {
 		this.currentProject = currentPsiFile!!.project
 		this.currentDocument = currentPsiFile!!.viewProvider.document
 	}
 
-	fun getResult(): List<CompletionVariant> {
+	private data class DescriptorCompletions(val listed: Collection<DeclarationDescriptor>?, val isTipsManagerCompletion: Boolean)
+
+	private fun completionsOf(element: PsiElement, bindingContext: BindingContext, caret: Int, helper: ReferenceVariantsHelper): DescriptorCompletions? {
+		val parent = element.parent
+		return when {
+			// ?
+			element is KtSimpleNameExpression -> completeSimpleNameExpression(element, helper)
+			parent is KtSimpleNameExpression -> completeSimpleNameExpression(parent, helper)
+			// ?.
+			element is KtQualifiedExpression -> completeQualifiedExpression(element, caret)
+			parent is KtQualifiedExpression -> completeQualifiedExpression(parent, caret)
+			else -> {
+				LOG.info("Completing other expression: $element")
+				val resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, element as KtExpression)
+				if (resolutionScope != null) {
+					DescriptorCompletions(resolutionScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER), false)
+				} else return null
+			}
+		}
+	}
+
+	private fun completeQualifiedExpression(expression: KtQualifiedExpression, caret: Int): DescriptorCompletions {
+		LOG.info("Completing KtQualifiedExpression")
+		val receiverExpression = expression.receiverExpression
+		// val resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, receiverExpression)
+		// val expressionType = bindingContext.get<KtExpression, KotlinTypeInfo>(BindingContext.EXPRESSION_TYPE_INFO, receiverExpression)!!.type
+		val resolutionScope = file.scopeAtPoint(caret)
+		val expressionType = file.typeOfExpression(receiverExpression, resolutionScope!!)
+
+		return if (expressionType != null && resolutionScope != null) {
+			DescriptorCompletions(expressionType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER), false)
+		} else DescriptorCompletions(null, false)
+	}
+
+	private fun completeSimpleNameExpression(expression: KtSimpleNameExpression, helper: ReferenceVariantsHelper): DescriptorCompletions {
+		LOG.info("Completing KtSimpleNameExpression of element")
+		return DescriptorCompletions(helper.getReferenceVariants(expression, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null), true)
+	}
+
+	private fun expressionAt(caret: Int): PsiElement? {
+		// var element = currentPsiFile!!.findElementAt(caret - 1)
+		var element: PsiElement? = file.parseAtPoint(caret - 1)
+		while (element !is KtExpression && element != null) {
+			element = element.parent
+		}
+		return element
+	}
+
+	fun getResult(): List<CompletionVariant> = getResultAt(caretPositionOffset)
+
+	private fun getResultAt(caret: Int): List<CompletionVariant> {
 		try {
-			addExpressionAtCaret()
+			addExpressionAtCaret(caret)
 			val analysisResult: AnalysisResult
 			val bindingContext: BindingContext
 			val containerProvider: ComponentProvider
@@ -91,10 +133,7 @@ class CompletionProvider(
 
 			containerProvider = resolveResult.getSecond()
 
-			val element = expressionForScope ?: return emptyList()
-			var descriptors: Collection<DeclarationDescriptor>? = null
-			var isTipsManagerCompletion = true
-
+			val element = expressionAt(caret) ?: return emptyList()
 			val helper = ReferenceVariantsHelper(
 					bindingContext,
 					KotlinResolutionFacade(containerProvider, currentProject),
@@ -103,45 +142,15 @@ class CompletionProvider(
 					emptySet()
 			)
 
-			when {
-				element is KtSimpleNameExpression -> {
-					descriptors = helper.getReferenceVariants(element, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
-				}
-				element.parent is KtSimpleNameExpression -> {
-					descriptors = helper.getReferenceVariants(element.parent as KtSimpleNameExpression, DescriptorKindFilter.ALL, NAME_FILTER, true, true, true, null)
-				}
-				else -> {
-					isTipsManagerCompletion = false
-					val resolutionScope: LexicalScope?
-					val parent = element.parent
-
-					when (parent) {
-						is KtQualifiedExpression -> {
-							val receiverExpression = parent.receiverExpression
-							val expressionType = bindingContext.get<KtExpression, KotlinTypeInfo>(BindingContext.EXPRESSION_TYPE_INFO, receiverExpression)!!.type
-							resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, receiverExpression)
-
-							if (expressionType != null && resolutionScope != null) {
-								descriptors = expressionType.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
-							}
-						}
-						else -> {
-							resolutionScope = bindingContext.get<KtElement, LexicalScope>(BindingContext.LEXICAL_SCOPE, element as KtExpression)
-							if (resolutionScope != null) {
-								descriptors = resolutionScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
-							} else {
-								return emptyList()
-							}
-						}
-					}
-				}
-			}
+			// Figure out, which descriptors should appear in the completion list:
+			val descriptors = completionsOf(element, bindingContext, caret, helper)
+			if (descriptors == null) return emptyList()
 
 			val result = ArrayList<CompletionVariant>()
 
-			if (descriptors != null) {
+			descriptors.listed?.let {
 				var prefix: String
-				if (!isTipsManagerCompletion) {
+				if (!descriptors.isTipsManagerCompletion) {
 					prefix = element.parent.text
 				} else {
 					prefix = element.text
@@ -151,17 +160,15 @@ class CompletionProvider(
 					prefix = ""
 				}
 
-				if (descriptors !is ArrayList<*>) {
-					descriptors = ArrayList(descriptors)
-				}
+				val descriptorsList = (it as? ArrayList<*>) ?: ArrayList(it)
 
-				Collections.sort((descriptors as ArrayList<DeclarationDescriptor>?)!!) { d1, d2 ->
+				Collections.sort((descriptorsList as ArrayList<DeclarationDescriptor>?)!!) { d1, d2 ->
 					val d1PresText = getPresentableText(d1)
 					val d2PresText = getPresentableText(d2)
 					(d1PresText.getFirst() + d1PresText.getSecond()).compareTo(d2PresText.getFirst() + d2PresText.getSecond(), ignoreCase = true)
 				}
 
-				for (descriptor in descriptors) {
+				for (descriptor in descriptorsList) {
 					val presentableText = getPresentableText(descriptor)
 
 					val fullName = formatName(presentableText.getFirst(), NUMBER_OF_CHAR_IN_COMPLETION_NAME)
@@ -205,23 +212,17 @@ class CompletionProvider(
 		} else builder
 	}
 
-	private fun addExpressionAtCaret() {
-		caretPositionOffset = getOffsetFromLineAndChar(lineNumber, charNumber)
+	private fun addExpressionAtCaret(caret: Int) {
 		val text = currentPsiFile!!.text
-		if (caretPositionOffset != 0) {
-			val buffer = StringBuilder(text.substring(0, caretPositionOffset))
+		if (caret != 0) {
+			val buffer = StringBuilder(text.substring(0, caret))
 			buffer.append("$DELIMITER ")
-			buffer.append(text.substring(caretPositionOffset))
+			buffer.append(text.substring(caret))
 			psiFiles.remove(currentPsiFile!!)
 			currentPsiFile = JetPsiFactoryUtil.createFile(currentProject, currentPsiFile!!.name, buffer.toString())
 			psiFiles.add(currentPsiFile!!)
 			currentDocument = currentPsiFile!!.viewProvider.document
 		}
-	}
-
-	private fun getOffsetFromLineAndChar(line: Int, charNumber: Int): Int {
-		val lineStart = currentDocument!!.getLineStartOffset(line)
-		return lineStart + charNumber
 	}
 
 	private fun keywordsCompletionVariants(keywords: TokenSet, prefix: String): List<CompletionVariant> {
