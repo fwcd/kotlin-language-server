@@ -52,7 +52,7 @@ private fun createTemporaryGradleFile(): File {
     }
 
     temp.bufferedWriter().use {
-        it.write("rootProject { apply from: '${config.absolutePath}'} ")
+        it.write("rootProject { apply from: '${config.absolutePath.replace("\\", "\\\\")}'} ")
     }
 
     return temp
@@ -67,6 +67,8 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
+val jarArtifactOutputLine by lazy { Pattern.compile("^.+?\\.jar$") }
+
 private fun readDependenciesViaTask(directory: Path): Set<Path>? {
     val gradle = getGradleCommand(directory)
     val config = createTemporaryGradleFile()
@@ -74,14 +76,12 @@ private fun readDependenciesViaTask(directory: Path): Set<Path>? {
     val gradleCommand = "$gradle -I ${config.absolutePath} classpath"
     val classpathCommand = Runtime.getRuntime().exec(gradleCommand, null, directory.toFile())
     val stdout = classpathCommand.inputStream
-    val artifact = Pattern.compile("^.+?\\.jar$")
     val dependencies = mutableSetOf<Path>()
 
     stdout.bufferedReader().use { reader ->
-        for (dependency in reader.lines()) {
-            val line = dependency.toString().trim()
-
-            if (artifact.matcher(line).matches()) {
+        reader.lines().forEach {
+            val line = it.toString().trim()
+            if (!line.startsWith("Download") && jarArtifactOutputLine.matcher(line).matches()) {
                 dependencies.add(Paths.get(line))
             }
         }

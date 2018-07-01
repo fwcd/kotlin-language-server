@@ -85,9 +85,11 @@ fun <T> tryResolving(what: String, resolver: () -> T?): T? {
         if (resolved != null) {
             LOG.info("Successfully resolved $what")
             return resolved
+        } else {
+            LOG.info("Could not resolve $what as it is null")
         }
     } catch (e: Exception) {
-        LOG.info("Could not resolve $what due to ${e.message}")
+        LOG.info("Could not resolve $what: ${e.message}")
     }
     return null
 }
