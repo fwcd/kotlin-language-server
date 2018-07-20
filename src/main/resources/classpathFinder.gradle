@@ -1,66 +1,60 @@
 allprojects { project ->
+	task kotlinLSPDeps {
+		task -> doLast {
+			System.out.println ""
+			System.out.println "gradle-version $gradleVersion"
+			System.out.println "kotlin-lsp-project ${project.name}"
 
-  task kotlinLSPDeps {
-    task -> doLast {
-      System.out.println ""
-      System.out.println "gradle-version " + gradleVersion
-      System.out.println "kotlin-lsp-project " + project.name
+			if (project.hasProperty('android')) {
+				def rootDir = project.rootDir
 
-      if(project.hasProperty('android')) {
+				def level = "21"
+				if (project.android.defaultConfig.targetSdkVersion != null) {
+					level = project.android.defaultConfig.targetSdkVersion.getApiLevel()
+					System.out.println "kotlin-lsp-target android-$level"
+				}
 
-        def rootDir = project.rootDir
+				def localProperties = new File(rootDir, "local.properties")
 
-        def level = "21"
-        if(project.android.defaultConfig.targetSdkVersion != null) {
-          level = project.android.defaultConfig.targetSdkVersion.getApiLevel()
-          System.out.println "kotlin-lsp-target android-" + level
-        }
+				if (localProperties.exists()) {
+					Properties properties = new Properties()
+					localProperties.withInputStream { instr -> properties.load(instr) }
+					def sdkDir = properties.getProperty('sdk.dir')
+					def androidJarPath = sdkDir + "/platforms/android-$level/android.jar"
+					System.out.println "kotlin-lsp-gradle $androidJarPath"
+				}
 
-        def localProperties = new File(rootDir, "local.properties")
+				if (project.android.hasProperty('applicationVariants')) {
+					project.android.applicationVariants.all { variant ->
+						variant.getCompileClasspath().each {
+							System.out.println "kotlin-lsp-gradle $it"
+						}
+					}
+				}
 
-        if (localProperties.exists()) {
-          Properties properties = new Properties()
-          localProperties.withInputStream { instr -> properties.load(instr) }
-          def sdkDir = properties.getProperty('sdk.dir')
-          def androidJarPath = sdkDir + "/platforms/android-" + level + "/android.jar"
-          System.out.println "kotlin-lsp-gradle " + androidJarPath
-        }
-
-        if(project.android.hasProperty('applicationVariants')) {
-          project.android.applicationVariants.all { variant ->
-            variant.getCompileClasspath().each {
-              System.out.println "kotlin-lsp-gradle " + it
-            }
-          }
-        }
-
-        def buildClasses = project.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
-        System.out.println "kotlin-lsp-gradle " + buildClasses
-
-      } else {
-        // Print the list of all dependencies jar files.
-        project.configurations.findAll {
-          it.metaClass.respondsTo(it, "isCanBeResolved") ? it.isCanBeResolved() : false
-        }.each {
-          it.resolve().each {
-            if(it.inspect().endsWith("jar")) {
-              System.out.println "kotlin-lsp-gradle " + it
-            } else if(it.inspect().endsWith("aar")) {
-              // If the dependency is an AAR file we try to determine the location
-              // of the classes.jar file in the exploded aar folder.
-              def splitted = it.inspect().split("/")
-              def namespace = splitted[-5]
-              def name = splitted[-4]
-              def version = splitted[-3]
-              def explodedPath = "$project.buildDir/intermediates/exploded-aar" +
-                                 "/$namespace/$name/$version/jars/classes.jar"
-              System.out.println "kotlin-lsp-gradle " + explodedPath
-            }
-          }
-        }
-      }
-    }
-  }
+				def buildClasses = project.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
+				System.out.println "kotlin-lsp-gradle $buildClasses"
+			} else {
+				// Print the list of all dependencies jar files.
+				project.configurations.findAll {
+					it.metaClass.respondsTo(it, "isCanBeResolved") ? it.isCanBeResolved() : false
+				}.each {
+					it.resolve().each {
+						if (it.inspect().endsWith("jar")) {
+							System.out.println "kotlin-lsp-gradle $it"
+						} else if (it.inspect().endsWith("aar")) {
+							// If the dependency is an AAR file we try to determine the location
+							// of the classes.jar file in the exploded aar folder.
+							def splitted = it.inspect().split("/")
+							def namespace = splitted[-5]
+							def name = splitted[-4]
+							def version = splitted[-3]
+							def explodedPath = "$project.buildDir/intermediates/exploded-aar/$namespace/$name/$version/jars/classes.jar"
+							System.out.println "kotlin-lsp-gradle $explodedPath"
+						}
+					}
+				}
+			}
+		}
+	}
 }
-
-
