@@ -112,7 +112,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
             LOG.info("Completing import '${surroundingElement.text}'")
             val module = file.container.get<ModuleDescriptor>()
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
-            val parentDot = match.groups[1]?.value ?: "."
+            val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.fine("Looking for members of package '$parent'")
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))

@@ -195,6 +195,13 @@ class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
 
         assertThat(labels, hasItems("MethodHandle"))
     }
+
+    @Test fun `complete import from j`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 5, 9)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItems("java"))
+    }
 }
 
 class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
