@@ -9,13 +9,9 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
-import org.gradle.tooling.GradleConnector
 
 fun readBuildGradle(buildFile: Path): Set<Path> {
     val projectDirectory = buildFile.getParent()
-    val connection = GradleConnector.newConnector()
-            .forProjectDirectory(projectDirectory.toFile())
-            .connect()
 
     // The first successful dependency resolver is used
     // (evaluating them from top to bottom)
@@ -27,13 +23,13 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
         LOG.warning("Could not resolve Gradle dependencies using any resolution strategy!")
     }
 
-    connection.close()
     return dependencies
 }
 
 private fun createTemporaryGradleFile(): File {
     val config = File.createTempFile("classpath", ".gradle")
-
+    config.deleteOnExit()
+    
     LOG.info("Creating temporary gradle file ${config.absolutePath}")
 
     config.bufferedWriter().use { configWriter ->
