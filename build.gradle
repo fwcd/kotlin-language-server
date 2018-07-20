@@ -84,5 +84,14 @@ task copyKotlinLib(type: Copy) {
 	into "$projectDir/lib-kotlin"
 }
 
+task fixFilePermissions(type: Exec) {
+	if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+		// When running on macOS or Linux the start script
+		// needs executable permissions to run.
+		commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
+	}
+}
+
 compileKotlin.dependsOn copyKotlinLib
-build.finalizedBy(installDist)
+installDist.finalizedBy fixFilePermissions
+build.finalizedBy installDist
