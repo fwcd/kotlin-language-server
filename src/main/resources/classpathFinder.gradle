@@ -6,24 +6,9 @@ allprojects { project ->
 			System.out.println "kotlin-lsp-project ${project.name}"
 
 			if (project.hasProperty('android')) {
-				def rootDir = project.rootDir
-
-				def level = "21"
-				if (project.android.defaultConfig.targetSdkVersion != null) {
-					level = project.android.defaultConfig.targetSdkVersion.getApiLevel()
-					System.out.println "kotlin-lsp-target android-$level"
+				project.android.getBootClasspath().each {
+					System.out.println "kotlin-lsp-gradle $it"
 				}
-
-				def localProperties = new File(rootDir, "local.properties")
-
-				if (localProperties.exists()) {
-					Properties properties = new Properties()
-					localProperties.withInputStream { instr -> properties.load(instr) }
-					def sdkDir = properties.getProperty('sdk.dir')
-					def androidJarPath = sdkDir + "/platforms/android-$level/android.jar"
-					System.out.println "kotlin-lsp-gradle $androidJarPath"
-				}
-
 				if (project.android.hasProperty('applicationVariants')) {
 					project.android.applicationVariants.all { variant ->
 						variant.getCompileClasspath().each {
