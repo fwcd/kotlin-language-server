@@ -9,13 +9,7 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.regex.Pattern
-import org.gradle.tooling.*
-import org.gradle.tooling.model.*
-import org.gradle.tooling.model.eclipse.*
-import org.gradle.tooling.model.idea.*
-import org.gradle.kotlin.dsl.tooling.models.*
+import org.gradle.tooling.GradleConnector
 
 fun readBuildGradle(buildFile: Path): Set<Path> {
     val projectDirectory = buildFile.getParent()
@@ -26,10 +20,6 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
     // The first successful dependency resolver is used
     // (evaluating them from top to bottom)
     var dependencies = firstNonNull<Set<Path>>(
-        { tryResolving("dependencies using Gradle task") { readDependenciesViaTask(projectDirectory) } },
-        { tryResolving("dependencies using Eclipse project model") { readDependenciesViaEclipseProject(connection) } },
-        { tryResolving("dependencies using Kotlin DSL model") { readDependenciesViaKotlinDSL(connection) } },
-        { tryResolving("dependencies using IDEA model") { readDependenciesViaIdeaProject(connection) } },
         { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
     ).orEmpty()
 
@@ -42,8 +32,9 @@ fun readBuildGradle(buildFile: Path): Set<Path> {
 }
 
 private fun createTemporaryGradleFile(): File {
-    val temp = File.createTempFile("tempGradle", ".config")
     val config = File.createTempFile("classpath", ".gradle")
+
+    LOG.info("Creating temporary gradle file ${config.absolutePath}")
 
     config.bufferedWriter().use { configWriter ->
         ClassLoader.getSystemResourceAsStream("classpathFinder.gradle").bufferedReader().use { configReader ->
@@ -51,11 +42,7 @@ private fun createTemporaryGradleFile(): File {
         }
     }
 
-    temp.bufferedWriter().use {
-        it.write("rootProject { apply from: '${config.absolutePath.replace("\\", "\\\\")}'} ")
-    }
-
-    return temp
+    return config
 }
 
 private fun getGradleCommand(workspace: Path): Path {
@@ -67,101 +54,27 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-val jarArtifactOutputLine by lazy { Pattern.compile("^.+?\\.jar$") }
-
-private fun readDependenciesViaTask(directory: Path): Set<Path>? {
-    val gradle = getGradleCommand(directory)
-    val config = createTemporaryGradleFile()
-
-    val gradleCommand = "$gradle -I ${config.absolutePath} classpath"
-    val classpathCommand = Runtime.getRuntime().exec(gradleCommand, null, directory.toFile())
-    val stdout = classpathCommand.inputStream
-    val dependencies = mutableSetOf<Path>()
-
-    stdout.bufferedReader().use { reader ->
-        reader.lines().forEach {
-            val line = it.toString().trim()
-            if (!line.startsWith("Download") && jarArtifactOutputLine.matcher(line).matches()) {
-                dependencies.add(Paths.get(line))
-            }
-        }
-    }
-
-    classpathCommand.waitFor()
-
-    if (dependencies.size > 0) {
-        return dependencies
-    } else {
-        return null
-    }
-}
-
-private fun readDependenciesViaEclipseProject(connection: ProjectConnection): Set<Path> {
-    val dependencies = mutableSetOf<Path>()
-    val project: EclipseProject = connection.getModel(EclipseProject::class.java)
-
-    for (dependency in project.classpath) {
-        dependencies.add(dependency.file.toPath())
-    }
-
-    return dependencies
-}
-
-private fun readDependenciesViaIdeaProject(connection: ProjectConnection): Set<Path> {
-    val dependencies = mutableSetOf<Path>()
-    val project: IdeaProject = connection.getModel(IdeaProject::class.java)
-
-    for (child in project.children) {
-        for (dependency in child.dependencies) {
-            if (dependency is ExternalDependency) {
-                dependencies.add(dependency.file.toPath())
-            }
-        }
-    }
-
-    return dependencies
-}
-
-private fun readDependenciesViaKotlinDSL(connection: ProjectConnection): Set<Path> {
-    val project: KotlinBuildScriptModel = connection.getModel(KotlinBuildScriptModel::class.java)
-    return project.classPath.map { it.toPath() }.toSet()
-}
-
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
     LOG.fine("Attempting dependency resolution through CLI...")
+    val config = createTemporaryGradleFile()
     val gradle = getGradleCommand(projectDirectory)
-    val classpathCommand = "$gradle dependencies --configuration=compileClasspath --console=plain"
-    val testClasspathCommand = "$gradle dependencies --configuration=testCompileClasspath --console=plain"
-    val dependencies = findGradleCLIDependencies(classpathCommand, projectDirectory)
-    val testDependencies = findGradleCLIDependencies(testClasspathCommand, projectDirectory)
-
-    return dependencies?.union(testDependencies.orEmpty()).orEmpty()
+    val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
+    LOG.fine("  -- executing $cmd")
+    val dependencies = findGradleCLIDependencies(cmd, projectDirectory)
+    return dependencies
 }
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
-    return parseGradleCLIDependencies(execAndReadStdout(command, projectDirectory))
+    val result = execAndReadStdout(command, projectDirectory)
+    LOG.fine(result)
+    return parseGradleCLIDependencies(result)
 }
 
-private val artifactPattern by lazy { "[\\S]+:[\\S]+:[\\S]+( -> )*([\\d.]+)*".toRegex() }
-private val jarMatcher by lazy { FileSystems.getDefault().getPathMatcher("glob:**.jar") }
+private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)\n".toRegex() }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
     val artifacts = artifactPattern.findAll(output)
-        .map { findGradleArtifact(parseArtifact(it.value, it.groups[2]?.value)) }
+        .mapNotNull { FileSystems.getDefault().getPath(it.groups[1]?.value) }
         .filterNotNull()
     return artifacts.toSet()
-}
-
-private fun findGradleArtifact(artifact: Artifact): Path? {
-    val jarPath = gradleCaches
-            ?.resolve(artifact.group)
-            ?.resolve(artifact.artifact)
-            ?.resolve(artifact.version)
-            ?.let { dependencyFolder ->
-                Files.walk(dependencyFolder)
-                        .filter { jarMatcher.matches(it) }
-                        .findFirst()
-            }
-            ?.orElse(null)
-    return jarPath
 }

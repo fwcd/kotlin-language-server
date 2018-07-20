@@ -1,83 +1,66 @@
-boolean isResolvable(Configuration conf) {
-	// isCanBeResolved was added in Gradle 3.3. Previously, all configurations were resolvable
-	if (Configuration.class.declaredMethods.any { it.name == 'isCanBeResolved' }) {
-		return conf.canBeResolved
-	}
-	return true
+allprojects { project ->
+
+  task kotlinLSPDeps {
+    task -> doLast {
+      System.out.println ""
+      System.out.println "gradle-version " + gradleVersion
+      System.out.println "kotlin-lsp-project " + project.name
+
+      if(project.hasProperty('android')) {
+
+        def rootDir = project.rootDir
+
+        def level = "21"
+        if(project.android.defaultConfig.targetSdkVersion != null) {
+          level = project.android.defaultConfig.targetSdkVersion.getApiLevel()
+          System.out.println "kotlin-lsp-target android-" + level
+        }
+
+        def localProperties = new File(rootDir, "local.properties")
+
+        if (localProperties.exists()) {
+          Properties properties = new Properties()
+          localProperties.withInputStream { instr -> properties.load(instr) }
+          def sdkDir = properties.getProperty('sdk.dir')
+          def androidJarPath = sdkDir + "/platforms/android-" + level + "/android.jar"
+          System.out.println "kotlin-lsp-gradle " + androidJarPath
+        }
+
+        if(project.android.hasProperty('applicationVariants')) {
+          project.android.applicationVariants.all { variant ->
+            variant.getCompileClasspath().each {
+              System.out.println "kotlin-lsp-gradle " + it
+            }
+          }
+        }
+
+        def buildClasses = project.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
+        System.out.println "kotlin-lsp-gradle " + buildClasses
+
+      } else {
+        // Print the list of all dependencies jar files.
+        project.configurations.findAll {
+          it.metaClass.respondsTo(it, "isCanBeResolved") ? it.isCanBeResolved() : false
+        }.each {
+          it.resolve().each {
+            if(it.inspect().endsWith("jar")) {
+              System.out.println "kotlin-lsp-gradle " + it
+            } else if(it.inspect().endsWith("aar")) {
+              // If the dependency is an AAR file we try to determine the location
+              // of the classes.jar file in the exploded aar folder.
+              def splitted = it.inspect().split("/")
+              def namespace = splitted[-5]
+              def name = splitted[-4]
+              def version = splitted[-3]
+              def explodedPath = "$project.buildDir/intermediates/exploded-aar" +
+                                 "/$namespace/$name/$version/jars/classes.jar"
+              System.out.println "kotlin-lsp-gradle " + explodedPath
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
-File getBuildCacheForDependency(File dependency) {
-	String name = dependency.getName()
-	String home = System.getProperty("user.home")
-	String gradleCache = home + File.separator + '.gradle' + File.separator + 'caches' + File.separator
-	if (file(gradleCache).exists()) {
-		String include = 'transforms*' + File.separator + '**' + File.separator + name + File.separator + '**' + File.separator + 'classes.jar'
-		return fileTree(dir: gradleCache, include: include).files.find { it.isFile() }
-	} else {
-		return zipTree(dependency).files.find { it.isFile() && it.name.endsWith('jar') }
-	}
-}
 
-task classpath {
-	doLast {
-		HashSet<String> classpathFiles = new HashSet<String>()
-		for (proj in allprojects) {
-			for (conf in proj.configurations) {
-				if (isResolvable(conf)) {
-					for (dependency in conf) {
-						classpathFiles += dependency
-					}
-				}
-			}
-
-			def rjava = proj.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
-			def rFiles = new File(rjava)
-			if (rFiles.exists()) {
-				classpathFiles += rFiles
-			}
-
-			if (proj.hasProperty("android")) {
-				classpathFiles += proj.android.getBootClasspath()
-				if (proj.android.hasProperty("applicationVariants")) {
-					proj.android.applicationVariants.all { v ->
-						if (v.hasProperty("javaCompile")) {
-							classpathFiles += v.javaCompile.classpath
-						}
-						if (v.hasProperty("compileConfiguration")) {
-							v.compileConfiguration.each { dependency ->
-								classpathFiles += dependency
-							}
-						}
-						if (v.hasProperty("runtimeConfiguration")) {
-							v.runtimeConfiguration.each { dependency ->
-								classpathFiles += dependency
-							}
-						}
-						if (v.hasProperty("getApkLibraries")) {
-							println v.getApkLibraries()
-							classpathFiles += v.getApkLibraries()
-						}
-						if (v.hasProperty("getCompileLibraries")) {
-							classpathFiles += v.getCompileLibraries()
-						}
-					}
-				}
-
-				if (proj.android.hasProperty("libraryVariants")) {
-					proj.android.libraryVariants.all { v ->
-						classpathFiles += v.javaCompile.classpath.files
-					}
-				}
-			}
-
-			HashSet<String> computedPaths = new HashSet<String>()
-			for (dependency in classpathFiles) {
-				if (dependency.name.endsWith("jar")) {
-					println dependency
-				} else if (dependency != null) {
-					println getBuildCacheForDependency(dependency)
-				}
-			}
-		}
-	}
-}
