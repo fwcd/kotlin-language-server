@@ -1,3 +1,10 @@
 language: java
-install: ./gradlew install
-script: ./gradlew build -i
+
+services:
+  - docker
+
+script:
+  - ./gradlew build
+  - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
+  - docker build ./ -t donniewest/kotlinlanguageserver:latest
+  - docker push donniewest/kotlinlanguageserver:latest
