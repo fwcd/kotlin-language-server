@@ -66,7 +66,7 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
     return parseGradleCLIDependencies(result)
 }
 
-private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(\\r?\\n)".toRegex(RegexOption.MULTILINE) }
+private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(\r?\n)".toRegex(RegexOption.MULTILINE) }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
     val artifacts = artifactPattern.findAll(output)
