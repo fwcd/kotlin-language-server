@@ -11,14 +11,20 @@ allprojects { project ->
 				}
 				if (project.android.hasProperty('applicationVariants')) {
 					project.android.applicationVariants.all { variant ->
+
+						def buildClasses = project.getBuildDir().absolutePath +
+															 File.separator + "intermediates" +
+															 File.separator + "classes" + 
+															 File.separator + variant.baseName.replaceAll("-", File.separator) 
+
+						System.out.println "kotlin-lsp-gradle $buildClasses"
+
 						variant.getCompileClasspath().each {
 							System.out.println "kotlin-lsp-gradle $it"
 						}
 					}
 				}
 
-				def buildClasses = project.getBuildDir().absolutePath + File.separator + "intermediates" + File.separator + "classes" + File.separator + "debug"
-				System.out.println "kotlin-lsp-gradle $buildClasses"
 			} else {
 				// Print the list of all dependencies jar files.
 				project.configurations.findAll {
