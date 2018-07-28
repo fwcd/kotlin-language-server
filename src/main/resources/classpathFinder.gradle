@@ -12,12 +12,22 @@ allprojects { project ->
 				if (project.android.hasProperty('applicationVariants')) {
 					project.android.applicationVariants.all { variant ->
 
-						def buildClasses = project.getBuildDir().absolutePath
-							+ File.separator + "intermediates"
-							+ File.separator + "classes"
-							+ File.separator + variant.baseName.replaceAll("-", File.separator) 
+						def variantBase = variant.baseName.replaceAll("-", File.separator)
+
+						def buildClasses = project.getBuildDir().absolutePath +
+							File.separator + "intermediates" +
+							File.separator + "classes" +
+							File.separator + variantBase
 
 						System.out.println "kotlin-lsp-gradle $buildClasses"
+
+						def userClasses = project.getBuildDir().absolutePath +
+							File.separator + "intermediates" +
+							File.separator + "javac" +
+							File.separator + variant.baseName.replaceAll("-", File.separator) +
+							File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
+
+						System.out.println "kotlin-lsp-gradle $userClasses"
 
 						variant.getCompileClasspath().each {
 							System.out.println "kotlin-lsp-gradle $it"
