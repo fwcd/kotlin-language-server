@@ -29,6 +29,7 @@ class KotlinTextDocumentService(
 ): TextDocumentService {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
+    private var linting = false
 
     fun connect(client: LanguageClient) {
         this.client = client
@@ -186,7 +187,10 @@ class KotlinTextDocumentService(
 
     private fun lintLater(file: Path) {
         lintTodo.add(file)
-        debounceLint.submit(::doLint)
+        if (!linting) {
+            debounceLint.submit(::doLint)
+            linting = true
+        }
     }
 
     private fun lintNow(file: Path) {
@@ -196,10 +200,12 @@ class KotlinTextDocumentService(
 
     private fun doLint() {
         LOG.info("Linting ${describeFiles(lintTodo)}")
+        linting = true
         val files = clearLint()
         val context = sp.compileFiles(files)
         reportDiagnostics(files, context.diagnostics)
         lintCount++
+        linting = false
     }
 
     private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {
