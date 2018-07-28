@@ -18,14 +18,18 @@ fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
     // TODO go to declaration name rather than beginning of javadoc comment
     LOG.info("Found declaration descriptor $target")
     val destination = location(target)
-
-    if (destination != null) {
-        val rawClassURI = destination.uri
-        if (isInsideJar(rawClassURI)) {
-            destination.uri = cachedDecompile(rawClassURI)
-        }
-    }
-
+    
+    // FIXME: Go to definition in decompiled files is temporarily
+    //        disabled until https://github.com/fwcd/KotlinLanguageServer/issues/45
+    //        is resolved.
+    
+    // if (destination != null) {
+    //     val rawClassURI = destination.uri
+    //     if (isInsideJar(rawClassURI)) {
+    //         destination.uri = cachedDecompile(rawClassURI)
+    //     }
+    // }
+    
     return destination
 }
 

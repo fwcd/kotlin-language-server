@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture
 private var threadCount = 0
 
 class Debouncer(private val delay: Duration) {
-    private val workerThread = Executors.newScheduledThreadPool(1) { Thread(it, "debounce-${threadCount++}") }
+    private val workerThread = Executors.newScheduledThreadPool(1) { Thread(it, "debounce${threadCount++}") }
     private var pendingTask = workerThread.submit({})
 
     fun submitImmediately(task: () -> Unit) {

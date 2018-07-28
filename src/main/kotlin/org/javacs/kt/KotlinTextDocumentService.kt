@@ -13,7 +13,7 @@ import org.javacs.kt.references.findReferences
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
-import org.javacs.kt.util.computeAsync
+import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
@@ -23,8 +23,12 @@ import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
-class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: SourcePath) : TextDocumentService {
+class KotlinTextDocumentService(
+    private val sf: SourceFiles,
+    private val sp: SourcePath
+): TextDocumentService {
     private lateinit var client: LanguageClient
+    private val async = AsyncExecutor()
 
     fun connect(client: LanguageClient) {
         this.client = client
@@ -44,7 +48,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         return Pair(compiled, offset)
     }
 
-    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> = computeAsync {
+    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> = async.compute {
         listOf(
             Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
                 params.textDocument.uri,
@@ -53,7 +57,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         )
     }
 
-    override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = computeAsync {
+    override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = async.compute {
         reportTime {
             LOG.info("Hovering at ${position.textDocument.uri} ${position.position.line}:${position.position.character}")
 
@@ -70,7 +74,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams) = computeAsync {
+    override fun definition(position: TextDocumentPositionParams) = async.compute {
         reportTime {
             LOG.info("Go-to-definition at ${describePosition(position)}")
 
@@ -91,7 +95,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun completion(position: CompletionParams) = computeAsync {
+    override fun completion(position: CompletionParams) = async.compute {
         reportTime {
             LOG.info("Completing at ${describePosition(position)}")
 
@@ -108,7 +112,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         TODO("not implemented")
     }
 
-    override fun documentSymbol(params: DocumentSymbolParams) = computeAsync {
+    override fun documentSymbol(params: DocumentSymbolParams) = async.compute {
         LOG.info("Find symbols in ${params.textDocument}")
 
         reportTime {
@@ -127,7 +131,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
 
     override fun didSave(params: DidSaveTextDocumentParams) {}
 
-    override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = computeAsync {
+    override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = async.compute {
         reportTime {
             LOG.info("Signature help at ${describePosition(position)}")
 
@@ -154,7 +158,7 @@ class KotlinTextDocumentService(private val sf: SourceFiles, private val sp: Sou
         lintLater(file)
     }
 
-    override fun references(position: ReferenceParams) = computeAsync {
+    override fun references(position: ReferenceParams) = async.compute {
         val file = Paths.get(URI.create(position.textDocument.uri))
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
