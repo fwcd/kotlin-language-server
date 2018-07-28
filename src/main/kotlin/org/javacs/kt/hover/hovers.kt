@@ -9,7 +9,7 @@ import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.position
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
-    val (ref, target) = file.referenceAtPoint(cursor) ?: return null
+    val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
     val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
@@ -17,4 +17,10 @@ fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
             position(file.content, location.startOffset),
             position(file.content, location.endOffset))
     return Hover(listOf(hover), range)
+}
+
+fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
+    val exprType = file.typeAtPoint(cursor)
+    val hoverText = exprType.toString()
+    return Hover(listOf(Either.forRight(MarkedString("kotlin", hoverText))))
 }

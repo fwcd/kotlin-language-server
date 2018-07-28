@@ -15,7 +15,7 @@
         {
             "label": "Build with Gradle",
             "type": "shell",
-            "command": "gradle build -x test",
+            "command": "gradle installDist",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
