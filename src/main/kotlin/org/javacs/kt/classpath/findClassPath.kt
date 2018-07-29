@@ -19,11 +19,19 @@ import java.util.Comparator
 import java.util.concurrent.TimeUnit
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
-    return workspaceRoots
+    return ensureStdLibInPaths(workspaceRoots
             .flatMap { projectFiles(it) }
             .flatMap { readProjectFile(it) }
             .toSet()
             .ifEmpty { backupClassPath() }
+            .union(workspaceRoots.flatMap { readLibDirectory(it) }))
+}
+
+private fun ensureStdLibInPaths(paths: Collection<Path>): Set<Path> {
+    return when (paths.any { it.toString().contains("kotlin-stdlib") }) {
+        true -> paths.toSet()
+        false -> paths.toSet().union(backupClassPath())
+    }
 }
 
 private fun backupClassPath() =
@@ -45,6 +53,14 @@ private fun readProjectFile(file: Path): Set<Path> {
     } else {
         throw IllegalArgumentException("$file is not a valid project configuration file (pom.xml or build.gradle)")
     }
+}
+
+private fun readLibDirectory(workspaceRoot: Path): Set<Path> {
+    var libsDirectory = workspaceRoot.resolve("libs").toFile()
+    if (libsDirectory.exists() && libsDirectory.isDirectory) {
+        return libsDirectory.listFiles { _, name -> name.endsWith("jar") }.map { it.toPath() }.toSet()
+    }
+    return emptySet()
 }
 
 private fun isMavenBuildFile(file: Path) = file.endsWith("pom.xml")
