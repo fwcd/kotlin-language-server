@@ -25,6 +25,12 @@ description = "Code completions, diagnostics and more for Kotlin"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
+}
+
 kotlin {
 	experimental {
 		coroutines 'enable'
@@ -54,7 +60,6 @@ dependencies {
 	implementation "org.gradle:gradle-tooling-api:4.3"
 	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1"
 
-	implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
 	implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
 	kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
 

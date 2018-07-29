@@ -32,10 +32,11 @@ class CompiledFile(
         return typeOfExpression(surroundingExpr, scope)
     }
 
-    fun typeOfExpression(expression: KtExpression, scopeWithImports: LexicalScope): KotlinType? {
-        val (context, _) = classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath)
-        return context.getType(expression)
-    }
+    fun typeOfExpression(expression: KtExpression, scopeWithImports: LexicalScope): KotlinType? =
+            bindingContextOf(expression, scopeWithImports).getType(expression)
+    
+    fun bindingContextOf(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext =
+            classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath).first
 
     private fun expandForType(cursor: Int, surroundingExpr: KtExpression): KtExpression {
         val dotParent = surroundingExpr.parent as? KtDotQualifiedExpression
@@ -45,11 +46,16 @@ class CompiledFile(
         else return surroundingExpr
     }
 
-    fun referenceAtPoint(cursor: Int): Pair<KtReferenceExpression, DeclarationDescriptor>? {
+    fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
         var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
-        val (context, _) = classPath.compiler.compileExpression(surroundingExpr, scope, sourcePath)
+        val context = bindingContextOf(surroundingExpr, scope)
+        LOG.info("Hovering $surroundingExpr")
+        return referenceFromContext(cursor, context)
+    }
+    
+    private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
         return targets.asSequence()
                 .filter { cursor in it.key.textRange }

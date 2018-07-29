@@ -142,7 +142,6 @@ class Compiler(classPath: Set<Path>) {
     }
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
-        LOG.info("Compiling ${expression.text}")
         try {
             val (container, trace) = createContainer(sourcePath)
             val incrementalCompiler = container.get<ExpressionTypingServices>()
