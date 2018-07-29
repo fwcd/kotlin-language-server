@@ -19,11 +19,19 @@ import java.util.Comparator
 import java.util.concurrent.TimeUnit
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
-    return workspaceRoots
+    return ensureStdlibInPaths(
+        workspaceRoots
             .flatMap { projectFiles(it) }
             .flatMap { readProjectFile(it) }
             .toSet()
-            .ifEmpty { backupClassPath() }
+    ).ifEmpty(::backupClassPath)
+}
+
+private fun ensureStdlibInPaths(paths: Set<Path>): Set<Path> {
+    // Ensure that there is exactly one kotlin-stdlib present
+    val isStdlib: ((Path) -> Boolean) = { it.toString().contains("kotlin-stdlib") }
+    val stdlib = paths.firstOrNull(isStdlib) ?: findKotlinStdlib()
+    return paths.filterNot(isStdlib).union(listOf(stdlib).filterNotNull())
 }
 
 private fun backupClassPath() =
