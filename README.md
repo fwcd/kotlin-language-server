@@ -23,7 +23,7 @@ The project uses the internal APIs of the [Kotlin compiler](https://github.com/J
 
 Dependencies are determined by the [findClassPath](src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or Gradle and tells it to output a list of dependencies. Currently, both Maven and Gradle projects are supported.
 
-I get incremental compilation at the file-level by keeping the same `KotlinCoreEnvironment` alive between compilations in [Compiler.kt](src/main/kotlin/org/javacs/kt/Compiler.kt). There is a performance benchmark in [OneFilePerformance.java](src/test/java/org/javacs/kt/OneFilePerformance.java) that verifies this works.
+I get incremental compilation at the file-level by keeping the same `KotlinCoreEnvironment` alive between compilations in [Compiler.kt](src/main/kotlin/org/javacs/kt/Compiler.kt). There is a performance benchmark in [OneFilePerformance.kt](src/test/kotlin/org/javacs/kt/OneFilePerformance.kt) that verifies this works.
 
 Getting incremental compilation at the expression level is a bit more complicated:
 - Fully compile a file and store in [CompiledFile](src/main/kotlin/org/javacs/kt/CompiledFile.kt):
