@@ -90,7 +90,9 @@ task copyKotlinLib(type: Copy) {
 }
 
 task fixFilePermissions(type: Exec) {
-	if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+	if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+		commandLine 'echo "Performed build on Windows (thus not requiring additional file permissions)"'
+	} else {
 		// When running on macOS or Linux the start script
 		// needs executable permissions to run.
 		commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
