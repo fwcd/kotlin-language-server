@@ -234,7 +234,7 @@
 			"name": "keyword.soft.kotlin"
 		},
 		"hard-keywords": {
-			"match": "\\b(as|for|typeof|is|in|throw|return|break|continue|if|else|while|do|when|try)\\b",
+			"match": "\\b(as|for|typeof|is|in|throw|return|break|continue|if|else|while|do|when|try|field)\\b",
 			"name": "keyword.hard.kotlin"
 		},
 		"annotation-simple": {
