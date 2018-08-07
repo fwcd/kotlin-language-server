@@ -223,7 +223,7 @@ private fun mvnCommand(): Path {
     return cacheMvnCommand!!
 }
 
-private fun isOSWindows() = (File.separatorChar == '\\')
+fun isOSWindows() = (File.separatorChar == '\\')
 
 private fun doMvnCommand() = findCommandOnPath("mvn")
 

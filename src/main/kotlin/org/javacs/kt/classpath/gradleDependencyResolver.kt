@@ -42,7 +42,8 @@ private fun createTemporaryGradleFile(): File {
 }
 
 private fun getGradleCommand(workspace: Path): Path {
-    val wrapper = workspace.resolve("gradlew").toAbsolutePath()
+    val wrapperName = if (isOSWindows()) "gradlew.bat" else "gradlew"
+    val wrapper = workspace.resolve(wrapperName).toAbsolutePath()
     if (Files.exists(wrapper)) {
         return wrapper
     } else {
@@ -51,7 +52,7 @@ private fun getGradleCommand(workspace: Path): Path {
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.fine("Attempting dependency resolution through CLI...")
+    LOG.info("Attempting dependency resolution through CLI...")
     val config = createTemporaryGradleFile()
     val gradle = getGradleCommand(projectDirectory)
     val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"

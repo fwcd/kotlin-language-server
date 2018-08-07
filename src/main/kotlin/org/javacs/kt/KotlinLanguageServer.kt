@@ -17,7 +17,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     val sourceFiles = SourceFiles(sourcePath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath)
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath)
-
+    
     override fun connect(client: LanguageClient) {
         workspaces.connect(client)
         textDocuments.connect(client)

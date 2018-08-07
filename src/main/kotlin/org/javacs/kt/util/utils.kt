@@ -15,7 +15,6 @@ inline fun<reified Find> PsiElement.findParent() =
 fun execAndReadStdout(shellCommand: String, directory: Path): String {
     val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
     val stdout = process.inputStream
-    process.waitFor()
     var result = ""
     stdout.bufferedReader().use {
         result = it.readText()
