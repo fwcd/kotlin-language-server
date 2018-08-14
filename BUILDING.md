@@ -16,7 +16,7 @@ Contains the commands required to build this project. Note that you might need t
 * With Testing:
     * `./gradlew build`
 * Without Testing:
-    * `./gradlew build -x test`
+    * `./gradlew installDist`
 * Start scripts for the language server are located under `build/install/kotlin-language-server/bin/`
 
 ## Testing the Language Server
