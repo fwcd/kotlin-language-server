@@ -16,9 +16,9 @@ class AsyncExecutor {
 	fun <R> computeOr(defaultValue: R, task: () -> R?) =
 			CompletableFuture.supplyAsync(Supplier {
 				try {
-					task()
+					task() ?: defaultValue
 				} catch (e: Exception) {
-					null
+					defaultValue
 				}
 			}, workerThread)
 }
