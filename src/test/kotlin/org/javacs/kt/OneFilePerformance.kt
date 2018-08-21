@@ -1,41 +1,41 @@
-package org.javacs.kt;
+package org.javacs.kt
 
-import com.intellij.openapi.Disposable;
-import com.intellij.openapi.vfs.StandardFileSystems;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileManager;
-import com.intellij.openapi.vfs.VirtualFileSystem;
-import com.intellij.psi.PsiManager;
-import com.intellij.psi.util.PsiTreeUtil;
-import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace;
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles;
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
-import org.jetbrains.kotlin.config.CommonConfigurationKeys;
-import org.jetbrains.kotlin.config.CompilerConfiguration;
-import org.jetbrains.kotlin.container.ComponentProvider;
-import org.jetbrains.kotlin.container.ValueDescriptor;
-import org.jetbrains.kotlin.descriptors.CallableDescriptor;
-import org.jetbrains.kotlin.load.java.JvmAbi;
-import org.jetbrains.kotlin.psi.KtElement;
-import org.jetbrains.kotlin.psi.KtFile;
-import org.jetbrains.kotlin.psi.KtPsiFactory;
-import org.jetbrains.kotlin.resolve.BindingTraceContext;
-import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer;
-import org.jetbrains.kotlin.resolve.TopDownAnalysisMode;
-import org.jetbrains.kotlin.resolve.calls.callUtil.getParentResolvedCall;
-import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall;
-import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfoFactory;
-import org.junit.Test;
-import org.openjdk.jmh.annotations.Benchmark;
-import org.openjdk.jmh.annotations.Scope;
-import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.runner.Runner;
-import org.openjdk.jmh.runner.RunnerException;
-import org.openjdk.jmh.runner.options.Options;
-import org.openjdk.jmh.runner.options.OptionsBuilder;
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.vfs.StandardFileSystems
+import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFileSystem
+import com.intellij.psi.PsiManager
+import com.intellij.psi.util.PsiTreeUtil
+import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
+import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.container.ValueDescriptor
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
+import org.jetbrains.kotlin.load.java.JvmAbi
+import org.jetbrains.kotlin.psi.KtElement
+import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtPsiFactory
+import org.jetbrains.kotlin.resolve.BindingTraceContext
+import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
+import org.jetbrains.kotlin.resolve.TopDownAnalysisMode
+import org.jetbrains.kotlin.resolve.calls.callUtil.getParentResolvedCall
+import org.jetbrains.kotlin.resolve.calls.model.ResolvedCall
+import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfoFactory
+import org.junit.Test
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.runner.Runner
+import org.openjdk.jmh.runner.RunnerException
+import org.openjdk.jmh.runner.options.Options
+import org.openjdk.jmh.runner.options.OptionsBuilder
 
-import java.lang.reflect.Type;
-import java.net.URL;
+import java.lang.reflect.Type
+import java.net.URL
 
 class OneFilePerformance {
     @State(Scope.Thread)
@@ -76,7 +76,7 @@ class OneFilePerformance {
     
     @Benchmark
     fun recompileBigFile(state: ReusableParts) {
-        val path = listOf(state.bigFile);
+        val path = listOf(state.bigFile)
         state.compile(path, path)
     }
     
