@@ -56,7 +56,7 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
         capabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         if (params.rootUri != null) {
-            LOG.info("Adding workspace ${params.rootUri} to source path")
+            LOG.info("Adding workspace {} to source path", params.rootUri)
 
             val root = Paths.get(URI.create(params.rootUri))
 

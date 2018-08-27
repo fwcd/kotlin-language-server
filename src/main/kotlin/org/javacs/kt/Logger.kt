@@ -75,7 +75,7 @@ class Logger {
         }
     }
     
-    private fun log(msgLevel: LogLevel, msg: String, placeholders: Array<out Any>) {
+    private fun log(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
         if (level <= msgLevel) {
             output(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
         }
@@ -83,17 +83,17 @@ class Logger {
     
     fun error(throwable: Throwable) = throwable.printStackTrace(errStream)
     
-    fun error(msg: String, vararg placeholders: Any) = log(LogLevel.ERROR, msg, placeholders)
+    fun error(msg: String, vararg placeholders: Any?) = log(LogLevel.ERROR, msg, placeholders)
     
-    fun warn(msg: String, vararg placeholders: Any) = log(LogLevel.WARN, msg, placeholders)
+    fun warn(msg: String, vararg placeholders: Any?) = log(LogLevel.WARN, msg, placeholders)
     
-    fun info(msg: String, vararg placeholders: Any) = log(LogLevel.INFO, msg, placeholders)
+    fun info(msg: String, vararg placeholders: Any?) = log(LogLevel.INFO, msg, placeholders)
     
-    fun debug(msg: String, vararg placeholders: Any) = log(LogLevel.DEBUG, msg, placeholders)
+    fun debug(msg: String, vararg placeholders: Any?) = log(LogLevel.DEBUG, msg, placeholders)
     
-    fun trace(msg: String, vararg placeholders: Any) = log(LogLevel.TRACE, msg, placeholders)
+    fun trace(msg: String, vararg placeholders: Any?) = log(LogLevel.TRACE, msg, placeholders)
     
-    fun deepTrace(msg: String, vararg placeholders: Any) = log(LogLevel.DEEP_TRACE, msg, placeholders)
+    fun deepTrace(msg: String, vararg placeholders: Any?) = log(LogLevel.DEEP_TRACE, msg, placeholders)
     
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")
@@ -110,12 +110,12 @@ class Logger {
         flushErrQueue()
     }
     
-    private fun insertPlaceholders(msg: String, placeholders: Array<out Any>): String {
+    private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {
         val msgLength = msg.length
         val lastIndex = msgLength - 1
         var charIndex = 0
         var placeholderIndex = 0
-        var result = ""
+        var result = StringBuilder()
         
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
@@ -124,16 +124,16 @@ class Logger {
                 if (placeholderIndex >= placeholders.size) {
                     return "ERROR: Tried to log more '{}' placeholders than there are values"
                 }
-                result += placeholders[placeholderIndex]
+                result.append(placeholders[placeholderIndex] ?: "null")
                 placeholderIndex += 1
                 charIndex += 2
             } else {
-                result += currentChar
+                result.append(currentChar)
                 charIndex += 1
             }
         }
         
-        return result
+        return result.toString()
     }
     
     private fun flushOutQueue() {

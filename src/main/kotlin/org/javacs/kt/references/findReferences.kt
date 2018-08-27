@@ -35,7 +35,7 @@ private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collectio
     val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
     val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
     val maybes = possibleReferences(declaration, sp).map { it.toPath() }
-    LOG.debug("Scanning ${maybes.size} files for references to ${element.fqName}")
+    LOG.debug("Scanning {} files for references to {}", maybes.size, element.fqName)
     val recompile = sp.compileFiles(maybes)
 
     return when {

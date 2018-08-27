@@ -29,7 +29,7 @@ class KotlinWorkspaceService(
 
     override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> {
         val args = params.arguments
-        LOG.info("Executing command: ${params.command} with ${params.arguments}")
+        LOG.info("Executing command: {} with {}", params.command, params.arguments)
 
         when (params.command) {
             JAVA_TO_KOTLIN_COMMAND -> {
@@ -75,7 +75,7 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-        LOG.info(params.toString())
+        LOG.info("{}", params)
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
@@ -86,7 +86,7 @@ class KotlinWorkspaceService(
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
         for (change in params.event.added) {
-            LOG.info("Adding workspace ${change.uri} to source path")
+            LOG.info("Adding workspace {} to source path", change.uri)
 
             val root = Paths.get(URI.create(change.uri))
 
@@ -94,7 +94,7 @@ class KotlinWorkspaceService(
             cp.addWorkspaceRoot(root)
         }
         for (change in params.event.removed) {
-            LOG.info("Dropping workspace ${change.uri} from source path")
+            LOG.info("Dropping workspace {} from source path", change.uri)
 
             val root = Paths.get(URI.create(change.uri))
 

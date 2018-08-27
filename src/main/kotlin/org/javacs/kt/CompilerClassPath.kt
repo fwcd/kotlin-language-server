@@ -26,7 +26,7 @@ class CompilerClassPath {
     }
 
     fun addWorkspaceRoot(root: Path) {
-        LOG.info("Searching for dependencies in workspace root ${root}")
+        LOG.info("Searching for dependencies in workspace root {}", root)
 
         workspaceRoots.add(root)
 
@@ -34,7 +34,7 @@ class CompilerClassPath {
     }
 
     fun removeWorkspaceRoot(root: Path) {
-        LOG.info("Remove dependencies from workspace root ${root}")
+        LOG.info("Remove dependencies from workspace root {}", root)
 
         workspaceRoots.remove(root)
 
@@ -58,15 +58,15 @@ class CompilerClassPath {
 private fun logAdded(sources: Collection<Path>) {
     when {
         sources.isEmpty() -> return
-        sources.size > 5 -> LOG.info("Adding ${sources.size} files to class path")
-        else -> LOG.info("Adding ${sources.joinToString(", ")} to class path")
+        sources.size > 5 -> LOG.info("Adding {} files to class path", sources.size)
+        else -> LOG.info("Adding {} to class path", sources)
     }
 }
 
 private fun logRemoved(sources: Collection<Path>) {
     when {
         sources.isEmpty() -> return
-        sources.size > 5 -> LOG.info("Removing ${sources.size} files from class path")
-        else -> LOG.info("Removing ${sources.joinToString(", ")} from class path")
+        sources.size > 5 -> LOG.info("Removing {} files from class path", sources.size)
+        else -> LOG.info("Removing {} from class path", sources)
     }
 }

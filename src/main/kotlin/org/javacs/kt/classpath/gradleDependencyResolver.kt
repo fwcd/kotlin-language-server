@@ -30,7 +30,7 @@ private fun createTemporaryGradleFile(): File {
     val config = File.createTempFile("classpath", ".gradle")
     config.deleteOnExit()
     
-    LOG.info("Creating temporary gradle file ${config.absolutePath}")
+    LOG.info("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
         ClassLoader.getSystemResourceAsStream("classpathFinder.gradle").bufferedReader().use { configReader ->
@@ -56,7 +56,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
     val config = createTemporaryGradleFile()
     val gradle = getGradleCommand(projectDirectory)
     val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
-    LOG.debug("  -- executing $cmd")
+    LOG.debug("  -- executing {}", cmd)
     val dependencies = findGradleCLIDependencies(cmd, projectDirectory)
     return dependencies
 }

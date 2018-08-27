@@ -100,10 +100,10 @@ fun location(declaration: DeclarationDescriptor): Location? {
                 return Location(file, Range(Position(0, 0), Position(0, 0)))
             }
             SourceFile.NO_SOURCE_FILE -> Unit // If no source file is present, do nothing
-            else -> LOG.info("Source type of $sourceFile not recognized")
+            else -> LOG.info("Source type of {} not recognized", sourceFile)
         }
     } else {
-        LOG.info("$declaration does not have a source")
+        LOG.info("{} does not have a source", declaration)
     }
 
     return null

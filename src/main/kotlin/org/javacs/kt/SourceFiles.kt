@@ -76,7 +76,7 @@ class SourceFiles(private val sp: SourcePath) {
             var newText = existing.content
 
             if (newVersion <= existing.version) {
-                LOG.warn("Ignored ${file.fileName} version $newVersion")
+                LOG.warn("Ignored {} version {}", file.fileName, newVersion)
                 return
             }
 
@@ -187,11 +187,11 @@ private fun findSourceFiles(root: Path): Set<Path> {
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Adding ${describeFiles(sources)} under $rootPath to source path")
+    LOG.info("Adding {} under $rootPath to source path", describeFiles(sources))
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Removing ${describeFiles(sources)} under $rootPath to source path")
+    LOG.info("Removing {} under $rootPath to source path", describeFiles(sources))
 }
 
 fun describeFiles(files: Collection<Path>): String {

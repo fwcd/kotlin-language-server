@@ -9,7 +9,7 @@ object LoggingMessageCollector: MessageCollector {
 	override fun clear() {}
 
 	override fun report(severity: CompilerMessageSeverity, message: String, location: CompilerMessageLocation?) {
-		LOG.debug("Kotlin compiler: [$severity] $message @ $location")
+		LOG.debug("Kotlin compiler: [{}] {} @ {}", severity, message, location)
 	}
 
 	override fun hasErrors() = false

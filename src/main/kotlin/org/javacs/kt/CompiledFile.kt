@@ -51,7 +51,7 @@ class CompiledFile(
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
-        LOG.info("Hovering $surroundingExpr")
+        LOG.info("Hovering {}", surroundingExpr)
         return referenceFromContext(cursor, context)
     }
     
@@ -86,7 +86,7 @@ class CompiledFile(
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
         val recoveryRange = oldParent.textRange
-        LOG.info("Re-parsing ${describeRange(recoveryRange, true)}")
+        LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
         val surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
         val padOffset = " ".repeat(recoveryRange.startOffset)
         val recompile = classPath.compiler.createFile(padOffset + surroundingContent)

@@ -27,9 +27,9 @@ class FernflowerDecompiler: Decompiler {
 	}
 
 	private fun invokeDecompiler(input: Path, output: Path) {
-		LOG.info("Decompiling ${input.fileName} using Fernflower...")
+		LOG.info("Decompiling {} using Fernflower...", input.fileName)
 		ConsoleDecompiler.main(arrayOf(input.toString(), output.toString()))
-		LOG.info("Finished decompiling ${input.fileName}")
+		LOG.info("Finished decompiling {}", input.fileName)
 	}
 
 	private fun createOutputDirectory(): Path {

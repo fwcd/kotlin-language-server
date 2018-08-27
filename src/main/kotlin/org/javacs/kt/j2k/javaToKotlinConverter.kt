@@ -8,7 +8,7 @@ import org.javacs.kt.util.nonNull
 
 fun convertJavaToKotlin(javaCode: String, compiler: Compiler): String {
 	val project = compiler.environment.project
-	LOG.info("Converting to Kotlin: $javaCode with project ${project}")
+	LOG.info("Converting to Kotlin: {} with project {}", javaCode, project)
 
 	return JavaToKotlinTranslator.generateKotlinCode(
 		nonNull(javaCode, "No Java code has been provided to the J2K-converter"),
