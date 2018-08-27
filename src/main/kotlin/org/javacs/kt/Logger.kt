@@ -32,7 +32,7 @@ private class JULRedirector(private val downstream: Logger): Handler() {
     override fun close() {}
 }
 
-enum class LogLevel(val level: Int) {
+enum class LogLevel(val value: Int) {
     NONE(100),
     ERROR(2),
     WARN(1),
@@ -76,7 +76,7 @@ class Logger {
     }
     
     private fun log(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
-        if (level <= msgLevel) {
+        if (level.value <= msgLevel.value) {
             output(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
         }
     }
