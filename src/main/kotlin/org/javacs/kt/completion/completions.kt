@@ -38,7 +38,7 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
     val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
-    LOG.fine("Looking for names that match '$partial'")
+    LOG.debug("Looking for names that match '$partial'")
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
@@ -114,7 +114,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
             val parent = parentDot.substring(0, parentDot.length - 1)
-            LOG.fine("Looking for members of package '$parent'")
+            LOG.debug("Looking for members of package '$parent'")
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
             parentPackage.memberScope.getContributedDescriptors().asSequence()
         }
@@ -127,7 +127,7 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
                     LOG.info("Completing members of ${referenceTarget.fqNameSafe}")
                     return referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
                 } else {
-                    LOG.warning("No type reference in '${surroundingElement.text}'")
+                    LOG.warn("No type reference in '${surroundingElement.text}'")
                     return emptySequence()
                 }
             } else {
@@ -174,7 +174,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
     if (lexicalScope != null) {
         val receiverType = file.typeOfExpression(receiverExpr, lexicalScope)
         if (receiverType != null) {
-            LOG.fine("Completing members of instance '${receiverType}'")
+            LOG.debug("Completing members of instance '${receiverType}'")
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
             return members + extensions
@@ -183,13 +183,13 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {
-        LOG.fine("Completing static members of '${referenceTarget.fqNameSafe}'")
+        LOG.debug("Completing static members of '${referenceTarget.fqNameSafe}'")
         val statics = referenceTarget.staticScope.getContributedDescriptors().asSequence()
         val classes = referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
         return statics + classes
     }
 
-    LOG.fine("Can't find member scope for ${receiverExpr.text}")
+    LOG.debug("Can't find member scope for ${receiverExpr.text}")
     return emptySequence()
 }
 
@@ -387,7 +387,7 @@ private fun logHidden(target: DeclarationDescriptor, from: DeclarationDescriptor
 }
 
 private fun doLogHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {
-    LOG.fine("Hiding ${describeDeclaration(target)} because it's not visible from ${describeDeclaration(from)}")
+    LOG.debug("Hiding ${describeDeclaration(target)} because it's not visible from ${describeDeclaration(from)}")
 }
 
 private fun describeDeclaration(declaration: DeclarationDescriptor): String {
@@ -398,13 +398,13 @@ private fun describeDeclaration(declaration: DeclarationDescriptor): String {
 }
 
 private fun doesntLookLikeImport(import: KtImportDirective): Sequence<DeclarationDescriptor> {
-    LOG.fine("${import.text} doesn't look like import a.b...")
+    LOG.debug("${import.text} doesn't look like import a.b...")
 
     return emptySequence()
 }
 
 private fun empty(message: String): CompletionList {
-    LOG.fine(message)
+    LOG.debug(message)
 
     return CompletionList(true, emptyList())
 }

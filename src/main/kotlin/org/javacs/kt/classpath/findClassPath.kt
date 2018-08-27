@@ -64,7 +64,7 @@ private fun readPom(pom: Path): Set<Path> {
     val artifacts = mavenOutput?.let(::readMavenDependencyList) ?: throw KotlinLSException("No artifacts could be read from $pom")
 
     when {
-        artifacts.isEmpty() -> LOG.warning("No artifacts found in $pom")
+        artifacts.isEmpty() -> LOG.warn("No artifacts found in $pom")
         artifacts.size < 5 -> LOG.info("Found ${artifacts.joinToString(", ")} in $pom")
         else -> LOG.info("Found ${artifacts.size} artifacts in $pom")
     }
@@ -205,7 +205,7 @@ private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
     if (Files.exists(result))
         return result
     else {
-        LOG.warning("Couldn't find $a in $result")
+        LOG.warn("Couldn't find $a in $result")
         return null
     }
 }

@@ -76,7 +76,7 @@ class SourceFiles(private val sp: SourcePath) {
             var newText = existing.content
 
             if (newVersion <= existing.version) {
-                LOG.warning("Ignored ${file.fileName} version $newVersion")
+                LOG.warn("Ignored ${file.fileName} version $newVersion")
                 return
             }
 
