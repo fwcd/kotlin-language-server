@@ -148,65 +148,11 @@ class Logger {
         }
     }
     
-    private fun format(message: String): String {
-        val now = Instant.now()
-        val time = if (logTime) "$now " else ""
-
+    private fun format(msg: String): String {
+        val time = if (logTime) "${Instant.now()} " else ""
         var thread = Thread.currentThread().name
-        val prefix = time
 
-        return multiLineFormat(
-            2, // padding between columns
-            FormatValue(prefix),
-            FormatValue(shortenOrPad(thread, 10)),
-            FormatValue(message)
-        )
-    }
-
-    data class FormatValue(val str: String, val charsPerLine: Int = str.length)
-
-    private fun multiLineFormat(padding: Int, vararg values: FormatValue): String {
-        val splittedValues = values.map { createLineBreaks(it.str, it.charsPerLine) }
-        return mergeSplittedLines(splittedValues, padding)
-    }
-
-    private fun mergeSplittedLines(splittedValues: List<List<String>>, padding: Int): String {
-        var charOffset = 0
-        val lines = mutableListOf<String>()
-        for (splittedValue in splittedValues) {
-            var lineIndex = 0
-            var maxOffset = 0
-            for (valueLine in splittedValue) {
-                while (lineIndex >= lines.size) lines.add("")
-
-                lines[lineIndex] = lines[lineIndex].padEnd(charOffset, ' ') + valueLine
-
-                maxOffset = Math.max(maxOffset, valueLine.length)
-                lineIndex++
-            }
-            charOffset += maxOffset + padding
-        }
-        return lines.reduce { prev, current -> prev + newline + current } + newline
-    }
-
-    private fun createLineBreaks(str: String, maxLength: Int): List<String> {
-        var current = ""
-        var lines = mutableListOf<String>()
-        var i = maxLength
-        for (character in str) {
-            val isNewline = character == '\n'
-            if (i == 0 || isNewline) {
-                lines.add(current.trim())
-                current = ""
-                i = maxLength
-            }
-            if (!isNewline) {
-                current += character
-            }
-            i--
-        }
-        if (current.length > 0) lines.add(current.trim().padEnd(maxLength, ' '))
-        return lines
+        return time + shortenOrPad(thread, 10) + msg
     }
 
     private fun shortenOrPad(str: String, length: Int): String =
