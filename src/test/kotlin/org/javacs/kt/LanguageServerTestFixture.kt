@@ -82,21 +82,20 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String): Languag
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {
-        LOG.info(request.toString())
-
+        println(request.toString())
         return null
     }
 
     override fun telemetryEvent(`object`: Any?) {
-        LOG.info(`object`.toString())
+        println(`object`.toString())
     }
 
     override fun logMessage(message: MessageParams?) {
-        LOG.info(message.toString())
+        println(message.toString())
     }
 
     override fun showMessage(message: MessageParams?) {
-        LOG.info(message.toString())
+        println(message.toString())
     }
 }
 
