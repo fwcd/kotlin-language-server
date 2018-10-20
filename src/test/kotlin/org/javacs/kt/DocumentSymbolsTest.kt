@@ -19,8 +19,8 @@ class DocumentSymbolsTest: LanguageServerTestFixture("symbols") {
     @Test fun `find document symbols`() {
         val fileId = TextDocumentIdentifier(uri(file).toString())
         val found = languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(fileId)).get()
-        val byKind = found.groupBy({ it.kind }, { it.name })
-        val all = found.map { it.name }.toList()
+        val byKind = found.groupBy({ it.left.kind }, { it.left.name })
+        val all = found.map { it.left.name }.toList()
 
         assertThat(byKind[SymbolKind.Class], hasItem("DocumentSymbols"))
         assertThat(byKind[SymbolKind.Constructor], hasItem("DocumentSymbols"))
