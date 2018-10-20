@@ -11,14 +11,18 @@ import { LOG } from './logger';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
     LOG.info('Activating Kotlin language server...');
+    let barItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+    context.subscriptions.push(barItem);
+    barItem.text = '$(sync) Activating Kotlin language server...';
+    barItem.show();
 
     let javaExecutablePath = findJavaExecutable('java');
 
     if (javaExecutablePath == null) {
         vscode.window.showErrorMessage("Couldn't locate java in $JAVA_HOME or $PATH");
-
+        barItem.dispose();
         return;
     }
 
@@ -48,7 +52,7 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Ensure that start script can be executed
     if (isOSUnixoid()) {
-        child_process.exec("chmod +x " + startScriptPath)
+        child_process.exec("chmod +x " + startScriptPath);
     }
     
     // Start the child java process
@@ -64,14 +68,16 @@ export function activate(context: vscode.ExtensionContext) {
     let languageClient = new LanguageClient('kotlin', 'Kotlin Language Server', serverOptions, clientOptions);
     let languageClientDisposable = languageClient.start();
 
+
+    await languageClient.onReady();
     // Push the disposable to the context's subscriptions so that the
     // client can be deactivated on extension deactivation
     context.subscriptions.push(languageClientDisposable);
+    barItem.dispose();
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {
-}
+export function deactivate() {}
 
 function findJavaExecutable(rawBinname: string) {
 	let binname = correctBinname(rawBinname);
@@ -119,17 +125,11 @@ function findJavaExecutable(rawBinname: string) {
 }
 
 function correctBinname(binname: string) {
-	if (process.platform === 'win32')
-		return binname + '.exe';
-	else
-		return binname;
+    return binname + process.platform === 'win32' ? '.exe' : '';
 }
 
 function correctScriptName(binname: string) {
-	if (process.platform === 'win32')
-		return binname + '.bat';
-	else
-		return binname;
+    return binname + process.platform === 'win32' ? '.bat' : '';
 }
 
 function findJavaExecutableInJavaHome(javaHome: string, binname: string) {
