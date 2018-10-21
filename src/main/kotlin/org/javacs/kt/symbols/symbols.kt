@@ -4,6 +4,8 @@ import com.intellij.psi.PsiElement
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.SymbolInformation
 import org.eclipse.lsp4j.SymbolKind
+import org.eclipse.lsp4j.DocumentSymbol
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.SourcePath
 import org.javacs.kt.completion.containsCharactersInOrder
 import org.javacs.kt.position.range
@@ -12,8 +14,8 @@ import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
-fun documentSymbols(file: KtFile): List<SymbolInformation> =
-    doDocumentSymbols(file).mapNotNull(::symbolInformation).toList()
+fun documentSymbols(file: KtFile): List<Either<SymbolInformation, DocumentSymbol>> =
+        doDocumentSymbols(file).mapNotNull(::symbolInformation).toList().map { Either.forLeft<SymbolInformation, DocumentSymbol>(it) }
 
 private fun doDocumentSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
         file.preOrderTraversal().mapNotNull { pickImportantElements(it, true) }
@@ -31,7 +33,7 @@ private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
         sp.all().asSequence().flatMap(::fileSymbols)
 
 private fun fileSymbols(file: KtFile): Sequence<KtNamedDeclaration> =
-    file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
+        file.preOrderTraversal().mapNotNull { pickImportantElements(it, false) }
 
 private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtNamedDeclaration? =
         when (node) {

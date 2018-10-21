@@ -49,12 +49,14 @@ class KotlinTextDocumentService(
         return Pair(compiled, offset)
     }
 
-    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Command>> = async.compute {
+    override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
         listOf(
-            Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
-                params.textDocument.uri,
-                params.range
-            ))
+            Either.forLeft<Command, CodeAction>(
+                Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
+                    params.textDocument.uri,
+                    params.range
+                ))
+            )
         )
     }
 
@@ -113,7 +115,7 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun documentSymbol(params: DocumentSymbolParams) = async.compute {
+    override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> = async.compute {
         LOG.info("Find symbols in {}", params.textDocument)
 
         reportTime {
