@@ -125,11 +125,11 @@ function findJavaExecutable(rawBinname: string) {
 }
 
 function correctBinname(binname: string) {
-    return binname + process.platform === 'win32' ? '.exe' : '';
+    return binname + ((process.platform === 'win32') ? '.exe' : '');
 }
 
 function correctScriptName(binname: string) {
-    return binname + process.platform === 'win32' ? '.bat' : '';
+    return binname + ((process.platform === 'win32') ? '.bat' : '');
 }
 
 function findJavaExecutableInJavaHome(javaHome: string, binname: string) {
