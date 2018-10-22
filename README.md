@@ -4,6 +4,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 [![Version](https://vsmarketplacebadge.apphb.com/version-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
+[![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
 
 ![Icon](Icon128.png)
 
