@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.MarkedString
 import com.intellij.openapi.util.TextRange
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
@@ -9,6 +10,8 @@ import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc
+import org.jetbrains.kotlin.kdoc.psi.impl.KDocImpl
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
@@ -46,22 +49,37 @@ class CompiledFile(
         else return surroundingExpr
     }
 
-    fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
+    fun referenceAtPoint(cursor: Int): Triple<KtExpression, DeclarationDescriptor, String>? {
         var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
-        return referenceFromContext(cursor, context)
+        val (first, second, third) = referenceFromContext(cursor, context) ?: return null
+        return Triple(first, second, third)
     }
     
-    private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
+    private fun referenceFromContext(cursor: Int, context: BindingContext): Triple<KtExpression, DeclarationDescriptor, String>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
-        return targets.asSequence()
+        val pair = targets.asSequence()
                 .filter { cursor in it.key.textRange }
                 .sortedBy { it.key.textRange.length }
                 .map { it.toPair() }
                 .firstOrNull()
+        if(pair != null) {
+            var javaDoc: String = ""
+            
+            /* LOG.warn("{}", pair.first.children.size)
+            if(pair.first.children.size > 0) {
+                LOG.warn("Classes: {}", pair.first.children.map({ it.javaClass.kotlin }).joinToString())
+                if(pair.first.children[0] is KDoc) {
+                    javaDoc = (pair.first.children[0] as KDoc).text
+                    LOG.warn("Text: {}", (pair.first.children[0] as KDoc).text)
+                }
+            } */
+            return Triple(pair.first, pair.second, javaDoc)
+        }
+        return null
     }
 
     private fun expandForReference(cursor: Int, surroundingExpr: KtExpression): KtExpression {
