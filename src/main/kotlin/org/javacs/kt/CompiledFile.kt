@@ -1,7 +1,6 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
-import org.eclipse.lsp4j.MarkedString
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
@@ -10,8 +9,6 @@ import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.psi.*
-import org.jetbrains.kotlin.kdoc.psi.api.KDoc
-import org.jetbrains.kotlin.kdoc.psi.impl.KDocImpl
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
