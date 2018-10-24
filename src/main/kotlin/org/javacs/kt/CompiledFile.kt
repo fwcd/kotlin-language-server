@@ -1,7 +1,7 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.MarkedString
 import com.intellij.openapi.util.TextRange
+import org.eclipse.lsp4j.MarkedString
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
@@ -55,7 +55,7 @@ class CompiledFile(
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
-        return referenceFromContext(cursor, context) ?: return null
+        return referenceFromContext(cursor, context)
     }
     
     private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
