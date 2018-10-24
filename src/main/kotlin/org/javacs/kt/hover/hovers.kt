@@ -28,25 +28,27 @@ import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.calls.callUtil.getType
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowValueFactory
 import org.jetbrains.kotlin.resolve.lazy.BodyResolveMode
+import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
-import org.jetbrains.kotlin.kdoc.psi.api.KDoc
+import org.javacs.kt.signaturehelp.getDocString
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
-    val (ref, target, javadoc) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
+    val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
+    val javaDoc = getDocString(file, cursor)
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
     val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
     val range = Range(
             position(file.content, location.startOffset),
             position(file.content, location.endOffset))
-    return Hover(listOf(hover, Either.forLeft<String, MarkedString>(javadoc)), range)
+    return Hover(listOf(hover, Either.forLeft(javaDoc)), range)
 }
 
 private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
-    val expression: KtExpression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
+    val expression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
     var javaDoc: String = ""
     if (expression.children.size > 0 && expression.children[0] is KDoc)
         javaDoc = renderJavaDoc(expression.children[0].text)

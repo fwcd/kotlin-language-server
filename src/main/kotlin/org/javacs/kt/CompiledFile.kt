@@ -49,37 +49,22 @@ class CompiledFile(
         else return surroundingExpr
     }
 
-    fun referenceAtPoint(cursor: Int): Triple<KtExpression, DeclarationDescriptor, String>? {
+    fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
         var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
-        val (first, second, third) = referenceFromContext(cursor, context) ?: return null
-        return Triple(first, second, third)
+        return referenceFromContext(cursor, context) ?: return null
     }
     
-    private fun referenceFromContext(cursor: Int, context: BindingContext): Triple<KtExpression, DeclarationDescriptor, String>? {
+    private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
-        val pair = targets.asSequence()
+        return targets.asSequence()
                 .filter { cursor in it.key.textRange }
                 .sortedBy { it.key.textRange.length }
                 .map { it.toPair() }
                 .firstOrNull()
-        if(pair != null) {
-            var javaDoc: String = ""
-            
-            /* LOG.warn("{}", pair.first.children.size)
-            if(pair.first.children.size > 0) {
-                LOG.warn("Classes: {}", pair.first.children.map({ it.javaClass.kotlin }).joinToString())
-                if(pair.first.children[0] is KDoc) {
-                    javaDoc = (pair.first.children[0] as KDoc).text
-                    LOG.warn("Text: {}", (pair.first.children[0] as KDoc).text)
-                }
-            } */
-            return Triple(pair.first, pair.second, javaDoc)
-        }
-        return null
     }
 
     private fun expandForReference(cursor: Int, surroundingExpr: KtExpression): KtExpression {

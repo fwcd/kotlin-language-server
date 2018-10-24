@@ -2,7 +2,9 @@ package org.javacs.kt.signaturehelp
 
 import org.eclipse.lsp4j.ParameterInformation
 import org.eclipse.lsp4j.SignatureHelp
+import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.SignatureInformation
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.completion.identifierOverloads
@@ -19,13 +21,26 @@ import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 
 fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
-    val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return nullResult("No call around ${file.describePosition(cursor)}")
+    val (signatures, activeDeclaration, activeParameter) = getSignatures(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
+    return SignatureHelp(signatures, activeDeclaration, activeParameter)
+}
+
+fun getDocString(file: CompiledFile, cursor: Int): String {
+    val signatures = getSignatures(file, cursor)
+    if (signatures == null || signatures.first.size == 0 || signatures.first[0].documentation == null) 
+        return ""
+    return if (signatures.first[0].documentation.isLeft()) signatures.first[0].documentation.left else ""
+}
+
+// TODO better function name?
+private fun getSignatures(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int, Int>? {
+    val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return null
     val candidates = candidates(call, file)
     val activeDeclaration = activeDeclaration(call, candidates)
     val activeParameter = activeParameter(call, cursor)
     val signatures = candidates.map(::toSignature)
 
-    return SignatureHelp(signatures, activeDeclaration, activeParameter)
+    return Triple(signatures, activeDeclaration, activeParameter)
 }
 
 private fun toSignature(desc: CallableDescriptor): SignatureInformation {
