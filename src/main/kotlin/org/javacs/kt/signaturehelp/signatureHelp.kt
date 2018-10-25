@@ -107,7 +107,9 @@ private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescript
 private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
     val args = call.valueArgumentList ?: return -1
     val text = args.text
-    val beforeCursor = text.subSequence(0, cursor - args.textRange.startOffset)
+    if (text.length == 2)
+        return 0
+    val beforeCursor = text.subSequence(0, args.textRange.startOffset - cursor)
 
     return beforeCursor.count { it == ','}
 }
