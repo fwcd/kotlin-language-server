@@ -109,7 +109,7 @@ private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
     val text = args.text
     if (text.length == 2)
         return 0
-    val beforeCursor = text.subSequence(0, args.textRange.startOffset - cursor)
+    val beforeCursor = text.subSequence(0, Math.max(args.textRange.startOffset, cursor) - Math.min(args.textRange.startOffset, cursor))
 
     return beforeCursor.count { it == ','}
 }
