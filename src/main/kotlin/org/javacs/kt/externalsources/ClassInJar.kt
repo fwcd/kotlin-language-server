@@ -16,7 +16,7 @@ fun parseUriAsClassInJar(uri: String): ClassInJar {
 	val jarPath = Paths.get(URI.create(jarUri))
 	val relativeClassPath = Paths.get(splitUri[1].trimLeadingPathSeparator())
 
-    val relativeJavaPath = Paths.get((splitUri[1].split(".class")[0] + ".java").trimLeadingPathSeparator())
+	val relativeJavaPath = Paths.get((splitUri[1].split(".class")[0] + ".java").trimLeadingPathSeparator())
 
 	return ClassInJar(jarPath, relativeClassPath, relativeJavaPath)
 }
@@ -24,53 +24,53 @@ fun parseUriAsClassInJar(uri: String): ClassInJar {
 class ClassInJar(
 	val jarPath: Path,
 	val relativeClassPath: Path,
-    val relativeJavaPath: Path
+	val relativeJavaPath: Path
 ) {
 	val className: String
 	private val classExtension: String
 
-    val javaName: String
-    private val javaExtension: String
+	val javaName: String
+	private val javaExtension: String
 
 	init {
 		var parsedName = relativeClassPath.fileName.parseName()
 		className = parsedName.name
 		classExtension = parsedName.extension
 
-        parsedName = relativeJavaPath.fileName.parseName()
+		parsedName = relativeJavaPath.fileName.parseName()
 		javaName = parsedName.name
 		javaExtension = parsedName.extension
 	}
 
 	fun toSourceClass(provider: SourceJarProvider): ClassInJar {
 		val sourceJarPath = provider.fetchSourceJar(jarPath)
-        // Need to decided what to pass in for 3rd param
+		// Need to decided what to pass in for 3rd param
 		return ClassInJar(sourceJarPath, relativeClassPath.replaceExtensionWith(".java"), relativeClassPath.replaceExtensionWith(".java"))
 	}
 
-    fun decompile(decompiler: Decompiler) = extractJava() ?: decompiler.decompileClass(extractClass())
+	fun decompile(decompiler: Decompiler) = extractJava() ?: decompiler.decompileClass(extractClass())
 
-    fun extractJava(): Path? {
-        return JarFile(jarPath.toFile()).use { jarFile ->
+	fun extractJava(): Path? {
+		return JarFile(jarPath.toFile()).use { jarFile ->
 			val jarEntry = jarFile.entries().asSequence()
 					.filter { Paths.get(it.name).equals(relativeJavaPath) }
 					.firstOrNull()
 
 			if (jarEntry == null) {
-                LOG.warn("Could not find $javaName")
-                return null
+				LOG.warn("Could not find $javaName")
+				return null
 			}
 
-            val tmpDir = System.getProperty("java.io.tmpdir")
+			val tmpDir = System.getProperty("java.io.tmpdir")
 
-            File("$tmpDir/${relativeJavaPath.parseDirectories()}/").mkdirs()
-            val tmpFile = File("$tmpDir/${relativeJavaPath.parseDirectories()}/$javaName$javaExtension")
-            tmpFile.createNewFile()
+			File("$tmpDir/${relativeJavaPath.parseDirectories()}/").mkdirs()
+			val tmpFile = File("$tmpDir/${relativeJavaPath.parseDirectories()}/$javaName$javaExtension")
+			tmpFile.createNewFile()
 			tmpFile.deleteOnExit() // Make sure the extracted file is deleted upon exit
 			tmpFile.outputStream().use { jarFile.getInputStream(jarEntry).copyTo(it) }
 			Paths.get(tmpFile.absolutePath)
 		}
-    }
+	}
 
 	fun extractClass(): Path {
 		return JarFile(jarPath.toFile()).use { jarFile ->
@@ -94,14 +94,14 @@ class ClassInJar(
 private data class FileName(val name: String, val extension: String)
 
 private fun String.trimLeadingPathSeparator(): String {
-    val firstChar = this[0]
-    return if (firstChar == '/' || firstChar == '\\') substring(1) else this
+	val firstChar = this[0]
+	return if (firstChar == '/' || firstChar == '\\') substring(1) else this
 }
 
 private fun Path.parseDirectories(): String {
-    val pathStr = toString()
-    val slashPos = pathStr.lastIndexOf("/")
-    return pathStr.substring(0, slashPos)
+	val pathStr = toString()
+	val slashPos = pathStr.lastIndexOf("/")
+	return pathStr.substring(0, slashPos)
 }
 
 private fun Path.parseName(): FileName {
