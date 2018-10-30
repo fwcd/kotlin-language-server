@@ -4,6 +4,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import org.javacs.kt.LOG
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
+import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -20,6 +21,13 @@ fun execAndReadStdout(shellCommand: String, directory: Path): String {
         result = it.readText()
     }
     return result
+}
+
+inline fun withCustomStdout(delegateOut: PrintStream, task: () -> Unit) {
+    val actualOut = System.out
+    System.setOut(delegateOut)
+    task()
+    System.setOut(actualOut)
 }
 
 fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
