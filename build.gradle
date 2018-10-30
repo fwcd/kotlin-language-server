@@ -25,6 +25,9 @@ description = "Code completions, diagnostics and more for Kotlin"
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+def debugPort = 8000
+def debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
+
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 	kotlinOptions {
 		jvmTarget = "1.8"
@@ -108,9 +111,25 @@ task debug(type: JavaExec) {
 	classpath sourceSets.main.runtimeClasspath
 	standardInput = System.in
 	
-	def port = 8000
-	println "Launching debuggee on port $port"
-	jvmArgs "-agentlib:jdwp=transport=dt_socket,address=$port,server=y,suspend=n"
+	println "Launching debuggee on debugPort $debugPort"
+	jvmArgs debugArgs
+}
+
+task debugStartScripts(type: CreateStartScripts) {
+	applicationName = startScripts.applicationName
+	mainClassName = startScripts.mainClassName
+	outputDir = installDist.destinationDir.toPath().resolve('bin').toFile()
+	classpath = startScripts.classpath
+	defaultJvmOpts = [debugArgs]
+}
+
+task installDebugDist(type: Sync) {
+	dependsOn installDist
+	finalizedBy debugStartScripts
+}
+
+applicationDistribution.into('bin') {
+	fileMode = 0755
 }
 
 compileKotlin.dependsOn copyKotlinLib

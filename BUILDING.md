@@ -1,31 +1,42 @@
 # Building
-Contains the commands required to build this project. Note that you might need to use `gradlew` instead of `./gradlew` when running on `cmd.exe`.
+Describes how to build and run this project. Note that you might need to use `gradlew` instead of `./gradlew` on Windows.
 
-## Setting up the development environment
-* Java should be installed and located under JAVA_HOME or PATH
+## Setup
+* Java 8+ should be installed and located under JAVA_HOME or PATH
 
-### For language server development
-* `./gradlew install`
+### ...for language server development
+* `./gradlew build`
 
-### For extension development
-* VSCode is required
+### ...for extension development
+* [VSCode](https://code.visualstudio.com) is required
 * `npm install`
 * `npm install -g vsce`
 
-## Building the Language Server
-* With Testing:
-    * `./gradlew build`
-* Without Testing:
-    * `./gradlew installDist`
+## Language Server
+
+| Task | Command | Description |
+| ---- | ------- | ----------- |
+| Packaging | `./gradlew installDist` | Packages the language server as a bundle of JAR files (e.g. for use with the VSCode extension) |
+| Debug Packaging | `./gradlew installDebugDist` | Packages the language server with a debug launch configuration |
+| Testing | `./gradlew test` | Executes all unit tests |
+| Running | `./gradlew run` | Runs the standalone language server from the command line |
+| Debugging | `./gradlew debug` | Launches the standalone language server from the command line using a debug configuration |
+| Building | `./gradlew build` | Builds, tests and packages the language server |
+
+### Launching the packaged language server
 * Start scripts for the language server are located under `build/install/kotlin-language-server/bin/`
 
-## Testing the Language Server
-* `./gradlew test`
+### Debugging
+* Attach to the running language server on `localhost:8000`
+    * Note that this can be done using the `Attach Kotlin Language Server` launch configuration in VSCode (requires the [Java Debug Extension](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug))
 
-## Running/Debugging the VSCode extension
+## VSCode Extension
+
+### Running/Debugging
+* Package the language server using `./gradlew installDist`
 * Open the debug tab in VSCode
 * Run the `Extension` launch configuration
 
-## Packaging the VSCode extension
+### Packaging
 * `vsce package -o build.vsix`
 * The extension is located as `build.vsix` in the repository folder
