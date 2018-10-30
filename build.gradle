@@ -84,6 +84,10 @@ test {
 	}
 }
 
+run {
+	standardInput = System.in
+}
+
 task copyKotlinLib(type: Copy) {
 	from configurations.kotlinJVMLib
 	into "$projectDir/lib-kotlin"
@@ -97,6 +101,16 @@ task fixFilePermissions(type: Exec) {
 		// needs executable permissions to run.
 		commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
 	}
+}
+
+task debug(type: JavaExec) {
+	main = mainClassName
+	classpath sourceSets.main.runtimeClasspath
+	standardInput = System.in
+	
+	def port = 8000
+	println "Launching debuggee on port $port"
+	jvmArgs "-agentlib:jdwp=transport=dt_socket,address=$port,server=y,suspend=n"
 }
 
 compileKotlin.dependsOn copyKotlinLib
