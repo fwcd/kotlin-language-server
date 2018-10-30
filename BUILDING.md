@@ -27,7 +27,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 * Start scripts for the language server are located under `build/install/kotlin-language-server/bin/`
 
 ### Debugging
-* Attach to the running language server on `localhost:8000`
+* Attach the running language server on `localhost:8000`
     * Note that this can be done using the `Attach Kotlin Language Server` launch configuration in VSCode (requires the [Java Debug Extension](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug))
 
 ## VSCode Extension
