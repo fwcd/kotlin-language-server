@@ -33,7 +33,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 ## VSCode Extension
 
 ### Running/Debugging
-* Package the language server using `./gradlew installDist`
+* Package the language server using `./gradlew installDist` (or `./gradlew installDebugDist` for debugging)
 * Open the debug tab in VSCode
 * Run the `Extension` launch configuration
 
