@@ -12,7 +12,7 @@
     "publisher": "fwcd",
     "license": "MIT",
     "engines": {
-        "vscode": "^1.21.0"
+        "vscode": "^1.28.1"
     },
     "categories": [
         "Programming Languages"
@@ -74,6 +74,6 @@
         "@types/mocha": "^5.2.3"
     },
     "dependencies": {
-        "vscode-languageclient": "^4.2.1"
+        "vscode-languageclient": "^5.1.1"
     }
 }
