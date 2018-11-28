@@ -1,17 +1,31 @@
 .vscode/**
 .idea/**
 .vscode-test/**
-tsconfig.json
-tslint.json
+.gradle/**
+.settings/**
+.gitignore
+.travis.yml
 *.iml
-pom.xml
+
+src/**
+
+lib/**
+lib-kotlin/**
+gradle/**
 
 out/test/**
 out/**/*.map
 build/**
 !build/install/**
 
-src/**
-lib/**
+tsconfig.json
+tslint.json
 
-.gitignore
+.classpath
+.project
+build.gradle
+gradle.properties
+gradlew
+gradlew.bat
+TODO.md
+pom.xml
