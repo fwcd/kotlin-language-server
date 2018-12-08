@@ -221,6 +221,9 @@
 				},
 				{
 					"include": "#hard-keywords"
+				},
+				{
+					"include": "#control-keywords"
 				}
 			]
 		},
@@ -237,8 +240,12 @@
 			"name": "keyword.soft.kotlin"
 		},
 		"hard-keywords": {
-			"match": "\\b(as|for|typeof|is|in|throw|return|break|continue|if|else|while|do|when|try)\\b",
+			"match": "\\b(as|typeof|is|in)\\b",
 			"name": "keyword.hard.kotlin"
+		},
+		"control-keywords": {
+			"match": "\\b(if|else|while|do|when|try|throw|break|continue|return|for)\\b",
+			"name": "keyword.control.kotlin"
 		},
 		"annotation-simple": {
 			"match": "(?<!\\w)@[\\w\\.]+\\b(?!:)",
