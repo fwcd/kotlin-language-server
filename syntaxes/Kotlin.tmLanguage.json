@@ -28,6 +28,9 @@
 					"include": "#comments"
 				},
 				{
+					"include": "#hard-keywords"
+				},
+				{
 					"match": "\\*",
 					"name": "variable.language.wildcard.kotlin"
 				}
