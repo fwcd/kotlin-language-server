@@ -3,6 +3,14 @@ All notable changes to the "kotlin" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.11]
+- Improved keyword syntax highlighting
+
+## [0.1.10]
+- More compact distribution
+- Security fixes
+- Fixed decompiler
+
 ## [0.1.6]
 - Bugfixes related to Gradle dependency resolution in combination with Android projects
 
