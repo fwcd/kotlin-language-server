@@ -15,8 +15,8 @@ class KotlinLanguageServer: LanguageServer, LanguageClientAware {
     val classPath = CompilerClassPath()
     val sourcePath = SourcePath(classPath)
     val sourceFiles = SourceFiles(sourcePath)
-    private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath)
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath)
+    private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments)
     
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)

@@ -8,17 +8,20 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.javacs.kt.symbols.workspaceSymbols
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.j2k.convertJavaToKotlin
+import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import com.google.gson.JsonElement
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 
 class KotlinWorkspaceService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
-    private val cp: CompilerClassPath
+    private val cp: CompilerClassPath,
+    private val docService: KotlinTextDocumentService
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
@@ -75,7 +78,10 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-        LOG.info("{}", params)
+        val settings = params.settings as JsonObject
+        Config.debounceTime = settings.get("kotlin").asJsonObject.get("debounceTime").asLong
+        docService.updateDebouncer()
+        LOG.info("configurations updated {}", settings)
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {

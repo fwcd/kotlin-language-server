@@ -57,7 +57,17 @@
                     "meta.embedded.block.kotlin": "kotlin"
                 }
             }
-        ]
+        ],
+        "configuration": {
+            "title": "Kotlin",
+            "properties": {
+                "kotlin.debounceTime": {
+                    "type": "integer",
+                    "default": 250,
+                    "description": "[DEBUG] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues"
+                }
+            }
+        }
     },
     "scripts": {
         "package-with-lsp": "gradle build && vsce package -o build.vsix",
