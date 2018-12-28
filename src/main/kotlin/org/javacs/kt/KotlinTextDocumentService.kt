@@ -32,6 +32,10 @@ class KotlinTextDocumentService(
     private val async = AsyncExecutor()
     private var linting = false
 
+    var debounceLint = Debouncer(Duration.ofMillis(Config.debounceTime))
+    val lintTodo = mutableSetOf<Path>()
+    var lintCount = 0
+
     fun connect(client: LanguageClient) {
         this.client = client
     }
@@ -181,10 +185,6 @@ class KotlinTextDocumentService(
     public fun updateDebouncer() {
         debounceLint = Debouncer(Duration.ofMillis(Config.debounceTime))
     }
-
-    var debounceLint = Debouncer(Duration.ofMillis(Config.debounceTime))
-    val lintTodo = mutableSetOf<Path>()
-    var lintCount = 0
 
     private fun clearLint(): List<Path> {
         val result = lintTodo.toList()
