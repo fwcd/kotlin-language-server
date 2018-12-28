@@ -15,7 +15,6 @@ import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
-import org.javacs.kt.Config
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -26,13 +25,14 @@ import java.util.concurrent.CompletableFuture
 
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
-    private val sp: SourcePath
+    private val sp: SourcePath,
+    private val config: Configuration
 ): TextDocumentService {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
     private var linting = false
 
-    var debounceLint = Debouncer(Duration.ofMillis(Config.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 
@@ -183,7 +183,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(Config.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
     }
 
     private fun clearLint(): List<Path> {

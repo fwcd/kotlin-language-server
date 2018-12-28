@@ -21,7 +21,8 @@ class KotlinWorkspaceService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val cp: CompilerClassPath,
-    private val docService: KotlinTextDocumentService
+    private val docService: KotlinTextDocumentService,
+    private val config: Configuration
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
@@ -79,7 +80,7 @@ class KotlinWorkspaceService(
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
         val settings = params.settings as JsonObject
-        Config.debounceTime = settings.get("kotlin").asJsonObject.get("debounceTime").asLong
+        config.debounceTime = settings.get("kotlin").asJsonObject.get("debounceTime").asLong
         docService.updateDebouncer()
         LOG.info("configurations updated {}", settings)
     }
