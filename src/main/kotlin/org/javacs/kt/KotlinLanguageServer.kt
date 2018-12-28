@@ -11,7 +11,7 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer: LanguageServer, LanguageClientAware {
+class KotlinLanguageServer : LanguageServer, LanguageClientAware {
     val classPath = CompilerClassPath()
     val sourcePath = SourcePath(classPath)
     val sourceFiles = SourceFiles(sourcePath)

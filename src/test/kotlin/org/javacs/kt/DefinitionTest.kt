@@ -5,7 +5,7 @@ import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
 
-class DefinitionTest: LanguageServerTestFixture("definition") {
+class DefinitionTest : LanguageServerTestFixture("definition") {
     val file = "GoFrom.kt"
 
     @Before fun `open GoFrom`() {

@@ -1,4 +1,4 @@
-private open class Visibility: VisibilitySuper {
+private open class Visibility : VisibilitySuper {
     fun test() {
         p
     }

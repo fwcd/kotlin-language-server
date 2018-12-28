@@ -5,7 +5,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 
-class LintTest: SingleFileTestFixture("lint", "LintErrors.kt") {
+class LintTest : SingleFileTestFixture("lint", "LintErrors.kt") {
     @Test fun `report error on open`() {
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
 

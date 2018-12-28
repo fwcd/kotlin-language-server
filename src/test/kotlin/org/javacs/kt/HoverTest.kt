@@ -3,7 +3,7 @@ package org.javacs.kt
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class HoverLiteralsTest: SingleFileTestFixture("hover", "Literals.kt") {
+class HoverLiteralsTest : SingleFileTestFixture("hover", "Literals.kt") {
     @Test fun `string reference`() {
         val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 3, 19)).get()!!
         val contents = hover.contents.left.first().right
@@ -13,7 +13,7 @@ class HoverLiteralsTest: SingleFileTestFixture("hover", "Literals.kt") {
     }
 }
 
-class HoverFunctionReferenceTest: SingleFileTestFixture("hover", "FunctionReference.kt") {
+class HoverFunctionReferenceTest : SingleFileTestFixture("hover", "FunctionReference.kt") {
     @Test fun `function reference`() {
         val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 2, 45)).get()!!
         val contents = hover.contents.left.first().right
@@ -23,7 +23,7 @@ class HoverFunctionReferenceTest: SingleFileTestFixture("hover", "FunctionRefere
     }
 }
 
-class HoverObjectReferenceTest: SingleFileTestFixture("hover", "ObjectReference.kt") {
+class HoverObjectReferenceTest : SingleFileTestFixture("hover", "ObjectReference.kt") {
     @Test fun `object reference`() {
         val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 2, 7)).get()!!
         val contents = hover.contents.left.first().right
@@ -57,7 +57,7 @@ class HoverObjectReferenceTest: SingleFileTestFixture("hover", "ObjectReference.
     }
 }
 
-class HoverRecoverTest: SingleFileTestFixture("hover", "Recover.kt") {
+class HoverRecoverTest : SingleFileTestFixture("hover", "Recover.kt") {
     @Test fun `incrementally repair a single-expression function`() {
         replace(file, 2, 9, "\"Foo\"", "intFunction()")
 
@@ -79,7 +79,7 @@ class HoverRecoverTest: SingleFileTestFixture("hover", "Recover.kt") {
     }
 }
 
-class HoverAcrossFilesTest: LanguageServerTestFixture("hover") {
+class HoverAcrossFilesTest : LanguageServerTestFixture("hover") {
     @Test fun `resolve across files`() {
         val from = "ResolveFromFile.kt"
         val to = "ResolveToFile.kt"

@@ -9,7 +9,7 @@ import org.junit.Assert.fail
 import org.junit.Ignore
 import org.junit.Test
 
-class AdditionalWorkspaceTest: LanguageServerTestFixture("mainWorkspace") {
+class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
     val file = "MainWorkspaceFile.kt"
 
     fun addWorkspaceRoot() {

@@ -5,7 +5,7 @@ import org.junit.Assert.assertThat
 import org.junit.Ignore
 import org.junit.Test
 
-class SignatureHelpTest: SingleFileTestFixture("signatureHelp", "SignatureHelp.kt") {
+class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.kt") {
     @Test fun `provide signature help for a function call`() {
         val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 3, 20)).get()!!
 

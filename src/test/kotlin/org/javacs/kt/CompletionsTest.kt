@@ -5,7 +5,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 
-class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.kt") {
+class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.kt") {
     @Test fun `complete instance members`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 15)).get().right!!
         val labels = completions.items.map { it.label }
@@ -58,7 +58,7 @@ class InstanceMemberTest: SingleFileTestFixture("completions", "InstanceMember.k
     }
 }
 
-class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
+class InstanceMembersJava : SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
     @Test fun `convert getFileName to fileName`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 14)).get().right!!
         val labels = completions.items.map { it.label }
@@ -68,7 +68,7 @@ class InstanceMembersJava: SingleFileTestFixture("completions", "InstanceMembers
     }
 }
 
-class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt") {
+class FunctionScopeTest : SingleFileTestFixture("completions", "FunctionScope.kt") {
     @Test fun `complete identifiers in function scope`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -89,7 +89,7 @@ class FunctionScopeTest: SingleFileTestFixture("completions", "FunctionScope.kt"
     }
 }
 
-class TypesTest: SingleFileTestFixture("completions", "Types.kt") {
+class TypesTest : SingleFileTestFixture("completions", "Types.kt") {
     @Test fun `complete a type name`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 25)).get().right!!
         val labels = completions.items.map { it.label }
@@ -101,7 +101,7 @@ class TypesTest: SingleFileTestFixture("completions", "Types.kt") {
     }
 }
 
-class FillEmptyBodyTest: SingleFileTestFixture("completions", "FillEmptyBody.kt") {
+class FillEmptyBodyTest : SingleFileTestFixture("completions", "FillEmptyBody.kt") {
     @Test fun `fill an empty body`() {
         replace(file, 2, 16, "", """"
             Callee.
@@ -113,7 +113,7 @@ class FillEmptyBodyTest: SingleFileTestFixture("completions", "FillEmptyBody.kt"
     }
 }
 
-class ConstructorTest: SingleFileTestFixture("completions", "Constructor.kt") {
+class ConstructorTest : SingleFileTestFixture("completions", "Constructor.kt") {
     @Test fun `complete a constructor`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -122,7 +122,7 @@ class ConstructorTest: SingleFileTestFixture("completions", "Constructor.kt") {
     }
 }
 
-class MiddleOfFunctionTest: SingleFileTestFixture("completions", "MiddleOfFunction.kt") {
+class MiddleOfFunctionTest : SingleFileTestFixture("completions", "MiddleOfFunction.kt") {
     @Test fun `complete in the middle of a function`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 11)).get().right!!
         val labels = completions.items.map { it.label }
@@ -131,7 +131,7 @@ class MiddleOfFunctionTest: SingleFileTestFixture("completions", "MiddleOfFuncti
     }
 }
 
-class BackquotedFunctionTest: SingleFileTestFixture("completions", "BackquotedFunction.kt") {
+class BackquotedFunctionTest : SingleFileTestFixture("completions", "BackquotedFunction.kt") {
     @Test fun `complete with backquotes`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 7)).get().right!!
         val insertText = completions.items.map { it.insertText }
@@ -140,7 +140,7 @@ class BackquotedFunctionTest: SingleFileTestFixture("completions", "BackquotedFu
     }
 }
 
-class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
+class CompleteStaticsTest : SingleFileTestFixture("completions", "Statics.kt") {
     @Test fun `java static method`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 16)).get().right!!
         val labels = completions.items.map { it.label }
@@ -170,7 +170,7 @@ class CompleteStaticsTest: SingleFileTestFixture("completions", "Statics.kt") {
     }
 }
 
-class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
+class VisibilityTest : SingleFileTestFixture("completions", "Visibility.kt") {
     @Test fun `find tricky visibility members`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -181,7 +181,7 @@ class VisibilityTest: SingleFileTestFixture("completions", "Visibility.kt") {
     }
 }
 
-class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
+class ImportsTest : SingleFileTestFixture("completions", "Imports.kt") {
     @Test fun `complete import from java-nio-path-P`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 1, 23)).get().right!!
         val labels = completions.items.map { it.label }
@@ -204,7 +204,7 @@ class ImportsTest: SingleFileTestFixture("completions", "Imports.kt") {
     }
 }
 
-class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
+class DoubleDotTest : SingleFileTestFixture("completions", "DoubleDot.kt") {
     @Test fun `complete nested select`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 15)).get().right!!
         val labels = completions.items.map { it.label }
@@ -214,7 +214,7 @@ class DoubleDotTest: SingleFileTestFixture("completions", "DoubleDot.kt") {
     }
 }
 
-class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
+class QuestionDotTest : SingleFileTestFixture("completions", "QuestionDot.kt") {
     @Test fun `complete null-safe select`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 8)).get().right!!
         val labels = completions.items.map { it.label }
@@ -223,7 +223,7 @@ class QuestionDotTest: SingleFileTestFixture("completions", "QuestionDot.kt") {
     }
 }
 
-class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt") {
+class OuterDotInnerTest : SingleFileTestFixture("completions", "OuterDotInner.kt") {
     @Test fun `complete as OuterClass-InnerClass`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 24)).get().right!!
         val labels = completions.items.map { it.label }
@@ -239,7 +239,7 @@ class OuterDotInnerTest: SingleFileTestFixture("completions", "OuterDotInner.kt"
     }
 }
 
-class EditCallTest: SingleFileTestFixture("completions", "EditCall.kt") {
+class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
     @Test fun `edit existing function`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 11)).get().right!!
         val labels = completions.items.map { it.label }

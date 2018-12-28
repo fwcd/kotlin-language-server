@@ -9,7 +9,7 @@ import com.intellij.codeInsight.NullableNotNullManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiModifierListOwner
 
-class KotlinNullableNotNullManager(project: Project): NullableNotNullManager(project) {
+class KotlinNullableNotNullManager(project: Project) : NullableNotNullManager(project) {
 	init {
 		setNotNulls("NotNull")
 		setNullables("Nullable")

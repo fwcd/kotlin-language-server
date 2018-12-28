@@ -4,7 +4,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 
-class ReferencesTest: SingleFileTestFixture("references", "ReferenceTo.kt") {
+class ReferencesTest : SingleFileTestFixture("references", "ReferenceTo.kt") {
     @Test fun `find referencs to foo`() {
         val request = referenceParams(file, 2, 11)
         val references = languageServer.textDocumentService.references(request).get()
@@ -14,7 +14,7 @@ class ReferencesTest: SingleFileTestFixture("references", "ReferenceTo.kt") {
     }
 }
 
-class ReferenceCollectionishTest: SingleFileTestFixture("references", "ReferenceCollectionish.kt") {
+class ReferenceCollectionishTest : SingleFileTestFixture("references", "ReferenceCollectionish.kt") {
     @Test fun `find references to iterator`() {
         val request = referenceParams(file, 2, 21)
         val references = languageServer.textDocumentService.references(request).get()
@@ -41,7 +41,7 @@ class ReferenceCollectionishTest: SingleFileTestFixture("references", "Reference
     }
 }
 
-class ReferenceComponentsTest: SingleFileTestFixture("references", "ReferenceComponents.kt") {
+class ReferenceComponentsTest : SingleFileTestFixture("references", "ReferenceComponents.kt") {
     @Test fun `find references to component1`() {
         val request = referenceParams(file, 2, 21)
         val references = languageServer.textDocumentService.references(request).get()
@@ -52,7 +52,7 @@ class ReferenceComponentsTest: SingleFileTestFixture("references", "ReferenceCom
     }
 }
 
-class ReferenceConstructorTest: SingleFileTestFixture("references", "ReferenceConstructor.kt") {
+class ReferenceConstructorTest : SingleFileTestFixture("references", "ReferenceConstructor.kt") {
     @Test fun `find reference to main constructor`() {
         val request = referenceParams(file, 1, 24)
         val references = languageServer.textDocumentService.references(request).get()
@@ -68,7 +68,7 @@ class ReferenceConstructorTest: SingleFileTestFixture("references", "ReferenceCo
     }
 }
 
-class ReferenceGetSetValueTest: SingleFileTestFixture("references", "ReferenceGetSetValue.kt") {
+class ReferenceGetSetValueTest : SingleFileTestFixture("references", "ReferenceGetSetValue.kt") {
     @Test fun `find references to getValue`() {
         val request = referenceParams(file, 4, 21)
         val references = languageServer.textDocumentService.references(request).get()
@@ -86,7 +86,7 @@ class ReferenceGetSetValueTest: SingleFileTestFixture("references", "ReferenceGe
     }
 }
 
-class ReferenceGetterSetterTest: SingleFileTestFixture("references", "ReferenceGetterSetter.kt") {
+class ReferenceGetterSetterTest : SingleFileTestFixture("references", "ReferenceGetterSetter.kt") {
     @Test fun `find references to get`() {
         val request = referenceParams(file, 2, 19)
         val references = languageServer.textDocumentService.references(request).get()
@@ -104,7 +104,7 @@ class ReferenceGetterSetterTest: SingleFileTestFixture("references", "ReferenceG
     }
 }
 
-class ReferenceInvokeTest: SingleFileTestFixture("references", "ReferenceInvoke.kt") {
+class ReferenceInvokeTest : SingleFileTestFixture("references", "ReferenceInvoke.kt") {
     @Test fun `find references to invoke`() {
         val request = referenceParams(file, 2, 21)
         val references = languageServer.textDocumentService.references(request).get()
@@ -114,7 +114,7 @@ class ReferenceInvokeTest: SingleFileTestFixture("references", "ReferenceInvoke.
     }
 }
 
-class ReferenceOperatorTest: SingleFileTestFixture("references", "ReferenceOperator.kt") {
+class ReferenceOperatorTest : SingleFileTestFixture("references", "ReferenceOperator.kt") {
     @Test fun `find references to equals`() {
         val request = referenceParams(file, 2, 30)
         val references = languageServer.textDocumentService.references(request).get()
@@ -172,7 +172,7 @@ class ReferenceOperatorTest: SingleFileTestFixture("references", "ReferenceOpera
     }
 }
 
-class ReferenceOperatorUsingNameTest: SingleFileTestFixture("references", "ReferenceOperatorUsingName.kt") {
+class ReferenceOperatorUsingNameTest : SingleFileTestFixture("references", "ReferenceOperatorUsingName.kt") {
     @Test fun `find references to equals`() {
         val request = referenceParams(file, 2, 30)
         val references = languageServer.textDocumentService.references(request).get()

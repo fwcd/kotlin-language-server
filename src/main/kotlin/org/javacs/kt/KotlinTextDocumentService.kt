@@ -27,7 +27,7 @@ class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val config: Configuration
-): TextDocumentService {
+) : TextDocumentService {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
     private var linting = false

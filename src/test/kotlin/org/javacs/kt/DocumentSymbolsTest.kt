@@ -9,7 +9,7 @@ import org.junit.Assert.assertThat
 import org.junit.Before
 import org.junit.Test
 
-class DocumentSymbolsTest: LanguageServerTestFixture("symbols") {
+class DocumentSymbolsTest : LanguageServerTestFixture("symbols") {
     val file = "DocumentSymbols.kt"
 
     @Before fun `open DocumentSymbols`() {
