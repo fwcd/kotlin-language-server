@@ -32,17 +32,18 @@ private fun ensureStdlibInPaths(paths: Set<Path>): Set<Path> {
     val isStdlib: ((Path) -> Boolean) = { it.toString().contains("kotlin-stdlib") }
 
     val linkedStdLibs = paths.filter(isStdlib)
-      .mapNotNull { StdLibItem.from(it) }
-      .groupBy { it.key }.map { candidates ->
-        // For each "kotlin-stdlib-blah", use the newest.  This may not be correct behavior if the project has lots of
-        // conflicting dependencies, but in general should get enough of the stdlib loaded that we can display errors
-
-        candidates.value.sortedWith(
-          compareByDescending<StdLibItem> { it.major } then
-            compareByDescending { it.minor }
-              then compareByDescending { it.patch }
-        ).first().path
-    }
+        .mapNotNull { StdLibItem.from(it) }
+        .groupBy { it.key }
+        .map { candidates ->
+            // For each "kotlin-stdlib-blah", use the newest.  This may not be correct behavior if the project has lots of
+            // conflicting dependencies, but in general should get enough of the stdlib loaded that we can display errors
+            
+            candidates.value.sortedWith(
+                compareByDescending<StdLibItem> { it.major } then
+                    compareByDescending { it.minor } then
+                        compareByDescending { it.patch }
+            ).first().path
+        }
 
     val stdlibs = if (linkedStdLibs.isNotEmpty()) {
         linkedStdLibs
@@ -54,11 +55,11 @@ private fun ensureStdlibInPaths(paths: Set<Path>): Set<Path> {
 }
 
 private data class StdLibItem(
-  val key : String,
-  val major : Int,
-  val minor: Int,
-  val patch : Int,
-  val path: Path
+    val key : String,
+    val major : Int,
+    val minor: Int,
+    val patch : Int,
+    val path: Path
 ) {
     companion object {
         // Matches names like: "kotlin-stdlib-jdk7-1.2.51.jar"
@@ -67,11 +68,11 @@ private data class StdLibItem(
         fun from(path: Path) : StdLibItem? {
             return parser.matchEntire(path.fileName.toString())?.let { match ->
                 StdLibItem(
-                  key = match.groups[1]?.value ?: match.groups[0]?.value!!,
-                  major = match.groups[3]?.value?.toInt() ?: 0,
-                  minor = match.groups[4]?.value?.toInt() ?: 0,
-                  patch = match.groups[5]?.value?.toInt() ?: 0,
-                  path = path
+                    key = match.groups[1]?.value ?: match.groups[0]?.value!!,
+                    major = match.groups[3]?.value?.toInt() ?: 0,
+                    minor = match.groups[4]?.value?.toInt() ?: 0,
+                    patch = match.groups[5]?.value?.toInt() ?: 0,
+                    path = path
                 )
             }
         }
