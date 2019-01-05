@@ -20,7 +20,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 | Debug Packaging | `./gradlew installDebugDist` | Packages the language server with a debug launch configuration |
 | Testing | `./gradlew test` | Executes all unit tests |
 | Running | `./gradlew run` | Runs the standalone language server from the command line |
-| Debugging | `./gradlew debug` | Launches the standalone language server from the command line using a debug configuration |
+| Debugging | `./gradlew debugRun` | Launches the standalone language server from the command line using a debug configuration |
 | Building | `./gradlew build` | Builds, tests and packages the language server |
 
 ### Launching the packaged language server

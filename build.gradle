@@ -103,12 +103,12 @@ task fixFilePermissions(type: Exec) {
 	commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
 }
 
-task debug(type: JavaExec) {
+task debugRun(type: JavaExec) {
 	main = mainClassName
 	classpath sourceSets.main.runtimeClasspath
 	standardInput = System.in
 	
-	println "Launching debuggee on debugPort $debugPort"
+	println "Configured debugPort to $debugPort"
 	jvmArgs debugArgs
 }
 
