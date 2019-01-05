@@ -22,10 +22,10 @@ class SimpleScriptTest {
         val replState = repl.createState()
 
         var line = compiler.compile(compilerState, ReplCodeLine(1, 1, "val x = 1"))
-        var result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
+        repl.eval(replState, line as ReplCompileResult.CompiledClasses)
 
         line = compiler.compile(compilerState, ReplCodeLine(2, 2, "x"))
-        result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
+        val result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
 
         when (result) {
             is ReplEvalResult.ValueResult -> println(result.value)

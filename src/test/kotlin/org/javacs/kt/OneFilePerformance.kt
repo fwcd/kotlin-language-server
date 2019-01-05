@@ -10,6 +10,7 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
+import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -33,6 +34,7 @@ import org.openjdk.jmh.runner.Runner
 import org.openjdk.jmh.runner.RunnerException
 import org.openjdk.jmh.runner.options.Options
 import org.openjdk.jmh.runner.options.OptionsBuilder
+import org.javacs.kt.util.LoggingMessageCollector
 
 import java.lang.reflect.Type
 import java.net.URL
@@ -43,6 +45,7 @@ class OneFilePerformance {
         internal var config = CompilerConfiguration()
         init {
             config.put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
+            config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
         }
         internal var env = KotlinCoreEnvironment.createForProduction(object: Disposable {
             override fun dispose() {
