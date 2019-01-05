@@ -44,7 +44,7 @@ repositories {
 	mavenCentral()
 	maven { url 'https://repo.gradle.org/gradle/libs-releases' }
 	teamcityServer {
-		url = 'http://teamcity.jetbrains.com'
+		url = 'https://teamcity.jetbrains.com'
 		credentials {
 			username = 'guest'
 			password = 'guest'
