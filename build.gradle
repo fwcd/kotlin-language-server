@@ -66,6 +66,7 @@ dependencies {
 	implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
 	implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
 	kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
+	kotlinJVMLib tc("$kotlinTeamCity/lib/j2k.jar")
 
 	implementation fileTree(dir: "lib", include: ["*.jar"])
 	implementation fileTree(dir: "lib-kotlin", include: ["*.jar"])
