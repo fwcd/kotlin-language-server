@@ -17,10 +17,10 @@ class TeamCityNode:
         return [TeamCityNode(self.server_url, node) for node in self.xmltree.findall(xpath)]
     
     def follow_href(self):
-        print("Following", self.get_attribute("href"))
-        return node_from_url(self.server_url, self.get_attribute("href"))
+        print("Following", self.attribute("href"))
+        return node_from_url(self.server_url, self.attribute("href"))
     
-    def get_attribute(self, name):
+    def attribute(self, name):
         return self.xmltree.attrib.get(name)
 
 class TeamCityConnection:
