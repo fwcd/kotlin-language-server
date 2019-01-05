@@ -8,7 +8,7 @@ set -e
 npm install
 
 # Build jar
-./../gradlew build
+./../gradlew installDist
 
 # Build vsix
 vsce package -o build.vsix
