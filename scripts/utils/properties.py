@@ -27,6 +27,10 @@ class PropertiesFile:
         self.write_line(line_index, key + "=" + str_value)
         self.entries[key] = {"line": line_index, "value": str_value}
     
+    def apply_changes(self, change_dict):
+        for key, value in change_dict.items():
+            self[key] = value
+    
     def write_line(self, index, content):
         with open(self.file_path, "r") as file:
             lines = file.readlines()

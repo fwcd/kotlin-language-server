@@ -16,12 +16,28 @@ class TeamCityNode:
     def findall(self, xpath):
         return [TeamCityNode(self.server_url, node) for node in self.xmltree.findall(xpath)]
     
+    def follow(self, xpath=None):
+        return self.follow_href() if xpath == None else self.find(xpath).follow_href()
+    
     def follow_href(self):
-        print("Following", self.attribute("href"))
-        return node_from_url(self.server_url, self.attribute("href"))
+        href = self.attribute("href")
+        print("Following", href)
+        return node_from_url(self.server_url, href)
     
     def attribute(self, name):
         return self.xmltree.attrib.get(name)
+    
+    def name(self):
+        return self.attribute("name")
+        
+    def number(self):
+        return self.attribute("number")
+        
+    def status(self):
+        return self.attribute("status")
+    
+    def id(self):
+        return self.attribute("id")
 
 class TeamCityConnection:
     def __init__(self, server_url):
