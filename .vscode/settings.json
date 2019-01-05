@@ -7,5 +7,7 @@
         "target": true,
         "out": true // set this to false to include "out" folder in search results
     },
-    "java.configuration.updateBuildConfiguration": "disabled"
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "editor.insertSpaces": true,
+    "files.insertFinalNewline": true
 }

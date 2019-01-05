@@ -1,20 +1,21 @@
-.settings/
+.settings
 .classpath
 .project
 .factorypath
 .gradle
 
-.idea/
+.idea
 *.iml
 
-lib-kotlin/
-bin/
-build/
-target/
-out/
+lib-kotlin
+bin
+build
+target
+out
+__pycache__
 *.vsix
 
-node_modules/
-.vscode-test/
+node_modules
+.vscode-test
 
-.DS_STORE
+.DS_Store
