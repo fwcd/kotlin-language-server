@@ -3,6 +3,8 @@ from utils.properties import PropertiesFile
 from utils.cli import prompt_by, require_not_none, confirm
 from utils.lists import first
 from argparse import ArgumentParser
+import os
+import sys
 
 def is_kotlin_version(version_name):
     return len(version_name) > 0 and version_name[0].isdigit()
@@ -14,10 +16,12 @@ def to_plugin_build(art_name):
     return art_name.lstrip("kotlin-plugin-").rstrip(".zip")
 
 def main():
-    parser = ArgumentParser(description="Updates the Kotlin version used.")
-    parser.add_argument("repo_folder", help="Path to the repository folder containing gradle.properties and build.gradle")
+    props_file = "gradle.properties"
     
-    props = PropertiesFile("gradle.properties")
+    if not os.path.exists(props_file):
+        sys.exit("Could not find " + props_file + " in current working directory!")
+    
+    props = PropertiesFile(props_file)
     tc = TeamCityConnection(props["teamCityUrl"])
     
     print("==========================")
@@ -47,7 +51,7 @@ def main():
         print(key + "=" + value)
     print()
     
-    if confirm("Should this configuration be applied to gradle.properties?"):
+    if confirm("Should this configuration be applied to " + props_file + "?"):
         props.apply_changes(changes)
         print()
         print("Success!")

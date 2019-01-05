@@ -43,6 +43,12 @@ The incremental expression compilation logic is all in [CompiledFile.kt](src/mai
 
 There is an extensive suite of behavioral [tests](src/test/kotlin/org/javacs/kt), which are all implemented in terms of the language server protocol, so you should be able to refactor the code any way you like and the tests should still work.
 
+## Scripts
+
+| Name | Command | Description |
+| ---- | ------- | ----------- |
+| update_kt_version.py | `python3 scripts/update_kt_version.py` | Finds and updates the Kotlin compiler/plugin version for this project |
+
 ## Features
 
 ### Autocomplete
