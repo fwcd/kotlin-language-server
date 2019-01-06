@@ -12,7 +12,6 @@ bin
 build
 target
 out
-src/test/resources/scriptRuntime
 __pycache__
 *.vsix
 
