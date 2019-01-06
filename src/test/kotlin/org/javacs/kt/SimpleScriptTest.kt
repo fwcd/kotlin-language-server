@@ -10,9 +10,13 @@ import org.junit.*
 import org.junit.Assert.*
 import org.hamcrest.Matchers.*
 import org.jetbrains.kotlin.load.java.JvmAbi
+import java.net.URLClassLoader
+import kotlin.script.templates.standard.ScriptTemplateWithArgs
 
 class SimpleScriptTest {
-    @Test fun basicScript() {
+    @Test
+    @Ignore
+    fun basicScript() {
         val scriptDef = KotlinScriptDefinition(Any::class)
         val repl = GenericReplEvaluator(listOf())
         val config = CompilerConfiguration()
@@ -22,14 +26,22 @@ class SimpleScriptTest {
         val replState = repl.createState()
 
         var line = compiler.compile(compilerState, ReplCodeLine(1, 1, "val x = 1"))
+        assertNotError(line)
         repl.eval(replState, line as ReplCompileResult.CompiledClasses)
 
         line = compiler.compile(compilerState, ReplCodeLine(2, 2, "x"))
+        assertNotError(line)
         val result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
 
         when (result) {
             is ReplEvalResult.ValueResult -> println(result.value)
             is ReplEvalResult.UnitResult -> println('_')
+        }
+    }
+    
+    private fun assertNotError(result: ReplCompileResult) {
+        if (result is ReplCompileResult.Error) {
+            fail(result.message)
         }
     }
 }
