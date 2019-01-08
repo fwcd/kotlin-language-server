@@ -55,14 +55,21 @@ class KotlinTextDocumentService(
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
-        listOf(
-            Either.forLeft<Command, CodeAction>(
-                Command("Convert Java code to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
-                    params.textDocument.uri,
-                    params.range
-                ))
+        val start = params.range.start
+        val end = params.range.end
+        val hasSelection = (end.character - start.character) != 0 || (end.line - start.line) != 0
+        if (hasSelection) {
+            listOf(
+                Either.forLeft<Command, CodeAction>(
+                    Command("Convert Java to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
+                        params.textDocument.uri,
+                        params.range
+                    ))
+                )
             )
-        )
+        } else {
+            emptyList()
+        }
     }
 
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = async.compute {
