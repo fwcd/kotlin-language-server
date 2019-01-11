@@ -8,7 +8,6 @@ import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
-import kotlin.coroutines.experimental.buildSequence
 
 inline fun<reified Find> PsiElement.findParent() =
         this.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
@@ -33,7 +32,7 @@ inline fun withCustomStdout(delegateOut: PrintStream, task: () -> Unit) {
 fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
     val root = this
 
-    return buildSequence {
+    return sequence {
         yield(root)
 
         for (child in root.children) {

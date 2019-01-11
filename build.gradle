@@ -34,12 +34,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 	}
 }
 
-kotlin {
-	experimental {
-		coroutines 'enable'
-	}
-}
-
 repositories {
 	mavenCentral()
 	maven { url 'https://repo.gradle.org/gradle/libs-releases' }

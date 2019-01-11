@@ -141,7 +141,7 @@ private fun possibleInvokeReferences(declaration: FunctionDescriptor, sp: Source
         sp.all().filter { possibleInvokeReference(declaration, it) }.toSet()
 
 // TODO this is not very selective
-private fun possibleInvokeReference(declaration: FunctionDescriptor, source: KtFile): Boolean =
+private fun possibleInvokeReference(@Suppress("UNUSED_PARAMETER") declaration: FunctionDescriptor, source: KtFile): Boolean =
         source.preOrderTraversal().filterIsInstance<KtCallExpression>().any()
 
 private fun isComponent(declaration: DeclarationDescriptor): Boolean =
