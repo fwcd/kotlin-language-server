@@ -48,9 +48,12 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
 }
 
 private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
+private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
 private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile): CompletionItem {
     val result = d.accept(RenderCompletionItem(), null)
+
+    result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
     if (isGetter(d) || isSetter(d)) {
         val name = extractVarName(d)
