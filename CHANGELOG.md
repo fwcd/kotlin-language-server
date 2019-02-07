@@ -3,6 +3,12 @@ All notable changes to the "kotlin" extension will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.13]
+- Kotlin 1.3.11 support
+- Detailed completion signatures for overloaded methods
+- Updated to VSCode ^1.30.2
+- Improved dependency resolution logs
+
 ## [0.1.12]
 - Kotlin 1.2.70 support
 

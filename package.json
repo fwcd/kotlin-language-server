@@ -7,7 +7,7 @@
         "type": "git",
         "url": "https://github.com/fwcd/KotlinLanguageServer.git"
     },
-    "version": "0.1.12",
+    "version": "0.1.13",
     "preview": true,
     "publisher": "fwcd",
     "license": "MIT",
