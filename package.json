@@ -70,7 +70,7 @@
         }
     },
     "scripts": {
-        "package-with-lsp": "gradle build && vsce package -o build.vsix",
+        "package-with-lsp": "gradle installDist && vsce package -o build.vsix",
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
