@@ -8,3 +8,4 @@ matrix:
       install:
         - npm install
         - npm run compile
+      script: npm run test
