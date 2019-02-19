@@ -11,7 +11,9 @@ import { LOG } from './logger';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
-export async function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    configureLanguage();
+    
     LOG.info('Activating Kotlin language server...');
     let barItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     context.subscriptions.push(barItem);
@@ -77,9 +79,51 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {}
 
-function findJavaExecutable(rawBinname: string) {
+function configureLanguage(): void {
+    // Source: https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
+    // License: https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/OSSREADME.json
+    vscode.languages.setLanguageConfiguration("kotlin", {
+        indentationRules: {
+            // ^(.*\*/)?\s*\}.*$
+            decreaseIndentPattern: /^(.*\*\/)?\s*\}.*$/,
+            // ^.*\{[^}"']*$
+            increaseIndentPattern: /^.*\{[^}"']*$/
+        },
+        wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g,
+        onEnterRules: [
+            {
+                // e.g. /** | */
+                beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+                afterText: /^\s*\*\/$/,
+                action: { indentAction: vscode.IndentAction.IndentOutdent, appendText: ' * ' }
+            },
+            {
+                // e.g. /** ...|
+                beforeText: /^\s*\/\*\*(?!\/)([^\*]|\*(?!\/))*$/,
+                action: { indentAction: vscode.IndentAction.None, appendText: ' * ' }
+            },
+            {
+                // e.g.  * ...|
+                beforeText: /^(\t|(\ \ ))*\ \*(\ ([^\*]|\*(?!\/))*)?$/,
+                action: { indentAction: vscode.IndentAction.None, appendText: '* ' }
+            },
+            {
+                // e.g.  */|
+                beforeText: /^(\t|(\ \ ))*\ \*\/\s*$/,
+                action: { indentAction: vscode.IndentAction.None, removeText: 1 }
+            },
+            {
+                // e.g.  *-----*/|
+                beforeText: /^(\t|(\ \ ))*\ \*[^/]*\*\/\s*$/,
+                action: { indentAction: vscode.IndentAction.None, removeText: 1 }
+            }
+        ]
+    });
+}
+
+function findJavaExecutable(rawBinname: string): string {
 	let binname = correctBinname(rawBinname);
 
 	// First search java.home setting
@@ -124,15 +168,15 @@ function findJavaExecutable(rawBinname: string) {
 	return binname;
 }
 
-function correctBinname(binname: string) {
+function correctBinname(binname: string): string {
     return binname + ((process.platform === 'win32') ? '.exe' : '');
 }
 
-function correctScriptName(binname: string) {
+function correctScriptName(binname: string): string {
     return binname + ((process.platform === 'win32') ? '.bat' : '');
 }
 
-function findJavaExecutableInJavaHome(javaHome: string, binname: string) {
+function findJavaExecutableInJavaHome(javaHome: string, binname: string): string {
     let workspaces = javaHome.split(path.delimiter);
 
     for (let i = 0; i < workspaces.length; i++) {
