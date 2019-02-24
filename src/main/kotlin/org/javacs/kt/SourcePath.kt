@@ -60,12 +60,20 @@ class SourcePath(private val cp: CompilerClassPath) {
         private fun doPrepareCompiledFile(): CompiledFile =
                 CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, all(), cp)
     }
+    
+    private fun sourceFile(file: Path): SourceFile {
+        if (file !in files) {
+            LOG.warn("File {} is not on SourcePath, adding it now...", file)
+            put(file, file.toFile().readText())
+        }
+        return files[file]!!
+    }
 
     fun put(file: Path, content: String) {
         assert(!content.contains('\r'))
 
-        if (files.contains(file))
-            files[file]!!.put(content)
+        if (file in files)
+            sourceFile(file).put(content)
         else
             files[file] = SourceFile(file, content)
     }
@@ -77,21 +85,21 @@ class SourcePath(private val cp: CompilerClassPath) {
     /**
      * Get the latest content of a file
      */
-    fun content(file: Path): String = files[file]!!.content
+    fun content(file: Path): String = sourceFile(file).content
 
-    fun parsedFile(file: Path): KtFile = files[file]!!.parseIfChanged().parsed!!
+    fun parsedFile(file: Path): KtFile = sourceFile(file).parseIfChanged().parsed!!
 
     /**
      * Compile the latest version of a file
      */
     fun currentVersion(file: Path): CompiledFile =
-            files[file]!!.compileIfChanged().prepareCompiledFile()
+            sourceFile(file).compileIfChanged().prepareCompiledFile()
 
     /**
      * Return whatever is the most-recent already-compiled version of `file`
      */
     fun latestCompiledVersion(file: Path): CompiledFile =
-            files[file]!!.prepareCompiledFile()
+            sourceFile(file).prepareCompiledFile()
 
     /**
      * Compile changed files
