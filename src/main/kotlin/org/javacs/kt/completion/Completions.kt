@@ -182,7 +182,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
             descriptors = members + extensions
-            if (!DescriptorUtils.isCompanionObject(TypeUtils.getClassDescriptor(receiverType))) {
+            if (!isCompanionOfEnum(receiverType)) {
                 return descriptors
             }
         }
@@ -198,6 +198,15 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
 
     LOG.debug("Can't find member scope for {}", receiverExpr.text)
     return emptySequence()
+}
+
+private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {
+    val classDescriptor = TypeUtils.getClassDescriptor(kotlinType)
+    val isCompanion = DescriptorUtils.isCompanionObject(classDescriptor)
+    if (!isCompanion) {
+        return false
+    }
+    return DescriptorUtils.isEnumClass(classDescriptor?.containingDeclaration)
 }
 
 private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String {
