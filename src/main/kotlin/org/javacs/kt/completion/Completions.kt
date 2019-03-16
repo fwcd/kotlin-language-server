@@ -174,13 +174,17 @@ private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: K
 private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
     // thingWithType.?
     val lexicalScope = file.scopeAtPoint(cursor)
+    var descriptors = emptySequence<DeclarationDescriptor>()
     if (lexicalScope != null) {
         val receiverType = file.typeOfExpression(receiverExpr, lexicalScope)
         if (receiverType != null) {
             LOG.debug("Completing members of instance '{}'", receiverType)
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
-            return members + extensions
+            descriptors = members + extensions
+            if (!DescriptorUtils.isCompanionObject(TypeUtils.getClassDescriptor(receiverType))) {
+                return descriptors
+            }
         }
     }
     // JavaClass.?
@@ -189,7 +193,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
         LOG.debug("Completing static members of '{}'", referenceTarget.fqNameSafe)
         val statics = referenceTarget.staticScope.getContributedDescriptors().asSequence()
         val classes = referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
-        return statics + classes
+        return descriptors + statics + classes
     }
 
     LOG.debug("Can't find member scope for {}", receiverExpr.text)
