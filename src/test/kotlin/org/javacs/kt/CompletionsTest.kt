@@ -249,3 +249,12 @@ class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
         assertThat(completions.items.filter { it.label.startsWith("println") }.firstOrNull(), hasProperty("insertText", equalTo("println")))
     }
 }
+
+class EnumWithCompanionObjectTest : SingleFileTestFixture("completions", "Enum.kt") {
+    @Test fun `enum with companion object`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 9, 15)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("ILLEGAL"))
+    }
+}
