@@ -5,7 +5,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 * Java 8+ should be installed and located under JAVA_HOME or PATH
 
 ### ...for language server development
-* `./gradlew build`
+* `./gradlew server:build`
 
 ### ...for extension development
 * [VSCode](https://code.visualstudio.com) is required
@@ -16,15 +16,15 @@ Describes how to build and run this project. Note that you might need to use `gr
 
 | Task | Command | Description |
 | ---- | ------- | ----------- |
-| Packaging | `./gradlew installDist` | Packages the language server as a bundle of JAR files (e.g. for use with the VSCode extension) |
-| Debug Packaging | `./gradlew installDebugDist` | Packages the language server with a debug launch configuration |
-| Testing | `./gradlew test` | Executes all unit tests |
-| Running | `./gradlew run` | Runs the standalone language server from the command line |
-| Debugging | `./gradlew debugRun` | Launches the standalone language server from the command line using a debug configuration |
-| Building | `./gradlew build` | Builds, tests and packages the language server |
+| Packaging | `./gradlew server:installDist` | Packages the language server as a bundle of JAR files (e.g. for use with the VSCode extension) |
+| Debug Packaging | `./gradlew server:installDebugDist` | Packages the language server with a debug launch configuration |
+| Testing | `./gradlew server:test` | Executes all unit tests |
+| Running | `./gradlew server:run` | Runs the standalone language server from the command line |
+| Debugging | `./gradlew server:debugRun` | Launches the standalone language server from the command line using a debug configuration |
+| Building | `./gradlew server:build` | Builds, tests and packages the language server |
 
 ### Launching the packaged language server
-* Start scripts for the language server are located under `build/install/kotlin-language-server/bin/`
+* Start scripts for the language server are located under `build/install/KotlinLanguageServer/bin/`
 
 ### Debugging
 * Attach the running language server on `localhost:8000`
@@ -33,7 +33,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 ## VSCode Extension
 
 ### Running/Debugging
-* Package the language server using `./gradlew installDist` (or `./gradlew installDebugDist` for debugging)
+* Package the language server using `./gradlew server:installDist` (or `./gradlew server:installDebugDist` for debugging)
 * Open the debug tab in VSCode
 * Run the `Extension` launch configuration
 

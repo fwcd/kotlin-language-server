@@ -1,0 +1,59 @@
+plugins {
+    id 'application'
+}
+
+group = 'org.javacs'
+version = '0.1.1'
+
+mainClassName = 'org.javacs.kt.MainKt'
+description = 'Code completions, diagnostics and more for Kotlin'
+
+def debugPort = 8000
+def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
+
+applicationDistribution.into('bin') {
+    fileMode = 0755
+}
+
+task fixFilePermissions(type: Exec) {
+    // When running on macOS or Linux the start script
+    // needs executable permissions to run.
+    onlyIf { !System.getProperty("os.name").toLowerCase().contains("windows") }
+    commandLine 'chmod', '+x', "${project.buildDir}/install/KotlinLanguageServer/bin/KotlinLanguageServer"
+}
+
+task debugRun(type: JavaExec) {
+    main = mainClassName
+    classpath sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    
+    println "Configured debugPort to $debugPort"
+    jvmArgs debugArgs
+}
+
+task debugStartScripts(type: CreateStartScripts) {
+    applicationName = startScripts.applicationName
+    mainClassName = startScripts.mainClassName
+    outputDir = installDist.destinationDir.toPath().resolve('bin').toFile()
+    classpath = startScripts.classpath
+    defaultJvmOpts = [debugArgs]
+}
+
+task installDebugDist(type: Sync) {
+    dependsOn installDist
+    finalizedBy debugStartScripts
+}
+
+run {
+    standardInput = System.in
+}
+
+test {
+    testLogging {
+        events "failed"
+        exceptionFormat "short"
+    }
+}
+
+installDist.finalizedBy fixFilePermissions
+build.finalizedBy installDist

@@ -9,123 +9,72 @@ buildscript {
 }
 
 plugins {
-	id "com.github.jk1.tcdeps" version "0.17"
+	id 'com.github.jk1.tcdeps' version '0.17' apply false
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'application'
-apply plugin: 'maven'
+def rootProjectDir = projectDir
 
-group = 'org.javacs'
-version = '0.1.1'
+allprojects {
+	apply plugin: 'kotlin'
+	apply plugin: 'maven'
+	apply plugin: 'com.github.jk1.tcdeps'
 
-mainClassName = "org.javacs.kt.MainKt"
-description = "Code completions, diagnostics and more for Kotlin"
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-def debugPort = 8000
-def debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-	kotlinOptions {
-		jvmTarget = "1.8"
-	}
-}
-
-repositories {
-	mavenCentral()
-	maven { url 'https://repo.gradle.org/gradle/libs-releases' }
-	teamcityServer {
-		url = teamCityUrl
-		credentials {
-			username = teamCityUsername
-			password = teamCityPassword
+	tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+		kotlinOptions {
+			jvmTarget = "1.8"
 		}
 	}
-}
 
-configurations {
-	kotlinJVMLib
-}
-
-dependencies {
-	def kotlinTeamCity = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
-
-	implementation "com.google.guava:guava:21.0"
-	implementation "org.gradle:gradle-tooling-api:4.3"
-	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.5.0"
-
-	implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
-	implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
-	kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
-	kotlinJVMLib tc("$kotlinTeamCity/lib/j2k.jar")
-
-	implementation fileTree(dir: "lib", include: ["*.jar"])
-	implementation fileTree(dir: "lib-kotlin", include: ["*.jar"])
-	testImplementation "org.hamcrest:hamcrest-all:1.3"
-	testImplementation "junit:junit:4.10"
-	testImplementation "org.openjdk.jmh:jmh-core:1.20"
-	testImplementation "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
-	annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.20"
-}
-
-configurations.all { config ->
-	config.resolutionStrategy {
-		preferProjectModules()
+	repositories {
+		mavenCentral()
+		maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+		teamcityServer {
+			url = teamCityUrl
+			credentials {
+				username = teamCityUsername
+				password = teamCityPassword
+			}
+		}
 	}
-}
 
-test {
-	testLogging {
-		events "failed"
-		exceptionFormat "short"
+	configurations {
+		kotlinJVMLib
 	}
-}
 
-run {
-	standardInput = System.in
-}
+	dependencies {
+		def kotlinTeamCity = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
 
-task copyKotlinJVMLib(type: Copy) {
-	from configurations.kotlinJVMLib
-	into "$projectDir/lib-kotlin"
-}
+		implementation "com.google.guava:guava:21.0"
+		implementation "org.gradle:gradle-tooling-api:4.3"
+		implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.5.0"
 
-task fixFilePermissions(type: Exec) {
-	// When running on macOS or Linux the start script
-	// needs executable permissions to run.
-	onlyIf { !System.getProperty("os.name").toLowerCase().contains("windows") }
-	commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
-}
+		implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
+		implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+		kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
+		kotlinJVMLib tc("$kotlinTeamCity/lib/j2k.jar")
 
-task debugRun(type: JavaExec) {
-	main = mainClassName
-	classpath sourceSets.main.runtimeClasspath
-	standardInput = System.in
-	
-	println "Configured debugPort to $debugPort"
-	jvmArgs debugArgs
-}
+		implementation fileTree(dir: "$rootProjectDir/lib", include: ["*.jar"])
+		implementation fileTree(dir: "$rootProjectDir/lib-kotlin", include: ["*.jar"])
+		testImplementation "org.hamcrest:hamcrest-all:1.3"
+		testImplementation "junit:junit:4.10"
+		testImplementation "org.openjdk.jmh:jmh-core:1.20"
+		testImplementation "org.jetbrains.kotlin:kotlin-script-runtime:$kotlinVersion"
+		annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.20"
+	}
 
-task debugStartScripts(type: CreateStartScripts) {
-	applicationName = startScripts.applicationName
-	mainClassName = startScripts.mainClassName
-	outputDir = installDist.destinationDir.toPath().resolve('bin').toFile()
-	classpath = startScripts.classpath
-	defaultJvmOpts = [debugArgs]
-}
+	configurations.all { config ->
+		config.resolutionStrategy {
+			preferProjectModules()
+		}
+	}
 
-task installDebugDist(type: Sync) {
-	dependsOn installDist
-	finalizedBy debugStartScripts
-}
+	task copyKotlinJVMLib(type: Copy) {
+		from configurations.kotlinJVMLib
+		into "$rootProjectDir/lib-kotlin"
+	}
 
-applicationDistribution.into('bin') {
-	fileMode = 0755
+	compileKotlin.dependsOn copyKotlinJVMLib
 }
-
-compileKotlin.dependsOn copyKotlinJVMLib
-installDist.finalizedBy fixFilePermissions
-build.finalizedBy installDist

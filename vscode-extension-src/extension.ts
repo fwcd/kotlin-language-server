@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         outputChannelName: 'Kotlin',
         revealOutputChannelOn: 4 // never
     }
-    let startScriptPath = path.resolve(context.extensionPath, "build", "install", "kotlin-language-server", "bin", correctScriptName("kotlin-language-server"))
+    let startScriptPath = path.resolve(context.extensionPath, "server", "build", "install", "KotlinLanguageServer", "bin", correctScriptName("KotlinLanguageServer"))
     let args = [];
     
     // Ensure that start script can be executed
