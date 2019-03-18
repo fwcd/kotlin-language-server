@@ -22,7 +22,7 @@
     ],
     "main": "./out/extension",
     "files": [
-        "build/install/**"
+        "server/build/install/**"
     ],
     "contributes": {
         "languages": [
@@ -67,7 +67,7 @@
         }
     },
     "scripts": {
-        "package-with-lsp": "gradle installDist && vsce package -o build.vsix",
+        "package-with-lsp": "gradle server:installDist && vsce package -o build.vsix",
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",

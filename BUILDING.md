@@ -24,7 +24,7 @@ Describes how to build and run this project. Note that you might need to use `gr
 | Building | `./gradlew server:build` | Builds, tests and packages the language server |
 
 ### Launching the packaged language server
-* Start scripts for the language server are located under `build/install/KotlinLanguageServer/bin/`
+* Start scripts for the language server are located under `server/build/install/server/bin/`
 
 ### Debugging
 * Attach the running language server on `localhost:8000`

@@ -19,7 +19,7 @@ out/test/**
 out/**/*.map
 bin/**
 build/**
-!build/install/**
+!server/build/install/**
 
 tsconfig.json
 tslint.json

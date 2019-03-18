@@ -19,7 +19,7 @@ task fixFilePermissions(type: Exec) {
     // When running on macOS or Linux the start script
     // needs executable permissions to run.
     onlyIf { !System.getProperty("os.name").toLowerCase().contains("windows") }
-    commandLine 'chmod', '+x', "${project.buildDir}/install/KotlinLanguageServer/bin/KotlinLanguageServer"
+    commandLine 'chmod', '+x', "${project.buildDir}/install/server/bin/server"
 }
 
 task debugRun(type: JavaExec) {
