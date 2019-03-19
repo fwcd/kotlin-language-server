@@ -22,8 +22,13 @@ private fun completeIdentifierInsideCall() {
     instance.instanceFoo(f)
 }
 
+private fun findCompletionsForLettersInFullMethod() {
+    SomeClass().instanceFoo()
+}
+
 private class SomeClass {
     fun instanceFoo() = "Foo"
+    fun instanceFee() = "Fee"
     private fun privateInstanceFoo() = "Foo"
     var fooVar = 1
 }

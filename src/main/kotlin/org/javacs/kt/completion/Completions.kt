@@ -104,6 +104,8 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
             el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression ?:
             // something::?
             el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression ?:
+            // something.foo() with cursor in the method
+            el.parent?.parent as? KtQualifiedExpression ?:
             // ?
             el as? KtNameReferenceExpression
 }
