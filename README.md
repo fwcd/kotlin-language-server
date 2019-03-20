@@ -43,6 +43,12 @@ The incremental expression compilation logic is all in [CompiledFile.kt](src/mai
 
 There is an extensive suite of behavioral [tests](src/test/kotlin/org/javacs/kt), which are all implemented in terms of the language server protocol, so you should be able to refactor the code any way you like and the tests should still work.
 
+## Modules
+
+| Name | Description |
+| ---- | ----------- |
+| server | The language server executable |
+
 ## Scripts
 
 | Name | Command | Description |
