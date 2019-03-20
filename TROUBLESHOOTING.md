@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## The tests fail with java.lang.NoSuchMethodError
+## The tests fail with `java.lang.NoSuchMethodError`
 * After updating the Kotlin version, there may be multiple copies of the compiler plugin in `lib-kotlin`, for example:
 
 ```
@@ -15,3 +15,12 @@ lib-kotlin
 * To fix this, simply remove the older JARs
 * If that still does not work, delete the entire `lib-kotlin` folder
     * Gradle will automatically re-download the necessary files once the project is built again
+
+## Running `npm run compile` or `vsce package` fails
+If you get the error
+
+```
+error TS6059: File '.../KotlinLanguageServer/bin/vscode-extension-src/...' is not under 'rootDir' '.../KotlinLanguageServer/vscode-extension-src'. 'rootDir' is expected to contain all source files.
+```
+
+delete the `bin` folder in the repository directory.
