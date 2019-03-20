@@ -11,6 +11,10 @@ description = 'Code completions, diagnostics and more for Kotlin'
 def debugPort = 8000
 def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
 
+dependencies {
+    implementation project(':shared')
+}
+
 applicationDistribution.into('bin') {
     fileMode = 0755
 }

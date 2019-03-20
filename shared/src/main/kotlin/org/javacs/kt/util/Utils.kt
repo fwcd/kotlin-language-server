@@ -1,16 +1,10 @@
 package org.javacs.kt.util
 
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiFile
 import org.javacs.kt.LOG
-import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import java.io.PrintStream
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
-
-inline fun<reified Find> PsiElement.findParent() =
-        this.parentsWithSelf.filterIsInstance<Find>().firstOrNull()
 
 fun execAndReadStdout(shellCommand: String, directory: Path): String {
     val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
@@ -29,18 +23,6 @@ inline fun withCustomStdout(delegateOut: PrintStream, task: () -> Unit) {
     System.setOut(actualOut)
 }
 
-fun PsiElement.preOrderTraversal(): Sequence<PsiElement> {
-    val root = this
-
-    return sequence {
-        yield(root)
-
-        for (child in root.children) {
-            yieldAll(child.preOrderTraversal())
-        }
-    }
-}
-
 fun winCompatiblePathOf(path: String): Path {
     if (path.get(2) == ':' && path.get(0) == '/') {
         // Strip leading '/' when dealing with paths on Windows
@@ -55,9 +37,6 @@ fun Path.replaceExtensionWith(newExtension: String): Path {
 	val newName = oldName.substring(0, oldName.lastIndexOf(".")) + newExtension
 	return resolveSibling(newName)
 }
-
-fun PsiFile.toPath(): Path =
-        winCompatiblePathOf(this.originalFile.viewProvider.virtualFile.path)
 
 fun <T> noResult(message: String, result: T): T {
     LOG.info(message)
