@@ -1,5 +1,9 @@
 matrix:
   include:
+    - name: "Shared module build (util, classpath)"
+      language: java
+      script: ./gradlew shared:build
+    
     - name: "Language server tests"
       language: java
       script: ./gradlew server:test -i
