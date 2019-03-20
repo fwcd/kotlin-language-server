@@ -8,9 +8,6 @@ import java.util.logging.LogRecord
 import java.util.logging.Handler
 import java.util.logging.Level
 import java.time.Instant
-import org.eclipse.lsp4j.MessageParams
-import org.eclipse.lsp4j.MessageType
-import org.eclipse.lsp4j.services.LanguageClient
 import org.javacs.kt.util.DelegatePrintStream
 
 val LOG = Logger()
