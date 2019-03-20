@@ -1,5 +1,6 @@
 plugins {
     id 'application'
+	id 'com.github.jk1.tcdeps' version '0.17'
 }
 
 group = 'org.javacs'
@@ -11,12 +12,45 @@ description = 'Code completions, diagnostics and more for Kotlin'
 def debugPort = 8000
 def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
 
+repositories {
+    maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+    mavenCentral()
+    teamcityServer {
+        url = teamCityUrl
+        credentials {
+            username = teamCityUsername
+            password = teamCityPassword
+        }
+    }
+}
+
+configurations {
+    kotlinJVMLib
+}
+
 dependencies {
+    def kotlinTeamCity = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
+    
     implementation project(':shared')
+    implementation 'com.google.guava:guava:21.0'
+    implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.5.0'
+    implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    
+    implementation fileTree(dir: "$projectDir/lib", include: ["*.jar"])
+    implementation fileTree(dir: "$projectDir/lib-kotlin", include: ["*.jar"])
+    
+    kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
+    kotlinJVMLib tc("$kotlinTeamCity/lib/j2k.jar")
 }
 
 applicationDistribution.into('bin') {
     fileMode = 0755
+}
+
+task copyKotlinJVMLib(type: Copy) {
+    from configurations.kotlinJVMLib
+    into "$projectDir/lib-kotlin"
 }
 
 task fixFilePermissions(type: Exec) {
@@ -59,5 +93,6 @@ test {
     }
 }
 
+compileKotlin.dependsOn copyKotlinJVMLib
 installDist.finalizedBy fixFilePermissions
 build.finalizedBy installDist

@@ -6,7 +6,6 @@ import org.javacs.kt.util.winCompatiblePathOf
 import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.KotlinLSException
-import org.jetbrains.kotlin.utils.ifEmpty
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
