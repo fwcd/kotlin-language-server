@@ -14,6 +14,19 @@ import { LOG } from './logger';
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     configureLanguage();
     
+    const serverEnabled = vscode.workspace.getConfiguration("kotlin").get("languageServer.enabled");
+    
+    if (serverEnabled) {
+        activateLanguageServer(context);
+    } else {
+        LOG.info("Skipping language server activation since 'kotlin.languageServer.enabled' is false");
+    }
+}
+
+// this method is called when your extension is deactivated
+export function deactivate(): void {}
+
+async function activateLanguageServer(context: vscode.ExtensionContext) {
     LOG.info('Activating Kotlin language server...');
     let barItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     context.subscriptions.push(barItem);
@@ -77,9 +90,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(languageClientDisposable);
     barItem.dispose();
 }
-
-// this method is called when your extension is deactivated
-export function deactivate(): void {}
 
 function configureLanguage(): void {
     // Source: https://github.com/Microsoft/vscode/blob/9d611d4dfd5a4a101b5201b8c9e21af97f06e7a7/extensions/typescript/src/typescriptMain.ts#L186
