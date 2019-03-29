@@ -1,6 +1,7 @@
 plugins {
     id 'application'
 	id 'com.github.jk1.tcdeps' version '0.17'
+    id 'com.jaredsburrows.license' version '0.8.42'
 }
 
 group = 'org.javacs'
@@ -14,6 +15,7 @@ def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspen
 
 repositories {
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+    maven { url uri("$projectDir/lib") }
     mavenCentral()
     teamcityServer {
         url = teamCityUrl
@@ -36,8 +38,8 @@ dependencies {
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.5.0'
     implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    implementation 'org.jetbrains:fernflower:1.0'
     
-    implementation fileTree(dir: "$projectDir/lib", include: ["*.jar"])
     implementation fileTree(dir: "$projectDir/lib-kotlin", include: ["*.jar"])
     
     kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")

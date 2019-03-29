@@ -5,5 +5,4 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    implementation 'org.gradle:gradle-tooling-api:4.3'
 }

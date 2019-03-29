@@ -22,6 +22,8 @@ Describes how to build and run this project. Note that you might need to use `gr
 | Running | `./gradlew server:run` | Runs the standalone language server from the command line |
 | Debugging | `./gradlew server:debugRun` | Launches the standalone language server from the command line using a debug configuration |
 | Building | `./gradlew server:build` | Builds, tests and packages the language server |
+| Releasing | `./gradlew server:distZip` | Creates a release zip in `server/build/distributions`. If any dependencies have changed since the last release, a new license report should be generated and placed in `src/main/dist` before creating the distribution. |
+| Generating a license report | `./gradlew server:licenseReport` | Generates a license report from the dependencies in `server/build/reports/licenses` |
 
 ### Launching the packaged language server
 * Start scripts for the language server are located under `server/build/install/server/bin/`
