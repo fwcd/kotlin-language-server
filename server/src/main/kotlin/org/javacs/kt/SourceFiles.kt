@@ -111,7 +111,7 @@ class SourceFiles(private val sp: SourcePath) {
         try {
             content = Files.readAllLines(file).joinToString("\n")
         } catch(exception:Exception) {
-            LOG.debug("Exception while parsing source file : ${file.toFile().absolutePath}")
+            LOG.warn("Exception while parsing source file : ${file.toFile().absolutePath}")
         }
 
         return SourceVersion(content, -1)
