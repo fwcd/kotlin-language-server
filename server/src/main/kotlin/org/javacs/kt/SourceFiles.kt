@@ -110,7 +110,7 @@ class SourceFiles(private val sp: SourcePath) {
 
         try {
             content = Files.readAllLines(file).joinToString("\n")
-        } catch(exception:Exception) {
+        } catch(exception: IOException) {
             LOG.warn("Exception while parsing source file : ${file.toFile().absolutePath}")
         }
 
