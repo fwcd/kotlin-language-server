@@ -106,7 +106,13 @@ class SourceFiles(private val sp: SourcePath) {
     private fun readFromDisk(file: Path): SourceVersion? {
         if (!Files.exists(file)) return null
 
-        val content = Files.readAllLines(file).joinToString("\n")
+        var content = ""
+
+        try {
+            content = Files.readAllLines(file).joinToString("\n")
+        } catch(exception: IOException) {
+            LOG.warn("Exception while parsing source file : ${file.toFile().absolutePath}")
+        }
 
         return SourceVersion(content, -1)
     }
