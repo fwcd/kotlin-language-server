@@ -1,3 +1,6 @@
+jdk:
+  - openjdk8
+  - oraclejdk8
 matrix:
   include:
     - name: "Shared module build (util, classpath)"
