@@ -1,6 +1,6 @@
 plugins {
     id 'application'
-	id 'com.github.jk1.tcdeps' version '0.17'
+	id 'com.github.jk1.tcdeps' version '0.19'
     id 'com.jaredsburrows.license' version '0.8.42'
 }
 
