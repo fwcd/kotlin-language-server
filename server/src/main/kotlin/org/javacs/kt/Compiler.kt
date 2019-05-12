@@ -6,7 +6,7 @@ import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileFactory
 import com.intellij.mock.MockProject
-import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
+import org.jetbrains.kotlin.scripting.legacy.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -68,10 +68,10 @@ class Compiler(classPath: Set<Path>) {
 
     private val parser = KtPsiFactory(environment.project)
     private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-    private val scripts = ScriptDefinitionProvider.getInstance(environment.project) as CliScriptDefinitionProvider
+    private val scripts = ScriptDefinitionProvider.getInstance(environment.project) as? CliScriptDefinitionProvider
 
     init {
-        scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
+        scripts?.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
     }
 
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
