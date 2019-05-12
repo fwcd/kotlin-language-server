@@ -31,7 +31,8 @@ configurations {
 }
 
 dependencies {
-    def kotlinTeamCity = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
+    def kotlinCompilerTC = "$kotlinBuildType:$kotlinBuild:kotlin-compiler-${kotlinVersion}.zip!/kotlinc"
+    def kotlinPluginTC = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
     
     implementation project(':shared')
     implementation 'com.google.guava:guava:21.0'
@@ -43,8 +44,11 @@ dependencies {
     
     implementation fileTree(dir: "$projectDir/lib-kotlin", include: ["*.jar"])
     
-    kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
-    kotlinJVMLib tc("$kotlinTeamCity/lib/j2k.jar")
+    kotlinJVMLib tc("$kotlinCompilerTC/lib/kotlin-scripting-impl.jar")
+    // TODO: The dependency above will be renamed in Kotlin 1.3.50:
+    // kotlinJVMLib tc("$kotlinCompilerTC/lib/kotlin-scripting-compiler-impl.jar")
+    kotlinJVMLib tc("$kotlinPluginTC/lib/kotlin-plugin.jar")
+    kotlinJVMLib tc("$kotlinPluginTC/lib/j2k.jar")
 }
 
 applicationDistribution.into('bin') {

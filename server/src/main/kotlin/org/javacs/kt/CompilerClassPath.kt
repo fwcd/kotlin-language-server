@@ -6,7 +6,7 @@ import java.nio.file.Path
 class CompilerClassPath {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
-    var compiler = Compiler(classPath)
+    var compiler = Compiler(classPath, workspaceRoots)
         private set
 
     private fun refresh() {
@@ -21,7 +21,7 @@ class CompilerClassPath {
 
             classPath.removeAll(removed)
             classPath.addAll(added)
-            compiler = Compiler(classPath)
+            compiler = Compiler(classPath, workspaceRoots)
         }
     }
 

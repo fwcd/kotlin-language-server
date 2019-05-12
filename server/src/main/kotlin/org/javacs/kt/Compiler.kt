@@ -7,6 +7,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiFileFactory
 import com.intellij.mock.MockProject
 import org.jetbrains.kotlin.scripting.legacy.CliScriptDefinitionProvider
+import org.jetbrains.kotlin.scripting.legacy.CliScriptDependenciesProvider
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -30,6 +31,8 @@ import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProvid
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.script.KotlinScriptDefinition
 import org.jetbrains.kotlin.script.ScriptDefinitionProvider
+import org.jetbrains.kotlin.script.ScriptDependenciesProvider
+import org.jetbrains.kotlin.script.StandardScriptDefinition
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
@@ -45,10 +48,11 @@ import org.javacs.kt.util.LoggingMessageCollector
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(classPath: Set<Path>) {
+class Compiler(classPath: Set<Path>, workspaceRoots: Set<Path>) {
     private val config = CompilerConfiguration().apply {
         put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
         put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
+        put(JVMConfigurationKeys.SCRIPT_DEFINITIONS, listOf(StandardScriptDefinition))
         addJvmClasspathRoots(classPath.map { it.toFile() })
     }
     val environment: KotlinCoreEnvironment
@@ -62,6 +66,8 @@ class Compiler(classPath: Set<Path>) {
         )
         val project = environment.project
         if (project is MockProject) {
+            project.registerService(ScriptDefinitionProvider::class.java, CliScriptDefinitionProvider())
+            project.registerService(ScriptDependenciesProvider::class.java, CliScriptDependenciesProvider(project))
             project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
         }
     }
@@ -71,7 +77,7 @@ class Compiler(classPath: Set<Path>) {
     private val scripts = ScriptDefinitionProvider.getInstance(environment.project) as? CliScriptDefinitionProvider
 
     init {
-        scripts?.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
+        scripts?.setScriptDefinitions(listOf(StandardScriptDefinition))
     }
 
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {

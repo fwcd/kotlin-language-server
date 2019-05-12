@@ -9,7 +9,7 @@ class CompiledFileTest {
     val compiledFile = compileFile()
 
     fun compileFile(): CompiledFile {
-        val compiler = Compiler(setOf())
+        val compiler = Compiler(setOf(), setOf())
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createFile(content, file)
