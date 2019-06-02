@@ -8,7 +8,6 @@ import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.hasProperty
 import org.hamcrest.Matchers.hasSize
 import org.junit.Assert.assertThat
-import org.junit.Ignore
 import org.junit.Test
 
 class DefinitionTest : SingleFileTestFixture("definition", "GoFrom.kt") {
@@ -37,7 +36,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
     fun `go to definition of object property`() {
         assertGoToProperty(
             of = position(15, 20),
-            expect = range(4, 5, 4, 41)
+            expect = range(4, 15, 4, 32)
         )
     }
 
@@ -45,7 +44,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
     fun `go to definition of top level property`() {
         assertGoToProperty(
             of = position(17, 20),
-            expect = range(11, 1, 11, 32)
+            expect = range(11, 11, 11, 23)
         )
     }
 
@@ -53,7 +52,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
     fun `go to definition of class level property`() {
         assertGoToProperty(
             of = position(16, 20),
-            expect = range(8, 5, 8, 34)
+            expect = range(8, 9, 8, 25)
         )
     }
 
@@ -61,7 +60,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
     fun `go to definition of local property`() {
         assertGoToProperty(
             of = position(18, 18),
-            expect = range(14, 5, 14, 24)
+            expect = range(14, 9, 14, 20)
         )
     }
 
