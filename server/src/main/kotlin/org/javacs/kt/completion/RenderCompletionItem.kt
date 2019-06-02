@@ -92,7 +92,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
         return if (desc.valueParameters.isEmpty())
             "$name()"
         else
-            "$name(\$0)"
+            "$name(${desc.valueParameters.mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }.joinToString()})"
     }
 
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
