@@ -89,7 +89,7 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams) = async.compute {
+    override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> = async.compute {
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
