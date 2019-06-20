@@ -10,26 +10,37 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 
-fun readBuildGradle(buildFile: Path): Set<Path> {
-    val projectDirectory = buildFile.getParent()
+internal class GradleClassPathResolver(private val path: Path) : ClassPathResolver {
 
-    // The first successful dependency resolver is used
-    // (evaluating them from top to bottom)
-    var dependencies = firstNonNull<Set<Path>>(
-        { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
-    ).orEmpty()
+    override val classpath: Set<Path> get() {
+        val projectDirectory = path.getParent()
 
-    if (dependencies.isEmpty()) {
-        LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
+        // The first successful dependency resolver is used
+        // (evaluating them from top to bottom)
+        var dependencies = firstNonNull<Set<Path>>(
+            { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
+        ).orEmpty()
+
+        if (dependencies.isEmpty()) {
+            LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
+        }
+
+        return dependencies
     }
 
-    return dependencies
+    companion object {
+
+        /** Create a maven resolver if a file is a pom */
+        fun maybeCreate(file: Path): GradleClassPathResolver? =
+            file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
+                ?.let { GradleClassPathResolver(it) }
+    }
 }
 
 private fun createTemporaryGradleFile(): File {
     val config = File.createTempFile("classpath", ".gradle")
     config.deleteOnExit()
-    
+
     LOG.info("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
