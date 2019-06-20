@@ -7,10 +7,11 @@ import java.nio.file.Paths
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
     val workspace = WithStdlibResolver(
-        workspaceRoots.asSequence()
-            .flatMap(::workspaceResolvers)
-            .fold(ClassPathResolver.empty) { accum, next -> accum + next }
-
+        ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
+            workspaceRoots.asSequence()
+                .flatMap(::workspaceResolvers)
+                .fold(ClassPathResolver.empty) { accum, next -> accum + next }
+        )
     )
     return workspace.or(BackupClassPathResolver).classpath
 }
@@ -46,7 +47,9 @@ private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver>
 
 /** Tries to create a classpath resolver from a file using as many sources as possible */
 private fun asClassPathProvider(path: Path): ClassPathResolver? =
-    MavenClassPathResolver.maybeCreate(path) ?: GradleClassPathResolver.maybeCreate(path)
+    MavenClassPathResolver.maybeCreate(path)
+        ?: GradleClassPathResolver.maybeCreate(path)
+        ?: ShellClassPathResolver.maybeCreate(path)
 
 internal val userHome = Paths.get(System.getProperty("user.home"))
 
