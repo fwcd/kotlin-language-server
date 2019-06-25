@@ -30,12 +30,12 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     }
 }
 
-private val artifact = ".*:.*:.*:.*:.*".toRegex()
+private val artifactPattern = "^[^:]*:(?:[^:]+:)+[^:]+".toRegex()
 
 private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
     mavenOutput.toFile()
         .readLines()
-        .filter { it.matches(artifact) }
+        .filter { it.matches(artifactPattern) }
         .map { parseArtifact(it) }
         .toSet()
 
@@ -86,12 +86,49 @@ fun parseArtifact(rawArtifact: String, version: String? = null): Artifact {
     val parts = rawArtifact.trim().split(':')
 
     return when (parts.size) {
-        3 -> Artifact(parts[0], parts[1], version ?: parts[2])
-        5 -> Artifact(parts[0], parts[1], version ?: parts[3])
+        3 -> Artifact(
+            group = parts[0],
+            artifact = parts[1],
+            packaging = null,
+            classifier = null,
+            version = version ?: parts[2],
+            scope = null
+        )
+        4 -> Artifact(
+            group = parts[0],
+            artifact = parts[1],
+            packaging = parts[2],
+            classifier = null,
+            version = version ?: parts[3],
+            scope = null
+        )
+        5 -> Artifact(
+            group = parts[0],
+            artifact = parts[1],
+            packaging = parts[2],
+            classifier = null,
+            version = version ?: parts[3],
+            scope = parts[4]
+        )
+        6 -> Artifact(
+            group = parts[0],
+            artifact = parts[1],
+            packaging = parts[2],
+            classifier = parts[3],
+            version = version ?: parts[4],
+            scope = parts[5]
+        )
         else -> throw IllegalArgumentException("$rawArtifact is not a properly formed Maven/Gradle artifact")
     }
 }
 
-data class Artifact(val group: String, val artifact: String, val version: String) {
+data class Artifact(
+    val group: String,
+    val artifact: String,
+    val packaging: String?,
+    val classifier: String?,
+    val version: String,
+    val scope: String?
+) {
     override fun toString() = "$group:$artifact:$version"
 }
