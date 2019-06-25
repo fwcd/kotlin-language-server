@@ -44,11 +44,11 @@ private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
         .resolve(a.version)
         .resolve(mavenJarName(a, source))
 
-    if (Files.exists(result))
-        return result
+    return if (Files.exists(result))
+        result
     else {
         LOG.warn("Couldn't find {} in {}", a, result)
-        return null
+        null
     }
 }
 
@@ -59,15 +59,14 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 private fun generateMavenDependencyList(pom: Path): Path? {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val workingDirectory = pom.toAbsolutePath().parent.toFile()
-    val cmd = "${mvnCommand} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    val cmd = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
     LOG.info("Run {} in {}", cmd, workingDirectory)
     val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
 
     process.inputStream.bufferedReader().use { reader ->
-        while (process.isAlive()) {
-            val line = reader.readLine()?.trim()
-            if (line == null) break
-            if ((line.length > 0) && !line.startsWith("Progress")) {
+        while (process.isAlive) {
+            val line = reader.readLine()?.trim() ?: break
+            if (line.isNotEmpty() && !line.startsWith("Progress")) {
                 LOG.info("Maven: {}", line)
             }
         }
