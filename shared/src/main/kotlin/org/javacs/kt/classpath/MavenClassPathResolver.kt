@@ -24,7 +24,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     companion object {
         /** Create a maven resolver if a file is a pom. */
         fun maybeCreate(file: Path): MavenClassPathResolver? =
-            file?.takeIf { it.endsWith("pom.xml") }?.let { MavenClassPathResolver(it) }
+            file.takeIf { it.endsWith("pom.xml") }?.let { MavenClassPathResolver(it) }
     }
 }
 
