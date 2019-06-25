@@ -11,7 +11,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 internal class GradleClassPathResolver(private val path: Path) : ClassPathResolver {
-
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
 
@@ -29,8 +28,7 @@ internal class GradleClassPathResolver(private val path: Path) : ClassPathResolv
     }
 
     companion object {
-
-        /** Create a maven resolver if a file is a pom */
+        /** Create a Gradle resolver if a file is a pom. */
         fun maybeCreate(file: Path): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
                 ?.let { GradleClassPathResolver(it) }
