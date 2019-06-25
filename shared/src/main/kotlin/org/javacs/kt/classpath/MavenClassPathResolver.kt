@@ -28,13 +28,13 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     }
 }
 
-private val artifactPattern = "^[^:]*:(?:[^:]+:)+[^:]+".toRegex()
+private val artifactPattern = "^[^:]+:(?:[^:]+:)+[^:]+".toRegex()
 
 private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
     mavenOutput.toFile()
         .readLines()
         .filter { it.matches(artifactPattern) }
-        .map { parseArtifact(it) }
+        .map { parseMavenArtifact(it) }
         .toSet()
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
@@ -79,7 +79,7 @@ private val mvnCommand: Path by lazy {
     requireNotNull(findCommandOnPath("mvn")) { "Unable to find the 'mvn' command" }
 }
 
-fun parseArtifact(rawArtifact: String, version: String? = null): Artifact {
+fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
     val parts = rawArtifact.trim().split(':')
 
     return when (parts.size) {
