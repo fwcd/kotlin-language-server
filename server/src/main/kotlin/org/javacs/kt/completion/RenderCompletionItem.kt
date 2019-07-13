@@ -27,7 +27,7 @@ val DECL_RENDERER = DescriptorRenderer.withOptions {
 
 private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")
 
-class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
+class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptorVisitor<CompletionItem, Unit> {
     private val result = CompletionItem()
 
     private fun escape(id: String): String =

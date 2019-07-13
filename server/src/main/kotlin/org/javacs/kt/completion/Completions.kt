@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-fun completions(file: CompiledFile, cursor: Int): CompletionList {
+fun completions(file: CompiledFile, cursor: Int, snippetsEnabled: Boolean = true): CompletionList {
     val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
     val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
@@ -42,7 +42,7 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    val list = visible.map { completionItem(it, surroundingElement, file) }.take(MAX_COMPLETION_ITEMS).toList()
+    val list = visible.map { completionItem(it, surroundingElement, file, snippetsEnabled) }.take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = (list.size == MAX_COMPLETION_ITEMS)
     return CompletionList(isIncomplete, list)
 }
@@ -50,8 +50,8 @@ fun completions(file: CompiledFile, cursor: Int): CompletionList {
 private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
-private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile): CompletionItem {
-    val result = d.accept(RenderCompletionItem(), null)
+private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, snippetsEnabled: Boolean): CompletionItem {
+    val result = d.accept(RenderCompletionItem(snippetsEnabled), null)
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
