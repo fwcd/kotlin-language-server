@@ -61,7 +61,7 @@ private fun getGradleCommand(workspace: Path): Path {
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.info("Resolving dependencies for {} through Gradle's CLI...", projectDirectory.fileName)
+    LOG.info("Resolving dependencies for '{}' through Gradle's CLI...", projectDirectory.fileName)
     val config = createTemporaryGradleFile()
     val gradle = getGradleCommand(projectDirectory)
     val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
