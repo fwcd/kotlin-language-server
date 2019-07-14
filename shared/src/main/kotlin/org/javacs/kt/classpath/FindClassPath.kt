@@ -5,6 +5,7 @@ import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.PathMatcher
+import java.nio.file.Files
 import java.nio.file.FileSystems
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
@@ -41,7 +42,7 @@ internal interface ClassPathResolver {
     }
 }
 
-/** Combines two classpath resolvers */
+/** Combines two classpath resolvers. */
 internal operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@plus.resolverType} + ${other.resolverType}"
@@ -49,7 +50,7 @@ internal operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPat
         override val maybeClasspath get() = this@plus.maybeClasspath + other.maybeClasspath
     }
 
-/** Uses the left-hand classpath if not empty, otherwise uses the right */
+/** Uses the left-hand classpath if not empty, otherwise uses the right. */
 internal fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@or.resolverType} or ${other.resolverType}"
@@ -57,13 +58,30 @@ internal fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
         override val maybeClasspath get() = this@or.maybeClasspath.takeIf { it.isNotEmpty() } ?: other.maybeClasspath
     }
 
-/** Searches the workspace for all files that could provide classpath info */
+/** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
     val ignored: List<PathMatcher> = ignoredPathPatterns(workspaceRoot.resolve(".gitignore"))
-    LOG.info("Ignoring $ignored")
-    return workspaceRoot.toFile().walk()
-        .onEnter { file -> ignored.none { it.matches(workspaceRoot.relativize(file.toPath())) } }
-        .mapNotNull { asClassPathProvider(it.toPath()) }
+    return folderResolvers(workspaceRoot, workspaceRoot, ignored).asSequence()
+}
+
+/** Searches the folder for all build-files. */
+private fun folderResolvers(workspaceRoot: Path, folder: Path, ignored: List<PathMatcher>): Collection<ClassPathResolver> {
+    var resolvers = mutableListOf<ClassPathResolver>()
+
+    for (file in Files.list(folder)) {
+        // Only test whether non-ignored file is a build-file
+        if (ignored.none { it.matches(workspaceRoot.relativize(file)) }) {
+            val resolver = asClassPathProvider(file)
+            if (resolver != null) {
+                resolvers.add(resolver)
+                break
+            } else if (Files.isDirectory(file)) {
+                resolvers.addAll(folderResolvers(workspaceRoot, file, ignored))
+            }
+        }
+    }
+
+    return resolvers
 }
 
 /** Tries to read glob patterns from a gitignore. */
