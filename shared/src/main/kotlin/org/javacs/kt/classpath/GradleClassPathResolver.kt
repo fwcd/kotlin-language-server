@@ -11,6 +11,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 internal class GradleClassPathResolver(private val path: Path) : ClassPathResolver {
+    override val resolverType: String = "Gradle"
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
 

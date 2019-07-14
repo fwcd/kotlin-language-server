@@ -13,17 +13,25 @@ fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
                 .fold(ClassPathResolver.empty) { accum, next -> accum + next }
         )
     )
-    return workspace.or(BackupClassPathResolver).classpath
+    return workspace.or(BackupClassPathResolver).maybeClasspath ?: emptySet<Path>()
 }
 
 /** A source for creating class paths */
 internal interface ClassPathResolver {
+    val resolverType: String
     val classpath: Set<Path>
+    val maybeClasspath: Set<Path>?
+        get() = try {
+            classpath
+        } catch (e: Exception) {
+            LOG.warn("Could not resolve classpath using $resolverType: ${e.message}")
+            null
+        }
 
     companion object {
-
         /** A default empty classpath implementation */
         val empty = object : ClassPathResolver {
+            override val resolverType = "{}"
             override val classpath = emptySet<Path>()
         }
     }
@@ -32,13 +40,17 @@ internal interface ClassPathResolver {
 /** Combines two classpath resolvers */
 internal operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
+        override val resolverType: String = "${this@plus.resolverType} + ${other.resolverType}"
         override val classpath = this@plus.classpath + other.classpath
+        override val maybeClasspath = (this@plus.maybeClasspath ?: emptySet<Path>()) + (other.maybeClasspath ?: emptySet<Path>())
     }
 
 /** Uses the left-hand classpath if not empty, otherwise uses the right */
 internal fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
+        override val resolverType: String = "${this@or.resolverType} or ${other.resolverType}"
         override val classpath = this@or.classpath.takeIf { it.isNotEmpty() } ?: other.classpath
+        override val maybeClasspath = this@or.maybeClasspath?.takeIf { it.isNotEmpty() } ?: other.maybeClasspath
     }
 
 /** Searches the workspace for all files that could provide classpath info */

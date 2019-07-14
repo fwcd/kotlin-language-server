@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 /** A classpath resolver that ensures another resolver contains the stdlib */
 internal class WithStdlibResolver(private val wrap: ClassPathResolver) : ClassPathResolver {
+    override val resolverType: String = "Stdlib + ${wrap.resolverType}"
     override val classpath: Set<Path> get() {
         val paths = wrap.classpath
 

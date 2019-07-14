@@ -11,6 +11,7 @@ import java.nio.file.Paths
 
 /** Backup classpath that just tries to find Kotlin. */
 object BackupClassPathResolver : ClassPathResolver {
+    override val resolverType: String = "Backup"
     override val classpath: Set<Path> get() = findKotlinStdlib()?.let { setOf(it) }.orEmpty()
 }
 

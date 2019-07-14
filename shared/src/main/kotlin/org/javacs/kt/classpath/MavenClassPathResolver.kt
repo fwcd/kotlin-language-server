@@ -8,6 +8,7 @@ import java.io.File
 
 /** Resolver for reading maven dependencies */
 internal class MavenClassPathResolver private constructor(private val pom: Path) : ClassPathResolver {
+    override val resolverType: String = "Maven"
     override val classpath: Set<Path> get() {
         val mavenOutput = generateMavenDependencyList(pom)
         val artifacts = mavenOutput?.let(::readMavenDependencyList) ?: throw KotlinLSException("No artifacts could be read from $pom")
