@@ -96,7 +96,7 @@ private fun ignoredPathPatterns(path: Path): List<PathMatcher> =
             ".git"
         ) }
         ?.mapNotNull { try {
-            LOG.info("Matcher of $it for $path")
+            LOG.debug("Adding ignore pattern '$it' from $path")
             FileSystems.getDefault().getPathMatcher("glob:$it")
         } catch (e: Exception) {
             LOG.warn("Did not recognize gitignore pattern: '$it' (${e.message})")
