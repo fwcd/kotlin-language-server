@@ -4,6 +4,8 @@ import org.javacs.kt.LOG
 import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.PathMatcher
+import java.nio.file.FileSystems
 
 fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
     val resolver = WithStdlibResolver(
@@ -56,8 +58,33 @@ internal fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
     }
 
 /** Searches the workspace for all files that could provide classpath info */
-private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> =
-    workspaceRoot.toFile().walk().mapNotNull { asClassPathProvider(it.toPath()) }
+private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
+    val ignored: List<PathMatcher> = ignoredPathPatterns(workspaceRoot.resolve(".gitignore"))
+    LOG.info("Ignoring $ignored")
+    return workspaceRoot.toFile().walk()
+        .onEnter { file -> ignored.none { it.matches(workspaceRoot.relativize(file.toPath())) } }
+        .mapNotNull { asClassPathProvider(it.toPath()) }
+}
+
+/** Tries to read glob patterns from a gitignore. */
+private fun ignoredPathPatterns(path: Path): List<PathMatcher> =
+    path.toFile()
+        .takeIf { it.exists() }
+        ?.readLines()
+        ?.map { it.trim() }
+        ?.filter { it.isNotEmpty() && !it.startsWith("#") }
+        ?.let { it + listOf(
+            // Patterns that are ignored by default
+            ".git"
+        ) }
+        ?.mapNotNull { try {
+            LOG.info("Matcher of $it for $path")
+            FileSystems.getDefault().getPathMatcher("glob:$it")
+        } catch (e: Exception) {
+            LOG.warn("Did not recognize gitignore pattern: '$it' (${e.message})")
+            null
+        } }
+        ?: emptyList<PathMatcher>()
 
 /** Tries to create a classpath resolver from a file using as many sources as possible */
 private fun asClassPathProvider(path: Path): ClassPathResolver? =
