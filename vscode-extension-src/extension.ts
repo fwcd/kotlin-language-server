@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as path from "path";
 import * as fs from "fs";
 import * as child_process from "child_process";
-import { LanguageClient, LanguageClientOptions, ServerOptions } from "vscode-languageclient";
+import { LanguageClient, LanguageClientOptions, ServerOptions, RevealOutputChannelOn } from "vscode-languageclient";
 import { isOSUnixoid } from './osUtils';
 import { LOG } from './logger';
 
@@ -13,9 +13,9 @@ import { LOG } from './logger';
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     configureLanguage();
-    
+
     const serverEnabled = vscode.workspace.getConfiguration("kotlin").get("languageServer.enabled");
-    
+
     if (serverEnabled) {
         activateLanguageServer(context);
     } else {
@@ -43,8 +43,8 @@ async function activateLanguageServer(context: vscode.ExtensionContext) {
 
     // Options to control the language client
     let clientOptions: LanguageClientOptions = {
-        // Register the server for java documents
-        documentSelector: ['kotlin'],
+        // Register the server for Kotlin documents
+        documentSelector: [{ language: 'kotlin', scheme: 'file' }],
         synchronize: {
             // Synchronize the setting section 'kotlin' to the server
             // NOTE: this currently doesn't do anything
@@ -60,16 +60,16 @@ async function activateLanguageServer(context: vscode.ExtensionContext) {
             ]
         },
         outputChannelName: 'Kotlin',
-        revealOutputChannelOn: 4 // never
+        revealOutputChannelOn: RevealOutputChannelOn.Never
     }
     let startScriptPath = path.resolve(context.extensionPath, "server", "build", "install", "server", "bin", correctScriptName("server"))
     let args = [];
-    
+
     // Ensure that start script can be executed
     if (isOSUnixoid()) {
         child_process.exec("chmod +x " + startScriptPath);
     }
-    
+
     // Start the child java process
     let serverOptions: ServerOptions = {
         command: startScriptPath,
