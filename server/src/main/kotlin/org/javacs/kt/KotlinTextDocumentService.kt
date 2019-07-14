@@ -213,13 +213,16 @@ class KotlinTextDocumentService(
     }
 
     private fun doLint() {
-        LOG.info("Linting {}", describeFiles(lintTodo))
         linting = true
-        val files = clearLint()
-        val context = sp.compileFiles(files)
-        reportDiagnostics(files, context.diagnostics)
-        lintCount++
-        linting = false
+        try {
+            LOG.info("Linting {}", describeFiles(lintTodo))
+            val files = clearLint()
+            val context = sp.compileFiles(files)
+            reportDiagnostics(files, context.diagnostics)
+            lintCount++
+        } finally {
+            linting = false
+        }
     }
 
     private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {
