@@ -3,36 +3,37 @@ package org.javacs.kt.classpath
 import java.nio.file.Path
 
 /** A classpath resolver that ensures another resolver contains the stdlib */
-internal class WithStdlibResolver(private val wrap: ClassPathResolver) : ClassPathResolver {
-    override val resolverType: String = "Stdlib + ${wrap.resolverType}"
-    override val classpath: Set<Path> get() {
-        val paths = wrap.classpath
+internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : ClassPathResolver {
+    override val resolverType: String get() = "Stdlib + ${wrapped.resolverType}"
+    override val classpath: Set<Path> get() = wrapWithStdlib(wrapped.classpath)
+    override val maybeClasspath: Set<Path> get() = wrapWithStdlib(wrapped.maybeClasspath)
+}
 
-        // Ensure that there is exactly one kotlin-stdlib present, and/or exactly one of kotlin-stdlib-common, -jdk8, etc.
-        val isStdlib: ((Path) -> Boolean) = { it.toString().contains("kotlin-stdlib") }
+private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
+    // Ensure that there is exactly one kotlin-stdlib present, and/or exactly one of kotlin-stdlib-common, -jdk8, etc.
+    val isStdlib: ((Path) -> Boolean) = { it.toString().contains("kotlin-stdlib") }
 
-        val linkedStdLibs = paths.filter(isStdlib)
-            .mapNotNull { StdLibItem.from(it) }
-            .groupBy { it.key }
-            .map { candidates ->
-                // For each "kotlin-stdlib-blah", use the newest.  This may not be correct behavior if the project has lots of
-                // conflicting dependencies, but in general should get enough of the stdlib loaded that we can display errors
+    val linkedStdLibs = paths.filter(isStdlib)
+        .mapNotNull { StdLibItem.from(it) }
+        .groupBy { it.key }
+        .map { candidates ->
+            // For each "kotlin-stdlib-blah", use the newest.  This may not be correct behavior if the project has lots of
+            // conflicting dependencies, but in general should get enough of the stdlib loaded that we can display errors
 
-                candidates.value.sortedWith(
-                    compareByDescending<StdLibItem> { it.major } then
-                        compareByDescending { it.minor } then
-                        compareByDescending { it.patch }
-                ).first().path
-            }
-
-        val stdlibs = if (linkedStdLibs.isNotEmpty()) {
-            linkedStdLibs
-        } else {
-            findKotlinStdlib()?.let { listOf(it) } ?: listOf()
+            candidates.value.sortedWith(
+                compareByDescending<StdLibItem> { it.major } then
+                    compareByDescending { it.minor } then
+                    compareByDescending { it.patch }
+            ).first().path
         }
 
-        return paths.filterNot(isStdlib).union(stdlibs)
+    val stdlibs = if (linkedStdLibs.isNotEmpty()) {
+        linkedStdLibs
+    } else {
+        findKotlinStdlib()?.let { listOf(it) } ?: listOf()
     }
+
+    return paths.filterNot(isStdlib).union(stdlibs)
 }
 
 private data class StdLibItem(
