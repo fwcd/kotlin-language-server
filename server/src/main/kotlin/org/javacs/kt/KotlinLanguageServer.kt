@@ -18,13 +18,13 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
     private val config = Configuration()
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    
+
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)
-        
+
         workspaces.connect(client)
         textDocuments.connect(client)
-        
+
         LOG.info("Connected to client")
     }
 
@@ -74,7 +74,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
     override fun getWorkspaceService(): KotlinWorkspaceService {
         return workspaces
     }
-    
+
     private fun connectLoggingBackend(client: LanguageClient) {
         val backend: (LogMessage) -> Unit = {
             client.logMessage(MessageParams().apply {
@@ -85,7 +85,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
         LOG.connectOutputBackend(backend)
         LOG.connectErrorBackend(backend)
     }
-    
+
     private fun LogLevel.toLSPMessageType(): MessageType = when (this) {
         LogLevel.ERROR -> MessageType.Error
         LogLevel.WARN -> MessageType.Warning
