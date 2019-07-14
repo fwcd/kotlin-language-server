@@ -115,7 +115,7 @@ class KotlinTextDocumentService(
             LOG.info("Completing at {}", describePosition(position))
 
             val (file, cursor) = recover(position, false)
-            val completions = completions(file, cursor)
+            val completions = completions(file, cursor, config.snippetsEnabled)
 
             LOG.info("Found {} items", completions.items.size)
 

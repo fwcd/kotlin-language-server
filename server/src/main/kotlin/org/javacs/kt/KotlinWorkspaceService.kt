@@ -79,8 +79,12 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
-        val settings = params.settings as JsonObject
-        config.debounceTime = settings.get("kotlin").asJsonObject.get("debounceTime").asLong
+        val settings = params.settings as? JsonObject
+        settings?.get("kotlin")?.asJsonObject?.apply {
+            get("debounceTime")?.asLong?.let { config.debounceTime = it }
+            get("snippetsEnabled")?.asBoolean?.let { config.snippetsEnabled = it }
+        }
+        
         docService.updateDebouncer()
         LOG.info("configurations updated {}", settings)
     }

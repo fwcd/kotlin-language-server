@@ -58,15 +58,20 @@
         "configuration": {
             "title": "Kotlin",
             "properties": {
+                "kotlin.languageServer.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether the language server should be used. When enabled the extension will provide code completions and linting, otherwise just syntax highlighting. Might require a reload to apply."
+                },
                 "kotlin.debounceTime": {
                     "type": "integer",
                     "default": 250,
                     "description": "[DEBUG] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues"
                 },
-                "kotlin.languageServer.enabled": {
+                "kotlin.snippetsEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Specifies whether the language server should be used. When enabled the extension will provide code completions and linting, otherwise just syntax highlighting. Might require a reload to apply."
+                    "description": "Specifies whether code completion should provide snippets (true) or plain-text items (false)"
                 }
             }
         }

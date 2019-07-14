@@ -19,7 +19,17 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
 
     private fun createLanguageServer(): KotlinLanguageServer {
         val languageServer = KotlinLanguageServer()
-        val init = InitializeParams()
+        val init = InitializeParams().apply {
+            capabilities = ClientCapabilities().apply {
+                textDocument = TextDocumentClientCapabilities().apply {
+                    completion = CompletionCapabilities().apply {
+                        completionItem = CompletionItemCapabilities().apply {
+                            snippetSupport = true
+                        }
+                    }
+                }
+            }
+        }
 
         init.rootUri = workspaceRoot.toUri().toString()
         languageServer.initialize(init)
