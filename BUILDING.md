@@ -2,7 +2,7 @@
 Describes how to build and run this project. Note that you might need to use `gradlew` instead of `./gradlew` on Windows.
 
 ## Setup
-* Java 8+ should be installed and located under JAVA_HOME or PATH
+* Java 8 should be installed and located under JAVA_HOME or PATH. Java 11 is *not* supported yet, see [#108](https://github.com/fwcd/KotlinLanguageServer/issues/108) for details.
 
 ### ...for language server development
 * `./gradlew server:build`
