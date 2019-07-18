@@ -13,7 +13,7 @@ class CompiledFileTest {
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createFile(content, file)
-        val classPath = CompilerClassPath()
+        val classPath = CompilerClassPath(CompilerConfiguration())
         val sourcePath = listOf(parse)
         val (context, container) = compiler.compileFiles(sourcePath, sourcePath)
         return CompiledFile(content, parse, context, container, sourcePath, classPath)

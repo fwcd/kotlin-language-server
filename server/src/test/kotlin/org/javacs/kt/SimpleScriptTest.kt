@@ -2,7 +2,8 @@ package org.javacs.kt
 
 import org.jetbrains.kotlin.cli.common.repl.*
 import org.jetbrains.kotlin.cli.jvm.repl.*
-import org.jetbrains.kotlin.config.*
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
+import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.script.*
 import com.intellij.openapi.util.*
 import org.jetbrains.kotlin.cli.common.messages.*
@@ -19,7 +20,7 @@ class SimpleScriptTest {
     fun basicScript() {
         val scriptDef = KotlinScriptDefinition(Any::class)
         val repl = GenericReplEvaluator(listOf())
-        val config = CompilerConfiguration()
+        val config = KotlinCompilerConfiguration()
         config.put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
         val compiler = GenericReplCompiler(scriptDef, config, MessageCollector.NONE)
         val compilerState = compiler.createState()
@@ -38,7 +39,7 @@ class SimpleScriptTest {
             is ReplEvalResult.UnitResult -> println('_')
         }
     }
-    
+
     private fun assertNotError(result: ReplCompileResult) {
         if (result is ReplCompileResult.Error) {
             fail(result.message)
