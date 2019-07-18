@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
+import org.javacs.kt.CompletionConfiguration
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.toPath
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-fun completions(file: CompiledFile, cursor: Int, snippetsEnabled: Boolean = true): CompletionList {
+fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
     val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
     val completions = doCompletions(file, cursor, surroundingElement)
     val partial = findPartialIdentifier(file, cursor)
@@ -42,7 +43,7 @@ fun completions(file: CompiledFile, cursor: Int, snippetsEnabled: Boolean = true
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    val list = visible.map { completionItem(it, surroundingElement, file, snippetsEnabled) }.take(MAX_COMPLETION_ITEMS).toList()
+    val list = visible.map { completionItem(it, surroundingElement, file, config) }.take(MAX_COMPLETION_ITEMS).toList()
     val isIncomplete = (list.size == MAX_COMPLETION_ITEMS)
     return CompletionList(isIncomplete, list)
 }
@@ -50,8 +51,8 @@ fun completions(file: CompiledFile, cursor: Int, snippetsEnabled: Boolean = true
 private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
-private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, snippetsEnabled: Boolean): CompletionItem {
-    val result = d.accept(RenderCompletionItem(snippetsEnabled), null)
+private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
+    val result = d.accept(RenderCompletionItem(config.snippets.enabled), null)
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 

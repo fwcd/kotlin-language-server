@@ -57,7 +57,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         val clientCapabilities = params.capabilities
-        config.snippetsEnabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
+        config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace {} to source path", params.rootUri)

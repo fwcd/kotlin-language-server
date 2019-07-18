@@ -32,7 +32,7 @@ class KotlinTextDocumentService(
     private val async = AsyncExecutor()
     private var linting = false
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 
@@ -115,7 +115,7 @@ class KotlinTextDocumentService(
             LOG.info("Completing at {}", describePosition(position))
 
             val (file, cursor) = recover(position, false)
-            val completions = completions(file, cursor, config.snippetsEnabled)
+            val completions = completions(file, cursor, config.completion)
 
             LOG.info("Found {} items", completions.items.size)
 
@@ -190,7 +190,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     }
 
     private fun clearLint(): List<Path> {

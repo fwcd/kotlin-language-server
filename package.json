@@ -63,15 +63,27 @@
                     "default": true,
                     "description": "Specifies whether the language server should be used. When enabled the extension will provide code completions and linting, otherwise just syntax highlighting. Might require a reload to apply."
                 },
-                "kotlin.debounceTime": {
+                "kotlin.linting.debounceTime": {
                     "type": "integer",
                     "default": 250,
                     "description": "[DEBUG] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues"
                 },
-                "kotlin.snippetsEnabled": {
+                "kotlin.completion.snippets.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Specifies whether code completion should provide snippets (true) or plain-text items (false)"
+                },
+                "kotlin.debounceTime": {
+                    "type": "integer",
+                    "default": 250,
+                    "description": "[DEPRECATED] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues",
+                    "deprecationMessage": "Use 'kotlin.linting.debounceTime' instead"
+                },
+                "kotlin.snippetsEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "[DEPRECATED] Specifies whether code completion should provide snippets (true) or plain-text items (false)",
+                    "deprecationMessage": "Use 'kotlin.completion.snippets.enabled'"
                 }
             }
         }
