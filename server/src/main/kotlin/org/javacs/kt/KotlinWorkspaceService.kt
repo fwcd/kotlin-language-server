@@ -81,15 +81,35 @@ class KotlinWorkspaceService(
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
         val settings = params.settings as? JsonObject
         settings?.get("kotlin")?.asJsonObject?.apply {
-            // Support deprecated configuration keys
-            get("debounceTime")?.asLong?.let { config.linting.debounceTime = it }
+            // Update deprecated configuration keys
+            get("debounceTime")?.asLong?.let {
+                config.linting.debounceTime = it
+                docService.updateDebouncer()
+            }
             get("snippetsEnabled")?.asBoolean?.let { config.completion.snippets.enabled = it }
 
-            get("linting")?.asJsonObject?.apply {
-                val linting = config.linting
-                get("debounceTime")?.asLong?.let { linting.debounceTime = it }
+            // Update compiler options
+            get("compiler")?.asJsonObject?.apply {
+                val compiler = config.compiler
+                get("jvm")?.asJsonObject?.apply {
+                    val jvm = compiler.jvm
+                    get("target")?.asString?.let {
+                        jvm.target = it
+                        cp.updateCompilerConfiguration()
+                    }
+                }
             }
 
+            // Update linter options
+            get("linting")?.asJsonObject?.apply {
+                val linting = config.linting
+                get("debounceTime")?.asLong?.let {
+                    linting.debounceTime = it
+                    docService.updateDebouncer()
+                }
+            }
+
+            // Update code-completion options
             get("completion")?.asJsonObject?.apply {
                 val completion = config.completion
                 get("snippets")?.asJsonObject?.apply {
@@ -99,8 +119,7 @@ class KotlinWorkspaceService(
             }
         }
 
-        docService.updateDebouncer()
-        LOG.info("configurations updated {}", settings)
+        LOG.info("Updated configurations: {}", settings)
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {

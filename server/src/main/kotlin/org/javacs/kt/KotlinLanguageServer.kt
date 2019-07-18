@@ -12,10 +12,10 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware {
-    val classPath = CompilerClassPath()
+    private val config = Configuration()
+    val classPath = CompilerClassPath(config.compiler)
     val sourcePath = SourcePath(classPath)
     val sourceFiles = SourceFiles(sourcePath)
-    private val config = Configuration()
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
 
