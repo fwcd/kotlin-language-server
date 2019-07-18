@@ -27,10 +27,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 export function deactivate(): void {}
 
 async function activateLanguageServer(context: vscode.ExtensionContext) {
-    LOG.info('Activating Kotlin language server...');
+    LOG.info('Activating Kotlin Language Server...');
     let barItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
     context.subscriptions.push(barItem);
-    barItem.text = '$(sync) Activating Kotlin language server...';
+    barItem.text = '$(sync~spin) Activating Kotlin Language Server...';
     barItem.show();
 
     let javaExecutablePath = findJavaExecutable('java');
