@@ -4,6 +4,7 @@ import com.intellij.codeInsight.NullableNotNullManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiFileFactory
 import com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.script.CliScriptDefinitionProvider
@@ -14,8 +15,9 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.idea.KotlinLanguage
@@ -46,32 +48,61 @@ import org.javacs.kt.util.LoggingMessageCollector
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
 class Compiler(classPath: Set<Path>) {
-    private val config = CompilerConfiguration().apply {
-        put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
-        put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
-        addJvmClasspathRoots(classPath.map { it.toFile() })
-    }
     val environment: KotlinCoreEnvironment
 
+    private var parser: KtPsiFactory
+    private var scripts: CliScriptDefinitionProvider
+    private val localFileSystem: VirtualFileSystem
+
+    companion object {
+        init {
+            System.setProperty("idea.io.use.fallback", "true")
+        }
+    }
+
     init {
-        System.setProperty("idea.io.use.fallback", "true")
         environment = KotlinCoreEnvironment.createForProduction(
-            parentDisposable = Disposable { },
-            configuration = config,
+            parentDisposable = Disposable {},
+            // Not to be confused with the CompilerConfiguration in the language server Configuration
+            configuration = KotlinCompilerConfiguration().apply {
+                put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
+                put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
+                addJvmClasspathRoots(classPath.map { it.toFile() })
+            },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
+
         val project = environment.project
         if (project is MockProject) {
             project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
         }
+
+        parser = KtPsiFactory(environment.project)
+        scripts = ScriptDefinitionProvider.getInstance(environment.project) as CliScriptDefinitionProvider
+        scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
+        localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
     }
 
-    private val parser = KtPsiFactory(environment.project)
-    private val localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
-    private val scripts = ScriptDefinitionProvider.getInstance(environment.project) as CliScriptDefinitionProvider
+    /**
+     * Updates the compiler environment using the given
+     * configuration (which is a class from this project).
+     */
+    fun updateConfiguration(config: CompilerConfiguration) {
+        jvmTargetFrom(config.jvm.target)
+            ?.let { environment.configuration.put(JVMConfigurationKeys.JVM_TARGET, it) }
+    }
 
-    init {
-        scripts.setScriptDefinitions(listOf(KotlinScriptDefinition(Any::class)))
+    private fun jvmTargetFrom(target: String): JvmTarget? = when (target) {
+        // See https://github.com/JetBrains/kotlin/blob/master/compiler/frontend.java/src/org/jetbrains/kotlin/config/JvmTarget.kt
+        "default" -> null
+        "1.6" -> JvmTarget.JVM_1_6
+        "1.8" -> JvmTarget.JVM_1_8
+        // TODO: Add once Java 9+ is supported
+        // "9" -> JvmTarget.JVM_9
+        // "10" -> JvmTarget.JVM_10
+        // "11" -> JvmTarget.JVM_11
+        // "12" -> JvmTarget.JVM_12
+        else -> null
     }
 
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {

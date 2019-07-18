@@ -63,6 +63,11 @@
                     "default": true,
                     "description": "Specifies whether the language server should be used. When enabled the extension will provide code completions and linting, otherwise just syntax highlighting. Might require a reload to apply."
                 },
+                "kotlin.compiler.jvm.target": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "Specifies the JVM target, e.g. \"1.6\" or \"1.8\""
+                },
                 "kotlin.linting.debounceTime": {
                     "type": "integer",
                     "default": 250,
