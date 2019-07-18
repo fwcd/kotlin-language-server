@@ -94,7 +94,7 @@ class Compiler(classPath: Set<Path>) {
 
     private fun jvmTargetFrom(target: String): JvmTarget? = when (target) {
         // See https://github.com/JetBrains/kotlin/blob/master/compiler/frontend.java/src/org/jetbrains/kotlin/config/JvmTarget.kt
-        "default" -> null
+        "default" -> JvmTarget.DEFAULT
         "1.6" -> JvmTarget.JVM_1_6
         "1.8" -> JvmTarget.JVM_1_8
         // TODO: Add once Java 9+ is supported
