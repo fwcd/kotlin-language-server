@@ -35,5 +35,14 @@ class MavenArtifactParsingTest {
             version = "1.0",
             scope = null
         )))
+        
+        assertThat(parseMavenArtifact("io.vertx:vertx-sql-client:test-jar:tests:3.8.0-SNAPSHOT:compile"), equalTo(Artifact(
+            group = "io.vertx",
+            artifact = "vertx-sql-client",
+            packaging = "test-jar",
+            classifier = "tests",
+            version = "3.8.0-SNAPSHOT",
+            scope = "compile"
+        )))
     }
 }
