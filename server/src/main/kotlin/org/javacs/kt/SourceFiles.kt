@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
+import org.javacs.kt.util.KotlinLSException
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
@@ -101,7 +102,8 @@ class SourceFiles(private val sp: SourcePath) {
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            files[file] = readFromDisk(file)!!
+            files[file] = readFromDisk(file)
+                ?: throw KotlinLSException("Could not read source file '$file' after being changed on disk")
     }
 
     private fun readFromDisk(file: Path): SourceVersion? {
@@ -129,7 +131,8 @@ class SourceFiles(private val sp: SourcePath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            files[file] = readFromDisk(file)!!
+            files[file] = readFromDisk(file)
+                ?: throw KotlinLSException("Could not read source file '$file' while adding workspace '$root'")
         }
 
         workspaceRoots.add(root)
