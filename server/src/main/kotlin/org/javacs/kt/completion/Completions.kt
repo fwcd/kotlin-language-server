@@ -12,6 +12,9 @@ import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.load.java.descriptors.JavaMethodDescriptor
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
+import org.jetbrains.kotlin.load.java.structure.JavaMethod
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
@@ -56,7 +59,7 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
-    if (isGetter(d) || isSetter(d)) {
+    if (isJavaCodeAndInstanceMethod(d) && (isGetter(d) || isSetter(d))) {
         val name = extractVarName(d)
 
         result.detail += " (from ${result.label})"
@@ -75,6 +78,15 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
     }
 
     return result
+}
+
+private fun isJavaCodeAndInstanceMethod(
+    descriptor: DeclarationDescriptor
+): Boolean {
+    val javaMethodDescriptor = descriptor as? JavaMethodDescriptor ?: return false
+    val source = javaMethodDescriptor.source as? JavaSourceElement ?: return false
+    val javaElement = source.javaElement
+    return javaElement is JavaMethod && !javaElement.isStatic
 }
 
 private fun extractVarName(d: DeclarationDescriptor): String {
