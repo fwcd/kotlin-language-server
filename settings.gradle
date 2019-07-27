@@ -1,3 +1,15 @@
+// Workaround, see https://github.com/gradle/gradle/issues/1697#issuecomment-394359260
+// TODO: Variable plugin versions will be supported in Gradle 5.6, see https://github.com/gradle/gradle/issues/1697#issuecomment-506910915
+pluginManagement {
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.namespace != null && requested.id.namespace.startsWith("org.jetbrains.kotlin")) {
+                useVersion kotlinVersion
+            }
+        }
+    }
+}
+
 rootProject.name = 'KotlinLanguageServer'
 
-include 'shared', 'server'
+include 'shared', 'server', 'editors:vscode'
