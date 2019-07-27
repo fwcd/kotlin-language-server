@@ -75,7 +75,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 
 task copyKotlinJVMLib(type: Copy) {
     from configurations.kotlinJVMLib
-    into "$projectDir/lib-kotlin"
+    into file('lib-kotlin')
 }
 
 task fixFilePermissions(type: Exec) {
@@ -90,8 +90,10 @@ task debugRun(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     standardInput = System.in
     
-    println "Configured debugPort to $debugPort"
     jvmArgs debugArgs
+    doLast {
+        println "Using debug port $debugPort"
+    }
 }
 
 task debugStartScripts(type: CreateStartScripts) {

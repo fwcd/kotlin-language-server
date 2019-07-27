@@ -3,22 +3,22 @@ matrix:
     - name: "Shared module build (util, classpath)"
       language: java
       jdk: openjdk8
-      script: ./gradlew shared:build
+      script: ./gradlew :shared:build
     
     - name: "Shared module tests"
       language: java
       jdk: openjdk8
-      script: ./gradlew shared:test -i
+      script: ./gradlew :shared:test -i
     
     - name: "Language server tests"
       language: java
       jdk: openjdk8
-      script: ./gradlew server:test -i
+      script: ./gradlew :server:test -i
       
     - name: "Language server executable"
       language: java
       jdk: openjdk8
-      script: ./gradlew server:installDist
+      script: ./gradlew :server:installDist
     
     - name: "VSCode extension (Node.js)"
       language: node_js
