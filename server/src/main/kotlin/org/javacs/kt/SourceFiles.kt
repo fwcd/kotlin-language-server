@@ -131,8 +131,9 @@ class SourceFiles(private val sp: SourcePath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            files[file] = readFromDisk(file)
-                ?: throw KotlinLSException("Could not read source file '$file' while adding workspace '$root'")
+            readFromDisk(file)?.let {
+                files[file] = it
+            } ?: LOG.warn("Could not read source file '{}'", file)
         }
 
         workspaceRoots.add(root)
