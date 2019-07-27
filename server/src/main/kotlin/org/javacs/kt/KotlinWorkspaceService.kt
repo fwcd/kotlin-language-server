@@ -119,7 +119,7 @@ class KotlinWorkspaceService(
             }
         }
 
-        LOG.info("Updated configurations: {}", settings)
+        LOG.info("Updated configuration: {}", settings)
     }
 
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {

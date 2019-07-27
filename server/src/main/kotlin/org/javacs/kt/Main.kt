@@ -15,11 +15,6 @@ fun main(args: Array<String>) {
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }
     val launcher = LSPLauncher.createServerLauncher(server, input, System.out, threads, { it })
     
-    val scope = ConfigurationItem().apply {
-        section = "kotlin"
-    }
-    launcher.remoteProxy.configuration(ConfigurationParams(listOf(scope)))
-    
     server.connect(launcher.remoteProxy)
     launcher.startListening()
 }
