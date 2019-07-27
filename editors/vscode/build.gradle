@@ -18,8 +18,8 @@ task copyLanguageServer(type: Copy) {
 
 /** Prepares the grammars for packaging. */
 task copyGrammars(type: Copy) {
-    from "$rootDir/grammars"
-    into "$resourcesDir/grammars"
+    from "$rootDir/grammars/textmate"
+    into "$resourcesDir/grammars/textmate"
 }
 
 /**

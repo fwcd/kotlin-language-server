@@ -22,7 +22,7 @@
     ],
     "main": "./out/extension",
     "files": [
-        "server/build/install/**"
+        "resources"
     ],
     "contributes": {
         "languages": [
@@ -35,18 +35,18 @@
                     ".kt",
                     ".kts"
                 ],
-                "configuration": "./syntaxes/kotlin.configuration.json"
+                "configuration": "./resources/grammars/textmate/kotlin.configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "kotlin",
                 "scopeName": "source.kotlin",
-                "path": "./syntaxes/Kotlin.tmLanguage.json"
+                "path": "./resources/grammars/textmate/Kotlin.tmLanguage.json"
             },
             {
                 "scopeName": "markdown.kotlin.codeblock",
-                "path": "./syntaxes/codeblock.json",
+                "path": "./resources/grammars/textmate/codeblock.json",
                 "injectTo": [
                     "text.html.markdown"
                 ],

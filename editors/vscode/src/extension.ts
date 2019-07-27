@@ -62,7 +62,7 @@ async function activateLanguageServer(context: vscode.ExtensionContext) {
         outputChannelName: 'Kotlin',
         revealOutputChannelOn: RevealOutputChannelOn.Never
     }
-    let startScriptPath = path.resolve(context.extensionPath, "server", "build", "install", "server", "bin", correctScriptName("server"))
+    let startScriptPath = path.resolve(context.extensionPath, "resources", "install", "bin", correctScriptName("server"))
     let args = [];
 
     // Ensure that start script can be executed

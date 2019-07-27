@@ -14,12 +14,11 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
+                "--extensionDevelopmentPath=${workspaceFolder}/editors/vscode"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
-            "preLaunchTask": "npm: watch"
+                "${workspaceFolder}/editors/vscode/out/**/*.js"
+            ]
         },
         {
             "name": "Extension Tests",
@@ -27,13 +26,12 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionDevelopmentPath=${workspaceFolder}/editors/vscode",
+                "--extensionTestsPath=${workspaceFolder}/editors/vscode/out/test"
             ],
             "outFiles": [
-                "${workspaceFolder}/out/test/**/*.js"
-            ],
-            "preLaunchTask": "npm: watch"
+                "${workspaceFolder}/editors/vscode/out/test/**/*.js"
+            ]
         }
     ]
 }
