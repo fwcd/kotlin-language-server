@@ -1,28 +1,29 @@
-matrix:
+jobs:
   include:
-    - name: "Shared module build (util, classpath)"
+    - stage: "Shared Module"
+      name: "Build"
       language: java
       jdk: openjdk8
       script: ./gradlew :shared:build
-    
-    - name: "Shared module tests"
+    - name: "Tests"
       language: java
       jdk: openjdk8
       script: ./gradlew :shared:test -i
-    
-    - name: "Language server tests"
+    - stage: "Language Server"
+      name: "Tests"
       language: java
       jdk: openjdk8
       script: ./gradlew :server:test -i
-      
-    - name: "Language server executable"
+    - name: "Executable"
       language: java
       jdk: openjdk8
       script: ./gradlew :server:installDist
-    
-    - name: "VSCode extension (Node.js)"
+    - stage: "Extensions"
+      name: "VSCode"
       language: node_js
-      install:
-        - npm install
-        - npm run compile
-      script: echo "npm tests temporarily disabled"
+      jdk: openjdk8
+      script: ./gradlew :extensions:vscode:build
+    - name: "Atom"
+      language: node_js
+      jdk: openjdk8
+      script: ./gradlew :extensions:atom:build
