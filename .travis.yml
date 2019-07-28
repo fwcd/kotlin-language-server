@@ -15,8 +15,8 @@ jobs:
       script: ./gradlew :server:test -i
     - name: "Executable"
       script: ./gradlew :server:installDist
-    - stage: "Extensions"
+    - stage: "Editor extensions"
       name: "VSCode"
-      script: ./gradlew :extensions:vscode:build
+      script: ./gradlew :editors:vscode:build
     - name: "Atom"
-      script: ./gradlew :extensions:atom:build
+      script: ./gradlew :editors:atom:build
