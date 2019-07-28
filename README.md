@@ -5,9 +5,9 @@
 [![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
 
-A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, method signature help and more for Kotlin.
+A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
 
-Any editor conforming to the LSP is supported, including [VSCode](https://code.visualstudio.com) and [Atom](https://atom.io) whose client extensions are located in the `editors` directory.
+Any editor conforming to LSP is supported, including [VSCode](https://code.visualstudio.com) and [Atom](https://atom.io) for which client extensions provided by this repository.
 
 ![Icon](Icon128.png)
 

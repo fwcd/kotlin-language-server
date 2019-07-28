@@ -12,7 +12,7 @@ Describes how to build and run the language server and the editor extensions.
 
 If you just want to build the language server and use its binaries in your client of choice, run:
 
-`./gradlew :server:installDist`
+>`./gradlew :server:installDist`
 
 The language server together with the required libraries will be located in `server/build/install`, the start scripts in `server/build/install/server/bin`.
 
@@ -38,6 +38,10 @@ Run `./gradlew :editors:vscode:packageExtension` from the repository's top-level
 To install the Atom plugin, first run `./gradlew :editors:atom:ide-kotlin:install` and then `apm link` inside the `editors/atom/ide-kotlin` directory.
 
 That's it! To use the extension, just reload your Atom window.
+
+## Tree-Sitter grammar
+
+See [the documentation](https://tree-sitter.github.io/tree-sitter/creating-parsers) and [this gist](https://gist.github.com/Aerijo/df27228d70c633e088b0591b8857eeef) for instructions on how to develop, build and run the Tree-Sitter grammar located in `grammars/tree-sitter`.
 
 ## Gradle Tasks
 This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
