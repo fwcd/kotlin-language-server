@@ -12,4 +12,9 @@ pluginManagement {
 
 rootProject.name = 'KotlinLanguageServer'
 
-include 'shared', 'server', 'editors:vscode'
+include(
+    'shared',
+    'server',
+    'editors:vscode',
+    'editors:atom:ide-kotlin'
+)

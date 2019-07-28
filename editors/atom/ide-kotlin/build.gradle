@@ -1,0 +1,19 @@
+plugins {
+    id 'com.github.node-gradle.node' version '1.5.2'
+}
+
+/** Prepares the language server binaries for packaging. */
+task copyLanguageServer(type: Copy) {
+    dependsOn ':server:installDist'
+    from project(':server').tasks.installDist.destinationDir
+    into file("install")
+}
+
+/** Prepares resources used by the extension. */
+task prepare { dependsOn copyLanguageServer }
+
+npmInstall { dependsOn prepare }
+
+task install { dependsOn npmInstall }
+
+task build { dependsOn install }
