@@ -1,38 +1,76 @@
 # Building
-Describes how to build and run this project. Note that you might need to use `gradlew` instead of `./gradlew` on Windows.
+Describes how to build and run the language server and the editor extensions.
 
 ## Setup
+
 * Java 8 should be installed and located under JAVA_HOME or PATH. Java 11 is *not* supported yet, see [#108](https://github.com/fwcd/KotlinLanguageServer/issues/108) for details.
-* For extension development, [Visual Studio Code](https://code.visualstudio.com) is recommended
+* Note that you might need to use `gradlew` instead of `./gradlew` for the commands on Windows.
 
 ## Language Server
 
-| Task | Command | Description |
-| ---- | ------- | ----------- |
-| Packaging | `./gradlew :server:installDist` | Packages the language server as a bundle of JAR files (e.g. for use with the VSCode extension) |
-| Debug Packaging | `./gradlew :server:installDebugDist` | Packages the language server with a debug launch configuration |
-| Testing | `./gradlew :server:test` | Executes all unit tests |
-| Running | `./gradlew :server:run` | Runs the standalone language server from the command line |
-| Debugging | `./gradlew :server:debugRun` | Launches the standalone language server from the command line using a debug configuration |
-| Building | `./gradlew :server:build` | Builds, tests and packages the language server |
-| Releasing | `./gradlew :server:distZip` | Creates a release zip in `server/build/distributions`. If any dependencies have changed since the last release, a new license report should be generated and placed in `src/main/dist` before creating the distribution. |
-| Generating a license report | `./gradlew :server:licenseReport` | Generates a license report from the dependencies in `server/build/reports/licenses` |
+### Building
 
-### Launching the packaged language server
-* Start scripts for the language server are located under `server/build/install/server/bin/`
+If you just want to build the language server and use its binaries in your client of choice, run:
 
-### Debugging
-* Attach the running language server on `localhost:8000`
-    * Note that this can be done using the `Attach Kotlin Language Server` launch configuration in VSCode (requires the [Java Debug Extension](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug))
+`./gradlew :server:installDist`
 
-## VSCode Extension
+The language server together with the required libraries will be located in `server/build/install`, the start scripts in `server/build/install/server/bin`.
 
-### Running/Debugging
-* Package the language server using `./gradlew :server:installDist` (or `./gradlew :server:installDebugDist` for debugging)
-* Prepare the extension using `./gradlew :editors:vscode:preCompile`
+## VSCode extension
+
+### Development/Running
+First run `npm run watch` from the `editors/vscode` directory in a background shell. The extension will then incrementally build in the background.
+
+Every time you want to run the extension with the language server:
+* Prepare the extension using `./gradlew :editors:vscode:prepare` (this automatically builds and copies the language server's binaries into the extension folder)
 * Open the debug tab in VSCode
 * Run the `Extension` launch configuration
 
+### Debugging
+Your can attach the running language server on `localhost:8000`. Note that this can be done using the `Attach Kotlin Language Server` launch configuration in VSCode (requires the [Java Debug Extension](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)).
+
 ### Packaging
-* `./gradlew :editors:vscode:packageExtension`
-* The extension is located as `kotlin-[version].vsix` in `editors/vscode`
+Run `./gradlew :editors:vscode:packageExtension` from the repository's top-level-directory. The extension will then be located under the name `kotlin-[version].vsix` in `editors/vscode`.
+
+## Atom plugin
+
+### Development/Running
+To install the Atom plugin, first run `./gradlew :editors:atom:ide-kotlin:install` and then `apm link` inside the `editors/atom/ide-kotlin` directory.
+
+That's it! To use the extension, just reload your Atom window.
+
+## Gradle Tasks
+This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
+
+### Language Server (:server)
+
+| Task | Command | Description |
+| ---- | ------- | ----------- |
+| Package | `./gradlew :server:installDist` | Packages the language server as a bundle of JAR files (e.g. for use with an editor extension) |
+| Package for Debugging | `./gradlew :server:installDebugDist` | Packages the language server with a debug launch configuration |
+| Test | `./gradlew :server:test` | Executes all unit tests |
+| Run | `./gradlew :server:run` | Runs the standalone language server from the command line |
+| Debug | `./gradlew :server:debugRun` | Launches the standalone language server from the command line using a debug configuration |
+| Build | `./gradlew :server:build` | Builds, tests and packages the language server |
+| Package for Release | `./gradlew :server:distZip` | Creates a release zip in `server/build/distributions`. If any dependencies have changed since the last release, a new license report should be generated and placed in `src/main/dist` before creating the distribution. |
+| Generate License Report | `./gradlew :server:licenseReport` | Generates a license report from the dependencies in `server/build/reports/licenses` |
+
+### Editors (:editors)
+
+#### VSCode (:editors:vscode)
+
+| Task | Command | Description |
+| ---- | ------- | ----------- |
+| Prepare | `./gradlew :editors:vscode:prepare` | Copies the packaged language server, the grammar files and other resources to the extension's directory. Can be useful to run separately if the extension's code is already built using `npm run watch`. |
+| Compile | `./gradlew :editors:vscode:compile` | Compiles the TypeScript code of the extension. |
+| Test | `./gradlew :editors:vscode:test` | Runs the unit tests of the extension. Currently not supported from within VSCode. |
+| Package | `./gradlew :editors:vscode:packageExtension` | Creates a `.vsix` package of the extension for use within VSCode. |
+
+#### Atom (:editors:atom)
+
+##### IDE-Kotlin (:editors:atom:ide-kotlin)
+
+| Task | Command | Description |
+| ---- | ------- | ----------- |
+| Prepare | `./gradlew :editors:vscode:prepare` | Copies the packaged language server into the extension's directory. |
+| Install | `./gradlew :editors:vscode:install` | Installs the npm dependencies of the Atom package. |
