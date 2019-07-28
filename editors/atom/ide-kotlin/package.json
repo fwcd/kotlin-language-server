@@ -38,7 +38,7 @@
         },
         "status-bar": {
             "versions": {
-                "0.1.0": "consumeStatusBar"
+                "^1.0.0": "consumeStatusBar"
             }
         }
     },

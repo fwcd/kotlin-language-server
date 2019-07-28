@@ -18,7 +18,6 @@ class KotlinLanguageClient extends AutoLanguageClient {
         // TODO: Windows-support
         const serverPath = path.join(__dirname, "..", "install", "bin", "server");
         const process = cp.spawn(serverPath);
-        process.on("")
         process.on("close", () => {
             if (!process.killed) {
                 atom.notifications.addError("Kotlin Language Server closed unexpectedly.", {
@@ -30,20 +29,29 @@ class KotlinLanguageClient extends AutoLanguageClient {
     }
 
     preInitialization(connection) {
-        connection.onCustom("language/status", status => {
-            this.updateStatusBar(status.message);
-        });
+        this.updateStatusMessage("Activating KLS...");
+    }
+
+    postInitialization(server) {
+        this.updateStatusMessage("KLS ready");
     }
 
     consumeStatusBar(statusBar) {
         this.statusBar = statusBar
+        if (!this.statusTile) {
+            this.createStatusTile();
+        }
     }
 
-    updateStatusBar(message) {
+    updateStatusMessage(message) {
         this.statusMessage.textContent = message;
         if (!this.statusTile && this.statusBar) {
-            this.statusTile = this.statusBar.addRightTile({ item: this.statusMessage })
+            this.createStatusTile();
         }
+    }
+
+    createStatusTile() {
+        this.statusTile = this.statusBar.addRightTile({ item: this.statusMessage, priority: 500 });
     }
 }
 
