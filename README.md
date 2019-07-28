@@ -1,10 +1,13 @@
 # KotlinLanguageServer
-A [language server](https://microsoft.github.io/language-server-protocol/) that provides IDE-independent smart code completion, diagnostics, hover, document symbols, method signature help and more for Kotlin and a VSCode extension that uses the language server.
 
 [![Version](https://vsmarketplacebadge.apphb.com/version-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
+
+A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, method signature help and more for Kotlin.
+
+Any editor conforming to the LSP is supported, including [VSCode](https://code.visualstudio.com) and [Atom](https://atom.io) whose client extensions are located in the `editors` directory.
 
 ![Icon](Icon128.png)
 
