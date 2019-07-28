@@ -1,29 +1,22 @@
+language: java
+jdk: openjdk8
+env: NODE_VERSION=8
+before_install: nvm install $NODE_VERSION
+
 jobs:
   include:
     - stage: "Shared Module"
       name: "Build"
-      language: java
-      jdk: openjdk8
       script: ./gradlew :shared:build
     - name: "Tests"
-      language: java
-      jdk: openjdk8
       script: ./gradlew :shared:test -i
     - stage: "Language Server"
       name: "Tests"
-      language: java
-      jdk: openjdk8
       script: ./gradlew :server:test -i
     - name: "Executable"
-      language: java
-      jdk: openjdk8
       script: ./gradlew :server:installDist
     - stage: "Extensions"
       name: "VSCode"
-      language: node_js
-      jdk: openjdk8
       script: ./gradlew :extensions:vscode:build
     - name: "Atom"
-      language: node_js
-      jdk: openjdk8
       script: ./gradlew :extensions:atom:build
