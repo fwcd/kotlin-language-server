@@ -45,12 +45,21 @@ class KotlinTextDocumentService(
 
     private val TextDocumentIdentifier.content
         get() = sp.content(filePath)
-
-    private fun recover(position: TextDocumentPositionParams, recompile: Boolean): Pair<CompiledFile, Int> {
+    
+    private enum class Recompile {
+        ALWAYS, ONLY_AFTER_DOT, NEVER
+    }
+    
+    private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
         val file = position.textDocument.filePath
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val compiled = if (recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        val shouldRecompile = when (recompile) {
+            Recompile.ALWAYS -> true
+            Recompile.ONLY_AFTER_DOT -> offset > 0 && content[offset - 1] == '.'
+            Recompile.NEVER -> false
+        }
+        val compiled = if (shouldRecompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
         return Pair(compiled, offset)
     }
 
@@ -76,7 +85,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Hovering at {} {}:{}", position.textDocument.uri, position.position.line, position.position.character)
 
-            val (file, cursor) = recover(position, true)
+            val (file, cursor) = recover(position, Recompile.ALWAYS)
             hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
         }
     }
@@ -93,7 +102,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
+            val (file, cursor) = recover(position, Recompile.NEVER)
             goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
         }
     }
@@ -114,7 +123,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Completing at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
+            val (file, cursor) = recover(position, Recompile.ONLY_AFTER_DOT) // TODO: Investigate when to recompile
             val completions = completions(file, cursor, config.completion)
 
             LOG.info("Found {} items", completions.items.size)
@@ -150,7 +159,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Signature help at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
+            val (file, cursor) = recover(position, Recompile.NEVER)
             fetchSignatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)
         }
     }
