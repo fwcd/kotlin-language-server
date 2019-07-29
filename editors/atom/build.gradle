@@ -17,3 +17,13 @@ npmInstall { dependsOn prepare }
 task install { dependsOn npmInstall }
 
 task build { dependsOn install }
+
+/**
+ * Links the extension into your local Atom
+ * package directory.
+ */
+task link(type: Exec) {
+    dependsOn install
+    workingDir projectDir
+    commandLine 'apm', 'link'
+}
