@@ -203,7 +203,6 @@ class KotlinTextDocumentService(
         lintTodo.add(file)
         if (!linting) {
             debounceLint.submit(::doLint)
-            linting = true
         }
     }
 
