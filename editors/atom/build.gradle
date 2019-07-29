@@ -2,15 +2,21 @@ plugins {
     id 'com.github.node-gradle.node' version '1.5.2'
 }
 
+/** Prepares the grammars for packaging. */
+task copyGrammars(type: Copy) {
+    from "$rootDir/grammars/textmate/Kotlin.tmLanguage.json"
+    into file('grammars')
+}
+
 /** Prepares the language server binaries for packaging. */
 task copyLanguageServer(type: Copy) {
     dependsOn ':server:installDist'
     from project(':server').tasks.installDist.destinationDir
-    into file("install")
+    into file('install')
 }
 
 /** Prepares resources used by the extension. */
-task prepare { dependsOn copyLanguageServer }
+task prepare { dependsOn copyGrammars, copyLanguageServer }
 
 npmInstall { dependsOn prepare }
 

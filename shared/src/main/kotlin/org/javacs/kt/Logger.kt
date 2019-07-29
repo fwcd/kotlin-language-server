@@ -23,9 +23,9 @@ private class JULRedirector(private val downstream: Logger): Handler() {
             else -> downstream.deepTrace(record.message)
         }
     }
-    
+
     override fun flush() {}
-    
+
     override fun close() {}
 }
 
@@ -52,11 +52,11 @@ class Logger {
     private val errQueue: Queue<LogMessage> = ArrayDeque()
     private val errStream = DelegatePrintStream { outputError(LogMessage(LogLevel.ERROR, it)) }
     val outStream = DelegatePrintStream { output(LogMessage(LogLevel.INFO, it)) }
-    
+
     private val newline = System.lineSeparator()
     val logTime = false
     var level = LogLevel.INFO
-    
+
     private fun outputError(msg: LogMessage) {
         if (errBackend == null) {
             errQueue.offer(msg)
@@ -64,7 +64,7 @@ class Logger {
             errBackend?.invoke(msg)
         }
     }
-    
+
     private fun output(msg: LogMessage) {
         if (outBackend == null) {
             outQueue.offer(msg)
@@ -72,49 +72,49 @@ class Logger {
             outBackend?.invoke(msg)
         }
     }
-    
+
     private fun log(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
         if (level.value <= msgLevel.value) {
             output(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
         }
     }
-    
+
     fun error(throwable: Throwable) = throwable.printStackTrace(errStream)
-    
+
     fun error(msg: String, vararg placeholders: Any?) = log(LogLevel.ERROR, msg, placeholders)
-    
+
     fun warn(msg: String, vararg placeholders: Any?) = log(LogLevel.WARN, msg, placeholders)
-    
+
     fun info(msg: String, vararg placeholders: Any?) = log(LogLevel.INFO, msg, placeholders)
-    
+
     fun debug(msg: String, vararg placeholders: Any?) = log(LogLevel.DEBUG, msg, placeholders)
-    
+
     fun trace(msg: String, vararg placeholders: Any?) = log(LogLevel.TRACE, msg, placeholders)
-    
+
     fun deepTrace(msg: String, vararg placeholders: Any?) = log(LogLevel.DEEP_TRACE, msg, placeholders)
-    
+
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")
         rootLogger.addHandler(JULRedirector(this))
     }
-    
+
     fun connectOutputBackend(outBackend: (LogMessage) -> Unit) {
         this.outBackend = outBackend
         flushOutQueue()
     }
-    
+
     fun connectErrorBackend(errBackend: (LogMessage) -> Unit) {
         this.errBackend = errBackend
         flushErrQueue()
     }
-    
+
     private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {
         val msgLength = msg.length
         val lastIndex = msgLength - 1
         var charIndex = 0
         var placeholderIndex = 0
         var result = StringBuilder()
-        
+
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
             val nextChar = if (charIndex != lastIndex) msg.get(charIndex + 1) else '?'
@@ -130,22 +130,22 @@ class Logger {
                 charIndex += 1
             }
         }
-        
+
         return result.toString()
     }
-    
+
     private fun flushOutQueue() {
         while (outQueue.isNotEmpty()) {
             outBackend?.invoke(outQueue.poll())
         }
     }
-    
+
     private fun flushErrQueue() {
         while (errQueue.isNotEmpty()) {
             errBackend?.invoke(errQueue.poll())
         }
     }
-    
+
     private fun format(msg: String): String {
         val time = if (logTime) "${Instant.now()} " else ""
         var thread = Thread.currentThread().name
