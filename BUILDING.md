@@ -35,7 +35,7 @@ Run `./gradlew :editors:vscode:packageExtension` from the repository's top-level
 ## Atom plugin
 
 ### Development/Running
-To install the Atom plugin, first run `./gradlew :editors:atom:ide-kotlin:install` and then `apm link` inside the `editors/atom/ide-kotlin` directory.
+To install the Atom plugin, first run `./gradlew :editors:atom:install` and then `apm link` inside the `editors/atom` directory.
 
 That's it! To use the extension, just reload your Atom window.
 
@@ -72,9 +72,7 @@ This paragraph assumes that you are familiar with Gradle's [task system](https:/
 
 #### Atom (:editors:atom)
 
-##### IDE-Kotlin (:editors:atom:ide-kotlin)
-
 | Task | Command | Description |
 | ---- | ------- | ----------- |
-| Prepare | `./gradlew :editors:vscode:prepare` | Copies the packaged language server into the extension's directory. |
-| Install | `./gradlew :editors:vscode:install` | Installs the npm dependencies of the Atom package. |
+| Prepare | `./gradlew :editors:atom:prepare` | Copies the packaged language server into the extension's directory. |
+| Install | `./gradlew :editors:atom:install` | Installs the npm dependencies of the Atom package. |

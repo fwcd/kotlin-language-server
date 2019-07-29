@@ -16,5 +16,5 @@ include(
     'shared',
     'server',
     'editors:vscode',
-    'editors:atom:ide-kotlin'
+    'editors:atom'
 )

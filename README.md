@@ -1,21 +1,21 @@
 # KotlinLanguageServer
+A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
 
 [![Version](https://vsmarketplacebadge.apphb.com/version-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
 
-A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
+![Icon](Icon128.png)
 
 Any editor conforming to LSP is supported, including [VSCode](https://code.visualstudio.com) and [Atom](https://atom.io) for which client extensions provided by this repository.
-
-![Icon](Icon128.png)
 
 ## Getting Started
 * See [BUILDING.md](BUILDING.md) for build instructions.
 * See [Roadmap](https://github.com/fwcd/KotlinLanguageServer/projects/1) for features, planned additions, bugfixes and changes
 * See [KotlinQuickStart](https://github.com/fwcd/KotlinQuickStart) for a sample project
 * See [KotlinDebugAdapter](https://github.com/fwcd/KotlinDebugAdapter) for debugging support on JVM
+* See [TreeSitterKotlin](https://github.com/fwcd/KotlinLanguageGrammars) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
 ## This repository needs your help!
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
