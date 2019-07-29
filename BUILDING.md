@@ -75,4 +75,5 @@ This paragraph assumes that you are familiar with Gradle's [task system](https:/
 | Task | Command | Description |
 | ---- | ------- | ----------- |
 | Prepare | `./gradlew :editors:atom:prepare` | Copies the packaged language server into the extension's directory. |
-| Install | `./gradlew :editors:atom:install` | Installs the npm dependencies of the Atom package. |
+| Install | `./gradlew :editors:atom:install` | Installs the npm dependencies of the extension. |
+| Link | `./gradlew :editors:atom:link` | Links the extension into your local Atom package directory. |
