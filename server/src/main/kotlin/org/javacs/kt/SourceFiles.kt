@@ -114,7 +114,7 @@ class SourceFiles(private val sp: SourcePath) {
         try {
             content = Files.readAllLines(file).joinToString("\n")
         } catch(exception: IOException) {
-            LOG.warn("Exception while parsing source file : ${file.toFile().absolutePath}")
+            LOG.warn("Exception while parsing source file: {}", file.toFile().absolutePath)
         }
 
         return SourceVersion(content, -1)
@@ -198,11 +198,11 @@ private fun findSourceFiles(root: Path): Set<Path> {
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Adding {} under $rootPath to source path", describeFiles(sources))
+    LOG.info("Adding {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Removing {} under $rootPath to source path", describeFiles(sources))
+    LOG.info("Removing {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 fun describeFiles(files: Collection<Path>): String {

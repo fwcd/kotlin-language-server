@@ -17,7 +17,7 @@ fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
         )
     ).or(BackupClassPathResolver)
 
-    LOG.info("Resolving classpath using ${resolver.resolverType}")
+    LOG.info("Resolving classpath using {}", resolver.resolverType)
     return resolver.maybeClasspath
 }
 
@@ -29,7 +29,7 @@ internal interface ClassPathResolver {
         get() = try {
             classpath
         } catch (e: Exception) {
-            LOG.warn("Could not resolve classpath using $resolverType: ${e.message}")
+            LOG.warn("Could not resolve classpath using {}: {}", resolverType, e.message)
             emptySet<Path>()
         }
 
@@ -96,10 +96,10 @@ private fun ignoredPathPatterns(path: Path): List<PathMatcher> =
             ".git"
         ) }
         ?.mapNotNull { try {
-            LOG.debug("Adding ignore pattern '$it' from $path")
+            LOG.debug("Adding ignore pattern '{}' from {}", it, path)
             FileSystems.getDefault().getPathMatcher("glob:$it")
         } catch (e: Exception) {
-            LOG.warn("Did not recognize gitignore pattern: '$it' (${e.message})")
+            LOG.warn("Did not recognize gitignore pattern: '{}' ({})", it, e.message)
             null
         } }
         ?: emptyList<PathMatcher>()
