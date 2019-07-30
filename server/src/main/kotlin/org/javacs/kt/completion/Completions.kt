@@ -10,6 +10,7 @@ import org.javacs.kt.CompletionConfiguration
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.toPath
+import org.javacs.kt.util.onEachIndexed
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
@@ -47,7 +48,10 @@ fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration
     LOG.debug("Looking for completions that match '{}'", partial)
     
     val items = elementCompletionItems(file, cursor, config, partial) + keywordCompletionItems(partial)
-    val itemList = items.take(MAX_COMPLETION_ITEMS).toList()
+    val itemList = items
+        .take(MAX_COMPLETION_ITEMS)
+        .toList()
+        .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
     val isIncomplete = (itemList.size == MAX_COMPLETION_ITEMS)
     
     return CompletionList(isIncomplete, itemList)

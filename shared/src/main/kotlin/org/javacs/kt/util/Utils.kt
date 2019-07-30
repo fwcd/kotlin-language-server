@@ -38,6 +38,14 @@ fun Path.replaceExtensionWith(newExtension: String): Path {
 	return resolveSibling(newName)
 }
 
+fun <T, C : Iterable<T>> C.onEachIndexed(transform: (index: Int, T) -> Unit): C = apply {
+    var i = 0
+    for (element in this) {
+        transform(i, element)
+        i++
+    }
+}
+
 fun <T> noResult(message: String, result: T): T {
     LOG.info(message)
     return result
