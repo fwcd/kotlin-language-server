@@ -47,7 +47,7 @@ class KotlinTextDocumentService(
         get() = sp.content(filePath)
     
     private enum class Recompile {
-        ALWAYS, ONLY_AFTER_DOT, NEVER
+        ALWAYS, WAIT_FOR_LINT, AFTER_DOT_WAIT_FOR_LINT, NEVER
     }
     
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
@@ -56,7 +56,16 @@ class KotlinTextDocumentService(
         val offset = offset(content, position.position.line, position.position.character)
         val shouldRecompile = when (recompile) {
             Recompile.ALWAYS -> true
-            Recompile.ONLY_AFTER_DOT -> offset > 0 && content[offset - 1] == '.'
+            Recompile.AFTER_DOT_WAIT_FOR_LINT -> {
+                if (offset > 0 && content[offset - 1] == '.') {
+                    debounceLint.waitForPendingTask()
+                }
+                false
+            }
+            Recompile.WAIT_FOR_LINT -> {
+                debounceLint.waitForPendingTask()
+                false
+            }
             Recompile.NEVER -> false
         }
         val compiled = if (shouldRecompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
@@ -123,7 +132,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Completing at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, Recompile.ONLY_AFTER_DOT) // TODO: Investigate when to recompile
+            val (file, cursor) = recover(position, Recompile.AFTER_DOT_WAIT_FOR_LINT) // TODO: Investigate when to recompile
             val completions = completions(file, cursor, config.completion)
 
             LOG.info("Found {} items", completions.items.size)
