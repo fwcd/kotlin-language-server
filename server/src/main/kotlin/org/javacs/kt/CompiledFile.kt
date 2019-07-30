@@ -47,7 +47,8 @@ class CompiledFile(
     }
 
     fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
-        var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
+        val element = parseAtPoint(cursor)
+        var cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
