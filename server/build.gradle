@@ -18,6 +18,10 @@ targetCompatibility = 1.8
 def debugPort = 8000
 def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
 
+startScripts {
+    applicationName = "kotlin-language-server"
+}
+
 repositories {
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
     maven { url uri("$projectDir/lib") }
@@ -82,7 +86,7 @@ task fixFilePermissions(type: Exec) {
     // When running on macOS or Linux the start script
     // needs executable permissions to run.
     onlyIf { !System.getProperty("os.name").toLowerCase().contains("windows") }
-    commandLine 'chmod', '+x', "${project.buildDir}/install/server/bin/server"
+    commandLine 'chmod', '+x', "${installDist.destinationDir}/bin/kotlin-language-server"
 }
 
 task debugRun(type: JavaExec) {

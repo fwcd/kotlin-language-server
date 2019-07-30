@@ -16,7 +16,7 @@ class KotlinLanguageClient extends AutoLanguageClient {
 
     startServerProcess(projectPath) {
         // TODO: Windows-support
-        const serverPath = path.join(__dirname, "..", "install", "bin", "server");
+        const serverPath = path.join(__dirname, "..", "install", "bin", "kotlin-language-server");
         const process = cp.spawn(serverPath);
         process.on("close", () => {
             if (!process.killed) {
