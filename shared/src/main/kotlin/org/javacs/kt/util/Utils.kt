@@ -38,7 +38,7 @@ fun Path.replaceExtensionWith(newExtension: String): Path {
 	return resolveSibling(newName)
 }
 
-fun <T, C : Iterable<T>> C.onEachIndexed(transform: (index: Int, T) -> Unit): C = apply {
+inline fun <T, C : Iterable<T>> C.onEachIndexed(transform: (index: Int, T) -> Unit): C = apply {
     var i = 0
     for (element in this) {
         transform(i, element)
@@ -72,7 +72,7 @@ fun <T> nonNull(item: T?, errorMsgIfNull: String): T =
         throw NullPointerException(errorMsgIfNull)
     } else item
 
-fun <T> tryResolving(what: String, resolver: () -> T?): T? {
+inline fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     try {
         val resolved = resolver()
         if (resolved != null) {
