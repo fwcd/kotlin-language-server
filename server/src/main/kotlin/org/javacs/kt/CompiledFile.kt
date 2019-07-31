@@ -66,14 +66,11 @@ class CompiledFile(
     }
 
     private fun expandForReference(cursor: Int, surroundingExpr: KtExpression): KtExpression {
-        // foo.bar
-        val dotParent = surroundingExpr.parent as? KtDotQualifiedExpression
-        if (dotParent != null) return expandForReference(cursor, dotParent)
-        // foo()
-        val callParent = surroundingExpr.parent as? KtCallExpression
-        if (callParent != null) return expandForReference(cursor, callParent)
-
-        return surroundingExpr
+        val parent: KtExpression? =
+            (surroundingExpr.parent as? KtDotQualifiedExpression)?.let { it as KtExpression } // foo.bar
+            ?: (surroundingExpr.parent as? KtSafeQualifiedExpression)?.let { it as KtExpression } // foo?.bar
+            ?: (surroundingExpr.parent as? KtCallExpression)?.let { it as KtExpression } // foo()
+        return parent?.let { expandForReference(cursor, it) } ?: surroundingExpr
     }
 
     /**
