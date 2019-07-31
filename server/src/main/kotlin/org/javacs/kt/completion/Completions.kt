@@ -47,7 +47,7 @@ fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
     
-    val items = elementCompletionItems(file, cursor, config, partial) + keywordCompletionItems(partial)
+    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial) }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
