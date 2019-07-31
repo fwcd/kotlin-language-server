@@ -40,7 +40,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     }
     
     @After fun shutdownExecutors() {
-        languageServer.textDocumentService.shutdownExecutors()
+        languageServer.textDocumentService.shutdownExecutors(awaitTermination = true)
     }
 
     fun completionParams(relativePath: String, line: Int, column: Int): CompletionParams {

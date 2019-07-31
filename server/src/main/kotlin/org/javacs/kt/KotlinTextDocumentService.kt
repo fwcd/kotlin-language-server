@@ -269,9 +269,9 @@ class KotlinTextDocumentService(
         client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
     
-    fun shutdownExecutors() {
-        async.shutdown()
-        debounceLint.shutdown()
+    fun shutdownExecutors(awaitTermination: Boolean) {
+        async.shutdown(awaitTermination)
+        debounceLint.shutdown(awaitTermination)
     }
 }
 

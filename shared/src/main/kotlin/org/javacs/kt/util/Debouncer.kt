@@ -1,5 +1,6 @@
 package org.javacs.kt.util
 
+import org.javacs.kt.LOG
 import java.time.Duration
 import java.util.function.Supplier
 import java.util.concurrent.ScheduledExecutorService
@@ -33,7 +34,11 @@ class Debouncer(
         pendingTask?.get()
     }
     
-    fun shutdown() {
+    fun shutdown(awaitTermination: Boolean) {
         executor.shutdown()
+        if (awaitTermination) {
+			LOG.info("Awaiting debouncer termination...")
+			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS)
+		}
     }
 }
