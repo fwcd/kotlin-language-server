@@ -268,6 +268,11 @@ class KotlinTextDocumentService(
     private fun clearDiagnostics(file: Path) {
         client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
+    
+    fun shutdownExecutors() {
+        async.shutdown()
+        debounceLint.shutdown()
+    }
 }
 
 private inline fun<T> reportTime(block: () -> T): T {

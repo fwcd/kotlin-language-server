@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.LanguageClient
 import org.junit.Before
+import org.junit.After
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -36,6 +37,10 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         languageServer.connect(this)
 
         return languageServer
+    }
+    
+    @After fun shutdownExecutors() {
+        languageServer.textDocumentService.shutdownExecutors()
     }
 
     fun completionParams(relativePath: String, line: Int, column: Int): CompletionParams {

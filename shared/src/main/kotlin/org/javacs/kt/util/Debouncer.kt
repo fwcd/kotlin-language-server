@@ -32,4 +32,8 @@ class Debouncer(
     fun waitForPendingTask() {
         pendingTask?.get()
     }
+    
+    fun shutdown() {
+        executor.shutdown()
+    }
 }

@@ -21,4 +21,8 @@ class AsyncExecutor {
 					defaultValue
 				}
 			}, workerThread)
+	
+	fun shutdown() {
+		workerThread.shutdown()
+	}
 }

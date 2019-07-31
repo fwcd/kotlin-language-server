@@ -32,6 +32,13 @@
             "outFiles": [
                 "${workspaceFolder}/editors/vscode/out/test/**/*.js"
             ]
+        },
+        {
+            "type": "java",
+            "name": "Debug Tests",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005
         }
     ]
 }
