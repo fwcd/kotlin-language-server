@@ -103,10 +103,10 @@ class Compiler(classPath: Set<Path>) {
         "default" -> JvmTarget.DEFAULT
         "1.6" -> JvmTarget.JVM_1_6
         "1.8" -> JvmTarget.JVM_1_8
-        "9" -> JvmTarget.JVM_9
-        "10" -> JvmTarget.JVM_10
-        "11" -> JvmTarget.JVM_11
-        "12" -> JvmTarget.JVM_12
+        // "9" -> JvmTarget.JVM_9
+        // "10" -> JvmTarget.JVM_10
+        // "11" -> JvmTarget.JVM_11
+        // "12" -> JvmTarget.JVM_12
         else -> null
     }
 

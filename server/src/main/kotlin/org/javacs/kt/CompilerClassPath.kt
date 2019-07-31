@@ -6,7 +6,7 @@ import java.nio.file.Path
 class CompilerClassPath(private val config: CompilerConfiguration) {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
-    var compiler = Compiler(classPath, workspaceRoots)
+    var compiler = Compiler(classPath)
         private set
 
     init {

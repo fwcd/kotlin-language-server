@@ -55,8 +55,8 @@ dependencies {
     kotlinJVMLib tc("$kotlinCompilerTC/lib/kotlin-scripting-impl.jar")
     // TODO: The dependency above will be renamed in Kotlin 1.3.50:
     // kotlinJVMLib tc("$kotlinCompilerTC/lib/kotlin-scripting-compiler-impl.jar")
-    kotlinJVMLib tc("$kotlinCompilerTC/lib/kotlin-plugin.jar")
-    kotlinJVMLib tc("$kotlinCompilerTC/lib/j2k.jar")
+    kotlinJVMLib tc("$kotlinPluginTC/lib/kotlin-plugin.jar")
+    kotlinJVMLib tc("$kotlinPluginTC/lib/j2k.jar")
     
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'junit:junit:4.11'
