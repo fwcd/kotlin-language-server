@@ -78,7 +78,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     }
 }
 
-task copyKotlinJVMLib(type: Copy) {
+task copyKotlinJVMLib(type: Sync) {
     from configurations.kotlinJVMLib
     into file('lib-kotlin')
 }
