@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.node-gradle.node' version '1.5.2'
+    id 'com.github.node-gradle.node' version '2.0.0'
 }
 
 def resourcesDir = file("resources")
@@ -34,7 +34,9 @@ npm_run_compile { dependsOn prepare }
 /** Compiles the VSCode extension's TypeScript code. */
 task compile { dependsOn npm_run_compile }
 
-npm_run_test { dependsOn compile }
+npm_run_test {
+    dependsOn compile
+}
 
 /** Tests the VSCode extension. */
 task test { dependsOn npm_run_test }
