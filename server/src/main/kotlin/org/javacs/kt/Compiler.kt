@@ -7,8 +7,6 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiFileFactory
 import com.intellij.mock.MockProject
-import org.jetbrains.kotlin.scripting.legacy.CliScriptDefinitionProvider
-import org.jetbrains.kotlin.scripting.legacy.CliScriptDependenciesProvider
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -28,13 +26,16 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
 import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.TopLevelDeclarations
+import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.script.KotlinScriptDefinition
-import org.jetbrains.kotlin.script.ScriptDefinitionProvider
-import org.jetbrains.kotlin.script.ScriptDependenciesProvider
-import org.jetbrains.kotlin.script.StandardScriptDefinition
+import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
+import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
+import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDependenciesProvider
+import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
+import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
@@ -54,7 +55,7 @@ class Compiler(classPath: Set<Path>) {
     val environment: KotlinCoreEnvironment
 
     private var parser: KtPsiFactory
-    private var scripts: CliScriptDefinitionProvider
+    private var scripts: ScriptDefinitionProvider
     private val localFileSystem: VirtualFileSystem
 
     companion object {
@@ -70,7 +71,7 @@ class Compiler(classPath: Set<Path>) {
             configuration = KotlinCompilerConfiguration().apply {
                 put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
-                put(JVMConfigurationKeys.SCRIPT_DEFINITIONS, listOf(StandardScriptDefinition))
+                put(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, listOf(KotlinScriptDefinition(Any::class)))
                 addJvmClasspathRoots(classPath.map { it.toFile() })
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
@@ -84,8 +85,7 @@ class Compiler(classPath: Set<Path>) {
         }
 
         parser = KtPsiFactory(environment.project)
-        scripts = ScriptDefinitionProvider.getInstance(environment.project) as CliScriptDefinitionProvider
-        scripts.setScriptDefinitions(listOf(StandardScriptDefinition))
+        scripts = ScriptDefinitionProvider.getInstance(environment.project)!!
         localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
     }
 
@@ -186,6 +186,7 @@ class Compiler(classPath: Set<Path>) {
                     expression,
                     TypeUtils.NO_EXPECTED_TYPE,
                     DataFlowInfo.EMPTY,
+                    InferenceSession.default,
                     trace,
                     true)
             return Pair(trace.bindingContext, container)

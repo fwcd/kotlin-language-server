@@ -1,10 +1,12 @@
 package org.javacs.kt
 
 import org.jetbrains.kotlin.cli.common.repl.*
-import org.jetbrains.kotlin.cli.jvm.repl.*
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
-import org.jetbrains.kotlin.script.*
+import org.jetbrains.kotlin.scripting.definitions.*
+import org.jetbrains.kotlin.scripting.repl.*
+// TODO: In the future this import will be:
+// import org.jetbrains.kotlin.scripting.compiler.plugin.repl.*
 import com.intellij.openapi.util.*
 import org.jetbrains.kotlin.cli.common.messages.*
 import org.junit.*
