@@ -119,6 +119,7 @@ run {
 }
 
 test {
+    maxHeapSize = "1G"
     testLogging {
         events "failed"
         exceptionFormat "short"
