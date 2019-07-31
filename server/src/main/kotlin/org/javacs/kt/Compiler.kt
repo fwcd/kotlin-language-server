@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.psi.*
@@ -33,9 +34,11 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDependenciesProvider
+import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
+import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
@@ -43,6 +46,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
@@ -71,7 +75,8 @@ class Compiler(classPath: Set<Path>) {
             configuration = KotlinCompilerConfiguration().apply {
                 put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
-                put(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, listOf(KotlinScriptDefinition(Any::class)))
+                add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
+                add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
                 addJvmClasspathRoots(classPath.map { it.toFile() })
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
@@ -79,8 +84,6 @@ class Compiler(classPath: Set<Path>) {
 
         val project = environment.project
         if (project is MockProject) {
-            project.registerService(ScriptDefinitionProvider::class.java, CliScriptDefinitionProvider())
-            project.registerService(ScriptDependenciesProvider::class.java, CliScriptDependenciesProvider(project))
             project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
         }
 

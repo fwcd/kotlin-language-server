@@ -42,6 +42,13 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     @After fun shutdownExecutors() {
         languageServer.textDocumentService.shutdownExecutors(awaitTermination = true)
     }
+    
+    @After fun printMemoryUsage() {
+        val rt = Runtime.getRuntime()
+        val total = rt.totalMemory().toDouble() / 1000000.0
+        val free = rt.freeMemory().toDouble() / 1000000.0
+        println("Memory after test: ${total - free} MB used / $total MB total")
+    }
 
     fun completionParams(relativePath: String, line: Int, column: Int): CompletionParams {
         val file = workspaceRoot.resolve(relativePath)
@@ -109,12 +116,12 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         println(`object`.toString())
     }
 
-    override fun logMessage(message: MessageParams?) {
-        println(message.toString())
-    }
+    override fun logMessage(message: MessageParams?) = printMessage(message)
 
-    override fun showMessage(message: MessageParams?) {
-        println(message.toString())
+    override fun showMessage(message: MessageParams?) = printMessage(message)
+    
+    private fun printMessage(message: MessageParams?) {
+        println("[${message?.type}] ${message?.message}")
     }
 }
 
