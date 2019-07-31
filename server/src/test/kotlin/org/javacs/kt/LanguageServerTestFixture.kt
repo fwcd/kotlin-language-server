@@ -19,7 +19,17 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
 
     private fun createLanguageServer(): KotlinLanguageServer {
         val languageServer = KotlinLanguageServer()
-        val init = InitializeParams()
+        val init = InitializeParams().apply {
+            capabilities = ClientCapabilities().apply {
+                textDocument = TextDocumentClientCapabilities().apply {
+                    completion = CompletionCapabilities().apply {
+                        completionItem = CompletionItemCapabilities().apply {
+                            snippetSupport = true
+                        }
+                    }
+                }
+            }
+        }
 
         init.rootUri = workspaceRoot.toUri().toString()
         languageServer.initialize(init)
@@ -37,14 +47,19 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     }
 
     fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams {
+        return textDocumentPosition(relativePath, position(line, column))
+    }
+
+    fun textDocumentPosition(relativePath: String, position: Position): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
-        val position = position(line, column)
-
         return TextDocumentPositionParams(fileId, position)
     }
 
     fun position(line: Int, column: Int) = Position(line - 1, column - 1)
+
+    fun range(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) =
+        Range(position(startLine, startColumn), position(endLine, endColumn))
 
     fun uri(relativePath: String) =
             workspaceRoot.resolve(relativePath).toUri()

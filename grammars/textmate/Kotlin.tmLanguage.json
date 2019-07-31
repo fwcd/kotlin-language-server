@@ -12,6 +12,10 @@
 			"include": "#code"
 		}
 	],
+	"fileTypes": [
+		"kt",
+		"kts"
+	],
 	"repository": {
 		"import": {
 			"begin": "\\b(import)\\b\\s*",
@@ -294,7 +298,7 @@
 				},
 				"3": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]
@@ -323,7 +327,7 @@
 				},
 				"3": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]
@@ -338,7 +342,7 @@
 				},
 				"2": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]
@@ -359,7 +363,7 @@
 				},
 				"2": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]
@@ -383,7 +387,7 @@
 			"captures": {
 				"0": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]
@@ -398,7 +402,7 @@
 				},
 				"2": {
 					"patterns": [
-						{ 
+						{
 							"include": "#type-parameter"
 						}
 					]

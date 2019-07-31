@@ -1,23 +1,22 @@
-matrix:
+language: java
+jdk: openjdk8
+env: NODE_VERSION=8
+before_install: nvm install $NODE_VERSION
+
+jobs:
   include:
-    - name: "Shared module build (util, classpath)"
-      language: java
-      jdk: openjdk8
-      script: ./gradlew shared:build
-    
-    - name: "Language server tests"
-      language: java
-      jdk: openjdk8
-      script: ./gradlew server:test -i
-      
-    - name: "Language server executable"
-      language: java
-      jdk: openjdk8
-      script: ./gradlew server:installDist
-    
-    - name: "VSCode extension (Node.js)"
-      language: node_js
-      install:
-        - npm install
-        - npm run compile
-      script: echo "npm tests temporarily disabled"
+    - stage: "Shared Module"
+      name: "Build"
+      script: ./gradlew :shared:build
+    - name: "Tests"
+      script: ./gradlew :shared:test -i
+    - stage: "Language Server"
+      name: "Tests"
+      script: ./gradlew :server:test -i
+    - name: "Executable"
+      script: ./gradlew :server:installDist
+    - stage: "Editor extensions"
+      name: "VSCode"
+      script: ./gradlew :editors:vscode:build
+    - name: "Atom"
+      script: ./gradlew :editors:atom:build

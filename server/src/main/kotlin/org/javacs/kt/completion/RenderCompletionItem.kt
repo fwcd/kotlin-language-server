@@ -27,8 +27,11 @@ val DECL_RENDERER = DescriptorRenderer.withOptions {
 
 private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")
 
-class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> {
+class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptorVisitor<CompletionItem, Unit> {
     private val result = CompletionItem()
+    
+    private val functionInsertFormat
+        get() = if (snippetsEnabled) Snippet else PlainText
 
     private fun escape(id: String): String =
         if (id.matches(GOOD_IDENTIFIER)) id
@@ -55,7 +58,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
 
         result.kind = Constructor
         result.insertText = functionInsertText(desc)
-        result.insertTextFormat = Snippet
+        result.insertTextFormat = functionInsertFormat
 
         return result
     }
@@ -81,7 +84,7 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
 
         result.kind = Function
         result.insertText = functionInsertText(desc)
-        result.insertTextFormat = Snippet
+        result.insertTextFormat = functionInsertFormat
 
         return result
     }
@@ -89,10 +92,11 @@ class RenderCompletionItem : DeclarationDescriptorVisitor<CompletionItem, Unit> 
     private fun functionInsertText(desc: FunctionDescriptor): String {
         val name = escape(desc.label()!!)
 
-        return if (desc.valueParameters.isEmpty())
-            "$name()"
-        else
-            "$name(\$0)"
+        return when {
+            !snippetsEnabled -> name
+            desc.valueParameters.isEmpty() -> "$name()"
+            else -> "$name(${desc.valueParameters.mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }.joinToString()})"
+        }
     }
 
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {

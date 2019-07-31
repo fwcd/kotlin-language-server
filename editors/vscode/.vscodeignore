@@ -12,14 +12,12 @@ scripts/**
 vscode-extension-src/**
 
 lib/**
-lib-kotlin/**
 gradle/**
 
 out/test/**
 out/**/*.map
 bin/**
 build/**
-!server/build/install/**
 
 tsconfig.json
 tslint.json

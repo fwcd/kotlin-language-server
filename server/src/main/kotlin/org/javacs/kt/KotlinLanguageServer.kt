@@ -12,19 +12,19 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware {
-    val classPath = CompilerClassPath()
+    private val config = Configuration()
+    val classPath = CompilerClassPath(config.compiler)
     val sourcePath = SourcePath(classPath)
     val sourceFiles = SourceFiles(sourcePath)
-    private val config = Configuration()
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    
+
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)
-        
+
         workspaces.connect(client)
         textDocuments.connect(client)
-        
+
         LOG.info("Connected to client")
     }
 
@@ -40,21 +40,24 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
     }
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
-        val capabilities = ServerCapabilities()
-        capabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
-        capabilities.workspace = WorkspaceServerCapabilities()
-        capabilities.workspace.workspaceFolders = WorkspaceFoldersOptions()
-        capabilities.workspace.workspaceFolders.supported = true
-        capabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
-        capabilities.hoverProvider = true
-        capabilities.completionProvider = CompletionOptions(false, listOf("."))
-        capabilities.signatureHelpProvider = SignatureHelpOptions(listOf("(", ","))
-        capabilities.definitionProvider = true
-        capabilities.documentSymbolProvider = true
-        capabilities.workspaceSymbolProvider = true
-        capabilities.referencesProvider = true
-        capabilities.codeActionProvider = true
-        capabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
+        val serverCapabilities = ServerCapabilities()
+        serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
+        serverCapabilities.workspace = WorkspaceServerCapabilities()
+        serverCapabilities.workspace.workspaceFolders = WorkspaceFoldersOptions()
+        serverCapabilities.workspace.workspaceFolders.supported = true
+        serverCapabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
+        serverCapabilities.hoverProvider = true
+        serverCapabilities.completionProvider = CompletionOptions(false, listOf("."))
+        serverCapabilities.signatureHelpProvider = SignatureHelpOptions(listOf("(", ","))
+        serverCapabilities.definitionProvider = true
+        serverCapabilities.documentSymbolProvider = true
+        serverCapabilities.workspaceSymbolProvider = true
+        serverCapabilities.referencesProvider = true
+        serverCapabilities.codeActionProvider = true
+        serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
+
+        val clientCapabilities = params.capabilities
+        config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
         if (params.rootUri != null) {
             LOG.info("Adding workspace {} to source path", params.rootUri)
@@ -65,13 +68,13 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
             classPath.addWorkspaceRoot(root)
         }
 
-        return completedFuture(InitializeResult(capabilities))
+        return completedFuture(InitializeResult(serverCapabilities))
     }
 
     override fun getWorkspaceService(): KotlinWorkspaceService {
         return workspaces
     }
-    
+
     private fun connectLoggingBackend(client: LanguageClient) {
         val backend: (LogMessage) -> Unit = {
             client.logMessage(MessageParams().apply {
@@ -82,7 +85,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
         LOG.connectOutputBackend(backend)
         LOG.connectErrorBackend(backend)
     }
-    
+
     private fun LogLevel.toLSPMessageType(): MessageType = when (this) {
         LogLevel.ERROR -> MessageType.Error
         LogLevel.WARN -> MessageType.Warning

@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
+import org.javacs.kt.util.KotlinLSException
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
@@ -101,7 +102,8 @@ class SourceFiles(private val sp: SourcePath) {
 
     fun changedOnDisk(file: Path) {
         if (isSource(file))
-            files[file] = readFromDisk(file)!!
+            files[file] = readFromDisk(file)
+                ?: throw KotlinLSException("Could not read source file '$file' after being changed on disk")
     }
 
     private fun readFromDisk(file: Path): SourceVersion? {
@@ -112,7 +114,7 @@ class SourceFiles(private val sp: SourcePath) {
         try {
             content = Files.readAllLines(file).joinToString("\n")
         } catch(exception: IOException) {
-            LOG.warn("Exception while parsing source file : ${file.toFile().absolutePath}")
+            LOG.warn("Exception while parsing source file: {}", file.toFile().absolutePath)
         }
 
         return SourceVersion(content, -1)
@@ -129,7 +131,9 @@ class SourceFiles(private val sp: SourcePath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            files[file] = readFromDisk(file)!!
+            readFromDisk(file)?.let {
+                files[file] = it
+            } ?: LOG.warn("Could not read source file '{}'", file)
         }
 
         workspaceRoots.add(root)
@@ -194,11 +198,11 @@ private fun findSourceFiles(root: Path): Set<Path> {
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Adding {} under $rootPath to source path", describeFiles(sources))
+    LOG.info("Adding {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Removing {} under $rootPath to source path", describeFiles(sources))
+    LOG.info("Removing {} under {} to source path", describeFiles(sources), rootPath)
 }
 
 fun describeFiles(files: Collection<Path>): String {

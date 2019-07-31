@@ -32,7 +32,7 @@ class KotlinTextDocumentService(
     private val async = AsyncExecutor()
     private var linting = false
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     val lintTodo = mutableSetOf<Path>()
     var lintCount = 0
 
@@ -45,12 +45,30 @@ class KotlinTextDocumentService(
 
     private val TextDocumentIdentifier.content
         get() = sp.content(filePath)
-
-    private fun recover(position: TextDocumentPositionParams, recompile: Boolean): Pair<CompiledFile, Int> {
+    
+    private enum class Recompile {
+        ALWAYS, WAIT_FOR_LINT, AFTER_DOT_WAIT_FOR_LINT, NEVER
+    }
+    
+    private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
         val file = position.textDocument.filePath
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
-        val compiled = if (recompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        val shouldRecompile = when (recompile) {
+            Recompile.ALWAYS -> true
+            Recompile.AFTER_DOT_WAIT_FOR_LINT -> {
+                if (offset > 0 && content[offset - 1] == '.') {
+                    debounceLint.waitForPendingTask()
+                }
+                false
+            }
+            Recompile.WAIT_FOR_LINT -> {
+                debounceLint.waitForPendingTask()
+                false
+            }
+            Recompile.NEVER -> false
+        }
+        val compiled = if (shouldRecompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
         return Pair(compiled, offset)
     }
 
@@ -76,7 +94,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Hovering at {} {}:{}", position.textDocument.uri, position.position.line, position.position.character)
 
-            val (file, cursor) = recover(position, true)
+            val (file, cursor) = recover(position, Recompile.NEVER)
             hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
         }
     }
@@ -89,11 +107,11 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams) = async.compute {
+    override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> = async.compute {
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
+            val (file, cursor) = recover(position, Recompile.NEVER)
             goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
         }
     }
@@ -114,8 +132,8 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Completing at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
-            val completions = completions(file, cursor)
+            val (file, cursor) = recover(position, Recompile.AFTER_DOT_WAIT_FOR_LINT) // TODO: Investigate when to recompile
+            val completions = completions(file, cursor, config.completion)
 
             LOG.info("Found {} items", completions.items.size)
 
@@ -150,7 +168,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Signature help at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, false)
+            val (file, cursor) = recover(position, Recompile.NEVER)
             fetchSignatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)
         }
     }
@@ -190,7 +208,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(config.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     }
 
     private fun clearLint(): List<Path> {
@@ -203,7 +221,6 @@ class KotlinTextDocumentService(
         lintTodo.add(file)
         if (!linting) {
             debounceLint.submit(::doLint)
-            linting = true
         }
     }
 
@@ -213,13 +230,16 @@ class KotlinTextDocumentService(
     }
 
     private fun doLint() {
-        LOG.info("Linting {}", describeFiles(lintTodo))
         linting = true
-        val files = clearLint()
-        val context = sp.compileFiles(files)
-        reportDiagnostics(files, context.diagnostics)
-        lintCount++
-        linting = false
+        try {
+            LOG.info("Linting {}", describeFiles(lintTodo))
+            val files = clearLint()
+            val context = sp.compileFiles(files)
+            reportDiagnostics(files, context.diagnostics)
+            lintCount++
+        } finally {
+            linting = false
+        }
     }
 
     private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {

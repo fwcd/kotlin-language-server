@@ -2,30 +2,35 @@ package org.javacs.kt.definition
 
 import org.eclipse.lsp4j.Location
 import org.javacs.kt.CompiledFile
-import org.javacs.kt.position.location
 import org.javacs.kt.LOG
-import org.javacs.kt.externalsources.parseUriAsClassInJar
-import org.javacs.kt.externalsources.ClassInJar
 import org.javacs.kt.externalsources.Decompiler
 import org.javacs.kt.externalsources.FernflowerDecompiler
-import org.javacs.kt.util.replaceExtensionWith
+import org.javacs.kt.externalsources.parseUriAsClassInJar
+import org.javacs.kt.position.location
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 private val decompiler: Decompiler = FernflowerDecompiler()
 private val decompiledClassesCache = mutableMapOf<String, String>()
 
 fun goToDefinition(file: CompiledFile, cursor: Int): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
-    // TODO go to declaration name rather than beginning of javadoc comment
+
     LOG.info("Found declaration descriptor {}", target)
-    val destination = location(target)
-    
+    var destination = location(target)
+    val psi = target.findPsi()
+
+    if (psi is KtNamedDeclaration) {
+        destination = psi.nameIdentifier?.let(::location) ?: destination
+    }
+
     if (destination != null) {
         val rawClassURI = destination.uri
         if (isInsideJar(rawClassURI)) {
             destination.uri = cachedDecompile(rawClassURI)
         }
     }
-    
+
     return destination
 }
 

@@ -2,20 +2,28 @@ package org.javacs.kt.completion
 
 import com.google.common.cache.CacheBuilder
 import org.eclipse.lsp4j.CompletionItem
+import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
+import org.javacs.kt.CompletionConfiguration
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.toPath
+import org.javacs.kt.util.onEachIndexed
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
+import org.jetbrains.kotlin.load.java.descriptors.JavaMethodDescriptor
+import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
+import org.jetbrains.kotlin.load.java.structure.JavaMethod
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.psi.psiUtil.*
+import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.lexer.KtKeywordToken
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
@@ -34,28 +42,52 @@ import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
 
-fun completions(file: CompiledFile, cursor: Int): CompletionList {
-    val surroundingElement = completableElement(file, cursor) ?: return CompletionList(true, emptyList())
-    val completions = doCompletions(file, cursor, surroundingElement)
+/** Finds completions at the specified position. */
+fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
     val partial = findPartialIdentifier(file, cursor)
-    LOG.debug("Looking for names that match '{}'", partial)
+    LOG.debug("Looking for completions that match '{}'", partial)
+    
+    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial) }
+    val itemList = items
+        .take(MAX_COMPLETION_ITEMS)
+        .toList()
+        .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
+    val isIncomplete = (itemList.size == MAX_COMPLETION_ITEMS)
+    
+    return CompletionList(isIncomplete, itemList)
+}
+
+/** Finds keyword completions starting with the given partial identifier. */
+private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
+    (KtTokens.SOFT_KEYWORDS.getTypes() + KtTokens.KEYWORDS.getTypes()).asSequence()
+        .mapNotNull { (it as? KtKeywordToken)?.value }
+        .filter { it.startsWith(partial) }
+        .map { CompletionItem().apply {
+            label = it
+            kind = CompletionItemKind.Keyword
+        } }
+
+/** Finds completions based on the element around the user's cursor. */
+private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
+    val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
+    val completions = elementCompletions(file, cursor, surroundingElement)
+    
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    val list = visible.map { completionItem(it, surroundingElement, file) }.take(MAX_COMPLETION_ITEMS).toList()
-    val isIncomplete = (list.size == MAX_COMPLETION_ITEMS)
-    return CompletionList(isIncomplete, list)
+    
+    return visible.map { completionItem(it, surroundingElement, file, config) }
 }
 
 private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
-private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile): CompletionItem {
-    val result = d.accept(RenderCompletionItem(), null)
+private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
+    val result = d.accept(RenderCompletionItem(config.snippets.enabled), null)
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
-    if (isGetter(d) || isSetter(d)) {
+    if (isJavaCodeAndInstanceMethod(d) && (isGetter(d) || isSetter(d))) {
         val name = extractVarName(d)
 
         result.detail += " (from ${result.label})"
@@ -76,9 +108,19 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
     return result
 }
 
+private fun isJavaCodeAndInstanceMethod(
+    descriptor: DeclarationDescriptor
+): Boolean {
+    val javaMethodDescriptor = descriptor as? JavaMethodDescriptor ?: return false
+    val source = javaMethodDescriptor.source as? JavaSourceElement ?: return false
+    val javaElement = source.javaElement
+    return javaElement is JavaMethod && !javaElement.isStatic
+}
+
 private fun extractVarName(d: DeclarationDescriptor): String {
     val match = Regex("(get|is|set)([A-Z]\\w+)").matchEntire(d.name.identifier)!!
     val upper = match.groups[2]!!.value
+
     return upper[0].toLowerCase() + upper.substring(1)
 }
 
@@ -110,7 +152,7 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
             el as? KtNameReferenceExpression
 }
 
-private fun doCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
+private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {

@@ -2,12 +2,12 @@
     "name": "kotlin",
     "displayName": "Kotlin",
     "description": "Smart code completion, diagnostics, syntax highlighting and more for Kotlin",
-    "icon": "Icon128.png",
+    "icon": "resources/Icon128.png",
     "repository": {
         "type": "git",
         "url": "https://github.com/fwcd/KotlinLanguageServer.git"
     },
-    "version": "0.1.13",
+    "version": "0.1.15",
     "preview": true,
     "publisher": "fwcd",
     "license": "MIT",
@@ -22,7 +22,7 @@
     ],
     "main": "./out/extension",
     "files": [
-        "server/build/install/**"
+        "resources"
     ],
     "contributes": {
         "languages": [
@@ -35,18 +35,18 @@
                     ".kt",
                     ".kts"
                 ],
-                "configuration": "./syntaxes/kotlin.configuration.json"
+                "configuration": "./resources/syntaxes/kotlin.configuration.json"
             }
         ],
         "grammars": [
             {
                 "language": "kotlin",
                 "scopeName": "source.kotlin",
-                "path": "./syntaxes/Kotlin.tmLanguage.json"
+                "path": "./resources/syntaxes/Kotlin.tmLanguage.json"
             },
             {
                 "scopeName": "markdown.kotlin.codeblock",
-                "path": "./syntaxes/codeblock.json",
+                "path": "./resources/syntaxes/codeblock.json",
                 "injectTo": [
                     "text.html.markdown"
                 ],
@@ -58,33 +58,55 @@
         "configuration": {
             "title": "Kotlin",
             "properties": {
-                "kotlin.debounceTime": {
-                    "type": "integer",
-                    "default": 250,
-                    "description": "[DEBUG] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues"
-                },
                 "kotlin.languageServer.enabled": {
                     "type": "boolean",
                     "default": true,
                     "description": "Specifies whether the language server should be used. When enabled the extension will provide code completions and linting, otherwise just syntax highlighting. Might require a reload to apply."
+                },
+                "kotlin.compiler.jvm.target": {
+                    "type": "string",
+                    "default": "default",
+                    "description": "Specifies the JVM target, e.g. \"1.6\" or \"1.8\""
+                },
+                "kotlin.linting.debounceTime": {
+                    "type": "integer",
+                    "default": 250,
+                    "description": "[DEBUG] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues"
+                },
+                "kotlin.completion.snippets.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Specifies whether code completion should provide snippets (true) or plain-text items (false)"
+                },
+                "kotlin.debounceTime": {
+                    "type": "integer",
+                    "default": 250,
+                    "description": "[DEPRECATED] Specifies the debounce time limit. Lower to increase responsiveness at the cost of possibile stability issues",
+                    "deprecationMessage": "Use 'kotlin.linting.debounceTime' instead"
+                },
+                "kotlin.snippetsEnabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "[DEPRECATED] Specifies whether code completion should provide snippets (true) or plain-text items (false)",
+                    "deprecationMessage": "Use 'kotlin.completion.snippets.enabled'"
                 }
             }
         }
     },
     "scripts": {
-        "package-with-lsp": "gradle server:installDist && vsce package -o build.vsix",
-        "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
         "watch": "tsc -watch -p ./",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+        "packageextension": "vsce package",
+        "test": "node ./node_modules/vscode/bin/test"
     },
     "engines": {
         "vscode": "^1.30.2"
     },
     "devDependencies": {
         "typescript": "^2.9.2",
-        "vscode": "^1.1.33",
+        "vscode": "^1.1.35",
+        "vsce": "1.64.0",
         "@types/node": "^10.3.4",
         "@types/mocha": "^5.2.3"
     },

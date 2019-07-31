@@ -3,11 +3,15 @@ package org.javacs.kt
 import org.javacs.kt.classpath.findClassPath
 import java.nio.file.Path
 
-class CompilerClassPath {
+class CompilerClassPath(private val config: CompilerConfiguration) {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
     var compiler = Compiler(classPath, workspaceRoots)
         private set
+
+    init {
+        compiler.updateConfiguration(config)
+    }
 
     private fun refresh() {
         val newClassPath = findClassPath(workspaceRoots)
@@ -21,8 +25,13 @@ class CompilerClassPath {
 
             classPath.removeAll(removed)
             classPath.addAll(added)
-            compiler = Compiler(classPath, workspaceRoots)
+            compiler = Compiler(classPath)
+            updateCompilerConfiguration()
         }
+    }
+
+    fun updateCompilerConfiguration() {
+        compiler.updateConfiguration(config)
     }
 
     fun addWorkspaceRoot(root: Path) {

@@ -57,7 +57,7 @@ class ClassInJar(
 					.firstOrNull()
 
 			if (jarEntry == null) {
-				LOG.warn("Could not find $javaName")
+				LOG.warn("Could not find {}", javaName)
 				return null
 			}
 

@@ -4,18 +4,15 @@ import java.nio.file.Path
 
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them
-private val excludedFolders = listOf("bin", "build", "target")
-
-class SourceExclusions {
-	private val excludedBranches: Collection<Path>
+class SourceExclusions(private val workspaceRoots: Collection<Path>) {
+	private val excludedFolders = listOf("bin", "build", "target")
 
 	constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
 
-	constructor(workspaceRoots: Collection<Path>) {
-		excludedBranches = workspaceRoots.flatMap { root -> excludedFolders.map { root.resolve(it) } }
-	}
-
-	fun isIncluded(file: Path) =
-			excludedBranches.filter { file.startsWith(it) }
-				.isEmpty()
+    fun isIncluded(file: Path) =
+        excludedFolders.none {
+            workspaceRoots.map { it.relativize(file) }
+                .flatMap { it } // Extract path segments
+                .any { segment -> segment.toString() == it }
+        }
 }

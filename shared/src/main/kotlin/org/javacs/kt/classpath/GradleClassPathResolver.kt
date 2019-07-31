@@ -10,26 +10,36 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 
-fun readBuildGradle(buildFile: Path): Set<Path> {
-    val projectDirectory = buildFile.getParent()
+internal class GradleClassPathResolver(private val path: Path) : ClassPathResolver {
+    override val resolverType: String = "Gradle"
+    override val classpath: Set<Path> get() {
+        val projectDirectory = path.getParent()
 
-    // The first successful dependency resolver is used
-    // (evaluating them from top to bottom)
-    var dependencies = firstNonNull<Set<Path>>(
-        { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
-    ).orEmpty()
+        // The first successful dependency resolver is used
+        // (evaluating them from top to bottom)
+        var dependencies = firstNonNull<Set<Path>>(
+            { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
+        ).orEmpty()
 
-    if (dependencies.isEmpty()) {
-        LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
+        if (dependencies.isEmpty()) {
+            LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
+        }
+
+        return dependencies
     }
 
-    return dependencies
+    companion object {
+        /** Create a Gradle resolver if a file is a pom. */
+        fun maybeCreate(file: Path): GradleClassPathResolver? =
+            file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
+                ?.let { GradleClassPathResolver(it) }
+    }
 }
 
 private fun createTemporaryGradleFile(): File {
     val config = File.createTempFile("classpath", ".gradle")
     config.deleteOnExit()
-    
+
     LOG.info("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
@@ -52,7 +62,7 @@ private fun getGradleCommand(workspace: Path): Path {
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
-    LOG.info("Resolving dependencies for {} through Gradle's CLI...", projectDirectory.fileName)
+    LOG.info("Resolving dependencies for '{}' through Gradle's CLI...", projectDirectory.fileName)
     val config = createTemporaryGradleFile()
     val gradle = getGradleCommand(projectDirectory)
     val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
