@@ -1,50 +1,54 @@
 package org.javacs.kt
 
-import org.jetbrains.kotlin.cli.common.repl.*
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
-import org.jetbrains.kotlin.scripting.definitions.*
-import org.jetbrains.kotlin.scripting.repl.*
-// TODO: In the future this import will be:
-// import org.jetbrains.kotlin.scripting.compiler.plugin.repl.*
-import com.intellij.openapi.util.*
-import org.jetbrains.kotlin.cli.common.messages.*
 import org.junit.*
 import org.junit.Assert.*
 import org.hamcrest.Matchers.*
-import org.jetbrains.kotlin.load.java.JvmAbi
-import java.net.URLClassLoader
-import kotlin.script.templates.standard.ScriptTemplateWithArgs
+import kotlin.script.experimental.api.*
+import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
+import kotlin.script.experimental.annotations.KotlinScript
+import kotlin.script.experimental.jvmhost.BasicJvmScriptingHost
+import kotlin.script.experimental.jvmhost.createJvmCompilationConfigurationFromTemplate
 
-class SimpleScriptTest {
-    @Test
-    @Ignore
-    fun basicScript() {
-        val scriptDef = KotlinScriptDefinition(Any::class)
-        val repl = GenericReplEvaluator(listOf())
-        val config = KotlinCompilerConfiguration()
-        config.put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
-        val compiler = GenericReplCompiler(scriptDef, config, MessageCollector.NONE)
-        val compilerState = compiler.createState()
-        val replState = repl.createState()
+@KotlinScript(fileExtension = "simpleScript.kts")
+abstract class SimpleScript
 
-        var line = compiler.compile(compilerState, ReplCodeLine(1, 1, "val x = 1"))
-        assertNotError(line)
-        repl.eval(replState, line as ReplCompileResult.CompiledClasses)
+private data class CodeSnippet(
+    override val text: String,
+    override val name: String? = null,
+    override val locationId: String? = null
+) : SourceCode
 
-        line = compiler.compile(compilerState, ReplCodeLine(2, 2, "x"))
-        assertNotError(line)
-        val result = repl.eval(replState, line as ReplCompileResult.CompiledClasses)
-
-        when (result) {
-            is ReplEvalResult.ValueResult -> println(result.value)
-            is ReplEvalResult.UnitResult -> println('_')
+private class SnippetRunner {
+    val config = createJvmCompilationConfigurationFromTemplate<SimpleScript> {
+        jvm {
+            dependenciesFromCurrentContext(wholeClasspath = true)
         }
     }
 
-    private fun assertNotError(result: ReplCompileResult) {
-        if (result is ReplCompileResult.Error) {
-            fail(result.message)
+    fun eval(code: SourceCode): ResultWithDiagnostics<EvaluationResult> {
+        return BasicJvmScriptingHost().eval(code, config, null)
+    }
+}
+
+class SimpleScriptTest {
+    @Test
+    fun basicScript() {
+        val runner = SnippetRunner()
+        var result = runner.eval(CodeSnippet("val x = 1"))
+        assertNotError(result)
+
+        result = runner.eval(CodeSnippet("234 + 32"))
+        assertNotError(result)
+
+        val resultValue = (result as ResultWithDiagnostics.Success).value.returnValue as ResultValue.Value
+        // TODO:
+        // assertThat(resultValue.type, equalTo("Int"))
+    }
+
+    private fun assertNotError(result: ResultWithDiagnostics<EvaluationResult>) {
+        if (result is ResultWithDiagnostics.Failure) {
+            fail("Error(s) while running REPL: ${result.reports}")
         }
     }
 }
