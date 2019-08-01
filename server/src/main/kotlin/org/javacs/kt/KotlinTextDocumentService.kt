@@ -49,13 +49,16 @@ class KotlinTextDocumentService(
     private val TextDocumentIdentifier.filePath
         get() = Paths.get(URI.create(uri))
 
+    private val TextDocumentIdentifier.isKotlinScript
+        get() = uri.endsWith(".kts")
+
     private val TextDocumentIdentifier.content
         get() = sp.content(filePath)
-    
+
     private enum class Recompile {
         ALWAYS, WAIT_FOR_LINT, AFTER_DOT_WAIT_FOR_LINT, NEVER
     }
-    
+
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
         val file = position.textDocument.filePath
         val content = sp.content(file)
@@ -126,7 +129,11 @@ class KotlinTextDocumentService(
         val code = extractRange(params.textDocument.content, params.range)
         listOf(TextEdit(
             params.range,
-            formatKotlinCode(code)
+            formatKotlinCode(
+                code,
+                isScript = params.textDocument.isKotlinScript,
+                options = params.options
+            )
         ))
     }
 
@@ -192,9 +199,14 @@ class KotlinTextDocumentService(
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
         val code = params.textDocument.content
+        LOG.info("{}", params.textDocument.uri)
         listOf(TextEdit(
             Range(Position(0, 0), position(code, code.length)),
-            formatKotlinCode(code)
+            formatKotlinCode(
+                code,
+                isScript = params.textDocument.isKotlinScript,
+                options = params.options
+            )
         ))
     }
 
@@ -282,12 +294,12 @@ class KotlinTextDocumentService(
     private fun clearDiagnostics(file: Path) {
         client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
-    
+
     private fun shutdownExecutors(awaitTermination: Boolean) {
         async.shutdown(awaitTermination)
         debounceLint.shutdown(awaitTermination)
     }
-    
+
     override fun close() {
         shutdownExecutors(awaitTermination = true)
     }
