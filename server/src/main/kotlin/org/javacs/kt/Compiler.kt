@@ -1,13 +1,13 @@
 package org.javacs.kt
 
-import com.intellij.codeInsight.NullableNotNullManager
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.VirtualFileSystem
-import com.intellij.psi.PsiFileFactory
-import com.intellij.mock.MockProject
+import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager
+import org.jetbrains.kotlin.com.intellij.openapi.Disposable
+import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileSystem
+import org.jetbrains.kotlin.com.intellij.psi.PsiFileFactory
+import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -47,7 +47,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector

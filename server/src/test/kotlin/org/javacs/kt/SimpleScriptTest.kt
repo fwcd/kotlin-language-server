@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.scripting.definitions.*
 import org.jetbrains.kotlin.scripting.repl.*
 // TODO: In the future this import will be:
 // import org.jetbrains.kotlin.scripting.compiler.plugin.repl.*
-import com.intellij.openapi.util.*
+import org.jetbrains.kotlin.com.intellij.openapi.util.*
 import org.jetbrains.kotlin.cli.common.messages.*
 import org.junit.*
 import org.junit.Assert.*
