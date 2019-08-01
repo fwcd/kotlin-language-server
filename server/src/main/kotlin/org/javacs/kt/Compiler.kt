@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import com.intellij.codeInsight.NullableNotNullManager
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
@@ -55,7 +56,9 @@ import org.javacs.kt.util.LoggingMessageCollector
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(classPath: Set<Path>) {
+class Compiler(classPath: Set<Path>) : AutoCloseable {
+    private val disposable = Disposer.newDisposable()
+    private var closedBefore = false
     val environment: KotlinCoreEnvironment
 
     private var parser: KtPsiFactory
@@ -70,7 +73,7 @@ class Compiler(classPath: Set<Path>) {
 
     init {
         environment = KotlinCoreEnvironment.createForProduction(
-            parentDisposable = Disposable {},
+            parentDisposable = disposable,
             // Not to be confused with the CompilerConfiguration in the language server Configuration
             configuration = KotlinCompilerConfiguration().apply {
                 put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
@@ -195,6 +198,15 @@ class Compiler(classPath: Set<Path>) {
             return Pair(trace.bindingContext, container)
         } catch (e: KotlinFrontEndException) {
             throw KotlinLSException("Error while analyzing: ${expression.text}", e)
+        }
+    }
+    
+    override fun close() {
+        if (!closedBefore) {
+            Disposer.dispose(disposable)
+            closedBefore = true
+        } else {
+            LOG.info("WARNING: Disposing twice")
         }
     }
 }

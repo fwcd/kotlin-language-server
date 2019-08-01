@@ -27,7 +27,7 @@ class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val config: Configuration
-) : TextDocumentService {
+) : TextDocumentService, AutoCloseable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
     private var linting = false
@@ -269,9 +269,13 @@ class KotlinTextDocumentService(
         client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
     }
     
-    fun shutdownExecutors(awaitTermination: Boolean) {
+    private fun shutdownExecutors(awaitTermination: Boolean) {
         async.shutdown(awaitTermination)
         debounceLint.shutdown(awaitTermination)
+    }
+    
+    override fun close() {
+        shutdownExecutors(awaitTermination = true)
     }
 }
 

@@ -11,7 +11,7 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, LanguageClientAware {
+class KotlinLanguageServer : LanguageServer, LanguageClientAware, AutoCloseable {
     private val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
     val sourcePath = SourcePath(classPath)
@@ -91,5 +91,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware {
         LogLevel.WARN -> MessageType.Warning
         LogLevel.INFO -> MessageType.Info
         else -> MessageType.Log
+    }
+    
+    override fun close() {
+        textDocumentService.close()
+        classPath.close()
     }
 }

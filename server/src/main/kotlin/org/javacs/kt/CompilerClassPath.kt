@@ -3,7 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.classpath.findClassPath
 import java.nio.file.Path
 
-class CompilerClassPath(private val config: CompilerConfiguration) {
+class CompilerClassPath(private val config: CompilerConfiguration) : AutoCloseable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
     var compiler = Compiler(classPath)
@@ -61,6 +61,10 @@ class CompilerClassPath(private val config: CompilerConfiguration) {
     fun changedOnDisk(file: Path) {
         if (file.fileName.toString() == "pom.xml")
             refresh()
+    }
+    
+    override fun close() {
+        compiler.close()
     }
 }
 

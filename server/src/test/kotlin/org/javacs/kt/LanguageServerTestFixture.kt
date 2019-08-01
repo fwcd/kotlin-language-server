@@ -39,8 +39,8 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         return languageServer
     }
     
-    @After fun shutdownExecutors() {
-        languageServer.textDocumentService.shutdownExecutors(awaitTermination = true)
+    @After fun closeLanguageServer() {
+        languageServer.close()
     }
     
     @After fun printMemoryUsage() {
