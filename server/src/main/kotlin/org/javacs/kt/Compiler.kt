@@ -57,9 +57,9 @@ import org.javacs.kt.util.LoggingMessageCollector
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
 class Compiler(classPath: Set<Path>) : AutoCloseable {
-    private val disposable = Disposer.newDisposable()
-    private var closedBefore = false
     val environment: KotlinCoreEnvironment
+    private val disposable = Disposer.newDisposable()
+    private var closed = false
 
     private var parser: KtPsiFactory
     private var scripts: ScriptDefinitionProvider
@@ -202,11 +202,11 @@ class Compiler(classPath: Set<Path>) : AutoCloseable {
     }
     
     override fun close() {
-        if (!closedBefore) {
+        if (!closed) {
             Disposer.dispose(disposable)
-            closedBefore = true
+            closed = true
         } else {
-            LOG.info("WARNING: Disposing twice")
+            LOG.warn("Compiler is already closed!")
         }
     }
 }
