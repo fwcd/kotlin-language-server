@@ -3,13 +3,13 @@ plugins {
 }
 
 /** Prepares the grammars for packaging. */
-task copyGrammars(type: Copy) {
+task copyGrammars(type: Sync) {
     from "$rootDir/grammars/textmate/Kotlin.tmLanguage.json"
     into file('grammars')
 }
 
 /** Prepares the language server binaries for packaging. */
-task copyLanguageServer(type: Copy) {
+task copyLanguageServer(type: Sync) {
     dependsOn ':server:installDist'
     from project(':server').tasks.installDist.destinationDir
     into file('install')
