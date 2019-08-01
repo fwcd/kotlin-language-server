@@ -49,6 +49,8 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains:fernflower:1.0'
+    implementation 'com.pinterest.ktlint:ktlint-core:0.34.2'
+    implementation 'com.pinterest.ktlint:ktlint-ruleset-standard:0.34.2'
     implementation fileTree(dir: "$projectDir/lib-kotlin", include: ["*.jar"])
     
     // TODO: Isolate J2K dependency from the plugin:

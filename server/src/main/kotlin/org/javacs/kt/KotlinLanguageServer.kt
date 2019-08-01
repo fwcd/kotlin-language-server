@@ -54,6 +54,8 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, AutoCloseable 
         serverCapabilities.workspaceSymbolProvider = true
         serverCapabilities.referencesProvider = true
         serverCapabilities.codeActionProvider = true
+        serverCapabilities.documentFormattingProvider = true
+        serverCapabilities.documentRangeFormattingProvider = true
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         val clientCapabilities = params.capabilities

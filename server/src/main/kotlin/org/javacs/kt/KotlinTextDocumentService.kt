@@ -7,8 +7,11 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
+import org.javacs.kt.formatting.formatKotlinCode
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
+import org.javacs.kt.position.extractRange
+import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
@@ -39,6 +42,9 @@ class KotlinTextDocumentService(
     fun connect(client: LanguageClient) {
         this.client = client
     }
+
+    private val TextDocumentItem.filePath
+        get() = Paths.get(URI.create(uri))
 
     private val TextDocumentIdentifier.filePath
         get() = Paths.get(URI.create(uri))
@@ -116,8 +122,12 @@ class KotlinTextDocumentService(
         }
     }
 
-    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> {
-        TODO("not implemented")
+    override fun rangeFormatting(params: DocumentRangeFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
+        val code = extractRange(params.textDocument.content, params.range)
+        listOf(TextEdit(
+            params.range,
+            formatKotlinCode(code)
+        ))
     }
 
     override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>> {
@@ -156,7 +166,7 @@ class KotlinTextDocumentService(
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        val file = Paths.get(URI.create(params.textDocument.uri))
+        val file = params.textDocument.filePath
 
         sf.open(file, params.textDocument.text, params.textDocument.version)
         lintNow(file)
@@ -180,19 +190,23 @@ class KotlinTextDocumentService(
         clearDiagnostics(file)
     }
 
-    override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> {
-        TODO("not implemented")
+    override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
+        val code = params.textDocument.content
+        listOf(TextEdit(
+            Range(Position(0, 0), position(code, code.length)),
+            formatKotlinCode(code)
+        ))
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
         val file = params.textDocument.filePath
 
-        sf.edit(file,  params.textDocument.version, params.contentChanges)
+        sf.edit(file, params.textDocument.version, params.contentChanges)
         lintLater(file)
     }
 
     override fun references(position: ReferenceParams) = async.compute {
-        val file = Paths.get(URI.create(position.textDocument.uri))
+        val file = position.textDocument.filePath
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
         findReferences(file, offset, sp)
@@ -203,7 +217,7 @@ class KotlinTextDocumentService(
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {
-        val path = Paths.get(URI.create(position.textDocument.uri))
+        val path = position.textDocument.filePath
         return "${path.fileName} ${position.position.line + 1}:${position.position.character + 1}"
     }
 
