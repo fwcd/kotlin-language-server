@@ -1,13 +1,13 @@
 package org.javacs.kt
 
-import com.intellij.codeInsight.NullableNotNullManager
-import com.intellij.openapi.Disposable
-import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.vfs.StandardFileSystems
-import com.intellij.openapi.vfs.VirtualFileManager
-import com.intellij.openapi.vfs.VirtualFileSystem
-import com.intellij.psi.PsiFileFactory
-import com.intellij.mock.MockProject
+import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager
+import org.jetbrains.kotlin.com.intellij.openapi.Disposable
+import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
+import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileSystem
+import org.jetbrains.kotlin.com.intellij.psi.PsiFileFactory
+import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
@@ -43,11 +43,11 @@ import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
+import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
@@ -56,7 +56,7 @@ import org.javacs.kt.util.LoggingMessageCollector
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(classPath: Set<Path>) : AutoCloseable {
+class Compiler(classPath: Set<Path>) : Closeable {
     val environment: KotlinCoreEnvironment
     private val disposable = Disposer.newDisposable()
     private var closed = false
@@ -200,7 +200,7 @@ class Compiler(classPath: Set<Path>) : AutoCloseable {
             throw KotlinLSException("Error while analyzing: ${expression.text}", e)
         }
     }
-    
+
     override fun close() {
         if (!closed) {
             Disposer.dispose(disposable)

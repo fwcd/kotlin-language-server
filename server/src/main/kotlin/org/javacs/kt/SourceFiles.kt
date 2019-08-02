@@ -1,6 +1,6 @@
 package org.javacs.kt
 
-import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
+import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.javacs.kt.util.KotlinLSException
 import java.io.BufferedReader

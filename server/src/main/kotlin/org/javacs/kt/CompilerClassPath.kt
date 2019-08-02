@@ -1,9 +1,10 @@
 package org.javacs.kt
 
 import org.javacs.kt.classpath.findClassPath
+import java.io.Closeable
 import java.nio.file.Path
 
-class CompilerClassPath(private val config: CompilerConfiguration) : AutoCloseable {
+class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
     var compiler = Compiler(classPath)
@@ -25,6 +26,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : AutoCloseab
 
             classPath.removeAll(removed)
             classPath.addAll(added)
+            compiler.close()
             compiler = Compiler(classPath)
             updateCompilerConfiguration()
         }
@@ -62,7 +64,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : AutoCloseab
         if (file.fileName.toString() == "pom.xml")
             refresh()
     }
-    
+
     override fun close() {
         compiler.close()
     }

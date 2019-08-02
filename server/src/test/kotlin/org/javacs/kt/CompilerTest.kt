@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.junit.Assert.assertThat
 import org.junit.Test
+import org.junit.After
 import java.nio.file.Files
 
 class CompilerTest {
@@ -68,5 +69,9 @@ private class FileToEdit {
         val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!
 
         assertThat(target.name, hasToString("intFunction"))
+    }
+
+    @After fun cleanUp() {
+        compiler.close()
     }
 }

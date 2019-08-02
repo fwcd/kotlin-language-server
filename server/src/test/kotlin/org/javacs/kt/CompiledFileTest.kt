@@ -8,15 +8,14 @@ import java.nio.file.Files
 class CompiledFileTest {
     val compiledFile = compileFile()
 
-    fun compileFile(): CompiledFile {
-        val compiler = Compiler(setOf())
+    fun compileFile(): CompiledFile = Compiler(setOf()).use { compiler ->
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createFile(content, file)
         val classPath = CompilerClassPath(CompilerConfiguration())
         val sourcePath = listOf(parse)
         val (context, container) = compiler.compileFiles(sourcePath, sourcePath)
-        return CompiledFile(content, parse, context, container, sourcePath, classPath)
+        CompiledFile(content, parse, context, container, sourcePath, classPath)
     }
 
     @Test fun `typeAtPoint should return type for x`() {

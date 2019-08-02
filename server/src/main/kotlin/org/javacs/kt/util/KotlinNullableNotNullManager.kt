@@ -4,12 +4,12 @@
  */
 package org.javacs.kt.util
 
-import com.intellij.codeInsight.NullabilityAnnotationInfo
-import com.intellij.codeInsight.NullableNotNullManager
-import com.intellij.openapi.project.Project
-import com.intellij.psi.PsiAnnotation
-import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiModifierListOwner
+import org.jetbrains.kotlin.com.intellij.codeInsight.NullabilityAnnotationInfo
+import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager
+import org.jetbrains.kotlin.com.intellij.openapi.project.Project
+import org.jetbrains.kotlin.com.intellij.psi.PsiAnnotation
+import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.com.intellij.psi.PsiModifierListOwner
 
 class KotlinNullableNotNullManager(project: Project) : NullableNotNullManager(project) {
     private val nullablesList = mutableListOf<String>()
