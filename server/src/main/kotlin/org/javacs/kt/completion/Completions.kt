@@ -46,14 +46,14 @@ private const val MAX_COMPLETION_ITEMS = 50
 fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
-    
+
     val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial) }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
         .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
     val isIncomplete = (itemList.size == MAX_COMPLETION_ITEMS)
-    
+
     return CompletionList(isIncomplete, itemList)
 }
 
@@ -71,11 +71,11 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
     val completions = elementCompletions(file, cursor, surroundingElement)
-    
+
     val nameFilter = matchesPartialIdentifier(partial)
     val matchesName = completions.filter(nameFilter)
     val visible = matchesName.filter(isVisible(file, cursor))
-    
+
     return visible.map { completionItem(it, surroundingElement, file, config) }
 }
 
@@ -112,7 +112,7 @@ private fun isJavaCodeAndInstanceMethod(
     descriptor: DeclarationDescriptor
 ): Boolean {
     val javaMethodDescriptor = descriptor as? JavaMethodDescriptor ?: return false
-    val source = javaMethodDescriptor.source as? JavaSourceElement ?: return false
+    val source = javaMethodDescriptor.source as? JavaSourceElement ?: return true
     val javaElement = source.javaElement
     return javaElement is JavaMethod && !javaElement.isStatic
 }
