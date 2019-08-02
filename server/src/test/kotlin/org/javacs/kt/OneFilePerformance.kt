@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.jetbrains.kotlin.com.intellij.openapi.Disposable
+import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFile
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
@@ -30,6 +31,8 @@ import org.junit.Test
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.annotations.TearDown
+import org.openjdk.jmh.annotations.Level
 import org.openjdk.jmh.runner.Runner
 import org.openjdk.jmh.runner.RunnerException
 import org.openjdk.jmh.runner.options.Options
@@ -38,30 +41,30 @@ import org.javacs.kt.util.LoggingMessageCollector
 
 import java.lang.reflect.Type
 import java.net.URL
+import java.io.Closeable
 
 class OneFilePerformance {
     @State(Scope.Thread)
-    class ReusableParts {
+    class ReusableParts : Closeable {
         internal var config = CompilerConfiguration()
         init {
             config.put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
             config.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
         }
-        internal var env = KotlinCoreEnvironment.createForProduction(object: Disposable {
-            override fun dispose() {
-                // Do nothing
-            }
-        }, config, EnvironmentConfigFiles.JVM_CONFIG_FILES)
+        internal val disposable = Disposer.newDisposable()
+        internal var env = KotlinCoreEnvironment.createForProduction(
+            disposable, config, EnvironmentConfigFiles.JVM_CONFIG_FILES
+        )
         internal var parser = KtPsiFactory(env.project)
         internal var fileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
         internal var bigFile = openFile("/kotlinCompilerPerformance/BigFile.kt")
-        
+
         internal fun openFile(resourcePath: String?): KtFile {
             val locate = OneFilePerformance::class.java.getResource(resourcePath)
             val file = fileSystem.findFileByPath(locate.path)
             return PsiManager.getInstance(env.project).findFile(file!!) as KtFile
         }
-        
+
         internal fun compile(compile: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingTraceContext {
             val trace = CliBindingTrace()
             val container = CompilerFixtures.createContainer(
@@ -75,14 +78,19 @@ class OneFilePerformance {
             analyze.analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, compile, DataFlowInfoFactory.EMPTY)
             return trace
         }
+
+        @TearDown(Level.Trial)
+        override fun close() {
+            Disposer.dispose(disposable)
+        }
     }
-    
+
     @Benchmark
     fun recompileBigFile(state: ReusableParts) {
         val path = listOf(state.bigFile)
         state.compile(path, path)
     }
-    
+
     @Benchmark
     fun recompileSmallFile(state: ReusableParts) {
         val smallFile = state.openFile("/kotlinCompilerPerformance/ReferencesBigFile.kt")
@@ -93,7 +101,7 @@ class OneFilePerformance {
         if (!call!!.getCandidateDescriptor().getName().asString().equals("max"))
             throw RuntimeException("Expected BigFile.max but found " + call)
     }
-    
+
     @Benchmark
     fun recompileBoth(state: ReusableParts) {
         val bigFile = state.openFile("/kotlinCompilerPerformance/BigFile.kt")
@@ -105,20 +113,22 @@ class OneFilePerformance {
         if (!call!!.getCandidateDescriptor().getName().asString().equals("max"))
             throw RuntimeException("Expected BigFile.max but found " + call)
     }
-    
+
     @Test
     fun checkRecompileBoth() {
-        val state = ReusableParts()
-        recompileBoth(state)
+        ReusableParts().use { state ->
+            recompileBoth(state)
+        }
     }
-    
+
     @Test
     fun checkRecompileOne() {
-        val state = ReusableParts()
-        state.compile(setOf(state.bigFile), setOf(state.bigFile))
-        recompileSmallFile(state)
+        ReusableParts().use { state ->
+            state.compile(setOf(state.bigFile), setOf(state.bigFile))
+            recompileSmallFile(state)
+        }
     }
-    
+
     companion object {
         @Throws(RunnerException::class, InterruptedException::class)
         @JvmStatic fun main(args: Array<String>) {
