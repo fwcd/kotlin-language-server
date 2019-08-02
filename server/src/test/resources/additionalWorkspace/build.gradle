@@ -1,19 +1,20 @@
-apply plugin: 'java'
-apply plugin: 'maven'
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
+}
 
 group = 'org.javacs'
 version = '1.0-SNAPSHOT'
 
-description = """test-project"""
+description = 'test-project'
 
-sourceCompatibility = 1.5
-targetCompatibility = 1.5
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
-    maven { url "http://repo.maven.apache.org/maven2" }
+    mavenCentral()
 }
 
 dependencies {
-    implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib', version:'1.2.31'
-    testImplementation group: 'junit', name: 'junit', version:'4.10'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+    testImplementation 'junit:junit:4.11'
 }

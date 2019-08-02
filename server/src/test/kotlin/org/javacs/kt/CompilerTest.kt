@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.After
+import org.junit.BeforeClass
 import java.nio.file.Files
 
 class CompilerTest {
@@ -19,6 +20,12 @@ class CompilerTest {
 private class FileToEdit {
     val someVal = 1
 }"""
+
+    companion object {
+        @JvmStatic @BeforeClass fun setupLogger() {
+            LOG.connectStdioBackend()
+        }
+    }
 
     @Test fun compileFile() {
         val content = Files.readAllLines(file).joinToString("\n")

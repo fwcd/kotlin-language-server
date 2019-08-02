@@ -3,10 +3,17 @@ package org.javacs.kt
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertThat
 import org.junit.Test
+import org.junit.BeforeClass
 import java.nio.file.Files
 
 class CompiledFileTest {
     val compiledFile = compileFile()
+
+    companion object {
+        @JvmStatic @BeforeClass fun setupLogger() {
+            LOG.connectStdioBackend()
+        }
+    }
 
     fun compileFile(): CompiledFile = Compiler(setOf()).use { compiler ->
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")

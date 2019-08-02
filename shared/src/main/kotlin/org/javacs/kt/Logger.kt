@@ -43,7 +43,10 @@ enum class LogLevel(val value: Int) {
 class LogMessage(
     val level: LogLevel,
     val message: String
-)
+) {
+    val formatted: String
+        get() = "[$level] $message"
+}
 
 class Logger {
     private var outBackend: ((LogMessage) -> Unit)? = null
@@ -106,6 +109,11 @@ class Logger {
     fun connectErrorBackend(errBackend: (LogMessage) -> Unit) {
         this.errBackend = errBackend
         flushErrQueue()
+    }
+
+    fun connectStdioBackend() {
+        connectOutputBackend { println(it.formatted) }
+        connectOutputBackend { System.err.println(it.formatted) }
     }
 
     private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {

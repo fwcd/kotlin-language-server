@@ -88,6 +88,11 @@ task copyKotlinJVMLib(type: Sync) {
     into file('lib-kotlin')
 }
 
+task copyPropertiesToTestWorkspace(type: Copy) {
+    from "$rootDir/gradle.properties"
+    into file('src/test/resources/additionalWorkspace')
+}
+
 task fixFilePermissions(type: Exec) {
     // When running on macOS or Linux the start script
     // needs executable permissions to run.
@@ -124,9 +129,11 @@ run {
 }
 
 test {
+    dependsOn copyPropertiesToTestWorkspace
+
     testLogging {
-        events "failed"
-        exceptionFormat "short"
+        events 'failed'
+        exceptionFormat 'full'
     }
 }
 
