@@ -21,6 +21,7 @@ import org.javacs.kt.util.Debouncer
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
+import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Duration
@@ -30,7 +31,7 @@ class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val config: Configuration
-) : TextDocumentService, AutoCloseable {
+) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
     private var linting = false

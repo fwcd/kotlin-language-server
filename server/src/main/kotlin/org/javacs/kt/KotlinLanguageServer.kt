@@ -7,11 +7,12 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
 import java.net.URI
+import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, LanguageClientAware, AutoCloseable {
+class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
     val sourcePath = SourcePath(classPath)
@@ -94,7 +95,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, AutoCloseable 
         LogLevel.INFO -> MessageType.Info
         else -> MessageType.Log
     }
-    
+
     override fun close() {
         textDocumentService.close()
         classPath.close()
