@@ -13,9 +13,8 @@ fun convertJavaToKotlin(javaCode: String, compiler: Compiler): String {
     val javaAST = psiFactory.createFileFromText("snippet.java", JavaLanguage.INSTANCE, javaCode)
     LOG.info("Parsed {} to {}", javaCode, javaAST)
 
-	// return JavaToKotlinTranslator.generateKotlinCode(
-	// 	nonNull(javaCode, "No Java code has been provided to the J2K-converter"),
-	// 	nonNull(project, "No project is present in the KotlinCoreEnvironment")
-	// )
-	TODO()
+	return JavaElementConverter().also(javaAST::accept).translatedKotlinCode ?: run {
+        LOG.warn("Could not translate code")
+        ""
+    }
 }

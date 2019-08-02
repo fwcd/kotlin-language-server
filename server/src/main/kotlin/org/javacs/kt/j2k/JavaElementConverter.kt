@@ -14,6 +14,15 @@ class JavaElementConverter(
     var translatedKotlinCode: String? = null
         private set
     private val indent: String = "".padStart(indentLevel * indentSize, ' ')
+    private val nextIndent: String = "".padStart((indentLevel + 1) * indentSize, ' ')
+
+    private val String?.spacePrefixed: String
+        get() = this?.let { " $it" } ?: ""
+
+    /** Convenience method to perform construction, visit and translation in one call. */
+    private fun PsiElement?.translate(indentDelta: Int = 0): String? = JavaElementConverter(indentLevel + indentDelta)
+        .also { this?.accept(it) }
+        .translatedKotlinCode
 
     override fun visitAnonymousClass(aClass: PsiAnonymousClass) {
         super.visitAnonymousClass(aClass)
@@ -48,11 +57,11 @@ class JavaElementConverter(
     }
 
     override fun visitClass(aClass: PsiClass) {
-        super.visitClass(aClass)
+        translatedKotlinCode = aClass.qualifiedName
     }
 
     override fun visitClassInitializer(initializer: PsiClassInitializer) {
-        super.visitClassInitializer(initializer)
+        translatedKotlinCode = "class ${initializer.containingClass?.qualifiedName}${initializer.body.translate().spacePrefixed}"
     }
 
     override fun visitClassObjectAccessExpression(expression: PsiClassObjectAccessExpression) {
@@ -60,7 +69,10 @@ class JavaElementConverter(
     }
 
     override fun visitCodeBlock(block: PsiCodeBlock) {
-        super.visitCodeBlock(block)
+        val indentedStatements = block.statements
+            .map { "$nextIndent${it.translate(indentDelta = 1)}" }
+            .joinToString(separator = "\n")
+        translatedKotlinCode = "{$indentedStatements\n$indent}"
     }
 
     override fun visitConditionalExpression(expression: PsiConditionalExpression) {
@@ -68,7 +80,7 @@ class JavaElementConverter(
     }
 
     override fun visitContinueStatement(statement: PsiContinueStatement) {
-        super.visitContinueStatement(statement)
+        translatedKotlinCode = "continue${statement.labelIdentifier.translate().spacePrefixed}"
     }
 
     override fun visitDeclarationStatement(statement: PsiDeclarationStatement) {
@@ -92,11 +104,11 @@ class JavaElementConverter(
     }
 
     override fun visitEmptyStatement(statement: PsiEmptyStatement) {
-        super.visitEmptyStatement(statement)
+        translatedKotlinCode = ""
     }
 
     override fun visitExpression(expression: PsiExpression) {
-        super.visitExpression(expression)
+        translatedKotlinCode = expression.text // Perform no conversion if no concrete visitor could be found
     }
 
     override fun visitExpressionList(list: PsiExpressionList) {
@@ -124,11 +136,13 @@ class JavaElementConverter(
     }
 
     override fun visitIdentifier(identifier: PsiIdentifier) {
-        super.visitIdentifier(identifier)
+        translatedKotlinCode = identifier.text
     }
 
     override fun visitIfStatement(statement: PsiIfStatement) {
-        super.visitIfStatement(statement)
+        val translatedIf = "if (${statement.condition.translate()})${statement.thenBranch.translate().spacePrefixed}"
+        val translatedElse = statement.elseBranch.translate()?.let { "else $it" }.spacePrefixed
+        translatedKotlinCode = translatedIf + translatedElse
     }
 
     override fun visitImportList(list: PsiImportList) {
@@ -326,7 +340,11 @@ class JavaElementConverter(
     }
 
     override fun visitJavaFile(file: PsiJavaFile) {
-        super.visitJavaFile(file)
+        // TODO: Package declarations, imports, ....
+        translatedKotlinCode = file.classes.asSequence()
+            .flatMap { it.initializers.asSequence() }
+            .map { it.translate() }
+            .joinToString(separator = "\n")
     }
 
     override fun visitImplicitVariable(variable: ImplicitVariable) {
