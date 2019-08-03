@@ -89,18 +89,17 @@ class JavaElementConverter(
     }
 
     override fun visitAssertStatement(statement: PsiAssertStatement) {
-        super.visitAssertStatement(statement)
-        j2kTODO("AssertStatement")
+        val translatedCondition = statement.assertCondition.translate()
+        val translatedDescription = statement.assertDescription.translate()?.let { " { $it }" } ?: ""
+        translatedKotlinCode = "assert($translatedCondition)$translatedDescription"
     }
 
     override fun visitAssignmentExpression(expression: PsiAssignmentExpression) {
-        super.visitAssignmentExpression(expression)
-        j2kTODO("AssignmentExpression")
+        translatedKotlinCode = "${expression.lExpression.translate()} ${expression.operationSign.text} ${expression.rExpression.translate()}"
     }
 
     override fun visitBinaryExpression(expression: PsiBinaryExpression) {
-        super.visitBinaryExpression(expression)
-        j2kTODO("BinaryExpression")
+        translatedKotlinCode = "${expression.lOperand.translate()} ${expression.operationSign.text} ${expression.rOperand.translate()}"
     }
 
     override fun visitBlockStatement(statement: PsiBlockStatement) {
@@ -254,8 +253,7 @@ class JavaElementConverter(
     }
 
     override fun visitJavaToken(token: PsiJavaToken) {
-        super.visitJavaToken(token)
-        j2kTODO("JavaToken")
+        translatedKotlinCode = token.text
     }
 
     override fun visitKeyword(keyword: PsiKeyword) {
@@ -305,18 +303,25 @@ class JavaElementConverter(
     }
 
     override fun visitNewExpression(expression: PsiNewExpression) {
-        super.visitNewExpression(expression)
-        j2kTODO("NewExpression")
+        val qualifier = expression.qualifier?.translate()?.let { "$it." } ?: ""
+        val name = expression.type?.translate()
+
+        val arrayDimensions = expression.arrayDimensions
+        val translatedArgs = if (arrayDimensions.isEmpty()) {
+            "(${expression.argumentList.translate()})"
+        } else {
+            arrayDimensions.map { "[$it]" }.joinToString()
+        }
+
+        translatedKotlinCode = "$qualifier$name$translatedArgs"
     }
 
     override fun visitPackage(aPackage: PsiPackage) {
-        super.visitPackage(aPackage)
-        j2kTODO("Package")
+        translatedKotlinCode = aPackage.qualifiedName
     }
 
     override fun visitPackageStatement(statement: PsiPackageStatement) {
-        super.visitPackageStatement(statement)
-        j2kTODO("PackageStatement")
+        translatedKotlinCode = "package ${statement.packageName}"
     }
 
     override fun visitParameter(parameter: PsiParameter) {
@@ -336,23 +341,21 @@ class JavaElementConverter(
     }
 
     override fun visitParenthesizedExpression(expression: PsiParenthesizedExpression) {
-        super.visitParenthesizedExpression(expression)
-        j2kTODO("ParenthesizedExpression")
+        translatedKotlinCode = "(${expression.expression.translate()})"
     }
 
     override fun visitUnaryExpression(expression: PsiUnaryExpression) {
+        // Implemented by prefix/postfix expression
         super.visitUnaryExpression(expression)
         j2kTODO("UnaryExpression")
     }
 
     override fun visitPostfixExpression(expression: PsiPostfixExpression) {
-        super.visitPostfixExpression(expression)
-        j2kTODO("PostfixExpression")
+        translatedKotlinCode = "${expression.operand.translate()}${expression.operationSign.text}"
     }
 
     override fun visitPrefixExpression(expression: PsiPrefixExpression) {
-        super.visitPrefixExpression(expression)
-        j2kTODO("PrefixExpression")
+        translatedKotlinCode = "${expression.operationSign.text}${expression.operand.translate()}"
     }
 
     override fun visitReferenceElement(reference: PsiJavaCodeReferenceElement) {
