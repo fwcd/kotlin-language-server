@@ -42,18 +42,27 @@ class JavaElementConverter(
      * Note that the 'indentDelta' refers to the layer
      * of indentation *inside* the block.
      */
-    private fun List<String>.buildCodeBlock(indentDelta: Int = 1): String {
+    private fun Sequence<String>.buildCodeBlock(indentDelta: Int = 1): String {
         val indentedStatements = this
             .map { "${nextIndent(indentDelta)}$it" }
             .joinToString(separator = "\n")
-        return "{\n$indentedStatements\n$indent}"
+        return "{\n$indentedStatements\n${nextIndent(indentDelta - 1)}}"
     }
+
+    private fun List<String>.buildCodeBlock(indentDelta: Int = 1): String = asSequence().buildCodeBlock(indentDelta)
 
     /** Converts a PsiType to its Kotlin representation. */
     private fun PsiType.translate(): String = accept(JavaTypeConverter)
 
     /** Converts a list of type arguments to its Kotlin representation. */
     private fun PsiCallExpression.translateTypeArguments(): String = "<${typeArgumentList.translate()}>"
+
+    /** Fetches the child statements of a potentially composite statement. */
+    private val PsiStatement.containedStatements: Sequence<PsiStatement> get() = if (this is PsiCodeBlock) {
+        statements.asSequence()
+    } else {
+        sequenceOf(this)
+    }
 
     private fun j2kTODO(type: String) {
         LOG.warn("J2K can not convert $type yet")
@@ -95,13 +104,12 @@ class JavaElementConverter(
     }
 
     override fun visitBlockStatement(statement: PsiBlockStatement) {
-        super.visitBlockStatement(statement)
-        j2kTODO("BlockStatement")
+        visitCodeBlock(statement.codeBlock)
     }
 
     override fun visitBreakStatement(statement: PsiBreakStatement) {
-        super.visitBreakStatement(statement)
-        j2kTODO("BreakStatement")
+        // TODO: Break labels
+        translatedKotlinCode = "break"
     }
 
     override fun visitClass(aClass: PsiClass) {
@@ -142,8 +150,10 @@ class JavaElementConverter(
     }
 
     override fun visitConditionalExpression(expression: PsiConditionalExpression) {
-        super.visitConditionalExpression(expression)
-        j2kTODO("ConditionalExpression")
+        val translatedCondition = expression.condition.translate()
+        val translatedThen = expression.thenExpression.translate()
+        val translatedElse = expression.elseExpression.translate()
+        translatedKotlinCode = "if ($translatedCondition) $translatedThen else $translatedElse"
     }
 
     override fun visitContinueStatement(statement: PsiContinueStatement) {
@@ -151,13 +161,13 @@ class JavaElementConverter(
     }
 
     override fun visitDeclarationStatement(statement: PsiDeclarationStatement) {
-        super.visitDeclarationStatement(statement)
-        j2kTODO("DeclarationStatement")
+        translatedKotlinCode = statement.declaredElements
+            .map { it.translate() }
+            .joinToString(separator = "\n")
     }
 
     override fun visitDocComment(comment: PsiDocComment) {
-        super.visitDocComment(comment)
-        j2kTODO("DocComment")
+        translatedKotlinCode = comment.text
     }
 
     override fun visitDocTag(tag: PsiDocTag) {
@@ -171,8 +181,7 @@ class JavaElementConverter(
     }
 
     override fun visitDoWhileStatement(statement: PsiDoWhileStatement) {
-        super.visitDoWhileStatement(statement)
-        j2kTODO("DoWhileStatement")
+        translatedKotlinCode = "do ${statement.body.translate()} while (${statement.condition.translate()})"
     }
 
     override fun visitEmptyStatement(statement: PsiEmptyStatement) {
@@ -200,8 +209,10 @@ class JavaElementConverter(
     }
 
     override fun visitForStatement(statement: PsiForStatement) {
-        super.visitForStatement(statement)
-        j2kTODO("ForStatement")
+        val translatedBody = ((statement.body?.containedStatements ?: emptySequence()) + sequenceOf(statement.update))
+            .mapNotNull { it.translate(indentDelta = 1) }
+            .buildCodeBlock()
+        translatedKotlinCode = "${statement.initialization.translate()}\nwhile (${statement.condition.translate()}) $translatedBody"
     }
 
     override fun visitForeachStatement(statement: PsiForeachStatement) {
@@ -220,18 +231,17 @@ class JavaElementConverter(
     }
 
     override fun visitImportList(list: PsiImportList) {
-        super.visitImportList(list)
-        j2kTODO("ImportList")
+        translatedKotlinCode = list.allImportStatements
+            .map { it.translate() ?: "?" }
+            .joinToString(separator = "\n")
     }
 
     override fun visitImportStatement(statement: PsiImportStatement) {
-        super.visitImportStatement(statement)
-        j2kTODO("ImportStatement")
+        translatedKotlinCode = "import ${statement.qualifiedName}"
     }
 
     override fun visitImportStaticStatement(statement: PsiImportStaticStatement) {
-        super.visitImportStaticStatement(statement)
-        j2kTODO("ImportStaticStatement")
+        translatedKotlinCode = "import ${statement.referenceName}"
     }
 
     override fun visitInlineDocTag(tag: PsiInlineDocTag) {
@@ -240,8 +250,7 @@ class JavaElementConverter(
     }
 
     override fun visitInstanceOfExpression(expression: PsiInstanceOfExpression) {
-        super.visitInstanceOfExpression(expression)
-        j2kTODO("InstanceOfExpression")
+        translatedKotlinCode = "(${expression.operand.translate()}) is ${expression.checkType?.type?.translate()}"
     }
 
     override fun visitJavaToken(token: PsiJavaToken) {
@@ -260,23 +269,29 @@ class JavaElementConverter(
     }
 
     override fun visitLiteralExpression(expression: PsiLiteralExpression) {
-        super.visitLiteralExpression(expression)
-        j2kTODO("LiteralExpression")
+        val value = expression.value
+        translatedKotlinCode = when (value) {
+            is String -> "\"$value\""
+            else -> value.toString()
+        }
     }
 
     override fun visitLocalVariable(variable: PsiLocalVariable) {
-        super.visitLocalVariable(variable)
-        j2kTODO("LocalVariable")
+        visitVariable(variable)
     }
 
     override fun visitMethod(method: PsiMethod) {
         // TODO: Type parameters, annotations, modifiers, ...
+        val name = method.name
+        val translatedParamList = method.parameterList.translate()
         val translatedBody = method.body.translate().spacePrefixed
-        translatedKotlinCode = "fun ${method.name}(${method.parameterList.translate()})$translatedBody"
+        translatedKotlinCode = "fun $name($translatedParamList)$translatedBody"
     }
 
     override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
-        translatedKotlinCode = "${expression.methodExpression.translate()}(${expression.argumentList.translate()})"
+        val name = expression.methodExpression.translate()
+        val translatedArgList = expression.argumentList.translate()
+        translatedKotlinCode = "$name($translatedArgList)"
     }
 
     override fun visitCallExpression(callExpression: PsiCallExpression) {
@@ -351,12 +366,16 @@ class JavaElementConverter(
     }
 
     override fun visitReferenceExpression(expression: PsiReferenceExpression) {
-        translatedKotlinCode = expression.referenceNameElement.translate()
+        val qualifier = expression.qualifier?.translate()?.let { "$it." } ?: ""
+        val name = expression.referenceNameElement.translate()
+        translatedKotlinCode = "$qualifier$name"
     }
 
     override fun visitMethodReferenceExpression(expression: PsiMethodReferenceExpression) {
-        super.visitMethodReferenceExpression(expression)
-        j2kTODO("MethodReferenceExpression")
+        val qualifier = expression.qualifierType.translate()
+            ?: expression.qualifierExpression.translate()
+        val memberName = expression.potentiallyApplicableMember?.name
+        translatedKotlinCode = "$qualifier::$memberName"
     }
 
     override fun visitReferenceList(list: PsiReferenceList) {
@@ -375,8 +394,7 @@ class JavaElementConverter(
     }
 
     override fun visitReturnStatement(statement: PsiReturnStatement) {
-        super.visitReturnStatement(statement)
-        j2kTODO("ReturnStatement")
+        translatedKotlinCode = "return${statement.returnValue.translate().spacePrefixed}"
     }
 
     override fun visitStatement(statement: PsiStatement) {
@@ -445,12 +463,11 @@ class JavaElementConverter(
     }
 
     override fun visitTypeElement(type: PsiTypeElement) {
-        super.visitTypeElement(type)
-        j2kTODO("TypeElement")
+        translatedKotlinCode = type.type.translate()
     }
 
     override fun visitTypeCastExpression(expression: PsiTypeCastExpression) {
-        translatedKotlinCode = "() as $"
+        translatedKotlinCode = "(${expression.operand.translate()}) as ${expression.castType?.type?.translate()}"
     }
 
     override fun visitVariable(variable: PsiVariable) {
@@ -461,16 +478,15 @@ class JavaElementConverter(
     }
 
     override fun visitWhileStatement(statement: PsiWhileStatement) {
-        super.visitWhileStatement(statement)
-        j2kTODO("WhileStatement")
+        translatedKotlinCode = "while (${statement.condition.translate()}) ${statement.body.translate()}"
     }
 
     override fun visitJavaFile(file: PsiJavaFile) {
         // This is the entry point for the J2K converter
-        // TODO: Package declarations, imports, ....
         translatedKotlinCode = file.children.asSequence()
             .mapNotNull { it.translate() }
-            .joinToString(separator = "\n")
+            .filter { it.isNotEmpty() }
+            .joinToString(separator = "\n\n")
     }
 
     override fun visitImplicitVariable(variable: ImplicitVariable) {
