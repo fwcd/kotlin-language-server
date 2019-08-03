@@ -23,4 +23,4 @@ let g:LanguageClient_serverCommands = {
 ```
 
 ## Other Editors
-Invoke the language server executable in a client-specific way. The server uses `stdio` to send and receive `JSON-RPC` messages.
+Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way. The server uses `stdio` to send and receive `JSON-RPC` messages.

@@ -11,7 +11,8 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 Any editor conforming to LSP is supported, including [VSCode](https://code.visualstudio.com) and [Atom](https://atom.io) for which client extensions provided by this repository.
 
 ## Getting Started
-* See [BUILDING.md](BUILDING.md) for build instructions.
+* See [BUILDING.md](BUILDING.md) for build instructions
+* See [Editor Integration](editors/README.md) for editor-specific instructions
 * See [Roadmap](https://github.com/fwcd/KotlinLanguageServer/projects/1) for features, planned additions, bugfixes and changes
 * See [KotlinQuickStart](https://github.com/fwcd/KotlinQuickStart) for a sample project
 * See [KotlinDebugAdapter](https://github.com/fwcd/KotlinDebugAdapter) for debugging support on JVM
