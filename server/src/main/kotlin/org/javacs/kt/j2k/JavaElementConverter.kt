@@ -12,9 +12,18 @@ class JavaElementConverter(
     private val indentLevel: Int = 0,
     private val indentSize: Int = 4 // spaces
 ) : JavaElementVisitor() {
+    /**
+     * Contains the translated code. If code has multiple lines,
+     * the first line is *not* indented, all subsequent lines are
+     * indented by 'indentLevel' levels.
+     */
     var translatedKotlinCode: String? = null
         private set
     private val indent: String = "".padStart(indentLevel * indentSize, ' ')
+
+    // =================
+    // Extension methods
+    // =================
 
     private val String?.spacePrefixed: String
         get() = this?.let { " $it" } ?: ""
@@ -24,56 +33,75 @@ class JavaElementConverter(
         .also { this?.accept(it) }
         .translatedKotlinCode
 
+    /** Fetches the indented indent. */
     private fun nextIndent(indentDelta: Int = 1): String = ""
         .padStart((indentLevel + indentDelta) * indentSize, ' ')
 
+    /**
+     * Constructs a code block from a list of statements.
+     * Note that the 'indentDelta' refers to the layer
+     * of indentation *inside* the block.
+     */
     private fun List<String>.buildCodeBlock(indentDelta: Int = 1): String {
         val indentedStatements = this
             .map { "${nextIndent(indentDelta)}$it" }
             .joinToString(separator = "\n")
-        return "{$indentedStatements\n$indent}"
+        return "{\n$indentedStatements\n$indent}"
     }
 
+    /** Converts a PsiType to its Kotlin representation. */
     private fun PsiType.translate(): String = accept(JavaTypeConverter)
+
+    /** Converts a list of type arguments to its Kotlin representation. */
+    private fun PsiCallExpression.translateTypeArguments(): String = "<${typeArgumentList.translate()}>"
+
+    private fun j2kTODO(type: String) {
+        LOG.warn("J2K can not convert $type yet")
+        translatedKotlinCode = "/*$type*/"
+    }
+
+    // =================
+    // Visitor methods
+    // =================
 
     override fun visitAnonymousClass(aClass: PsiAnonymousClass) {
         super.visitAnonymousClass(aClass)
-        LOG.warn("J2K can not convert AnonymousClass yet")
+        j2kTODO("AnonymousClass")
     }
 
     override fun visitArrayAccessExpression(expression: PsiArrayAccessExpression) {
         super.visitArrayAccessExpression(expression)
-        LOG.warn("J2K can not convert ArrayAccessExpression yet")
+        j2kTODO("ArrayAccessExpression")
     }
 
     override fun visitArrayInitializerExpression(expression: PsiArrayInitializerExpression) {
         super.visitArrayInitializerExpression(expression)
-        LOG.warn("J2K can not convert ArrayInitializerExpression yet")
+        j2kTODO("ArrayInitializerExpression")
     }
 
     override fun visitAssertStatement(statement: PsiAssertStatement) {
         super.visitAssertStatement(statement)
-        LOG.warn("J2K can not convert AssertStatement yet")
+        j2kTODO("AssertStatement")
     }
 
     override fun visitAssignmentExpression(expression: PsiAssignmentExpression) {
         super.visitAssignmentExpression(expression)
-        LOG.warn("J2K can not convert AssignmentExpression yet")
+        j2kTODO("AssignmentExpression")
     }
 
     override fun visitBinaryExpression(expression: PsiBinaryExpression) {
         super.visitBinaryExpression(expression)
-        LOG.warn("J2K can not convert BinaryExpression yet")
+        j2kTODO("BinaryExpression")
     }
 
     override fun visitBlockStatement(statement: PsiBlockStatement) {
         super.visitBlockStatement(statement)
-        LOG.warn("J2K can not convert BlockStatement yet")
+        j2kTODO("BlockStatement")
     }
 
     override fun visitBreakStatement(statement: PsiBreakStatement) {
         super.visitBreakStatement(statement)
-        LOG.warn("J2K can not convert BreakStatement yet")
+        j2kTODO("BreakStatement")
     }
 
     override fun visitClass(aClass: PsiClass) {
@@ -87,13 +115,13 @@ class JavaElementConverter(
         val translatedCompanion = if (!staticMembers.isEmpty()) {
             val translatedCompanionBlock = staticMembers
                 .map { "@JvmStatic ${it.translate(indentDelta = 2)}" }
-                .buildCodeBlock()
+                .buildCodeBlock(indentDelta = 2)
                 .spacePrefixed
             "companion object$translatedCompanionBlock"
         } else ""
 
         val translatedBody = (listOf(translatedCompanion) + translatedInstanceMembers)
-            .buildCodeBlock()
+            .buildCodeBlock(indentDelta = 1)
             .spacePrefixed
 
         translatedKotlinCode = "class ${aClass.qualifiedName}$translatedBody"
@@ -105,7 +133,7 @@ class JavaElementConverter(
 
     override fun visitClassObjectAccessExpression(expression: PsiClassObjectAccessExpression) {
         super.visitClassObjectAccessExpression(expression)
-        LOG.warn("J2K can not convert ClassObjectAccessExpression yet")
+        j2kTODO("ClassObjectAccessExpression")
     }
 
     override fun visitCodeBlock(block: PsiCodeBlock) {
@@ -115,7 +143,7 @@ class JavaElementConverter(
 
     override fun visitConditionalExpression(expression: PsiConditionalExpression) {
         super.visitConditionalExpression(expression)
-        LOG.warn("J2K can not convert ConditionalExpression yet")
+        j2kTODO("ConditionalExpression")
     }
 
     override fun visitContinueStatement(statement: PsiContinueStatement) {
@@ -124,27 +152,27 @@ class JavaElementConverter(
 
     override fun visitDeclarationStatement(statement: PsiDeclarationStatement) {
         super.visitDeclarationStatement(statement)
-        LOG.warn("J2K can not convert DeclarationStatement yet")
+        j2kTODO("DeclarationStatement")
     }
 
     override fun visitDocComment(comment: PsiDocComment) {
         super.visitDocComment(comment)
-        LOG.warn("J2K can not convert DocComment yet")
+        j2kTODO("DocComment")
     }
 
     override fun visitDocTag(tag: PsiDocTag) {
         super.visitDocTag(tag)
-        LOG.warn("J2K can not convert DocTag yet")
+        j2kTODO("DocTag")
     }
 
     override fun visitDocTagValue(value: PsiDocTagValue) {
         super.visitDocTagValue(value)
-        LOG.warn("J2K can not convert DocTagValue yet")
+        j2kTODO("DocTagValue")
     }
 
     override fun visitDoWhileStatement(statement: PsiDoWhileStatement) {
         super.visitDoWhileStatement(statement)
-        LOG.warn("J2K can not convert DoWhileStatement yet")
+        j2kTODO("DoWhileStatement")
     }
 
     override fun visitEmptyStatement(statement: PsiEmptyStatement) {
@@ -156,33 +184,29 @@ class JavaElementConverter(
     }
 
     override fun visitExpressionList(list: PsiExpressionList) {
-        super.visitExpressionList(list)
-        LOG.warn("J2K can not convert ExpressionList yet")
+        translatedKotlinCode = list.expressions.asSequence().map { it.translate() }.joinToString(separator = ", ")
     }
 
     override fun visitExpressionListStatement(statement: PsiExpressionListStatement) {
-        super.visitExpressionListStatement(statement)
-        LOG.warn("J2K can not convert ExpressionListStatement yet")
+        visitExpressionList(statement.expressionList)
     }
 
     override fun visitExpressionStatement(statement: PsiExpressionStatement) {
-        super.visitExpressionStatement(statement)
-        LOG.warn("J2K can not convert ExpressionStatement yet")
+        translatedKotlinCode = statement.expression.translate()
     }
 
     override fun visitField(field: PsiField) {
-        super.visitField(field)
-        LOG.warn("J2K can not convert Field yet")
+        visitVariable(field)
     }
 
     override fun visitForStatement(statement: PsiForStatement) {
         super.visitForStatement(statement)
-        LOG.warn("J2K can not convert ForStatement yet")
+        j2kTODO("ForStatement")
     }
 
     override fun visitForeachStatement(statement: PsiForeachStatement) {
         super.visitForeachStatement(statement)
-        LOG.warn("J2K can not convert ForeachStatement yet")
+        j2kTODO("ForeachStatement")
     }
 
     override fun visitIdentifier(identifier: PsiIdentifier) {
@@ -197,52 +221,52 @@ class JavaElementConverter(
 
     override fun visitImportList(list: PsiImportList) {
         super.visitImportList(list)
-        LOG.warn("J2K can not convert ImportList yet")
+        j2kTODO("ImportList")
     }
 
     override fun visitImportStatement(statement: PsiImportStatement) {
         super.visitImportStatement(statement)
-        LOG.warn("J2K can not convert ImportStatement yet")
+        j2kTODO("ImportStatement")
     }
 
     override fun visitImportStaticStatement(statement: PsiImportStaticStatement) {
         super.visitImportStaticStatement(statement)
-        LOG.warn("J2K can not convert ImportStaticStatement yet")
+        j2kTODO("ImportStaticStatement")
     }
 
     override fun visitInlineDocTag(tag: PsiInlineDocTag) {
         super.visitInlineDocTag(tag)
-        LOG.warn("J2K can not convert InlineDocTag yet")
+        j2kTODO("InlineDocTag")
     }
 
     override fun visitInstanceOfExpression(expression: PsiInstanceOfExpression) {
         super.visitInstanceOfExpression(expression)
-        LOG.warn("J2K can not convert InstanceOfExpression yet")
+        j2kTODO("InstanceOfExpression")
     }
 
     override fun visitJavaToken(token: PsiJavaToken) {
         super.visitJavaToken(token)
-        LOG.warn("J2K can not convert JavaToken yet")
+        j2kTODO("JavaToken")
     }
 
     override fun visitKeyword(keyword: PsiKeyword) {
         super.visitKeyword(keyword)
-        LOG.warn("J2K can not convert Keyword yet")
+        j2kTODO("Keyword")
     }
 
     override fun visitLabeledStatement(statement: PsiLabeledStatement) {
         super.visitLabeledStatement(statement)
-        LOG.warn("J2K can not convert LabeledStatement yet")
+        j2kTODO("LabeledStatement")
     }
 
     override fun visitLiteralExpression(expression: PsiLiteralExpression) {
         super.visitLiteralExpression(expression)
-        LOG.warn("J2K can not convert LiteralExpression yet")
+        j2kTODO("LiteralExpression")
     }
 
     override fun visitLocalVariable(variable: PsiLocalVariable) {
         super.visitLocalVariable(variable)
-        LOG.warn("J2K can not convert LocalVariable yet")
+        j2kTODO("LocalVariable")
     }
 
     override fun visitMethod(method: PsiMethod) {
@@ -252,33 +276,32 @@ class JavaElementConverter(
     }
 
     override fun visitMethodCallExpression(expression: PsiMethodCallExpression) {
-        super.visitMethodCallExpression(expression)
-        LOG.warn("J2K can not convert MethodCallExpression yet")
+        translatedKotlinCode = "${expression.methodExpression.translate()}(${expression.argumentList.translate()})"
     }
 
     override fun visitCallExpression(callExpression: PsiCallExpression) {
         super.visitCallExpression(callExpression)
-        LOG.warn("J2K can not convert CallExpression yet")
+        j2kTODO("CallExpression")
     }
 
     override fun visitModifierList(list: PsiModifierList) {
         super.visitModifierList(list)
-        LOG.warn("J2K can not convert ModifierList yet")
+        j2kTODO("ModifierList")
     }
 
     override fun visitNewExpression(expression: PsiNewExpression) {
         super.visitNewExpression(expression)
-        LOG.warn("J2K can not convert NewExpression yet")
+        j2kTODO("NewExpression")
     }
 
     override fun visitPackage(aPackage: PsiPackage) {
         super.visitPackage(aPackage)
-        LOG.warn("J2K can not convert Package yet")
+        j2kTODO("Package")
     }
 
     override fun visitPackageStatement(statement: PsiPackageStatement) {
         super.visitPackageStatement(statement)
-        LOG.warn("J2K can not convert PackageStatement yet")
+        j2kTODO("PackageStatement")
     }
 
     override fun visitParameter(parameter: PsiParameter) {
@@ -288,7 +311,7 @@ class JavaElementConverter(
 
     override fun visitReceiverParameter(parameter: PsiReceiverParameter) {
         super.visitReceiverParameter(parameter)
-        LOG.warn("J2K can not convert ReceiverParameter yet")
+        j2kTODO("ReceiverParameter")
     }
 
     override fun visitParameterList(list: PsiParameterList) {
@@ -299,147 +322,151 @@ class JavaElementConverter(
 
     override fun visitParenthesizedExpression(expression: PsiParenthesizedExpression) {
         super.visitParenthesizedExpression(expression)
-        LOG.warn("J2K can not convert ParenthesizedExpression yet")
+        j2kTODO("ParenthesizedExpression")
     }
 
     override fun visitUnaryExpression(expression: PsiUnaryExpression) {
         super.visitUnaryExpression(expression)
-        LOG.warn("J2K can not convert UnaryExpression yet")
+        j2kTODO("UnaryExpression")
     }
 
     override fun visitPostfixExpression(expression: PsiPostfixExpression) {
         super.visitPostfixExpression(expression)
-        LOG.warn("J2K can not convert PostfixExpression yet")
+        j2kTODO("PostfixExpression")
     }
 
     override fun visitPrefixExpression(expression: PsiPrefixExpression) {
         super.visitPrefixExpression(expression)
-        LOG.warn("J2K can not convert PrefixExpression yet")
+        j2kTODO("PrefixExpression")
     }
 
     override fun visitReferenceElement(reference: PsiJavaCodeReferenceElement) {
         super.visitReferenceElement(reference)
-        LOG.warn("J2K can not convert ReferenceElement yet")
+        j2kTODO("ReferenceElement")
     }
 
     override fun visitImportStaticReferenceElement(reference: PsiImportStaticReferenceElement) {
         super.visitImportStaticReferenceElement(reference)
-        LOG.warn("J2K can not convert ImportStaticReferenceElement yet")
+        j2kTODO("ImportStaticReferenceElement")
     }
 
-    override fun visitReferenceExpression(expression: PsiReferenceExpression) {}
+    override fun visitReferenceExpression(expression: PsiReferenceExpression) {
+        translatedKotlinCode = expression.referenceNameElement.translate()
+    }
 
     override fun visitMethodReferenceExpression(expression: PsiMethodReferenceExpression) {
         super.visitMethodReferenceExpression(expression)
-        LOG.warn("J2K can not convert MethodReferenceExpression yet")
+        j2kTODO("MethodReferenceExpression")
     }
 
     override fun visitReferenceList(list: PsiReferenceList) {
         super.visitReferenceList(list)
-        LOG.warn("J2K can not convert ReferenceList yet")
+        j2kTODO("ReferenceList")
     }
 
     override fun visitReferenceParameterList(list: PsiReferenceParameterList) {
         super.visitReferenceParameterList(list)
-        LOG.warn("J2K can not convert ReferenceParameterList yet")
+        j2kTODO("ReferenceParameterList")
     }
 
     override fun visitTypeParameterList(list: PsiTypeParameterList) {
         super.visitTypeParameterList(list)
-        LOG.warn("J2K can not convert TypeParameterList yet")
+        j2kTODO("TypeParameterList")
     }
 
     override fun visitReturnStatement(statement: PsiReturnStatement) {
         super.visitReturnStatement(statement)
-        LOG.warn("J2K can not convert ReturnStatement yet")
+        j2kTODO("ReturnStatement")
     }
 
     override fun visitStatement(statement: PsiStatement) {
         super.visitStatement(statement)
-        LOG.warn("J2K can not convert Statement yet")
+        j2kTODO("Statement")
     }
 
     override fun visitSuperExpression(expression: PsiSuperExpression) {
         super.visitSuperExpression(expression)
-        LOG.warn("J2K can not convert SuperExpression yet")
+        j2kTODO("SuperExpression")
     }
 
     override fun visitSwitchLabelStatement(statement: PsiSwitchLabelStatement) {
         super.visitSwitchLabelStatement(statement)
-        LOG.warn("J2K can not convert SwitchLabelStatement yet")
+        j2kTODO("SwitchLabelStatement")
     }
 
     override fun visitSwitchLabeledRuleStatement(statement: PsiSwitchLabeledRuleStatement) {
         super.visitSwitchLabeledRuleStatement(statement)
-        LOG.warn("J2K can not convert SwitchLabeledRuleStatement yet")
+        j2kTODO("SwitchLabeledRuleStatement")
     }
 
     override fun visitSwitchStatement(statement: PsiSwitchStatement) {
         super.visitSwitchStatement(statement)
-        LOG.warn("J2K can not convert SwitchStatement yet")
+        j2kTODO("SwitchStatement")
     }
 
     override fun visitSynchronizedStatement(statement: PsiSynchronizedStatement) {
         super.visitSynchronizedStatement(statement)
-        LOG.warn("J2K can not convert SynchronizedStatement yet")
+        j2kTODO("SynchronizedStatement")
     }
 
     override fun visitThisExpression(expression: PsiThisExpression) {
         super.visitThisExpression(expression)
-        LOG.warn("J2K can not convert ThisExpression yet")
+        j2kTODO("ThisExpression")
     }
 
     override fun visitThrowStatement(statement: PsiThrowStatement) {
         super.visitThrowStatement(statement)
-        LOG.warn("J2K can not convert ThrowStatement yet")
+        j2kTODO("ThrowStatement")
     }
 
     override fun visitTryStatement(statement: PsiTryStatement) {
         super.visitTryStatement(statement)
-        LOG.warn("J2K can not convert TryStatement yet")
+        j2kTODO("TryStatement")
     }
 
     override fun visitCatchSection(section: PsiCatchSection) {
         super.visitCatchSection(section)
-        LOG.warn("J2K can not convert CatchSection yet")
+        j2kTODO("CatchSection")
     }
 
     override fun visitResourceList(resourceList: PsiResourceList) {
         super.visitResourceList(resourceList)
-        LOG.warn("J2K can not convert ResourceList yet")
+        j2kTODO("ResourceList")
     }
 
     override fun visitResourceVariable(variable: PsiResourceVariable) {
         super.visitResourceVariable(variable)
-        LOG.warn("J2K can not convert ResourceVariable yet")
+        j2kTODO("ResourceVariable")
     }
 
     override fun visitResourceExpression(expression: PsiResourceExpression) {
         super.visitResourceExpression(expression)
-        LOG.warn("J2K can not convert ResourceExpression yet")
+        j2kTODO("ResourceExpression")
     }
 
     override fun visitTypeElement(type: PsiTypeElement) {
         super.visitTypeElement(type)
-        LOG.warn("J2K can not convert TypeElement yet")
+        j2kTODO("TypeElement")
     }
 
     override fun visitTypeCastExpression(expression: PsiTypeCastExpression) {
-        super.visitTypeCastExpression(expression)
-        LOG.warn("J2K can not convert TypeCastExpression yet")
+        translatedKotlinCode = "() as $"
     }
 
     override fun visitVariable(variable: PsiVariable) {
-        super.visitVariable(variable)
-        LOG.warn("J2K can not convert Variable yet")
+        // TODO: Nullability
+        val keyword = if (variable.hasModifierProperty(PsiModifier.FINAL)) "val" else "var"
+        val translatedInitializer = variable.initializer.translate()?.let { " = $it" } ?: ""
+        translatedKotlinCode = "$keyword ${variable.name}: ${variable.type.translate()}$translatedInitializer"
     }
 
     override fun visitWhileStatement(statement: PsiWhileStatement) {
         super.visitWhileStatement(statement)
-        LOG.warn("J2K can not convert WhileStatement yet")
+        j2kTODO("WhileStatement")
     }
 
     override fun visitJavaFile(file: PsiJavaFile) {
+        // This is the entry point for the J2K converter
         // TODO: Package declarations, imports, ....
         translatedKotlinCode = file.children.asSequence()
             .mapNotNull { it.translate() }
@@ -448,107 +475,107 @@ class JavaElementConverter(
 
     override fun visitImplicitVariable(variable: ImplicitVariable) {
         super.visitImplicitVariable(variable)
-        LOG.warn("J2K can not convert ImplicitVariable yet")
+        j2kTODO("ImplicitVariable")
     }
 
     override fun visitDocToken(token: PsiDocToken) {
         super.visitDocToken(token)
-        LOG.warn("J2K can not convert DocToken yet")
+        j2kTODO("DocToken")
     }
 
     override fun visitTypeParameter(classParameter: PsiTypeParameter) {
         super.visitTypeParameter(classParameter)
-        LOG.warn("J2K can not convert TypeParameter yet")
+        j2kTODO("TypeParameter")
     }
 
     override fun visitAnnotation(annotation: PsiAnnotation) {
         super.visitAnnotation(annotation)
-        LOG.warn("J2K can not convert Annotation yet")
+        j2kTODO("Annotation")
     }
 
     override fun visitAnnotationParameterList(list: PsiAnnotationParameterList) {
         super.visitAnnotationParameterList(list)
-        LOG.warn("J2K can not convert AnnotationParameterList yet")
+        j2kTODO("AnnotationParameterList")
     }
 
     override fun visitAnnotationArrayInitializer(initializer: PsiArrayInitializerMemberValue) {
         super.visitAnnotationArrayInitializer(initializer)
-        LOG.warn("J2K can not convert AnnotationArrayInitializer yet")
+        j2kTODO("AnnotationArrayInitializer")
     }
 
     override fun visitNameValuePair(pair: PsiNameValuePair) {
         super.visitNameValuePair(pair)
-        LOG.warn("J2K can not convert NameValuePair yet")
+        j2kTODO("NameValuePair")
     }
 
     override fun visitAnnotationMethod(method: PsiAnnotationMethod) {
         super.visitAnnotationMethod(method)
-        LOG.warn("J2K can not convert AnnotationMethod yet")
+        j2kTODO("AnnotationMethod")
     }
 
     override fun visitEnumConstant(enumConstant: PsiEnumConstant) {
         super.visitEnumConstant(enumConstant)
-        LOG.warn("J2K can not convert EnumConstant yet")
+        j2kTODO("EnumConstant")
     }
 
     override fun visitEnumConstantInitializer(enumConstantInitializer: PsiEnumConstantInitializer) {
         super.visitEnumConstantInitializer(enumConstantInitializer)
-        LOG.warn("J2K can not convert EnumConstantInitializer yet")
+        j2kTODO("EnumConstantInitializer")
     }
 
     override fun visitCodeFragment(codeFragment: JavaCodeFragment) {
         super.visitCodeFragment(codeFragment)
-        LOG.warn("J2K can not convert CodeFragment yet")
+        j2kTODO("CodeFragment")
     }
 
     override fun visitPolyadicExpression(expression: PsiPolyadicExpression) {
         super.visitPolyadicExpression(expression)
-        LOG.warn("J2K can not convert PolyadicExpression yet")
+        j2kTODO("PolyadicExpression")
     }
 
     override fun visitLambdaExpression(expression: PsiLambdaExpression) {
         super.visitLambdaExpression(expression)
-        LOG.warn("J2K can not convert LambdaExpression yet")
+        j2kTODO("LambdaExpression")
     }
 
     override fun visitSwitchExpression(expression: PsiSwitchExpression) {
         super.visitSwitchExpression(expression)
-        LOG.warn("J2K can not convert SwitchExpression yet")
+        j2kTODO("SwitchExpression")
     }
 
     override fun visitModule(module: PsiJavaModule) {
         super.visitModule(module)
-        LOG.warn("J2K can not convert Module yet")
+        j2kTODO("Module")
     }
 
     override fun visitModuleReferenceElement(refElement: PsiJavaModuleReferenceElement) {
         super.visitModuleReferenceElement(refElement)
-        LOG.warn("J2K can not convert ModuleReferenceElement yet")
+        j2kTODO("ModuleReferenceElement")
     }
 
     override fun visitModuleStatement(statement: PsiStatement) {
         super.visitModuleStatement(statement)
-        LOG.warn("J2K can not convert ModuleStatement yet")
+        j2kTODO("ModuleStatement")
     }
 
     override fun visitRequiresStatement(statement: PsiRequiresStatement) {
         super.visitRequiresStatement(statement)
-        LOG.warn("J2K can not convert RequiresStatement yet")
+        j2kTODO("RequiresStatement")
     }
 
     override fun visitPackageAccessibilityStatement(statement: PsiPackageAccessibilityStatement) {
         super.visitPackageAccessibilityStatement(statement)
-        LOG.warn("J2K can not convert PackageAccessibilityStatement yet")
+        j2kTODO("PackageAccessibilityStatement")
     }
 
     override fun visitUsesStatement(statement: PsiUsesStatement) {
         super.visitUsesStatement(statement)
-        LOG.warn("J2K can not convert UsesStatement yet")
+        j2kTODO("UsesStatement")
     }
 
     override fun visitProvidesStatement(statement: PsiProvidesStatement) {
         super.visitProvidesStatement(statement)
-        LOG.warn("J2K can not convert ProvidesStatement yet")
+        j2kTODO("ProvidesStatement")
     }
 }
 

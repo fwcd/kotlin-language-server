@@ -19,7 +19,7 @@ object JavaTypeConverter : PsiTypeVisitor<String>() {
     override fun visitClassType(classType: PsiClassType): String = when (classType.className) {
         "Integer" -> "Int"
         "Character" -> "Char"
-        else -> super.visitClassType(classType)
+        else -> super.visitClassType(classType) ?: classType.className
     }
 
     override fun visitCapturedWildcardType(capturedWildcardType: PsiCapturedWildcardType): String {
