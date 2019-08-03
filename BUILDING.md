@@ -2,14 +2,12 @@
 Describes how to build and run the language server and the editor extensions.
 
 ## Setup
-
-* Java 8 should be installed and located under JAVA_HOME or PATH. Java 11 is *not* supported yet, see [#108](https://github.com/fwcd/KotlinLanguageServer/issues/108) for details.
+* Java 8+ should be installed and located under `JAVA_HOME` or `PATH`.
 * Note that you might need to use `gradlew` instead of `./gradlew` for the commands on Windows.
 
 ## Language Server
 
 ### Building
-
 If you just want to build the language server and use its binaries in your client of choice, run:
 
 >`./gradlew :server:installDist`
