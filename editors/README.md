@@ -17,6 +17,8 @@ _using [`LanguageClient-neovim`](https://github.com/autozimu/LanguageClient-neov
 Add the language server to your `PATH` and include the following configuration in your `.vimrc`:
 
 ```vim
+autocmd BufReadPost *.kt setlocal filetype=kotlin
+
 let g:LanguageClient_serverCommands = {
     \ 'kotlin': ["kotlin-language-server"],
     \ }
