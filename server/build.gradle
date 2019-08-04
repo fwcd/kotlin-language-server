@@ -53,7 +53,11 @@ dependencies {
     implementation 'com.pinterest.ktlint:ktlint-core:0.34.2'
     implementation 'com.pinterest.ktlint:ktlint-ruleset-standard:0.34.2'
 
-    // TODO: Isolate J2K dependency from the plugin:
+    // Re-add to depend on Kotlin plugin classes directly. Note that
+    // this plugin uses the normal imports (com.intellij.*)
+    // instead of the embedded ones (org.jetbrains.kotlin.com.intellij.*)
+    // as used by kotlin-compiler-embeddable, ktlint, etc.
+
     // kotlinJVMLib tc("$kotlinPluginTC/lib/kotlin-plugin.jar")
 
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
