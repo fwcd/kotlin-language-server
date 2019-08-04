@@ -24,5 +24,7 @@ let g:LanguageClient_serverCommands = {
     \ }
 ```
 
+Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.
+
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way. The server uses `stdio` to send and receive `JSON-RPC` messages.
