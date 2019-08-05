@@ -1,4 +1,4 @@
-# KotlinLanguageServer
+# Kotlin Language Server
 A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
 
 [![Version](https://vsmarketplacebadge.apphb.com/version-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
