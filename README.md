@@ -3,7 +3,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 
 [![Version](https://vsmarketplacebadge.apphb.com/version-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
 [![Installs](https://vsmarketplacebadge.apphb.com/installs-short/fwcd.kotlin.svg)](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin)
-[![Build Status](https://travis-ci.org/fwcd/KotlinLanguageServer.svg?branch=master)](https://travis-ci.org/fwcd/KotlinLanguageServer)
+[![Build Status](https://travis-ci.org/fwcd/kotlin-language-server.svg?branch=master)](https://travis-ci.org/fwcd/kotlin-language-server)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
 
 ![Icon](Icon128.png)
@@ -13,10 +13,10 @@ Any editor conforming to LSP is supported, including [VSCode](https://code.visua
 ## Getting Started
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](editors/README.md) for editor-specific instructions
-* See [Roadmap](https://github.com/fwcd/KotlinLanguageServer/projects/1) for features, planned additions, bugfixes and changes
-* See [KotlinQuickStart](https://github.com/fwcd/KotlinQuickStart) for a sample project
-* See [KotlinDebugAdapter](https://github.com/fwcd/KotlinDebugAdapter) for debugging support on JVM
-* See [TreeSitterKotlin](https://github.com/fwcd/KotlinLanguageGrammars) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
+* See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
+* See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
+* See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for debugging support on JVM
+* See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
 ## This repository needs your help!
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.

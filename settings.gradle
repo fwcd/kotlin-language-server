@@ -1,4 +1,4 @@
-rootProject.name = 'KotlinLanguageServer'
+rootProject.name = 'kotlin-language-server'
 
 include(
     'shared',
