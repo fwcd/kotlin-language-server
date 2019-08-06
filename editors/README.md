@@ -24,6 +24,19 @@ let g:LanguageClient_serverCommands = {
     \ }
 ```
 
+_using [`coc.nvim`](https://github.com/neoclide/coc.nvim)_
+
+Add the following to your coc-settings.json file
+```
+    "languageserver": {
+        "kotlin": {
+            "command": "/pathWhereYouClonedKotlinLanguageServer/server/build/scripts/server",
+            "filetypes": ["kotlin"]
+        }
+    }
+}
+```
+
 Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.
 
 ## Other Editors
