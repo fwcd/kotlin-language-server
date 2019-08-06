@@ -26,11 +26,11 @@ let g:LanguageClient_serverCommands = {
 
 _using [`coc.nvim`](https://github.com/neoclide/coc.nvim)_
 
-Add the following to your coc-settings.json file
-```
+Add the following to your coc-settings.json file:
+
+```json
 {
     "languageserver": {
-    
         "kotlin": {
             "command": "/pathWhereYouClonedKotlinLanguageServer/server/build/scripts/server",
             "filetypes": ["kotlin"]
