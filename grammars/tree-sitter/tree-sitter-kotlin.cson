@@ -119,6 +119,7 @@ scopes:
 	'infix_expression > simple_identifier': 'entity.name.function.kotlin'
 	'call_expression > navigation_expression > navigation_suffix > simple_identifier': 'entity.name.function.kotlin'
 	'variable_declaration > simple_identifier': 'variable.kotlin'
+	'parameter > simple_identifier': 'variable.parameter.kotlin'
 	'comment': 'comment.kotlin'
 	'integer_literal': 'constant.numeric.integer.kotlin'
 	'hex_literal': 'constant.numeric.integer.hexadecimal.kotlin'
