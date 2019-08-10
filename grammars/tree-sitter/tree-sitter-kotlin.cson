@@ -113,3 +113,6 @@ scopes:
 		"/=",
 		"%="
 	''': 'keyword.operator.assignment.kotlin'
+	'type_identifier': 'entity.name.type'
+	'function_declaration > simple_identifier': 'entity.name.function'
+	'variable_declaration > simple_identifier': 'variable'
