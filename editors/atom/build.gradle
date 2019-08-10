@@ -26,7 +26,13 @@ task prepare { dependsOn copyTextMateGrammar, copyTreeSitterGrammar, copyLanguag
 
 npmInstall { dependsOn prepare }
 
-task install { dependsOn npmInstall }
+task apmRebuild(type: Exec) {
+	dependsOn npmInstall
+	workingDir projectDir
+	commandLine 'apm', 'rebuild'
+}
+
+task install { dependsOn apmRebuild }
 
 task build { dependsOn install }
 

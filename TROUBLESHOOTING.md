@@ -2,12 +2,11 @@
 
 ## Atom: Failed to load `ide-kotlin` package grammar
 
-### The module was compiled against a different Node.js version using `NODE_MODULE_VERSION` X, but requires `NODE_MODULE_VERSION` Y
-Find out which Node.js version matches Y [here](https://nodejs.org/de/download/releases/), switch to it and re-run
+### A dynamic link library (DLL) initialization routine failed / The module was compiled against a different Node.js version using `NODE_MODULE_VERSION` X, but requires `NODE_MODULE_VERSION` Y
 
->`npm rebuild`
+Try `apm rebuild`.
 
-in `editors/atom`.
+See also [this issue](https://github.com/tree-sitter/tree-sitter/issues/377) and [the Electron docs](https://electronjs.org/docs/tutorial/using-native-node-modules) on how to rebuild.
 
 ## Language Server: The tests fail with `java.lang.NoSuchMethodError`
 * After updating the Kotlin version, there may be multiple copies of the compiler plugin in `lib-kotlin`, for example:
