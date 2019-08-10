@@ -15,8 +15,7 @@ class KotlinLanguageClient extends AutoLanguageClient {
     getServerName() { return "KotlinLanguageServer"; }
 
     startServerProcess(projectPath) {
-        // TODO: Windows-support
-        const serverPath = path.join(__dirname, "..", "install", "bin", "kotlin-language-server");
+        const serverPath = path.join(__dirname, "..", "install", "bin", this.correctScriptName("kotlin-language-server"));
         const process = cp.spawn(serverPath);
         process.on("close", () => {
             if (!process.killed) {
@@ -26,6 +25,10 @@ class KotlinLanguageClient extends AutoLanguageClient {
             }
         });
         return process;
+    }
+
+    correctScriptName(name) {
+        return name + ((process.platform === "win32") ? ".bat" : "");
     }
 
     preInitialization(connection) {
