@@ -1,6 +1,15 @@
 # Troubleshooting
 
-## The tests fail with `java.lang.NoSuchMethodError`
+## Atom: Failed to load `ide-kotlin` package grammar
+
+### The module was compiled against a different Node.js version using `NODE_MODULE_VERSION` X, but requires `NODE_MODULE_VERSION` Y
+Find out which Node.js version matches Y [here](https://nodejs.org/de/download/releases/), switch to it and re-run
+
+>`npm rebuild`
+
+in `editors/atom`.
+
+## Language Server: The tests fail with `java.lang.NoSuchMethodError`
 * After updating the Kotlin version, there may be multiple copies of the compiler plugin in `lib-kotlin`, for example:
 
 ```
@@ -16,7 +25,7 @@ lib-kotlin
 * If that still does not work, delete the entire `lib-kotlin` folder
     * Gradle will automatically re-download the necessary files once the project is built again
 
-## Running `npm run compile` or `vsce package` fails
+## VSCode: Running `npm run compile` or `vsce package` fails
 If you get the error
 
 ```

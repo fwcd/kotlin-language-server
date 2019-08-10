@@ -3,7 +3,7 @@ scopeName: 'source.kotlin'
 type: 'tree-sitter'
 parser: 'tree-sitter-kotlin'
 
-fileTypes: ['kotlin']
+fileTypes: ['kt', 'kts']
 
 comments:
 	start: '// '
