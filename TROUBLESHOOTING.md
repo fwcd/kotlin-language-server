@@ -4,7 +4,7 @@
 
 ### A dynamic link library (DLL) initialization routine failed / The module was compiled against a different Node.js version using `NODE_MODULE_VERSION` X, but requires `NODE_MODULE_VERSION` Y
 
-Try `apm rebuild`.
+Run `./gradlew :editors:atom:apmRebuild` (or inside `editors/atom`: `apm rebuild`).
 
 See also [this issue](https://github.com/tree-sitter/tree-sitter/issues/377) and [the Electron docs](https://electronjs.org/docs/tutorial/using-native-node-modules) on how to rebuild.
 
