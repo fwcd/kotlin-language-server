@@ -4,7 +4,10 @@
     "version": "0.0.1",
     "description": "Smart code completion, linting and more for Kotlin",
     "keywords": [],
-    "repository": "https://github.com/fwcd/KotlinLanguageServer",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fwcd/kotlin-language-server.git"
+    },
     "license": "MIT",
     "engines": {
         "atom": ">=1.0.0 <2.0.0"

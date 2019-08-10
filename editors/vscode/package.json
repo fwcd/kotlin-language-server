@@ -5,7 +5,7 @@
     "icon": "resources/Icon128.png",
     "repository": {
         "type": "git",
-        "url": "https://github.com/fwcd/KotlinLanguageServer.git"
+        "url": "https://github.com/fwcd/kotlin-language-server.git"
     },
     "version": "0.1.15",
     "preview": true,
