@@ -63,3 +63,53 @@ scopes:
 		"const",
 		"suspend"
 	''': 'storage.modifier.other.kotlin'
+	'"fun"': 'storage.type.function.kotlin'
+	'"object"': 'storage.type.object.kotlin'
+	'"class"': 'storage.type.class.kotlin'
+	'"typealias"': 'storage.type.alias.kotlin'
+	'''
+		"val",
+		"var"
+	''': 'storage.type.variable.kotlin'
+	'''
+		"++",
+		"--",
+		".",
+		"?.",
+		"?"
+	''': 'keyword.operator.postfix.kotlin'
+	'"!"': 'keyword.operator.prefix.kotlin'
+	'":"': 'keyword.operator.typerhs.kotlin'
+	'''
+		"*",
+		"/",
+		"%"
+	''': 'keyword.operator.multiplicative.kotlin'
+	'''
+		"+",
+		"-"
+	''': 'keyword.operator.additive.kotlin'
+	'".."': 'keyword.operator.range.kotlin'
+	'"?:"': 'keyword.operator.elvis.kotlin'
+	'''
+		"<",
+		">",
+		"<=",
+		">="
+	''': 'keyword.operator.comparison.kotlin'
+	'''
+		"==",
+		"!=",
+		"===",
+		"!=="
+	''': 'keyword.operator.equality.kotlin'
+	'"&&"': 'keyword.operator.conjunction.kotlin'
+	'"||"': 'keyword.operator.disjunction.kotlin'
+	'''
+		"=",
+		"+=",
+		"-=",
+		"*=",
+		"/=",
+		"%="
+	''': 'keyword.operator.assignment.kotlin'
