@@ -13,7 +13,8 @@
         "source.kotlin"
     ],
     "dependencies": {
-        "atom-languageclient": "^0.9.9"
+        "atom-languageclient": "^0.9.9",
+        "tree-sitter-kotlin": "^0.1.1"
     },
     "consumedServices": {
         "linter-indie": {

@@ -1,0 +1,65 @@
+name: 'Kotlin'
+scopeName: 'source.kotlin'
+type: 'tree-sitter'
+parser: 'tree-sitter-kotlin'
+
+fileTypes: ['kotlin']
+
+comments:
+	start: '// '
+
+scopes:
+	'source_file': 'source.kotlin'
+	'''
+		"if",
+		"else",
+		"while",
+		"do",
+		"when",
+		"try",
+		"throw",
+		"break",
+		"continue",
+		"return",
+		"for"
+	''': 'keyword.control.kotlin'
+	'''
+		"catch",
+		"finally",
+		"field"
+	''': 'keyword.soft.kotlin'
+	'''
+		"as",
+		"typeof",
+		"is",
+		"in"
+	''': 'keyword.hard.kotlin'
+	'''
+		"abstract",
+		"final",
+		"enum",
+		"open",
+		"annotation",
+		"sealed",
+		"data",
+		"override",
+		"final",
+		"lateinit",
+		"private",
+		"protected",
+		"public",
+		"internal",
+		"inner",
+		"companion",
+		"noinline",
+		"crossinline",
+		"vararg",
+		"reified",
+		"tailrec",
+		"operator",
+		"infix",
+		"inline",
+		"external",
+		"const",
+		"suspend"
+	''': 'storage.modifier.other.kotlin'

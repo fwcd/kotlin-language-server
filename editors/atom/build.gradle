@@ -2,9 +2,15 @@ plugins {
     id 'com.github.node-gradle.node' version '2.0.0'
 }
 
-/** Prepares the grammars for packaging. */
-task copyGrammars(type: Sync) {
+/** Prepares the TextMate grammar for packaging. */
+task copyTextMateGrammar(type: Copy) {
     from "$rootDir/grammars/textmate/Kotlin.tmLanguage.json"
+    into file('grammars')
+}
+
+/** Prepares the Tree-Sitter grammar for packaging. */
+task copyTreeSitterGrammar(type: Copy) {
+    from "$rootDir/grammars/tree-sitter/tree-sitter-kotlin.cson"
     into file('grammars')
 }
 
@@ -16,7 +22,7 @@ task copyLanguageServer(type: Sync) {
 }
 
 /** Prepares resources used by the extension. */
-task prepare { dependsOn copyGrammars, copyLanguageServer }
+task prepare { dependsOn copyTextMateGrammar, copyTreeSitterGrammar, copyLanguageServer }
 
 npmInstall { dependsOn prepare }
 
