@@ -41,7 +41,7 @@ To build and link the Atom plugin into your local packages folder, run:
 
 That's it! To use the extension, just reload your Atom window.
 
-> Note that you might have to manually run `apm rebuild` and `apm link` in `editors/atom` if `apm` could not be found on your `PATH`.
+> Note that you might have to manually run `apm rebuild` and `apm link` in `editors/atom` if `apm` could not be found on your `PATH` or you are using Windows.
 
 ## Gradle Tasks
 This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
