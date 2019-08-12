@@ -42,7 +42,7 @@ def command_output(cmd, cwd):
     return subprocess.check_output(cmd, cwd=cwd).decode("utf-8").strip()
 
 def git_history_since(ver, repo_path):
-    return re.split(r"[\r\n]+", command_output(["git", "log", "--oneline", f"{ver}..HEAD"], cwd=repo_path))
+    return re.split(r"[\r\n]+", command_output(["git", "log", "--oneline", f"v{ver}..HEAD"], cwd=repo_path))
 
 def git_branch(repo_path):
     return command_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_path)
