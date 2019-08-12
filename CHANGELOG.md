@@ -3,6 +3,12 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.0]
+- Rewrite Java-to-Kotlin converter from scratch
+- Implement Kotlin formatter
+- Add keyword completions
+- Make completions more reliable
+
 ## [0.1.13]
 - Kotlin 1.3.11 support
 - Detailed completion signatures for overloaded methods
