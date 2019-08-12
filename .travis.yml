@@ -2,9 +2,7 @@ language: java
 jdk:
   - openjdk8
   - openjdk11
-env:
-  - NODE_VERSION=10.2.1
-  - CXX=g++-4.8
+env: NODE_VERSION=10.2.1 CXX=g++-4.8
 before_install: nvm install $NODE_VERSION
 
 jobs:
