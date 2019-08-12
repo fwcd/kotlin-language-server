@@ -121,9 +121,11 @@ def main():
     changelog.prepend_version(new_version, changelog_message)
 
     print("Creating Git commit and tag...")
-    git_message = "\n".join([f"Update version to {new_version}", ""] + changelog_message)
+    tag_message = "\n".join([f"Update version to {new_version}", ""] + changelog_message)
+    commit_message = "\n".join([f"Update version to {new_version}", "", "Bump language server, Atom package and VSCode extension version."])
+
     subprocess.run(["git", "add", "."], cwd=PROJECT_DIR)
-    subprocess.run(["git", "commit", "-m", git_message], cwd=PROJECT_DIR)
-    subprocess.run(["git", "tag", "-a", f"v{new_version}", "-m", git_message], cwd=PROJECT_DIR)
+    subprocess.run(["git", "commit", "-m", commit_message], cwd=PROJECT_DIR)
+    subprocess.run(["git", "tag", "-a", f"v{new_version}", "-m", tag_message], cwd=PROJECT_DIR)
 
 main()
