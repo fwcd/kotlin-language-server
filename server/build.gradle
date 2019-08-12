@@ -7,7 +7,7 @@ plugins {
 }
 
 group = 'org.javacs'
-version = '0.1.13'
+version = projectVersion
 
 mainClassName = 'org.javacs.kt.MainKt'
 description = 'Code completions, diagnostics and more for Kotlin'

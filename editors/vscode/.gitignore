@@ -3,3 +3,5 @@
 # grammars and more (all of which are
 # provided by Gradle).
 resources
+# Provided by Gradle
+CHANGELOG.md

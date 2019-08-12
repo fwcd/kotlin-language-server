@@ -4,11 +4,6 @@ plugins {
 
 def resourcesDir = file("resources")
 
-task copyIcon(type: Copy) {
-    from "$rootDir/Icon128.png"
-    into resourcesDir
-}
-
 /** Prepares the language server binaries for packaging. */
 task copyLanguageServer(type: Sync) {
     dependsOn ':server:installDist'
@@ -22,12 +17,24 @@ task copyGrammars(type: Sync) {
     into "$resourcesDir/syntaxes"
 }
 
+/** Copies the Kotlin icon into the resource directory. */
+task copyIcon(type: Copy) {
+    from "$rootDir/Icon128.png"
+    into resourcesDir
+}
+
+/** Copies the language server changelog into the extension directory. */
+task copyChangelog(type: Copy) {
+    from "$rootDir/CHANGELOG.md"
+    into projectDir
+}
+
 /**
  * Prepares resources used by the extension.
  * Can be useful if the extension's code is
  * built separately, e.g. using 'npm run watch'.
  */
-task prepare { dependsOn copyIcon, copyLanguageServer, copyGrammars }
+task prepare { dependsOn copyLanguageServer, copyGrammars, copyChangelog, copyIcon }
 
 npm_run_compile { dependsOn prepare }
 
