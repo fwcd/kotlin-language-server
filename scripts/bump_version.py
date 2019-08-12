@@ -117,6 +117,6 @@ def main():
 
     subprocess.run(["git", "add", "."], cwd=PROJECT_DIR)
     subprocess.run(["git", "commit", "-m", commit_message], cwd=PROJECT_DIR)
-    subprocess.run(["git", "tag", "-a", f"v{new_version}", "-m", tag_message], cwd=PROJECT_DIR)
+    subprocess.run(["git", "tag", "-a", f"{new_version}", "-m", tag_message], cwd=PROJECT_DIR)
 
 main()
