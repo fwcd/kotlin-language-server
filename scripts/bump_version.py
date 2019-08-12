@@ -121,6 +121,9 @@ def main():
     changelog.prepend_version(new_version, changelog_message)
 
     print("Creating Git commit and tag...")
-    subprocess.run(["git", "tag", "-a", str(new_version), "-m", "\n".join(changelog_message)])
+    git_message = "\n".join([f"Update version to {new_version}", ""] + changelog_message)
+    subprocess.run(["git", "add", "."], cwd=PROJECT_DIR)
+    subprocess.run(["git", "commit", "-m", git_message], cwd=PROJECT_DIR)
+    subprocess.run(["git", "tag", "-a", f"v{new_version}", "-m", git_message], cwd=PROJECT_DIR)
 
 main()
