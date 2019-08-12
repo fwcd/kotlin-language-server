@@ -1,3 +1,6 @@
+# A script that updates the Kotlin version
+# used by the language server.
+
 from utils.teamcity import TeamCityConnection, TeamCityNode
 from utils.properties import PropertiesFile
 from utils.cli import prompt_by, require_not_none, confirm, title
