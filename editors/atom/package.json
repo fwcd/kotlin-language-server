@@ -1,7 +1,7 @@
 {
     "name": "ide-kotlin",
     "main": "./lib/main",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "description": "Smart code completion, linting and more for Kotlin",
     "keywords": [],
     "repository": "https://github.com/fwcd/KotlinLanguageServer",
