@@ -140,6 +140,10 @@ test {
     }
 }
 
+distZip {
+    archiveName = "${project.name}.zip"
+}
+
 compileKotlin.dependsOn copyKotlinJVMLib
 installDist.finalizedBy fixFilePermissions
 build.finalizedBy installDist

@@ -2,7 +2,6 @@ task distZip(type: Zip) {
     from(projectDir) {
         include '*.json'
     }
-    archiveBaseName = 'grammars'
-    archiveVersion = projectVersion
+    archiveName = "${project.name}.zip"
     destinationDirectory = file("$buildDir/distributions")
 }
