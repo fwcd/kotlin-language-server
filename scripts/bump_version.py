@@ -38,8 +38,11 @@ def increment_patch(ver):
 def command_output(cmd, cwd):
     return subprocess.check_output(cmd, cwd=cwd).decode("utf-8").strip()
 
-def git_history_since(ver, repo_path):
-    return re.split(r"[\r\n]+", command_output(["git", "log", "--oneline", f"v{ver}..HEAD"], cwd=repo_path))
+def git_last_tag(repo_path):
+    return command_output(["git", "describe", "--abbrev=0"], cwd=repo_path)
+
+def git_history_since_last_tag(repo_path):
+    return re.split(r"[\r\n]+", command_output(["git", "log", "--oneline", f"{git_last_tag(repo_path)}..HEAD"], cwd=repo_path))
 
 def git_branch(repo_path):
     return command_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_path)
@@ -87,13 +90,13 @@ def main():
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp_path = Path(temp.name).absolute()
 
-    history = git_history_since(previous_version, PROJECT_DIR)
+    history = git_history_since_last_tag(PROJECT_DIR)
     formatted_history = [f"# {commit}" for commit in history]
     initial_message = [
         "",
         "",
         "# Please enter a changelog/release message.",
-        "# This is the history between {previous_version} and {new_version}:"
+        f"# This is the history since the last tag:"
     ] + formatted_history
 
     with open(temp_path, "w") as temp_contents:
