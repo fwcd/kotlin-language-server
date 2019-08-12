@@ -22,3 +22,22 @@ jobs:
       script: ./gradlew :editors:vscode:build
     - name: "Atom"
       script: ./gradlew :editors:atom:build
+
+before_deploy:
+  - npm install -g vsce atom-package-manager
+  - ./gradlew :editors:vscode:packageExtension
+
+deploy:
+  - provider: script
+    script: cd editors/vscode && vsce publish -p $VSC_TOKEN
+    skip_cleanup: true
+    on:
+      repo: fwcd/kotlin-language-server
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
+  - provider: script
+    script: cd editors/atom && apm publish --tag $(git describe --tags --abbrev=0)
+    on:
+      repo: fwcd/kotlin-language-server
+      tags: true
+      condition: $TRAVIS_OS_NAME = linux
