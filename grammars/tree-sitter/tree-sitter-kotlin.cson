@@ -1,0 +1,139 @@
+name: 'Kotlin'
+scopeName: 'source.kotlin'
+type: 'tree-sitter'
+parser: 'tree-sitter-kotlin'
+
+fileTypes: ['kt', 'kts']
+
+comments:
+	start: '// '
+
+scopes:
+	'source_file': 'source.kotlin'
+	'''
+		"if",
+		"else",
+		"while",
+		"do",
+		"when",
+		"try",
+		"throw",
+		"break",
+		"continue",
+		"return",
+		"for",
+		"package"
+	''': 'keyword.control.kotlin'
+	'"import"': 'keyword.control.import.kotlin'
+	'''
+		"catch",
+		"finally",
+		"field"
+	''': 'keyword.soft.kotlin'
+	'''
+		"as",
+		"typeof",
+		"is",
+		"in"
+	''': 'keyword.hard.kotlin'
+	'''
+		"abstract",
+		"final",
+		"enum",
+		"open",
+		"annotation",
+		"sealed",
+		"data",
+		"override",
+		"final",
+		"lateinit",
+		"private",
+		"protected",
+		"public",
+		"internal",
+		"inner",
+		"companion",
+		"noinline",
+		"crossinline",
+		"vararg",
+		"reified",
+		"tailrec",
+		"operator",
+		"infix",
+		"inline",
+		"external",
+		"const",
+		"suspend"
+	''': 'storage.modifier.other.kotlin'
+	'"fun"': 'storage.type.function.kotlin'
+	'"object"': 'storage.type.object.kotlin'
+	'"class"': 'storage.type.class.kotlin'
+	'"interface'": 'storage.type.interface.kotlin'
+	'"typealias"': 'storage.type.alias.kotlin'
+	'''
+		"val",
+		"var"
+	''': 'storage.type.variable.kotlin'
+	'''
+		"++",
+		"--",
+		".",
+		"?.",
+		"?"
+	''': 'keyword.operator.postfix.kotlin'
+	'"!"': 'keyword.operator.prefix.kotlin'
+	'":"': 'keyword.operator.typerhs.kotlin'
+	'''
+		"*",
+		"/",
+		"%"
+	''': 'keyword.operator.multiplicative.kotlin'
+	'''
+		"+",
+		"-"
+	''': 'keyword.operator.additive.kotlin'
+	'".."': 'keyword.operator.range.kotlin'
+	'"?:"': 'keyword.operator.elvis.kotlin'
+	'''
+		"<",
+		">",
+		"<=",
+		">="
+	''': 'keyword.operator.comparison.kotlin'
+	'''
+		"==",
+		"!=",
+		"===",
+		"!=="
+	''': 'keyword.operator.equality.kotlin'
+	'"&&"': 'keyword.operator.conjunction.kotlin'
+	'"||"': 'keyword.operator.disjunction.kotlin'
+	'''
+		"=",
+		"+=",
+		"-=",
+		"*=",
+		"/=",
+		"%="
+	''': 'keyword.operator.assignment.kotlin'
+	'type_identifier': 'entity.name.type.kotlin'
+	'function_declaration > simple_identifier': 'entity.name.function.kotlin'
+	'call_expression > simple_identifier': 'entity.name.function.kotlin'
+	'infix_expression > simple_identifier': 'entity.name.function.kotlin'
+	'call_expression > navigation_expression > navigation_suffix > simple_identifier': 'entity.name.function.kotlin'
+	'variable_declaration > simple_identifier': 'variable.kotlin'
+	'parameter > simple_identifier': 'variable.parameter.kotlin'
+	'comment': 'comment.kotlin'
+	'integer_literal': 'constant.numeric.integer.kotlin'
+	'hex_literal': 'constant.numeric.integer.hexadecimal.kotlin'
+	'bin_literal': 'constant.numeric.integer.binary.kotlin'
+	'real_literal': 'constant.numeric.float'
+	'boolean_literal': 'constant.language'
+	'this_expression': 'constant.language'
+	'"null"': 'constant.language'
+	'line_string_literal': 'string'
+	'multi_line_string_literal': 'string'
+	'interpolated_expression': 'source.kotlin.embedded'
+	'interpolated_identifier': 'entity.name'
+	'annotation': 'meta.annotation'
+	'annotation > simple_identifier': 'meta.annotation.identifier'

@@ -4,16 +4,21 @@
     "version": "0.2.4",
     "description": "Smart code completion, linting and more for Kotlin",
     "keywords": [],
-    "repository": "https://github.com/fwcd/KotlinLanguageServer",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/fwcd/kotlin-language-server.git"
+    },
     "license": "MIT",
     "engines": {
-        "atom": ">=1.0.0 <2.0.0"
+        "atom": "*",
+        "node": "*"
     },
     "enhancedScopes": [
         "source.kotlin"
     ],
     "dependencies": {
-        "atom-languageclient": "^0.9.9"
+        "atom-languageclient": "^0.9.9",
+        "tree-sitter-kotlin": "^0.2.3"
     },
     "consumedServices": {
         "linter-indie": {

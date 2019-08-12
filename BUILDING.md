@@ -35,9 +35,13 @@ Run `./gradlew :editors:vscode:packageExtension` from the repository's top-level
 ## Atom plugin
 
 ### Development/Running
-To install the Atom plugin, run `./gradlew :editors:atom:link`.
+To build and link the Atom plugin into your local packages folder, run:
+
+>`./gradlew :editors:atom:apmLink`
 
 That's it! To use the extension, just reload your Atom window.
+
+> Note that you might have to manually run `apm rebuild` and `apm link` in `editors/atom` if `apm` could not be found on your `PATH` or you are using Windows.
 
 ## Gradle Tasks
 This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
@@ -72,4 +76,5 @@ This paragraph assumes that you are familiar with Gradle's [task system](https:/
 | ---- | ------- | ----------- |
 | Prepare | `./gradlew :editors:atom:prepare` | Copies the packaged language server into the extension's directory. |
 | Install | `./gradlew :editors:atom:install` | Installs the npm dependencies of the extension. |
-| Link | `./gradlew :editors:atom:link` | Links the extension into your local Atom package directory. |
+| APM Rebuild | `./gradlew :editors:atom:apmRebuild` | Rebuilds the extension's native modules using Atom's Node version. |
+| APM Link | `./gradlew :editors:atom:apmLink` | Links the extension into your local Atom package directory. |
