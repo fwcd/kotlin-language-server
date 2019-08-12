@@ -38,8 +38,17 @@ def increment_patch(ver):
 def update_npm_version(path, ver):
     subprocess.call(["npm", "version", str(ver)], cwd=path, shell=True)
 
-def git_history_since(ver):
-    return re.split(r"[\r\n]+", subprocess.check_output(["git", "log", "--oneline", f"{ver}..HEAD"]).decode("utf-8"))
+def command_output(cmd, cwd):
+    return subprocess.check_output(cmd, cwd=cwd).decode("utf-8").strip()
+
+def git_history_since(ver, repo_path):
+    return re.split(r"[\r\n]+", command_output(["git", "log", "--oneline", f"{ver}..HEAD"], cwd=repo_path))
+
+def git_branch(repo_path):
+    return command_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_path)
+
+def git_working_dir_is_clean(repo_path):
+    return len(command_output(["git", "status", "--porcelain"], cwd=repo_path)) == 0
 
 INCREMENTS = {
     "major": increment_major,
@@ -52,12 +61,20 @@ PROJECT_VERSION_KEY = "projectVersion"
 
 def main():
     title("Project Version Updater")
+
+    if not git_working_dir_is_clean(PROJECT_DIR):
+        print("Commit any pending changes first to make sure the working directory is in a clean state!")
+        return
+    if git_branch(PROJECT_DIR) != "master":
+        print("Switch to the master branch first!")
+        return
+
     increment = None
     properties = PropertiesFile(str(PROJECT_DIR / "gradle.properties"))
     previous_version = parse_version(properties[PROJECT_VERSION_KEY])
 
     print()
-    print(f"Currently @{previous_version}")
+    print(f"Currently @{previous_version}.")
     print()
 
     while increment not in INCREMENTS.keys():
@@ -79,7 +96,7 @@ def main():
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp_path = Path(temp.name).absolute()
 
-    history = git_history_since(previous_version)
+    history = git_history_since(previous_version, PROJECT_DIR)
     formatted_history = [f"# {commit}" for commit in history]
     initial_message = [
         "",
@@ -103,7 +120,7 @@ def main():
     changelog = ChangelogFile(PROJECT_DIR / "CHANGELOG.md")
     changelog.prepend_version(new_version, changelog_message)
 
-    print("Creating Git tag...")
+    print("Creating Git commit and tag...")
     subprocess.run(["git", "tag", "-a", str(new_version), "-m", "\n".join(changelog_message)])
 
 main()
