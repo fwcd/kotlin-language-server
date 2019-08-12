@@ -58,6 +58,7 @@ There is an extensive suite of behavioral [tests](server/src/test/kotlin/org/jav
 | Name | Command | Description |
 | ---- | ------- | ----------- |
 | update_kt_version.py | `python3 scripts/update_kt_version.py` | Finds and updates the Kotlin compiler/plugin version for this project |
+| bump_version.py | `python3 scripts/bump_version.py` | Increments the project version and creates a new tag |
 
 ## Features
 

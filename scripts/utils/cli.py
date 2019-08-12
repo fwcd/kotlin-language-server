@@ -1,7 +1,13 @@
 import sys
 import re
 
-alphanum_pattern = re.compile(r"(\d+)|(\D+)") 
+alphanum_pattern = re.compile(r"(\d+)|(\D+)")
+
+def title(s, padding=2):
+    length = len(s) + (2 * padding)
+    print("=" * length)
+    print(f"  {s}  ")
+    print("=" * length)
 
 def confirm(what):
     result = input(what + " [y/n] ")
@@ -18,15 +24,15 @@ def require_not_none(description, x):
 def prompt_by(what, nodes, describer):
     node_dict = {describer(node): node for node in nodes}
     sorted_described = sorted(node_dict.keys(), key=alphanum_sort_key)
-    
+
     print()
     print(sorted_described)
     print()
-    
+
     last_entry = sorted_described[-1] if len(sorted_described) > 0 else None
     choice = input("Enter a " + what + " to choose [default: " + last_entry + "]: ").strip()
     print()
-    
+
     if len(choice) == 0:
         return node_dict[last_entry]
     elif choice not in node_dict.keys():
