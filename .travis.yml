@@ -3,48 +3,30 @@ dist: trusty
 jdk:
   - openjdk8
   - openjdk11
-env: NODE_VERSION=10.2.1 CXX=g++-4.8
+env: NODE_VERSION=10.2.1
 before_install: nvm install $NODE_VERSION
-
-addons:
-  apt:
-    packages:
-      - libsecret-1-dev
-      - g++-4.8
 
 jobs:
   include:
-    - stage: "Shared Module"
+    - stage: "Shared module"
       name: "Build"
       script: ./gradlew :shared:build
     - name: "Tests"
       script: ./gradlew :shared:test -i
-    - stage: "Language Server"
+    - stage: "Language server"
       name: "Tests"
       script: ./gradlew :server:test -i
     - name: "Executable"
       script: ./gradlew :server:installDist
-    - stage: "Editor extensions"
-      name: "VSCode"
-      script: ./gradlew :editors:vscode:build
-    - name: "Atom"
-      script: ./gradlew :editors:atom:build
     - stage: "Deploy"
-      before_deploy:
-        - npm install -g vsce atom-package-manager
-        - ./gradlew :editors:vscode:packageExtension
-        - ./gradlew :editors:atom:install
+      before_deploy: ./gradlew :server:distZip
       deploy:
-        - provider: script
-          script: cd editors/vscode && vsce publish -p $VSC_TOKEN
-          skip_cleanup: true
-          on:
-          repo: fwcd/kotlin-language-server
+        provider: releases
+        api_key:
+          secure: "DQLsAAtr2u2X494FOR1Q3P181M+dWbT7jLkxJRxrgRQdGipeYcUp0c9/+uyEF7o4N3i4uCAWSh4yHJ0hGtOir/L9vd/EljftIU8d/qxDduuw9mmt6/7tVOzuQ3I8+Zap5XVXgDDSO0fsiwEBEShTbqCEdhzNJ2ZVbgd/C1N8dOfObmcRHtGuxox35TmbLlOoPCXEqsnirQFxxyH5e/G2DTnrUBpZ5ZeCJJsPzVxZzvTOMPwW4EeuOk9vYPPYQqfpQdJYiSwrlN+s6ELHHs7rJQhXUAzjiaJN5C/JxEPeCcFGZ9kak168tFp8ud6l+TGaT2ViuvChWIbKb3rJvHfIIKRtDGXi6vSR55Zj0p+EelIStRsUarru/Mhewocawmlwh4RPWvefD27FntHvzCW8tC2WoBo1VMYZdQ1Qcla/QN5psyLSr8XlaeFfBZgo66rctwb0opDtDROZ0oqlYq+CMcWEj0/TtRpQxWyzlNj2r4AomGKoqtaQWXfErMKbr3m24NhSq+4IWb7m8dx6WhcFOpTaWMmGyGoGDu8RNBQerigj2qd8hoIeC9U0VJNSh3DzF12jj3cYoIT4PVwAibQHIz9dhIMjdgwDgRKFGH/PFtKSPXVAtQGhfJA6gP/6qCMMEKHRYeFExhlCJtko0zBxeBToqJoEqKVojb72dclFG5o="
+        file_glob: true
+        file: "server/build/distributions/*.zip"
+        skip_cleanup: true
+        on:
           tags: true
-          condition: $TRAVIS_OS_NAME = linux
-        - provider: script
-          script: cd editors/atom && apm publish --tag $(git describe --tags --abbrev=0)
-          on:
           repo: fwcd/kotlin-language-server
-          tags: true
-          condition: $TRAVIS_OS_NAME = linux

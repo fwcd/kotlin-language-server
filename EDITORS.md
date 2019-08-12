@@ -1,10 +1,10 @@
 # Editor Integration
 
 ## Visual Studio Code
-See [BUILDING](../BUILDING.md#vscode-extension) or install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin).
+See [vscode-kotlin-ide](https://github.com/fwcd/vscode-kotlin-ide) or install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin).
 
 ## Atom
-See [BUILDING](../BUILDING.md#atom-plugin).
+See [atom-ide-kotlin](https://github.com/fwcd/atom-ide-kotlin).
 
 ## Emacs
 _using [`lsp-mode`](https://github.com/emacs-lsp/lsp-mode)_

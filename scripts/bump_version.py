@@ -35,9 +35,6 @@ def increment_minor(ver):
 def increment_patch(ver):
     return Version(ver.major, ver.minor, ver.patch + 1)
 
-def update_npm_version(path, ver):
-    subprocess.call(["npm", "version", str(ver)], cwd=path, shell=True)
-
 def command_output(cmd, cwd):
     return subprocess.check_output(cmd, cwd=cwd).decode("utf-8").strip()
 
@@ -86,12 +83,6 @@ def main():
     print(f"Updating project version to {new_version}...")
     properties[PROJECT_VERSION_KEY] = str(new_version)
 
-    print("Updating Atom package version...")
-    update_npm_version(PROJECT_DIR / "editors" / "atom", new_version)
-
-    print("Updating VSCode extension version...")
-    update_npm_version(PROJECT_DIR / "editors" / "vscode", new_version)
-
     # Fetch new changelog message from user
     temp = tempfile.NamedTemporaryFile(delete=False)
     temp_path = Path(temp.name).absolute()
@@ -122,7 +113,7 @@ def main():
 
     print("Creating Git commit and tag...")
     tag_message = "\n".join([f"Update version to {new_version}", ""] + changelog_message)
-    commit_message = "\n".join([f"Update version to {new_version}", "", "Bump language server, Atom package and VSCode extension version."])
+    commit_message = "\n".join([f"Update version to {new_version}", "", f"Increment to the next {increment} version."])
 
     subprocess.run(["git", "add", "."], cwd=PROJECT_DIR)
     subprocess.run(["git", "commit", "-m", commit_message], cwd=PROJECT_DIR)

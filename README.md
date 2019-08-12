@@ -12,7 +12,7 @@ Any editor conforming to LSP is supported, including [VSCode](https://code.visua
 
 ## Getting Started
 * See [BUILDING.md](BUILDING.md) for build instructions
-* See [Editor Integration](editors/README.md) for editor-specific instructions
+* See [Editor Integration](EDITORS.md) for editor-specific instructions
 * See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
 * See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
 * See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for debugging support on JVM

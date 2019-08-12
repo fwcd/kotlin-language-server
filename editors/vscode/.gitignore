@@ -1,7 +1,0 @@
-# Ignore 'resources' folder which will
-# contain the language server binaries,
-# grammars and more (all of which are
-# provided by Gradle).
-resources
-# Provided by Gradle
-CHANGELOG.md
