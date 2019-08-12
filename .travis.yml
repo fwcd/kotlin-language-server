@@ -2,7 +2,9 @@ language: java
 jdk:
   - openjdk8
   - openjdk11
-env: NODE_VERSION=8
+env:
+  - NODE_VERSION=10.2.1
+  - CXX=g++-4.8
 before_install: nvm install $NODE_VERSION
 
 jobs:
@@ -22,6 +24,12 @@ jobs:
       script: ./gradlew :editors:vscode:build
     - name: "Atom"
       script: ./gradlew :editors:atom:build
+
+addons:
+  apt:
+    packages:
+      - libsecret-1-dev
+      - g++-4.8
 
 before_deploy:
   - npm install -g vsce atom-package-manager
