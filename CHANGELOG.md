@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.6]
+- Remove version postfix from ZIP distributions
+
 ## [0.2.5]
 - Move editor extensions into separate repositories
 
