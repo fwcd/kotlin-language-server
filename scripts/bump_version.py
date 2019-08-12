@@ -36,7 +36,7 @@ def increment_patch(ver):
     return Version(ver.major, ver.minor, ver.patch + 1)
 
 def update_npm_version(path, ver):
-    subprocess.run(["npm", "version", str(ver)], cwd=path)
+    subprocess.call(["npm", "version", str(ver)], cwd=path, shell=True)
 
 def git_history_since(ver):
     return re.split(r"[\r\n]+", subprocess.check_output(["git", "log", "--oneline", f"{ver}..HEAD"]).decode("utf-8"))
@@ -104,6 +104,6 @@ def main():
     changelog.prepend_version(new_version, changelog_message)
 
     print("Creating Git tag...")
-    subprocess.run(["git", "tag", "-a", new_version, "-m", "\n".join(changelog_message)])
+    subprocess.run(["git", "tag", "-a", str(new_version), "-m", "\n".join(changelog_message)])
 
 main()
