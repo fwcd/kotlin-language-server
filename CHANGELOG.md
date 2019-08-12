@@ -3,9 +3,6 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.2.1]
-- Minor patches
-
 ## [0.2.0]
 - Rewrite Java-to-Kotlin converter from scratch
 - Implement Kotlin formatter
