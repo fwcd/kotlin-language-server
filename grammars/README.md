@@ -1,2 +1,2 @@
 # Grammars
-Grammar files that are used by the editor extensions.
+Contains TextMate language grammars for Kotlin used by various editor extensions.

@@ -16,32 +16,17 @@ The language server executable is now located under `server/build/install/server
 
 Note that there are external dependent libraries, so if you want to put the server somewhere else, you have to move the entire `install`-directory.
 
-## VSCode extension
+### Packaging
+To create a ZIP-archive of the language server, run:
 
-### Development/Running
-First run `npm run watch` from the `editors/vscode` directory in a background shell. The extension will then incrementally build in the background.
+>`./gradlew :server:distZip`
 
-Every time you want to run the extension with the language server:
-* Prepare the extension using `./gradlew :editors:vscode:prepare` (this automatically builds and copies the language server's binaries into the extension folder)
-* Open the debug tab in VSCode
-* Run the `Extension` launch configuration
-
-### Debugging
-Your can attach the running language server on `localhost:8000`. Note that this can be done using the `Attach Kotlin Language Server` launch configuration in VSCode (requires the [Java Debug Extension](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-debug)).
+## Grammars
 
 ### Packaging
-Run `./gradlew :editors:vscode:packageExtension` from the repository's top-level-directory. The extension will then be located under the name `kotlin-[version].vsix` in `editors/vscode`.
+To create a ZIP-archive of the grammars, run:
 
-## Atom plugin
-
-### Development/Running
-To build and link the Atom plugin into your local packages folder, run:
-
->`./gradlew :editors:atom:apmLink`
-
-That's it! To use the extension, just reload your Atom window.
-
-> Note that you might have to manually run `apm rebuild` and `apm link` in `editors/atom` if `apm` could not be found on your `PATH` or you are using Windows.
+>`./gradlew :grammars:distZip`
 
 ## Gradle Tasks
 This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
@@ -59,22 +44,8 @@ This paragraph assumes that you are familiar with Gradle's [task system](https:/
 | Package for Release | `./gradlew :server:distZip` | Creates a release zip in `server/build/distributions`. If any dependencies have changed since the last release, a new license report should be generated and placed in `src/main/dist` before creating the distribution. |
 | Generate License Report | `./gradlew :server:licenseReport` | Generates a license report from the dependencies in `server/build/reports/licenses` |
 
-### Editors (:editors)
-
-#### VSCode (:editors:vscode)
+### Grammars (:grammars)
 
 | Task | Command | Description |
 | ---- | ------- | ----------- |
-| Prepare | `./gradlew :editors:vscode:prepare` | Copies the packaged language server, the grammar files and other resources to the extension's directory. Can be useful to run separately if the extension's code is already built using `npm run watch`. |
-| Compile | `./gradlew :editors:vscode:compile` | Compiles the TypeScript code of the extension. |
-| Test | `./gradlew :editors:vscode:test` | Runs the unit tests of the extension. Currently not supported from within VSCode. |
-| Package | `./gradlew :editors:vscode:packageExtension` | Creates a `.vsix` package of the extension for use within VSCode. |
-
-#### Atom (:editors:atom)
-
-| Task | Command | Description |
-| ---- | ------- | ----------- |
-| Prepare | `./gradlew :editors:atom:prepare` | Copies the packaged language server into the extension's directory. |
-| Install | `./gradlew :editors:atom:install` | Installs the npm dependencies of the extension. |
-| APM Rebuild | `./gradlew :editors:atom:apmRebuild` | Rebuilds the extension's native modules using Atom's Node version. |
-| APM Link | `./gradlew :editors:atom:apmLink` | Links the extension into your local Atom package directory. |
+| Package for Release | `./gradlew :grammars:distZip` | Creates a zip of the grammars in `grammars/build/distributions` |

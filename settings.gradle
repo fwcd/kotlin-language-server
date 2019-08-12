@@ -3,6 +3,5 @@ rootProject.name = 'kotlin-language-server'
 include(
     'shared',
     'server',
-    'editors:vscode',
-    'editors:atom'
+    'grammars'
 )
