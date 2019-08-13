@@ -1,7 +1,7 @@
 # Kotlin Language Server
 A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
 
-![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)
+[![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Build Status](https://travis-ci.org/fwcd/kotlin-language-server.svg?branch=master)](https://travis-ci.org/fwcd/kotlin-language-server)
 ![VS Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/fwcd.kotlin?label=vs%20marketplace%20downloads)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
