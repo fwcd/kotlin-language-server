@@ -27,6 +27,7 @@ jobs:
         file_glob: true
         file: "server/build/distributions/*.zip"
         skip_cleanup: true
+        name: "Version $TRAVIS_TAG"
         on:
           tags: true
           repo: fwcd/kotlin-language-server
