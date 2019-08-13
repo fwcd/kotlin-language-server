@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.7]
+- Improve release naming
+
 ## [0.2.6]
 - Remove version postfix from ZIP distributions
 
