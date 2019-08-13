@@ -25,7 +25,9 @@ jobs:
         api_key:
           secure: "DQLsAAtr2u2X494FOR1Q3P181M+dWbT7jLkxJRxrgRQdGipeYcUp0c9/+uyEF7o4N3i4uCAWSh4yHJ0hGtOir/L9vd/EljftIU8d/qxDduuw9mmt6/7tVOzuQ3I8+Zap5XVXgDDSO0fsiwEBEShTbqCEdhzNJ2ZVbgd/C1N8dOfObmcRHtGuxox35TmbLlOoPCXEqsnirQFxxyH5e/G2DTnrUBpZ5ZeCJJsPzVxZzvTOMPwW4EeuOk9vYPPYQqfpQdJYiSwrlN+s6ELHHs7rJQhXUAzjiaJN5C/JxEPeCcFGZ9kak168tFp8ud6l+TGaT2ViuvChWIbKb3rJvHfIIKRtDGXi6vSR55Zj0p+EelIStRsUarru/Mhewocawmlwh4RPWvefD27FntHvzCW8tC2WoBo1VMYZdQ1Qcla/QN5psyLSr8XlaeFfBZgo66rctwb0opDtDROZ0oqlYq+CMcWEj0/TtRpQxWyzlNj2r4AomGKoqtaQWXfErMKbr3m24NhSq+4IWb7m8dx6WhcFOpTaWMmGyGoGDu8RNBQerigj2qd8hoIeC9U0VJNSh3DzF12jj3cYoIT4PVwAibQHIz9dhIMjdgwDgRKFGH/PFtKSPXVAtQGhfJA6gP/6qCMMEKHRYeFExhlCJtko0zBxeBToqJoEqKVojb72dclFG5o="
         file_glob: true
-        file: "server/build/distributions/*.zip"
+        file:
+          - "server/build/distributions/*.zip"
+          - "grammars/build/distributions/*.zip"
         skip_cleanup: true
         name: "Version $TRAVIS_TAG"
         on:
