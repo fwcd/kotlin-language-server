@@ -19,7 +19,9 @@ jobs:
     - name: "Executable"
       script: ./gradlew :server:installDist
     - stage: "Deploy"
-      before_deploy: ./gradlew :server:distZip
+      before_deploy:
+        - ./gradlew :server:distZip
+        - ./gradlew :grammars:distZip
       deploy:
         provider: releases
         api_key:
