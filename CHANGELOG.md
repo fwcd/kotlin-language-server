@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.2.8]
+- Include grammars distribution in release
+
 ## [0.2.7]
 - Improve release naming
 
