@@ -253,7 +253,7 @@ class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem(startsWith("println")))
-        assertThat(completions.items.filter { it.label.startsWith("println") }.firstOrNull(), hasProperty("insertText", equalTo("println")))
+        assertThat(completions.items.find { it.label.startsWith("println") }, hasProperty("insertText", equalTo("println")))
     }
 }
 
@@ -263,5 +263,23 @@ class EnumWithCompanionObjectTest : SingleFileTestFixture("completions", "Enum.k
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("ILLEGAL"))
+    }
+}
+
+class TrailingLambdaTest : SingleFileTestFixture("completions", "TrailingLambda.kt") {
+    @Test fun `complete function with single lambda parameter`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 6, 9)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("lambdaParameter")))
+        assertThat(completions.items.find { it.label.startsWith("lambdaParameter") }, hasProperty("insertText", equalTo("lambdaParameter { \${1:x} }")))
+    }
+
+    @Test fun `complete function with mixed parameters`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 7, 8)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("mixedParameters")))
+        assertThat(completions.items.find { it.label.startsWith("mixedParameters") }, hasProperty("insertText", equalTo("mixedParameters(\${1:a}) { \${2:b} }")))
     }
 }
