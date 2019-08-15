@@ -3,7 +3,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 
 [![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Build Status](https://travis-ci.org/fwcd/kotlin-language-server.svg?branch=master)](https://travis-ci.org/fwcd/kotlin-language-server)
-![VS Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/fwcd.kotlin?label=vs%20marketplace%20downloads)
+[![Downloads](https://img.shields.io/github/downloads/fwcd/kotlin-language-server/total)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
 
 ![Icon](Icon128.png)
