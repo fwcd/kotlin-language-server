@@ -29,7 +29,7 @@ private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")
 
 class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptorVisitor<CompletionItem, Unit> {
     private val result = CompletionItem()
-    
+
     private val functionInsertFormat
         get() = if (snippetsEnabled) Snippet else PlainText
 
@@ -95,7 +95,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
         return when {
             !snippetsEnabled -> name
             desc.valueParameters.isEmpty() -> "$name()"
-            else -> "$name(${desc.valueParameters.mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }.joinToString()})"
+            else -> "$name(${desc.valueParameters.mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }.joinToString()})\$0"
         }
     }
 

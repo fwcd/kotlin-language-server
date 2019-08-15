@@ -2,6 +2,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "kotlin",
+            "request": "launch",
+            "name": "Kotlin Launch",
+            "projectRoot": "${workspaceFolder}/server",
+            "mainClass": "org.javacs.kt.MainKt"
+        },
+        {
             "type": "java",
             "name": "Attach Kotlin Language Server",
             "request": "attach",
