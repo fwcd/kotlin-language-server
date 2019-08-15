@@ -79,7 +79,7 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
     return visible.map { completionItem(it, surroundingElement, file, config) }
 }
 
-private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
+private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
 private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
