@@ -89,7 +89,7 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
-    if (isJavaCodeAndInstanceMethod(d) && (isGetter(d) || isSetter(d))) {
+    if (isNotStaticJavaMethod(d) && (isGetter(d) || isSetter(d))) {
         val name = extractVarName(d)
 
         result.detail += " (from ${result.label})"
@@ -106,10 +106,10 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
     return result
 }
 
-private fun isJavaCodeAndInstanceMethod(
+private fun isNotStaticJavaMethod(
     descriptor: DeclarationDescriptor
 ): Boolean {
-    val javaMethodDescriptor = descriptor as? JavaMethodDescriptor ?: return false
+    val javaMethodDescriptor = descriptor as? JavaMethodDescriptor ?: return true
     val source = javaMethodDescriptor.source as? JavaSourceElement ?: return true
     val javaElement = source.javaElement
     return javaElement is JavaMethod && !javaElement.isStatic
