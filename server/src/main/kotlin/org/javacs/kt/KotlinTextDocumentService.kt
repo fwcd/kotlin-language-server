@@ -174,7 +174,11 @@ class KotlinTextDocumentService(
         lintNow(file)
     }
 
-    override fun didSave(params: DidSaveTextDocumentParams) {}
+    override fun didSave(params: DidSaveTextDocumentParams) {
+        // Lint after saving to prevent inconsistent diagnostics
+        val file = params.textDocument.filePath
+        lintNow(file)
+    }
 
     override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = async.compute {
         reportTime {
