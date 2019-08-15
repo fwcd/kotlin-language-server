@@ -83,7 +83,9 @@ private val callPattern = Regex("(.*)\\((\\$\\d+)?\\)")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
 private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
-    val result = d.accept(RenderCompletionItem(config.snippets.enabled), null)
+    val isMethodReference = surroundingElement is KtCallableReferenceExpression
+    val renderWithSnippets = config.snippets.enabled && !isMethodReference
+    val result = d.accept(RenderCompletionItem(renderWithSnippets), null)
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
@@ -94,10 +96,6 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
         result.label = name
         result.insertText = name
         result.filterText = name
-    }
-
-    if (surroundingElement is KtCallableReferenceExpression && result.insertText.endsWith("()")) {
-        result.insertText = result.insertText.removeSuffix("()")
     }
 
     val matchCall = callPattern.matchEntire(result.insertText)
