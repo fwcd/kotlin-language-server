@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.CompletionItemKind.Function
 import org.eclipse.lsp4j.InsertTextFormat.PlainText
 import org.eclipse.lsp4j.InsertTextFormat.Snippet
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
@@ -92,12 +93,25 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     private fun functionInsertText(desc: FunctionDescriptor): String {
         val name = escape(desc.label()!!)
 
-        return when {
-            !snippetsEnabled -> name
-            desc.valueParameters.isEmpty() -> "$name()"
-            else -> "$name(${desc.valueParameters.mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }.joinToString()})\$0"
+        return if (snippetsEnabled) {
+            val parameters = desc.valueParameters
+            val hasTrailingLambda = parameters.lastOrNull()?.type?.isFunctionType ?: false
+
+            if (hasTrailingLambda) {
+                val parenthesizedParams = parameters.dropLast(1).ifEmpty { null }?.let { "(${valueParametersSnippet(it)})" } ?: ""
+                "$name$parenthesizedParams { \${${parameters.size}:${parameters.last().name}} }\$0"
+            } else {
+                "$name(${valueParametersSnippet(parameters)})\$0"
+            }
+        } else {
+            name
         }
     }
+
+    private fun valueParametersSnippet(parameters: List<ValueParameterDescriptor>) = parameters
+        .asSequence()
+        .mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }
+        .joinToString()
 
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
