@@ -22,6 +22,7 @@ private class JULRedirector(private val downstream: Logger): Handler() {
             Level.FINE -> downstream.trace(record.message)
             else -> downstream.deepTrace(record.message)
         }
+        record.thrown?.let(downstream::printStackTrace)
     }
 
     override fun flush() {}
@@ -82,7 +83,7 @@ class Logger {
         }
     }
 
-    fun error(throwable: Throwable) = throwable.printStackTrace(errStream)
+    fun printStackTrace(throwable: Throwable) = throwable.printStackTrace(errStream)
 
     fun error(msg: String, vararg placeholders: Any?) = log(LogLevel.ERROR, msg, placeholders)
 
@@ -158,7 +159,7 @@ class Logger {
         val time = if (logTime) "${Instant.now()} " else ""
         var thread = Thread.currentThread().name
 
-        return time + shortenOrPad(thread, 10) + msg
+        return time + shortenOrPad(thread, 10) + msg.trimEnd()
     }
 
     private fun shortenOrPad(str: String, length: Int): String =
