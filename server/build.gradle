@@ -6,7 +6,6 @@ plugins {
     id 'com.jaredsburrows.license' version '0.8.42'
 }
 
-group = 'org.javacs'
 version = projectVersion
 
 mainClassName = 'org.javacs.kt.MainKt'

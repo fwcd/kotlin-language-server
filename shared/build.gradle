@@ -1,5 +1,6 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm'
+    id 'maven'
 }
 
 sourceCompatibility = 1.8
