@@ -8,21 +8,16 @@ import java.nio.file.PathMatcher
 import java.nio.file.Files
 import java.nio.file.FileSystems
 
-fun findClassPath(workspaceRoots: Collection<Path>): Set<Path> {
-    val resolver = WithStdlibResolver(
-        ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
-            workspaceRoots.asSequence()
-                .flatMap(::workspaceResolvers)
-                .fold(ClassPathResolver.empty) { accum, next -> accum + next }
-        )
-    ).or(BackupClassPathResolver)
-
-    LOG.info("Resolving classpath using {}", resolver.resolverType)
-    return resolver.maybeClasspath
-}
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver = WithStdlibResolver(
+    ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
+        workspaceRoots.asSequence()
+            .flatMap(::workspaceResolvers)
+            .fold(ClassPathResolver.empty) { accum, next -> accum + next }
+    )
+).or(BackupClassPathResolver)
 
 /** A source for creating class paths */
-internal interface ClassPathResolver {
+interface ClassPathResolver {
     val resolverType: String
     val classpath: Set<Path> // may throw exceptions
     val maybeClasspath: Set<Path> // does not throw exceptions
@@ -43,7 +38,7 @@ internal interface ClassPathResolver {
 }
 
 /** Combines two classpath resolvers. */
-internal operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
+operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@plus.resolverType} + ${other.resolverType}"
         override val classpath get() = this@plus.classpath + other.classpath
@@ -51,7 +46,7 @@ internal operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPat
     }
 
 /** Uses the left-hand classpath if not empty, otherwise uses the right. */
-internal fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
+fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@or.resolverType} or ${other.resolverType}"
         override val classpath get() = this@or.classpath.takeIf { it.isNotEmpty() } ?: other.classpath

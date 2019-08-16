@@ -1,6 +1,6 @@
 package org.javacs.kt
 
-import org.javacs.kt.classpath.findClassPath
+import org.javacs.kt.classpath.defaultClassPathResolver
 import java.io.Closeable
 import java.nio.file.Path
 
@@ -15,7 +15,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 
     private fun refresh() {
-        val newClassPath = findClassPath(workspaceRoots)
+        val newClassPath = defaultClassPathResolver(workspaceRoots).maybeClasspath
 
         if (newClassPath != classPath) {
             val added = newClassPath - classPath
