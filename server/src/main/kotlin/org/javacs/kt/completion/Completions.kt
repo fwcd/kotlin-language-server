@@ -435,11 +435,6 @@ private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescript
         || (TypeUtils.getTypeParameterDescriptorOrNull(receiverType)?.isGenericExtensionFor(type) ?: false)
 }
 
-private fun ClassDescriptor.isClassExtensionFor(type: KotlinType): Boolean {
-    fun equalsReceiver(type: KotlinType) = TypeUtils.getClassDescriptor(type)?.fqNameSafe == fqNameSafe
-    return equalsReceiver(type) || type.supertypes().any(::equalsReceiver)
-}
-
 private fun TypeParameterDescriptor.isGenericExtensionFor(type: KotlinType): Boolean =
     upperBounds.all { KotlinTypeChecker.DEFAULT.isSubtypeOf(type, it) }
 
