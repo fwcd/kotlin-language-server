@@ -15,7 +15,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 
     private fun refresh() {
-        val newClassPath = defaultClassPathResolver(workspaceRoots).maybeClasspath
+        val newClassPath = defaultClassPathResolver(workspaceRoots).classpathOrEmpty
 
         if (newClassPath != classPath) {
             val added = newClassPath - classPath

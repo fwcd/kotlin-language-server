@@ -20,7 +20,7 @@ fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolve
 interface ClassPathResolver {
     val resolverType: String
     val classpath: Set<Path> // may throw exceptions
-    val maybeClasspath: Set<Path> // does not throw exceptions
+    val classpathOrEmpty: Set<Path> // does not throw exceptions
         get() = try {
             classpath
         } catch (e: Exception) {
@@ -42,7 +42,7 @@ operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@plus.resolverType} + ${other.resolverType}"
         override val classpath get() = this@plus.classpath + other.classpath
-        override val maybeClasspath get() = this@plus.maybeClasspath + other.maybeClasspath
+        override val classpathOrEmpty get() = this@plus.classpathOrEmpty + other.classpathOrEmpty
     }
 
 /** Uses the left-hand classpath if not empty, otherwise uses the right. */
@@ -50,7 +50,7 @@ fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
     object : ClassPathResolver {
         override val resolverType: String get() = "${this@or.resolverType} or ${other.resolverType}"
         override val classpath get() = this@or.classpath.takeIf { it.isNotEmpty() } ?: other.classpath
-        override val maybeClasspath get() = this@or.maybeClasspath.takeIf { it.isNotEmpty() } ?: other.maybeClasspath
+        override val classpathOrEmpty get() = this@or.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: other.classpathOrEmpty
     }
 
 /** Searches the workspace for all files that could provide classpath info. */
