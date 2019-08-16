@@ -12,7 +12,7 @@ fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolve
     ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
         workspaceRoots.asSequence()
             .flatMap(::workspaceResolvers)
-            .fold(ClassPathResolver.empty) { accum, next -> accum + next }
+            .joined
     )
 ).or(BackupClassPathResolver)
 
@@ -36,6 +36,10 @@ interface ClassPathResolver {
         }
     }
 }
+
+val Sequence<ClassPathResolver>.joined get() = fold(ClassPathResolver.empty) { accum, next -> accum + next }
+
+val Collection<ClassPathResolver>.joined get() = fold(ClassPathResolver.empty) { accum, next -> accum + next }
 
 /** Combines two classpath resolvers. */
 operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
