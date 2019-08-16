@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.typeUtil.supertypes
+import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
@@ -430,11 +431,17 @@ private fun isParentClass(declaration: DeclarationDescriptor): ClassDescriptor? 
 
 private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescriptor): Boolean {
     val receiverType = extensionFunction.extensionReceiverParameter?.type ?: return false
-    val receiverClass = TypeUtils.getClassDescriptor(receiverType) ?: return false
-    fun equalsReceiver(type: KotlinType) = TypeUtils.getClassDescriptor(type)?.fqNameSafe == receiverClass.fqNameSafe
-    if (equalsReceiver(type)) return true
-    else return type.supertypes().any(::equalsReceiver)
+    return KotlinTypeChecker.DEFAULT.isSubtypeOf(type, receiverType)
+        || (TypeUtils.getTypeParameterDescriptorOrNull(receiverType)?.isGenericExtensionFor(type) ?: false)
 }
+
+private fun ClassDescriptor.isClassExtensionFor(type: KotlinType): Boolean {
+    fun equalsReceiver(type: KotlinType) = TypeUtils.getClassDescriptor(type)?.fqNameSafe == fqNameSafe
+    return equalsReceiver(type) || type.supertypes().any(::equalsReceiver)
+}
+
+private fun TypeParameterDescriptor.isGenericExtensionFor(type: KotlinType): Boolean =
+    upperBounds.all { KotlinTypeChecker.DEFAULT.isSubtypeOf(type, it) }
 
 private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
 
