@@ -12,7 +12,7 @@ private var threadCount = 0
 class AsyncExecutor {
 	private val workerThread = Executors.newSingleThreadExecutor { Thread(it, "async${threadCount++}") }
 
-    fun run(task: () -> Unit) =
+    fun execute(task: () -> Unit) =
             CompletableFuture.runAsync(Runnable(task), workerThread)
 
 	fun <R> compute(task: () -> R) =
