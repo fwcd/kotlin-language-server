@@ -186,7 +186,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // .?
         is KtQualifiedExpression -> {
             LOG.info("Completing member expression '{}'", surroundingElement.text)
-            completeMembers(file, cursor, surroundingElement.receiverExpression)
+            completeMembers(file, cursor, surroundingElement.receiverExpression, surroundingElement is KtSafeQualifiedExpression)
         }
         is KtCallableReferenceExpression -> {
             // something::?
@@ -214,13 +214,14 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
     }
 }
 
-private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression): Sequence<DeclarationDescriptor> {
+private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence<DeclarationDescriptor> {
     // thingWithType.?
     val lexicalScope = file.scopeAtPoint(cursor)
     var descriptors = emptySequence<DeclarationDescriptor>()
     if (lexicalScope != null) {
-        val receiverType = file.typeOfExpression(receiverExpr, lexicalScope)
-        if (receiverType != null) {
+        val expressionType = file.typeOfExpression(receiverExpr, lexicalScope)
+        if (expressionType != null) {
+            val receiverType = if (unwrapNullable) TypeUtils.makeNotNullable(expressionType) else expressionType
             LOG.debug("Completing members of instance '{}'", receiverType)
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
