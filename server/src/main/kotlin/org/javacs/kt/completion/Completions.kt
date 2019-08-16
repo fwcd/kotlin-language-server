@@ -434,10 +434,18 @@ private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescript
     val receiverType = extensionFunction.extensionReceiverParameter?.type ?: return false
     return KotlinTypeChecker.DEFAULT.isSubtypeOf(type, receiverType)
         || (TypeUtils.getTypeParameterDescriptorOrNull(receiverType)?.isGenericExtensionFor(type) ?: false)
+        || (TypeUtils.getClassDescriptor(receiverType)?.isClassExtensionFor(type) ?: false)
 }
 
 private fun TypeParameterDescriptor.isGenericExtensionFor(type: KotlinType): Boolean =
     upperBounds.all { KotlinTypeChecker.DEFAULT.isSubtypeOf(type, it) }
+
+// Currently only needed for extensions such as e.g. Collection<T> applied to List<SomeConcreteType>
+// Direct subtype relationships will be detected by KotlinTypeChecker.isSubtypeOf
+private fun ClassDescriptor.isClassExtensionFor(type: KotlinType): Boolean {
+    fun matchesFqName(t: KotlinType) = TypeUtils.getClassDescriptor(t)?.fqNameSafe == fqNameSafe
+    return matchesFqName(type) || type.supertypes().any(::matchesFqName)
+}
 
 private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
 
