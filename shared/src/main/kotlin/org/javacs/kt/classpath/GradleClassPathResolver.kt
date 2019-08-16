@@ -57,7 +57,9 @@ private fun getGradleCommand(workspace: Path): Path {
     if (Files.exists(wrapper)) {
         return wrapper
     } else {
-        return findCommandOnPath("gradle") ?: throw KotlinLSException("Could not find 'gradle' on PATH")
+        return workspace.parent?.let(::getGradleCommand)
+            ?: findCommandOnPath("gradle")
+            ?: throw KotlinLSException("Could not find 'gradle' on PATH")
     }
 }
 
