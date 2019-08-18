@@ -54,7 +54,7 @@ import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
 
 /**
- * Kotlin environments used to parse, analyze and compile
+ * Kotlin compiler APIs used to parse, analyze and compile
  * files and expressions.
  */
 private class CompilationEnvironment(
@@ -130,12 +130,12 @@ private class CompilationEnvironment(
  */
 class Compiler(classPath: Set<Path>) : Closeable {
     private var closed = false
-    private val fileCompileEnvironment = CompilationEnvironment(classPath)
-    private val expressionCompileEnvironment = CompilationEnvironment(classPath)
     private val localFileSystem: VirtualFileSystem
+    private val compileEnvironment = CompilationEnvironment(classPath)
+    private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     val psiFileFactory
-        get() = PsiFileFactory.getInstance(fileCompileEnvironment.environment.project)
+        get() = PsiFileFactory.getInstance(compileEnvironment.environment.project)
 
     companion object {
         init {
@@ -152,8 +152,7 @@ class Compiler(classPath: Set<Path>) : Closeable {
      * configuration (which is a class from this project).
      */
     fun updateConfiguration(config: CompilerConfiguration) {
-        fileCompileEnvironment.updateConfiguration(config)
-        expressionCompileEnvironment.updateConfiguration(config)
+        compileEnvironment.updateConfiguration(config)
     }
 
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
@@ -195,13 +194,9 @@ class Compiler(classPath: Set<Path>) : Closeable {
     fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> =
             compileFiles(listOf(file), sourcePath)
 
-    // TODO lock at file-level
-    private val fileCompileLock = ReentrantLock()
-    private val expressionCompileLock = ReentrantLock()
-
     fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
-        fileCompileLock.withLock {
-            val (container, trace) = fileCompileEnvironment.createContainer(sourcePath)
+        compileLock.withLock {
+            val (container, trace) = compileEnvironment.createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
             topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
 
@@ -211,8 +206,9 @@ class Compiler(classPath: Set<Path>) : Closeable {
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
         try {
-            expressionCompileLock.withLock {
-                val (container, trace) = expressionCompileEnvironment.createContainer(sourcePath)
+            // Use same lock as 'compileFile' to avoid concurrency issues such as #42
+            compileLock.withLock {
+                val (container, trace) = compileEnvironment.createContainer(sourcePath)
                 val incrementalCompiler = container.get<ExpressionTypingServices>()
                 incrementalCompiler.getTypeInfo(
                         scopeWithImports,
@@ -231,8 +227,7 @@ class Compiler(classPath: Set<Path>) : Closeable {
 
     override fun close() {
         if (!closed) {
-            fileCompileEnvironment.close()
-            expressionCompileEnvironment.close()
+            compileEnvironment.close()
             closed = true
         } else {
             LOG.warn("Compiler is already closed!")
