@@ -54,7 +54,8 @@ import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
 
 /**
- * Kotlin parsing and compilation environments.
+ * Kotlin environments used to parse, analyze and compile
+ * files and expressions.
  */
 private class CompilationEnvironment(
     classPath: Set<Path>
