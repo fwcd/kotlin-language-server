@@ -118,7 +118,7 @@ private fun isNotStaticJavaMethod(
 }
 
 private fun extractPropertyName(d: DeclarationDescriptor): String {
-    val match = Regex("(get|set)([A-Z]\\w+)").matchEntire(d.name.identifier)!!
+    val match = Regex("(get|set)?((?:(?:is)|[A-Z])\\w*)").matchEntire(d.name.identifier)!!
     val upper = match.groups[2]!!.value
 
     return upper[0].toLowerCase() + upper.substring(1)
