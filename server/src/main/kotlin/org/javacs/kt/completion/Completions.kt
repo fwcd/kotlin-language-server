@@ -92,7 +92,7 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
     if (isNotStaticJavaMethod(d) && (isGetter(d) || isSetter(d))) {
-        val name = extractVarName(d)
+        val name = extractPropertyName(d)
 
         result.detail += " (from ${result.label})"
         result.label = name
@@ -117,8 +117,8 @@ private fun isNotStaticJavaMethod(
     return javaElement is JavaMethod && !javaElement.isStatic
 }
 
-private fun extractVarName(d: DeclarationDescriptor): String {
-    val match = Regex("(get|is|set)([A-Z]\\w+)").matchEntire(d.name.identifier)!!
+private fun extractPropertyName(d: DeclarationDescriptor): String {
+    val match = Regex("(get|set)([A-Z]\\w+)").matchEntire(d.name.identifier)!!
     val upper = match.groups[2]!!.value
 
     return upper[0].toLowerCase() + upper.substring(1)

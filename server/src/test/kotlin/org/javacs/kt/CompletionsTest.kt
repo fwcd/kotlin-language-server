@@ -283,3 +283,28 @@ class TrailingLambdaTest : SingleFileTestFixture("completions", "TrailingLambda.
         assertThat(completions.items.find { it.label.startsWith("mixedParameters") }, hasProperty("insertText", equalTo("mixedParameters(\${1:a}) { \${2:b} }")))
     }
 }
+
+class JavaGetterSetterConversionTest : SingleFileTestFixture("completions", "JavaGetterSetterConversion.kt") {
+    @Test fun `test java static method conversion`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 44)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("getInstance")))
+    }
+
+    @Test fun `test java getter and setter conversion`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 5, 18)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, not(hasItem(startsWith("getFirstDayOfWeek"))))
+        assertThat(labels, not(hasItem(startsWith("setFirstDayOfWeek"))))
+        assertThat(labels, hasItem(startsWith("firstDayOfWeek")))
+    }
+
+    @Test fun `test java boolean getter conversion`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 6, 19)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("isLenient")))
+    }
+}
