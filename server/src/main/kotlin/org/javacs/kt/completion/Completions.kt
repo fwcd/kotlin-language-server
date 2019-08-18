@@ -85,8 +85,9 @@ private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
 private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
-    val isMethodReference = surroundingElement is KtCallableReferenceExpression
-    val renderWithSnippets = config.snippets.enabled && !isMethodReference
+    val renderWithSnippets = config.snippets.enabled
+        && surroundingElement !is KtCallableReferenceExpression
+        && surroundingElement !is KtImportDirective
     val result = d.accept(RenderCompletionItem(renderWithSnippets), null)
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
@@ -139,17 +140,19 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
 private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
     val el = file.parseAtPoint(cursor - 1) ?: return null
             // import x.y.?
-    return el.findParent<KtImportDirective>() ?:
+    return el.findParent<KtImportDirective>()
             // :?
-            el.parent as? KtTypeElement ?:
+            ?: el.parent as? KtTypeElement
             // .?
-            el as? KtQualifiedExpression ?: el.parent as? KtQualifiedExpression ?:
+            ?: el as? KtQualifiedExpression
+            ?: el.parent as? KtQualifiedExpression
             // something::?
-            el as? KtCallableReferenceExpression ?: el.parent as? KtCallableReferenceExpression ?:
+            ?: el as? KtCallableReferenceExpression
+            ?: el.parent as? KtCallableReferenceExpression
             // something.foo() with cursor in the method
-            el.parent?.parent as? KtQualifiedExpression ?:
+            ?: el.parent?.parent as? KtQualifiedExpression
             // ?
-            el as? KtNameReferenceExpression
+            ?: el as? KtNameReferenceExpression
 }
 
 private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
