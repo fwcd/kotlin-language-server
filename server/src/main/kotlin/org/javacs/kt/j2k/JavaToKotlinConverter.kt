@@ -9,7 +9,7 @@ import org.javacs.kt.Compiler
 import org.javacs.kt.util.nonNull
 
 fun convertJavaToKotlin(javaCode: String, compiler: Compiler): String {
-    val psiFactory = PsiFileFactory.getInstance(compiler.environment.project)
+    val psiFactory = compiler.psiFileFactory
     val javaAST = psiFactory.createFileFromText("snippet.java", JavaLanguage.INSTANCE, javaCode)
     LOG.info("Parsed {} to {}", javaCode, javaAST)
 

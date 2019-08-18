@@ -220,21 +220,27 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
 
 private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence<DeclarationDescriptor> {
     // thingWithType.?
-    val lexicalScope = file.scopeAtPoint(cursor)
     var descriptors = emptySequence<DeclarationDescriptor>()
-    if (lexicalScope != null) {
-        val expressionType = file.typeOfExpression(receiverExpr, lexicalScope)
-        if (expressionType != null) {
-            val receiverType = if (unwrapNullable) TypeUtils.makeNotNullable(expressionType) else expressionType
+    file.scopeAtPoint(cursor)?.let { lexicalScope ->
+        file.typeOfExpression(receiverExpr, lexicalScope)?.let { expressionType ->
+            val receiverType = if (unwrapNullable) try {
+                TypeUtils.makeNotNullable(expressionType)
+            } catch (e: Exception) {
+                LOG.printStackTrace(e)
+                expressionType
+            } else expressionType
+
             LOG.debug("Completing members of instance '{}'", receiverType)
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
             descriptors = members + extensions
+
             if (!isCompanionOfEnum(receiverType)) {
                 return descriptors
             }
         }
     }
+
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {

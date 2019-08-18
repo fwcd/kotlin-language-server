@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileSystem
 import org.jetbrains.kotlin.com.intellij.psi.PsiFileFactory
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
@@ -53,23 +54,16 @@ import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
 
 /**
- * Incrementally compiles files and expressions.
- * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
+ * Kotlin parsing and compilation environments.
  */
-class Compiler(classPath: Set<Path>) : Closeable {
-    val environment: KotlinCoreEnvironment
+private class CompilationEnvironment(
+    classPath: Set<Path>
+) : Closeable {
     private val disposable = Disposer.newDisposable()
-    private var closed = false
 
-    private var parser: KtPsiFactory
-    private var scripts: ScriptDefinitionProvider
-    private val localFileSystem: VirtualFileSystem
-
-    companion object {
-        init {
-            System.setProperty("idea.io.use.fallback", "true")
-        }
-    }
+    val environment: KotlinCoreEnvironment
+    val parser: KtPsiFactory
+    val scripts: ScriptDefinitionProvider
 
     init {
         environment = KotlinCoreEnvironment.createForProduction(
@@ -90,15 +84,10 @@ class Compiler(classPath: Set<Path>) : Closeable {
             project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
         }
 
-        parser = KtPsiFactory(environment.project)
-        scripts = ScriptDefinitionProvider.getInstance(environment.project)!!
-        localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+        parser = KtPsiFactory(project)
+        scripts = ScriptDefinitionProvider.getInstance(project)!!
     }
 
-    /**
-     * Updates the compiler environment using the given
-     * configuration (which is a class from this project).
-     */
     fun updateConfiguration(config: CompilerConfiguration) {
         jvmTargetFrom(config.jvm.target)
             ?.let { environment.configuration.put(JVMConfigurationKeys.JVM_TARGET, it) }
@@ -116,12 +105,60 @@ class Compiler(classPath: Set<Path>) : Closeable {
         else -> null
     }
 
+    fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
+        val trace = CliBindingTrace()
+        val container = TopDownAnalyzerFacadeForJVM.createContainer(
+                project = environment.project,
+                files = listOf(),
+                trace = trace,
+                configuration = environment.configuration,
+                packagePartProvider = environment::createPackagePartProvider,
+                // TODO FileBasedDeclarationProviderFactory keeps indices, re-use it across calls
+                declarationProviderFactory = { storageManager, _ ->  FileBasedDeclarationProviderFactory(storageManager, sourcePath) })
+        return Pair(container, trace)
+    }
+
+    override fun close() {
+        Disposer.dispose(disposable)
+    }
+}
+
+/**
+ * Incrementally compiles files and expressions.
+ * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
+ */
+class Compiler(classPath: Set<Path>) : Closeable {
+    private var closed = false
+    private val fileCompileEnvironment = CompilationEnvironment(classPath)
+    private val expressionCompileEnvironment = CompilationEnvironment(classPath)
+    private val localFileSystem: VirtualFileSystem
+
+    val psiFileFactory
+        get() = PsiFileFactory.getInstance(fileCompileEnvironment.environment.project)
+
+    companion object {
+        init {
+            setIdeaIoUseFallback()
+        }
+    }
+
+    init {
+        localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+    }
+
+    /**
+     * Updates the compiler environment using the given
+     * configuration (which is a class from this project).
+     */
+    fun updateConfiguration(config: CompilerConfiguration) {
+        fileCompileEnvironment.updateConfiguration(config)
+        expressionCompileEnvironment.updateConfiguration(config)
+    }
+
     fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
         assert(!content.contains('\r'))
 
-        val factory = PsiFileFactory.getInstance(environment.project)
-        val new = factory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
-
+        val new = psiFileFactory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
         assert(new.virtualFile != null)
 
         return new
@@ -154,28 +191,16 @@ class Compiler(classPath: Set<Path>) : Closeable {
         else return onlyDeclaration
     }
 
-    fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
-        val trace = CliBindingTrace()
-        val container = TopDownAnalyzerFacadeForJVM.createContainer(
-                project = environment.project,
-                files = listOf(),
-                trace = trace,
-                configuration = environment.configuration,
-                packagePartProvider = environment::createPackagePartProvider,
-                // TODO FileBasedDeclarationProviderFactory keeps indices, re-use it across calls
-                declarationProviderFactory = { storageManager, _ ->  FileBasedDeclarationProviderFactory(storageManager, sourcePath) })
-        return Pair(container, trace)
-    }
-
     fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> =
             compileFiles(listOf(file), sourcePath)
 
     // TODO lock at file-level
-    private val compileLock = ReentrantLock()
+    private val fileCompileLock = ReentrantLock()
+    private val expressionCompileLock = ReentrantLock()
 
     fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
-        compileLock.withLock {
-            val (container, trace) = createContainer(sourcePath)
+        fileCompileLock.withLock {
+            val (container, trace) = fileCompileEnvironment.createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
             topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
 
@@ -185,17 +210,19 @@ class Compiler(classPath: Set<Path>) : Closeable {
 
     fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
         try {
-            val (container, trace) = createContainer(sourcePath)
-            val incrementalCompiler = container.get<ExpressionTypingServices>()
-            incrementalCompiler.getTypeInfo(
-                    scopeWithImports,
-                    expression,
-                    TypeUtils.NO_EXPECTED_TYPE,
-                    DataFlowInfo.EMPTY,
-                    InferenceSession.default,
-                    trace,
-                    true)
-            return Pair(trace.bindingContext, container)
+            expressionCompileLock.withLock {
+                val (container, trace) = expressionCompileEnvironment.createContainer(sourcePath)
+                val incrementalCompiler = container.get<ExpressionTypingServices>()
+                incrementalCompiler.getTypeInfo(
+                        scopeWithImports,
+                        expression,
+                        TypeUtils.NO_EXPECTED_TYPE,
+                        DataFlowInfo.EMPTY,
+                        InferenceSession.default,
+                        trace,
+                        true)
+                return Pair(trace.bindingContext, container)
+            }
         } catch (e: KotlinFrontEndException) {
             throw KotlinLSException("Error while analyzing: ${expression.text}", e)
         }
@@ -203,7 +230,8 @@ class Compiler(classPath: Set<Path>) : Closeable {
 
     override fun close() {
         if (!closed) {
-            Disposer.dispose(disposable)
+            fileCompileEnvironment.close()
+            expressionCompileEnvironment.close()
             closed = true
         } else {
             LOG.warn("Compiler is already closed!")

@@ -60,7 +60,7 @@ class SourcePath(private val cp: CompilerClassPath) {
         private fun doPrepareCompiledFile(): CompiledFile =
                 CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, all(), cp)
     }
-    
+
     private fun sourceFile(file: Path): SourceFile {
         if (file !in files) {
             LOG.warn("File {} is not on SourcePath, adding it now...", file)
