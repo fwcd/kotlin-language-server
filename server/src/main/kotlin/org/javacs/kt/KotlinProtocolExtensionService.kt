@@ -10,17 +10,11 @@ import java.net.URISyntaxException
 import java.util.concurrent.CompletableFuture
 
 class KotlinProtocolExtensionService(
-    private val jarClassContentProvider: JarClassContentProvider
+    private val contentProvider: URIContentProvider
 ) : KotlinProtocolExtensions {
     private val async = AsyncExecutor()
 
     override fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?> = async.compute {
-        val uri = try { URI(textDocument.uri) } catch (e: URISyntaxException) { null }
-        uri?.toKlsURI()
-            ?.let { klsURI ->
-                val (_, contents) = jarClassContentProvider.contentsOf(klsURI)
-                contents
-            }
-            ?: noResult("Could not fetch JAR class contents of '${textDocument.uri}'. Make sure that it conforms to the format 'kls:file:///path/to/myJar.jar!/[...]'!", null)
+        contentProvider.contentOfEncoded(textDocument.uri)
     }
 }

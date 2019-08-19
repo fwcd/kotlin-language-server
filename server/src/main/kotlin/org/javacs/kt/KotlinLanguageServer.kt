@@ -22,10 +22,11 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val sourceFiles = SourceFiles(sourcePath)
 
     private val jarClassContentProvider = JarClassContentProvider(config.externalSources, classPath)
+    private val uriContentProvider = URIContentProvider(sourcePath, jarClassContentProvider)
 
-    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, jarClassContentProvider)
+    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, uriContentProvider)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    private val protocolExtensions = KotlinProtocolExtensionService(jarClassContentProvider)
+    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)

@@ -28,7 +28,7 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
 
         if (isInsideJar(rawClassURI)) {
             URI(rawClassURI).toKlsURI()?.let { klsURI ->
-                val (klsSourceURI, contents) = jarClassContentProvider.contentsOf(klsURI)
+                val (klsSourceURI, contents) = jarClassContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {
                     // Defer decompilation until a jarClassContents request is sent

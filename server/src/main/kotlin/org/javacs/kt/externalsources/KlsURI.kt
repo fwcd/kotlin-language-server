@@ -1,6 +1,7 @@
 package org.javacs.kt.externalsources
 
 import org.javacs.kt.j2k.convertJavaToKotlin
+import org.javacs.kt.util.partitionAroundLast
 import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
@@ -28,7 +29,7 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * Other file extensions for classes (such as .kt and .java) are supported too, in
  * which case the file will directly be used without invoking the decompiler.
  */
-data class KlsURI(private val uri: URI) {
+data class KlsURI(val uri: URI) {
     val fileExtension: String?
         get() = uri.toString()
             .substringAfterLast("/")
@@ -39,7 +40,8 @@ data class KlsURI(private val uri: URI) {
         get() = fileExtension == "class"
 
     fun withFileExtension(newExtension: String): KlsURI {
-        val newURI = "${uri.toString().substringAfterLast("/").split(".").first()}.$newExtension"
+        val (parentURI, fileName) = uri.toString().partitionAroundLast("/")
+        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension"
         return KlsURI(URI(newURI))
     }
 
