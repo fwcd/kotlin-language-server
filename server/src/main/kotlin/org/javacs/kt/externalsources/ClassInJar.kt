@@ -63,8 +63,8 @@ class ClassInJar(
 
 			val tmpDir = System.getProperty("java.io.tmpdir")
 
-			File("$tmpDir/${relativeJavaPath.parseDirectories()}/").mkdirs()
-			val tmpFile = File("$tmpDir/${relativeJavaPath.parseDirectories()}/$javaName$javaExtension")
+			File("$tmpDir/${relativeJavaPath.parent}/").mkdirs()
+			val tmpFile = File("$tmpDir/${relativeJavaPath.parent}/$javaName$javaExtension")
 			tmpFile.createNewFile()
 			tmpFile.deleteOnExit() // Make sure the extracted file is deleted upon exit
 			tmpFile.outputStream().use { jarFile.getInputStream(jarEntry).copyTo(it) }
@@ -96,12 +96,6 @@ private data class FileName(val name: String, val extension: String)
 private fun String.trimLeadingPathSeparator(): String {
 	val firstChar = this[0]
 	return if (firstChar == '/' || firstChar == '\\') substring(1) else this
-}
-
-private fun Path.parseDirectories(): String {
-	val pathStr = toString()
-	val slashPos = pathStr.lastIndexOf("/")
-	return pathStr.substring(0, slashPos)
 }
 
 private fun Path.parseName(): FileName {
