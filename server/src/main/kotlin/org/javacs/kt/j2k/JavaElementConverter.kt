@@ -227,8 +227,10 @@ class JavaElementConverter(
     }
 
     override fun visitForeachStatement(statement: PsiForeachStatement) {
-        super.visitForeachStatement(statement)
-        j2kTODO("ForeachStatement")
+        val translatedParameter = statement.iterationParameter.name
+        val translatedIterated = statement.iteratedValue.translate()
+        val translatedBody = statement.body.translate()
+        translatedKotlinCode = "for ($translatedParameter in $translatedIterated) $translatedBody"
     }
 
     override fun visitIdentifier(identifier: PsiIdentifier) {
@@ -463,8 +465,12 @@ class JavaElementConverter(
     }
 
     override fun visitTryStatement(statement: PsiTryStatement) {
-        super.visitTryStatement(statement)
-        j2kTODO("TryStatement")
+        val translatedTryBlock = statement.tryBlock.translate()
+        val translatedCatches = statement.catchBlocks.asSequence()
+            .mapIndexed { i, block -> " catch (${statement.catchBlockParameters[i].translate()}) ${block.translate()}" }
+            .joinToString()
+        val translatedFinally = statement.finallyBlock.translate()?.let { " finally $it" } ?: ""
+        translatedKotlinCode = "try $translatedTryBlock$translatedCatches$translatedFinally"
     }
 
     override fun visitCatchSection(section: PsiCatchSection) {
