@@ -21,7 +21,7 @@ public data class CompilerConfiguration(
 )
 
 public data class URIConfiguration(
-    val useKlsScheme: Boolean = false
+    var useKlsScheme: Boolean = false
 )
 
 public data class Configuration(
