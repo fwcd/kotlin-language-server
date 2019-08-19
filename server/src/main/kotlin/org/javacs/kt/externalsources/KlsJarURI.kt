@@ -9,7 +9,11 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.Files
 
-fun URI.toKlsJarURI(): KlsJarURI? = if (scheme == "kls") KlsJarURI(this) else null
+fun URI.toKlsJarURI(): KlsJarURI? = when (scheme) {
+    "kls" -> KlsJarURI(this)
+    "file" -> KlsJarURI(URI("kls:$this"))
+    else -> null
+}
 
 /**
  * A Uniform Resource Identifier (URI) with a "kls" (Kotlin language server) scheme
