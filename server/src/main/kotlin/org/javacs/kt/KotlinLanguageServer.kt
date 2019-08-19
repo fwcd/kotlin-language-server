@@ -59,7 +59,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.documentSymbolProvider = true
         serverCapabilities.workspaceSymbolProvider = true
         serverCapabilities.referencesProvider = true
-        serverCapabilities.codeActionProvider = true
+        serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = true
         serverCapabilities.documentRangeFormattingProvider = true
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)

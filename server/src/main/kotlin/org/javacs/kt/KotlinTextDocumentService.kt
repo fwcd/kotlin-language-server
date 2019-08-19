@@ -114,14 +114,15 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams): CompletableFuture<List<Location>> = async.compute {
+    override fun definition(position: TextDocumentPositionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
             goToDefinition(file, cursor, decompiler, config.uri)
                 ?.let(::listOf)
-                ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
+                ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
+                ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))
         }
     }
 

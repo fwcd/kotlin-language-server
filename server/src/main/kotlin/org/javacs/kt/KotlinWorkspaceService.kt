@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
+import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.symbols.workspaceSymbols
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.j2k.convertJavaToKotlin
@@ -44,9 +45,11 @@ class KotlinWorkspaceService(
                 val selectedJavaCode = extractRange(sp.content(filePath), range)
                 val kotlinCode = convertJavaToKotlin(selectedJavaCode, cp.compiler)
 
-                languageClient?.applyEdit(ApplyWorkspaceEditParams(WorkspaceEdit(listOf(TextDocumentEdit(
-                    VersionedTextDocumentIdentifier().apply { uri = fileUri },
-                    listOf(TextEdit(range, kotlinCode))
+                languageClient?.applyEdit(ApplyWorkspaceEditParams(WorkspaceEdit(listOf(Either.forLeft<TextDocumentEdit, ResourceOperation>(
+                    TextDocumentEdit(
+                        VersionedTextDocumentIdentifier().apply { uri = fileUri },
+                        listOf(TextEdit(range, kotlinCode))
+                    )
                 )))))
             }
         }
