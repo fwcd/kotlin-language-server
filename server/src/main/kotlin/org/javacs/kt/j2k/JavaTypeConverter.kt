@@ -1,5 +1,6 @@
 package org.javacs.kt.j2k
 
+import org.javacs.kt.LOG
 import org.jetbrains.kotlin.com.intellij.psi.*
 
 object JavaTypeConverter : PsiTypeVisitor<String>() {
@@ -12,7 +13,12 @@ object JavaTypeConverter : PsiTypeVisitor<String>() {
         else -> primitiveType.canonicalText.capitalize()
     }
 
-    override fun visitArrayType(arrayType: PsiArrayType): String = when (arrayType.componentType.canonicalText) {
+    override fun visitArrayType(arrayType: PsiArrayType): String = when (try {
+        arrayType.componentType.canonicalText
+    } catch (e: IllegalStateException) {
+        LOG.warn("Error while fetching text representation of array type: {}", e)
+        "?"
+    }) {
         "byte" -> "ByteArray"
         "short" -> "ShortArray"
         "int" -> "IntArray"
