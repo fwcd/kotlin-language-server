@@ -121,10 +121,11 @@ class KotlinWorkspaceService(
                 }
             }
 
-            // Update URI options
-            get("uri")?.asJsonObject?.apply {
-                val uri = config.uri
-                get("useKlsScheme")?.asBoolean?.let { uri.useKlsScheme = it }
+            // Update options about external sources e.g. JAR files, decompilers, etc
+            get("externalSources")?.asJsonObject?.apply {
+                val externalSources = config.externalSources
+                get("useKlsScheme")?.asBoolean?.let { externalSources.useKlsScheme = it }
+                get("autoConvertToKotlin")?.asBoolean?.let { externalSources.autoConvertToKotlin = it }
             }
         }
 

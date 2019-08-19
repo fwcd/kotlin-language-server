@@ -4,14 +4,14 @@ import org.eclipse.lsp4j.Location
 import java.net.URI
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
-import org.javacs.kt.URIConfiguration
+import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.externalsources.Decompiler
 import org.javacs.kt.externalsources.toKlsJarURI
 import org.javacs.kt.position.location
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
-fun goToDefinition(file: CompiledFile, cursor: Int, decompiler: Decompiler, config: URIConfiguration): Location? {
+fun goToDefinition(file: CompiledFile, cursor: Int, decompiler: Decompiler, config: ExternalSourcesConfiguration): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
 
     LOG.info("Found declaration descriptor {}", target)
