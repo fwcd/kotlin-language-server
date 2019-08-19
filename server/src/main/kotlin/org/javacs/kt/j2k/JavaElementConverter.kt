@@ -430,8 +430,8 @@ class JavaElementConverter(
     }
 
     override fun visitSuperExpression(expression: PsiSuperExpression) {
-        super.visitSuperExpression(expression)
-        j2kTODO("SuperExpression")
+        val translatedQualifier = expression.qualifier.translate()?.let { "@$it" } ?: ""
+        translatedKotlinCode = "super$translatedQualifier"
     }
 
     override fun visitSwitchLabelStatement(statement: PsiSwitchLabelStatement) {
@@ -450,8 +450,9 @@ class JavaElementConverter(
     }
 
     override fun visitSynchronizedStatement(statement: PsiSynchronizedStatement) {
-        super.visitSynchronizedStatement(statement)
-        j2kTODO("SynchronizedStatement")
+        val translatedLock = statement.lockExpression.translate()?.let { "($it)" } ?: ""
+        val translatedBody = statement.body.translate()
+        translatedKotlinCode = "synchronized$translatedLock $translatedBody"
     }
 
     override fun visitThisExpression(expression: PsiThisExpression) {
@@ -460,8 +461,7 @@ class JavaElementConverter(
     }
 
     override fun visitThrowStatement(statement: PsiThrowStatement) {
-        super.visitThrowStatement(statement)
-        j2kTODO("ThrowStatement")
+        translatedKotlinCode = "throw ${statement.exception.translate()}"
     }
 
     override fun visitTryStatement(statement: PsiTryStatement) {
