@@ -12,8 +12,17 @@ object JavaTypeConverter : PsiTypeVisitor<String>() {
         else -> primitiveType.canonicalText.capitalize()
     }
 
-    override fun visitArrayType(arrayType: PsiArrayType): String =
-        "Array<${arrayType.componentType.accept(this)}>"
+    override fun visitArrayType(arrayType: PsiArrayType): String = when (arrayType.componentType.canonicalText) {
+        "byte" -> "ByteArray"
+        "short" -> "ShortArray"
+        "int" -> "IntArray"
+        "long" -> "LongArray"
+        "char" -> "CharArray"
+        "boolean" -> "BooleanArray"
+        "float" -> "FloatArray"
+        "double" -> "DoubleArray"
+        else -> "Array<${arrayType.componentType.accept(this)}>"
+    }
 
     override fun visitClassType(classType: PsiClassType): String {
         val translatedTypeArgs = classType.parameters.asSequence()

@@ -29,7 +29,7 @@ class JavaElementConverter(
         get() = this?.let { " $it" } ?: ""
 
     /** Convenience method to perform construction, visit and translation in one call. */
-    private inline fun PsiElement?.translate(indentDelta: Int = 0): String? = JavaElementConverter(indentLevel + indentDelta)
+    private fun PsiElement?.translate(indentDelta: Int = 0): String? = JavaElementConverter(indentLevel + indentDelta)
         .also { this?.accept(it) }
         .translatedKotlinCode
 
@@ -79,8 +79,9 @@ class JavaElementConverter(
     }
 
     override fun visitArrayAccessExpression(expression: PsiArrayAccessExpression) {
-        super.visitArrayAccessExpression(expression)
-        j2kTODO("ArrayAccessExpression")
+        val translatedArray = expression.arrayExpression.translate()
+        val translatedIndex = expression.indexExpression.translate()
+        translatedKotlinCode = "$translatedArray[$translatedIndex]"
     }
 
     override fun visitArrayInitializerExpression(expression: PsiArrayInitializerExpression) {
@@ -452,8 +453,8 @@ class JavaElementConverter(
     }
 
     override fun visitThisExpression(expression: PsiThisExpression) {
-        super.visitThisExpression(expression)
-        j2kTODO("ThisExpression")
+        val translatedQualifier = expression.qualifier.translate()?.let { "@$it" } ?: ""
+        translatedKotlinCode = "this$translatedQualifier"
     }
 
     override fun visitThrowStatement(statement: PsiThrowStatement) {
@@ -575,8 +576,28 @@ class JavaElementConverter(
     }
 
     override fun visitLambdaExpression(expression: PsiLambdaExpression) {
-        super.visitLambdaExpression(expression)
-        j2kTODO("LambdaExpression")
+        val translatedParams: String = expression.parameterList.parameters
+            .map { it.name }
+            .joinToString(separator = ", ")
+            .ifEmpty { null }
+            ?.let { " $it ->" }
+            ?: ""
+
+        val body = expression.body
+        val translatedBody: String = when (body) {
+            null -> " "
+            is PsiExpression -> " ${body.translate()} "
+            is PsiCodeBlock -> {
+                val indentedStatements = body.statements
+                    .asSequence()
+                    .map { "${nextIndent()}${it.translate()}" }
+                    .joinToString(separator = "\n")
+                "\n$indentedStatements\n$indent"
+            }
+            else -> " ? "
+        }
+
+        translatedKotlinCode = "{$translatedParams$translatedBody}"
     }
 
     override fun visitSwitchExpression(expression: PsiSwitchExpression) {
