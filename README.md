@@ -52,6 +52,7 @@ There is an extensive suite of behavioral [tests](server/src/test/kotlin/org/jav
 | Name | Description |
 | ---- | ----------- |
 | server | The language server executable |
+| shared | Classpath resolution and utilities |
 
 ## Scripts
 
@@ -59,6 +60,10 @@ There is an extensive suite of behavioral [tests](server/src/test/kotlin/org/jav
 | ---- | ------- | ----------- |
 | update_kt_version.py | `python3 scripts/update_kt_version.py` | Finds and updates the Kotlin compiler/plugin version for this project |
 | bump_version.py | `python3 scripts/bump_version.py` | Increments the project version and creates a new tag |
+
+## Protocol Extensions
+
+The Kotlin language server supports some non-standard requests through LSP. See [KotlinProtocolExtensions](server/src/main/kotlin/org/javacs/kt/KotlinProtocolExtensions.kt) for a description of the interface. The general syntax for these methods is `kotlin/someCustomMethod`.
 
 ## Features
 
