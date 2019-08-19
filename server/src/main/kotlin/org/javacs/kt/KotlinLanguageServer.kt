@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
+import org.eclipse.lsp4j.jsonrpc.services.JsonDelegate
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
@@ -24,6 +25,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, decompiler)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
+    private val protocolExtensions = KotlinProtocolExtensionService(decompiler)
 
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)
@@ -34,16 +36,12 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         LOG.info("Connected to client")
     }
 
-    override fun shutdown(): CompletableFuture<Any> {
-        return completedFuture(null)
-    }
+    override fun getTextDocumentService(): KotlinTextDocumentService = textDocuments
 
-    override fun getTextDocumentService(): KotlinTextDocumentService {
-        return textDocuments
-    }
+    override fun getWorkspaceService(): KotlinWorkspaceService = workspaces
 
-    override fun exit() {
-    }
+    @JsonDelegate
+    fun getProtocolExtensionService(): KotlinProtocolExtensions = protocolExtensions
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
         val serverCapabilities = ServerCapabilities()
@@ -79,10 +77,6 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         return completedFuture(InitializeResult(serverCapabilities))
     }
 
-    override fun getWorkspaceService(): KotlinWorkspaceService {
-        return workspaces
-    }
-
     private fun connectLoggingBackend(client: LanguageClient) {
         val backend: (LogMessage) -> Unit = {
             client.logMessage(MessageParams().apply {
@@ -105,4 +99,11 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         textDocumentService.close()
         classPath.close()
     }
+
+    override fun shutdown(): CompletableFuture<Any> {
+        close()
+        return completedFuture(null)
+    }
+
+    override fun exit() {}
 }
