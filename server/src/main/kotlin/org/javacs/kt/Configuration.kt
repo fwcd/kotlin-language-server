@@ -20,8 +20,13 @@ public data class CompilerConfiguration(
     val jvm: JVMConfiguration = JVMConfiguration()
 )
 
+public data class URIConfiguration(
+    val useKlsScheme: Boolean = false
+)
+
 public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
-    val linting: LintingConfiguration = LintingConfiguration()
+    val linting: LintingConfiguration = LintingConfiguration(),
+    val uri: URIConfiguration = URIConfiguration()
 )

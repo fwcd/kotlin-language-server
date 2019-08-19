@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
+import org.javacs.kt.externalsources.Decompiler
 import org.javacs.kt.formatting.formatKotlinCode
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
@@ -30,7 +31,8 @@ import java.util.concurrent.CompletableFuture
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
-    private val config: Configuration
+    private val config: Configuration,
+    private val decompiler: Decompiler
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
@@ -117,7 +119,9 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor)?.let(::listOf) ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
+            goToDefinition(file, cursor, decompiler, config.uri)
+                ?.let(::listOf)
+                ?: noResult("Couldn't find definition at ${describePosition(position)}", emptyList())
         }
     }
 

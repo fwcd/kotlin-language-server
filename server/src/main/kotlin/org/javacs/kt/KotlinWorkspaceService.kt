@@ -117,6 +117,12 @@ class KotlinWorkspaceService(
                     get("enabled")?.asBoolean?.let { snippets.enabled = it }
                 }
             }
+
+            // Update URI options
+            get("uri")?.asJsonObject?.apply {
+                val uri = config.uri
+                get("useKlsScheme")?.asBoolean?.let { uri.useKlsScheme = it }
+            }
         }
 
         LOG.info("Updated configuration: {}", settings)

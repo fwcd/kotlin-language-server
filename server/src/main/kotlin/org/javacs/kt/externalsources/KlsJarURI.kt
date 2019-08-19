@@ -6,11 +6,14 @@ import java.net.JarURLConnection
 import java.io.BufferedReader
 import java.io.File.createTempFile
 import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.Files
 
 fun URI.toKlsJarURI(): KlsJarURI? = if (scheme == "kls") KlsJarURI(this) else null
 
 /**
- * A Uniform Resource Identifier (URI) with a "kls" (Kotlin language server) scheme.
+ * A Uniform Resource Identifier (URI) with a "kls" (Kotlin language server) scheme
+ * that identifies a class or source file inside a JAR archive.
  * The URI should be structured as follows:
  *
  * <p><pre>
@@ -21,6 +24,16 @@ fun URI.toKlsJarURI(): KlsJarURI? = if (scheme == "kls") KlsJarURI(this) else nu
  * which case the file will directly be used without invoking the decompiler.
  */
 class KlsJarURI(private val uri: URI) {
+    private val fileExtension: String?
+        get() = Paths.get(toFileURI()).fileName
+            .toString()
+            .split(".")
+            .takeIf { it.size > 1 }
+            ?.lastOrNull()
+    private val isCompiled = fileExtension == "class"
+
+    private fun toFileURI(): URI = URI(uri.schemeSpecificPart)
+
     private fun toJarURL(): URL = URL("jar:${uri.schemeSpecificPart}")
 
     private fun openJarURLConnection() = toJarURL().openConnection() as JarURLConnection
@@ -42,9 +55,9 @@ class KlsJarURI(private val uri: URI) {
             .use(BufferedReader::readText)
     }
 
-    fun readToTemporaryFile(): Path = withJarURLConnection {
+    fun extractToTemporaryFile(): Path = withJarURLConnection {
         val name = it.jarEntry.name.split(".")
-        val tmpFile = createTempFile(name[0], name[1])
+        val tmpFile = createTempFile(name[0], ".${name[1]}")
         tmpFile.deleteOnExit()
 
         it.jarFile
@@ -53,4 +66,17 @@ class KlsJarURI(private val uri: URI) {
 
         tmpFile.toPath()
     }
+
+    fun readDecompiled(decompiler: Decompiler): String = if (isCompiled) {
+        extractAndDecompile(decompiler)
+            .let { Files.newInputStream(it) }
+            .bufferedReader()
+            .use(BufferedReader::readText)
+    } else {
+        readContents()
+    }
+
+    fun extractAndDecompile(decompiler: Decompiler): Path = decompiler.decompileClass(extractToTemporaryFile())
+
+    override fun toString(): String = uri.toString()
 }
