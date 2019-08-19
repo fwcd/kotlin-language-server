@@ -1,5 +1,6 @@
 package org.javacs.kt.externalsources
 
+import org.javacs.kt.j2k.convertJavaToKotlin
 import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
@@ -9,15 +10,15 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.Files
 
-fun URI.toKlsJarURI(): KlsJarURI? = when (scheme) {
-    "kls" -> KlsJarURI(this)
-    "file" -> KlsJarURI(URI("kls:$this"))
+fun URI.toKlsURI(): KlsURI? = when (scheme) {
+    "kls" -> KlsURI(this)
+    "file" -> KlsURI(URI("kls:$this"))
     else -> null
 }
 
 /**
- * A Uniform Resource Identifier (URI) with a "kls" (Kotlin language server) scheme
- * that identifies a class or source file inside a JAR archive.
+ * Identifies a class or source file inside a JAR archive using a Uniform
+ * Resource Identifier (URI) with a "kls" (Kotlin language server) scheme.
  * The URI should be structured as follows:
  *
  * <p><pre>
@@ -27,14 +28,20 @@ fun URI.toKlsJarURI(): KlsJarURI? = when (scheme) {
  * Other file extensions for classes (such as .kt and .java) are supported too, in
  * which case the file will directly be used without invoking the decompiler.
  */
-class KlsJarURI(private val uri: URI) {
-    private val fileExtension: String?
-        get() = Paths.get(toFileURI()).fileName
-            .toString()
+data class KlsURI(private val uri: URI) {
+    val fileExtension: String?
+        get() = uri.toString()
+            .substringAfterLast("/")
             .split(".")
             .takeIf { it.size > 1 }
             ?.lastOrNull()
-    private val isCompiled = fileExtension == "class"
+    val isCompiled: Boolean
+        get() = fileExtension == "class"
+
+    fun withFileExtension(newExtension: String): KlsURI {
+        val newURI = "${uri.toString().substringAfterLast("/").split(".").first()}.$newExtension"
+        return KlsURI(URI(newURI))
+    }
 
     private fun toFileURI(): URI = URI(uri.schemeSpecificPart)
 
@@ -70,17 +77,6 @@ class KlsJarURI(private val uri: URI) {
 
         tmpFile.toPath()
     }
-
-    fun readDecompiled(decompiler: Decompiler): String = if (isCompiled) {
-        extractAndDecompile(decompiler)
-            .let { Files.newInputStream(it) }
-            .bufferedReader()
-            .use(BufferedReader::readText)
-    } else {
-        readContents()
-    }
-
-    fun extractAndDecompile(decompiler: Decompiler): Path = decompiler.decompileClass(extractToTemporaryFile())
 
     override fun toString(): String = uri.toString()
 }

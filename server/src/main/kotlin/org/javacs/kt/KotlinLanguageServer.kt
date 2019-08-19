@@ -7,8 +7,7 @@ import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
-import org.javacs.kt.externalsources.CachingDecompiler
-import org.javacs.kt.externalsources.FernflowerDecompiler
+import org.javacs.kt.externalsources.JarClassContentProvider
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
@@ -17,15 +16,16 @@ import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val config = Configuration()
-    private val decompiler = CachingDecompiler(FernflowerDecompiler())
 
     val classPath = CompilerClassPath(config.compiler)
     val sourcePath = SourcePath(classPath)
     val sourceFiles = SourceFiles(sourcePath)
 
-    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, decompiler)
+    private val jarClassContentProvider = JarClassContentProvider(config.externalSources, classPath)
+
+    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, jarClassContentProvider)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    private val protocolExtensions = KotlinProtocolExtensionService(decompiler)
+    private val protocolExtensions = KotlinProtocolExtensionService(jarClassContentProvider)
 
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)

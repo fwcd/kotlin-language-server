@@ -35,4 +35,4 @@ public data class Configuration(
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val linting: LintingConfiguration = LintingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration()
-}
+)
