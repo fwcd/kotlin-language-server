@@ -32,7 +32,7 @@ class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val config: Configuration,
-    private val contentProvider: URIContentProvider
+    private val uriContentProvider: URIContentProvider
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
@@ -46,24 +46,24 @@ class KotlinTextDocumentService(
         this.client = client
     }
 
-    private val TextDocumentItem.filePath
-        get() = Paths.get(URI.create(uri))
+    private val TextDocumentItem.filePath: Path?
+        get() = URI.create(uri).takeIf { it.scheme == "file" }?.let(Paths::get)
 
-    private val TextDocumentIdentifier.filePath
-        get() = Paths.get(URI.create(uri))
+    private val TextDocumentIdentifier.filePath: Path?
+        get() = URI.create(uri).takeIf { it.scheme == "file" }?.let(Paths::get)
 
-    private val TextDocumentIdentifier.isKotlinScript
+    private val TextDocumentIdentifier.isKotlinScript: Boolean
         get() = uri.endsWith(".kts")
 
-    private val TextDocumentIdentifier.content
-        get() = sp.content(filePath)
+    private val TextDocumentIdentifier.content: String
+        get() = uriContentProvider.contentOfEncoded(uri)
 
     private enum class Recompile {
         ALWAYS, AFTER_DOT, WAIT_FOR_LINT, NEVER
     }
 
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
-        val file = position.textDocument.filePath
+        val file = position.textDocument.filePath!! // TODO
         val content = sp.content(file)
         val offset = offset(content, position.position.line, position.position.character)
         val shouldRecompile = when (recompile) {
@@ -119,7 +119,7 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor, contentProvider.jarClassContentProvider, config.externalSources)
+            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, config.externalSources)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))
@@ -166,23 +166,25 @@ class KotlinTextDocumentService(
         LOG.info("Find symbols in {}", params.textDocument)
 
         reportTime {
-            val path = params.textDocument.filePath
-            val file = sp.parsedFile(path)
-            documentSymbols(file)
+            params.textDocument.filePath
+                ?.let(sp::parsedFile)
+                ?.let(::documentSymbols)
+                ?: noResult("Could not find document symbols", emptyList())
         }
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        val file = params.textDocument.filePath
-
-        sf.open(file, params.textDocument.text, params.textDocument.version)
-        lintNow(file)
+        params.textDocument.filePath?.let { file ->
+            sf.open(file, params.textDocument.text, params.textDocument.version)
+            lintNow(file)
+        }
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
-        val file = params.textDocument.filePath
-        lintNow(file)
+        params.textDocument.filePath?.let { file ->
+            lintNow(file)
+        }
     }
 
     override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -195,10 +197,10 @@ class KotlinTextDocumentService(
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        val file = params.textDocument.filePath
-
-        sf.close(file)
-        clearDiagnostics(file)
+        params.textDocument.filePath?.let { file ->
+            sf.close(file)
+            clearDiagnostics(file)
+        }
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
@@ -215,17 +217,20 @@ class KotlinTextDocumentService(
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        val file = params.textDocument.filePath
-
-        sf.edit(file, params.textDocument.version, params.contentChanges)
-        lintLater(file)
+        params.textDocument.filePath?.let { file ->
+            sf.edit(file, params.textDocument.version, params.contentChanges)
+            lintLater(file)
+        }
     }
 
     override fun references(position: ReferenceParams) = async.compute {
-        val file = position.textDocument.filePath
-        val content = sp.content(file)
-        val offset = offset(content, position.position.line, position.position.character)
-        findReferences(file, offset, sp)
+        position.textDocument.filePath
+            ?.let { file ->
+                val content = sp.content(file)
+                val offset = offset(content, position.position.line, position.position.character)
+                findReferences(file, offset, sp)
+            }
+            ?: noResult("Could not find references at $position", emptyList())
     }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
@@ -234,7 +239,7 @@ class KotlinTextDocumentService(
 
     private fun describePosition(position: TextDocumentPositionParams): String {
         val path = position.textDocument.filePath
-        return "${path.fileName} ${position.position.line + 1}:${position.position.character + 1}"
+        return "${path?.fileName} ${position.position.line + 1}:${position.position.character + 1}"
     }
 
     public fun updateDebouncer() {

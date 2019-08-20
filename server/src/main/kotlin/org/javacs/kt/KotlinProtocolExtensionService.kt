@@ -10,11 +10,11 @@ import java.net.URISyntaxException
 import java.util.concurrent.CompletableFuture
 
 class KotlinProtocolExtensionService(
-    private val contentProvider: URIContentProvider
+    private val uriContentProvider: URIContentProvider
 ) : KotlinProtocolExtensions {
     private val async = AsyncExecutor()
 
     override fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?> = async.compute {
-        contentProvider.contentOfEncoded(textDocument.uri)
+        uriContentProvider.contentOfEncoded(textDocument.uri)
     }
 }
