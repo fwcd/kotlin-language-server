@@ -9,6 +9,7 @@ import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.externalsources.toKlsURI
 import org.javacs.kt.position.location
+import org.javacs.kt.util.partitionAroundLast
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
@@ -36,7 +37,8 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                 } else {
                     // Return the path to a temporary file
                     // since the client has not opted into KLS URIs
-                    val tmpFile = File.createTempFile("decompiled", ".${klsSourceURI}")
+                    val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
+                    val tmpFile = File.createTempFile(name, ".$extension")
                     tmpFile.deleteOnExit()
                     tmpFile.writeText(contents)
                     destination.uri = tmpFile.toURI().toString()

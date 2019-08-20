@@ -30,9 +30,10 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * which case the file will directly be used without invoking the decompiler.
  */
 data class KlsURI(val uri: URI) {
+    val fileName: String
+        get() = uri.toString().substringAfterLast("/")
     val fileExtension: String?
-        get() = uri.toString()
-            .substringAfterLast("/")
+        get() = fileName
             .split(".")
             .takeIf { it.size > 1 }
             ?.lastOrNull()
