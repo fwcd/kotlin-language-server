@@ -12,7 +12,7 @@ import java.nio.file.Paths
 import java.nio.file.Files
 
 fun URI.toKlsURI(): KlsURI? = when (scheme) {
-    "kls" -> KlsURI(this)
+    "kls" -> KlsURI(URI("kls:$schemeSpecificPart"))
     "file" -> KlsURI(URI("kls:$this"))
     else -> null
 }

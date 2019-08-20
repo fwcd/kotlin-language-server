@@ -16,13 +16,12 @@ import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val config = Configuration()
-
     val classPath = CompilerClassPath(config.compiler)
-    val sourcePath = SourcePath(classPath)
-    val sourceFiles = SourceFiles(sourcePath)
 
     private val jarClassContentProvider = JarClassContentProvider(config.externalSources, classPath)
-    private val uriContentProvider = URIContentProvider(sourcePath, jarClassContentProvider)
+    private val uriContentProvider = URIContentProvider(jarClassContentProvider)
+    val sourcePath = SourcePath(classPath, uriContentProvider)
+    val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, uriContentProvider)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)

@@ -8,9 +8,10 @@ import org.jetbrains.kotlin.diagnostics.Severity
 import org.jetbrains.kotlin.diagnostics.rendering.DefaultErrorMessages
 import org.jetbrains.kotlin.diagnostics.Diagnostic as KotlinDiagnostic
 import java.nio.file.Path
+import java.net.URI
 
-fun convertDiagnostic(diagnostic: KotlinDiagnostic): List<Pair<Path, LangServerDiagnostic>> {
-    val path = diagnostic.psiFile.toPath()
+fun convertDiagnostic(diagnostic: KotlinDiagnostic): List<Pair<URI, LangServerDiagnostic>> {
+    val uri = diagnostic.psiFile.toPath().toUri()
     val content = diagnostic.psiFile.text
 
     return diagnostic.textRanges.map {
@@ -20,7 +21,7 @@ fun convertDiagnostic(diagnostic: KotlinDiagnostic): List<Pair<Path, LangServerD
                 severity(diagnostic.severity),
                 "kotlin",
                 code(diagnostic))
-        Pair(path, d)
+        Pair(uri, d)
     }
 }
 

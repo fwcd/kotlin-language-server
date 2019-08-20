@@ -19,6 +19,7 @@ import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
+import org.javacs.kt.util.filePath
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -39,7 +40,7 @@ class KotlinTextDocumentService(
     private var linting = false
 
     var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
-    val lintTodo = mutableSetOf<Path>()
+    val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
     fun connect(client: LanguageClient) {
@@ -47,24 +48,24 @@ class KotlinTextDocumentService(
     }
 
     private val TextDocumentItem.filePath: Path?
-        get() = URI.create(uri).takeIf { it.scheme == "file" }?.let(Paths::get)
+        get() = URI.create(uri)?.filePath
 
     private val TextDocumentIdentifier.filePath: Path?
-        get() = URI.create(uri).takeIf { it.scheme == "file" }?.let(Paths::get)
+        get() = URI.create(uri)?.filePath
 
     private val TextDocumentIdentifier.isKotlinScript: Boolean
         get() = uri.endsWith(".kts")
 
     private val TextDocumentIdentifier.content: String
-        get() = uriContentProvider.contentOfEncoded(uri)
+        get() = uriContentProvider.contentOf(URI(uri))
 
     private enum class Recompile {
         ALWAYS, AFTER_DOT, WAIT_FOR_LINT, NEVER
     }
 
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
-        val file = position.textDocument.filePath!! // TODO
-        val content = sp.content(file)
+        val uri = URI(position.textDocument.uri) // TODO
+        val content = sp.content(uri)
         val offset = offset(content, position.position.line, position.position.character)
         val shouldRecompile = when (recompile) {
             Recompile.ALWAYS -> true
@@ -75,7 +76,7 @@ class KotlinTextDocumentService(
             }
             Recompile.NEVER -> false
         }
-        val compiled = if (shouldRecompile) sp.currentVersion(file) else sp.latestCompiledVersion(file)
+        val compiled = if (shouldRecompile) sp.currentVersion(uri) else sp.latestCompiledVersion(uri)
         return Pair(compiled, offset)
     }
 
@@ -166,25 +167,23 @@ class KotlinTextDocumentService(
         LOG.info("Find symbols in {}", params.textDocument)
 
         reportTime {
-            params.textDocument.filePath
-                ?.let(sp::parsedFile)
-                ?.let(::documentSymbols)
-                ?: noResult("Could not find document symbols", emptyList())
+            val uri = URI(params.textDocument.uri)
+            val parsed = sp.parsedFile(uri)
+
+            documentSymbols(parsed)
         }
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        params.textDocument.filePath?.let { file ->
-            sf.open(file, params.textDocument.text, params.textDocument.version)
-            lintNow(file)
-        }
+        val uri = URI(params.textDocument.uri)
+        sf.open(uri, params.textDocument.text, params.textDocument.version)
+        lintNow(uri)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
-        params.textDocument.filePath?.let { file ->
-            lintNow(file)
-        }
+        val uri = URI(params.textDocument.uri)
+        lintNow(uri)
     }
 
     override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -197,10 +196,9 @@ class KotlinTextDocumentService(
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        params.textDocument.filePath?.let { file ->
-            sf.close(file)
-            clearDiagnostics(file)
-        }
+        val uri = URI(params.textDocument.uri)
+        sf.close(uri)
+        clearDiagnostics(uri)
     }
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
@@ -217,21 +215,19 @@ class KotlinTextDocumentService(
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        params.textDocument.filePath?.let { file ->
-            sf.edit(file, params.textDocument.version, params.contentChanges)
-            lintLater(file)
-        }
+        val uri = URI(params.textDocument.uri)
+        sf.edit(uri, params.textDocument.version, params.contentChanges)
+        lintLater(uri)
     }
 
     override fun references(position: ReferenceParams) = async.compute {
         position.textDocument.filePath
             ?.let { file ->
-                val content = sp.content(file)
+                val content = sp.content(URI(position.textDocument.uri))
                 val offset = offset(content, position.position.line, position.position.character)
                 findReferences(file, offset, sp)
             }
-            ?: noResult("Could not find references at $position", emptyList())
-    }
+        }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
@@ -246,20 +242,20 @@ class KotlinTextDocumentService(
         debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     }
 
-    private fun clearLint(): List<Path> {
+    private fun clearLint(): List<URI> {
         val result = lintTodo.toList()
         lintTodo.clear()
         return result
     }
 
-    private fun lintLater(file: Path) {
-        lintTodo.add(file)
+    private fun lintLater(uri: URI) {
+        lintTodo.add(uri)
         if (!linting) {
             debounceLint.submit(::doLint)
         }
     }
 
-    private fun lintNow(file: Path) {
+    private fun lintNow(file: URI) {
         lintTodo.add(file)
         debounceLint.submitImmediately(::doLint)
     }
@@ -267,7 +263,7 @@ class KotlinTextDocumentService(
     private fun doLint() {
         linting = true
         try {
-            LOG.info("Linting {}", describeFiles(lintTodo))
+            LOG.info("Linting {}", describeURIs(lintTodo))
             val files = clearLint()
             val context = sp.compileFiles(files)
             reportDiagnostics(files, context.diagnostics)
@@ -277,31 +273,31 @@ class KotlinTextDocumentService(
         }
     }
 
-    private fun reportDiagnostics(compiled: Collection<Path>, kotlinDiagnostics: Diagnostics) {
+    private fun reportDiagnostics(compiled: Collection<URI>, kotlinDiagnostics: Diagnostics) {
         val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
-        for ((file, diagnostics) in byFile) {
-            if (sf.isOpen(file)) {
-                client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), diagnostics))
+        for ((uri, diagnostics) in byFile) {
+            if (sf.isOpen(uri)) {
+                client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
 
-                LOG.info("Reported {} diagnostics in {}", diagnostics.size, file.fileName)
+                LOG.info("Reported {} diagnostics in {}", diagnostics.size, uri)
             }
-            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, file.fileName)
+            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, uri)
         }
 
         val noErrors = compiled - byFile.keys
         for (file in noErrors) {
             clearDiagnostics(file)
 
-            LOG.info("No diagnostics in {}", file.fileName)
+            LOG.info("No diagnostics in {}", file)
         }
 
         lintCount++
     }
 
-    private fun clearDiagnostics(file: Path) {
-        client.publishDiagnostics(PublishDiagnosticsParams(file.toUri().toString(), listOf()))
+    private fun clearDiagnostics(uri: URI) {
+        client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf()))
     }
 
     private fun shutdownExecutors(awaitTermination: Boolean) {

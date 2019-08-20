@@ -3,13 +3,18 @@ package org.javacs.kt
 import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil.convertLineSeparators
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.javacs.kt.util.KotlinLSException
+import org.javacs.kt.util.filePath
+import org.javacs.kt.util.partitionAroundLast
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
 import java.io.IOException
+import java.io.FileNotFoundException
+import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.stream.Collectors
 
 private class SourceVersion(val content: String, val version: Int)
@@ -18,23 +23,23 @@ private class SourceVersion(val content: String, val version: Int)
  * Notify SourcePath whenever a file changes
  */
 private class NotifySourcePath(private val sp: SourcePath) {
-    private val files = mutableMapOf<Path, SourceVersion>()
+    private val files = mutableMapOf<URI, SourceVersion>()
 
-    operator fun get(file: Path): SourceVersion? = files[file]
+    operator fun get(uri: URI): SourceVersion? = files[uri]
 
-    operator fun set(file: Path, source: SourceVersion) {
+    operator fun set(uri: URI, source: SourceVersion) {
         val content = convertLineSeparators(source.content)
 
-        files[file] = source
-        sp.put(file, content)
+        files[uri] = source
+        sp.put(uri, content)
     }
 
-    fun remove(file: Path) {
-        files.remove(file)
-        sp.delete(file)
+    fun remove(uri: URI) {
+        files.remove(uri)
+        sp.delete(uri)
     }
 
-    fun removeAll(rm: Collection<Path>) {
+    fun removeAll(rm: Collection<URI>) {
         files -= rm
 
         rm.forEach(sp::delete)
@@ -46,39 +51,42 @@ private class NotifySourcePath(private val sp: SourcePath) {
 /**
  * Keep track of the text of all files in the workspace
  */
-class SourceFiles(private val sp: SourcePath) {
+class SourceFiles(
+    private val sp: SourcePath,
+    private val contentProvider: URIContentProvider
+) {
     private val workspaceRoots = mutableSetOf<Path>()
     private var exclusions = SourceExclusions(workspaceRoots)
     private val files = NotifySourcePath(sp)
-    private val open = mutableSetOf<Path>()
+    private val open = mutableSetOf<URI>()
 
-    fun open(file: Path, content: String, version: Int) {
-        if (exclusions.isIncluded(file)) {
-            files[file] = SourceVersion(content, version)
-            open.add(file)
+    fun open(uri: URI, content: String, version: Int) {
+        if (exclusions.isURIIncluded(uri)) {
+            files[uri] = SourceVersion(content, version)
+            open.add(uri)
         }
     }
 
-    fun close(file: Path) {
-        if (exclusions.isIncluded(file)) {
-            open.remove(file)
+    fun close(uri: URI) {
+        if (exclusions.isURIIncluded(uri)) {
+            open.remove(uri)
 
-            val disk = readFromDisk(file)
+            val disk = readFromDisk(uri)
 
             if (disk != null)
-                files[file] = disk
+                files[uri] = disk
             else
-                files.remove(file)
+                files.remove(uri)
         }
     }
 
-    fun edit(file: Path, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
-        if (exclusions.isIncluded(file)) {
-            val existing = files[file]!!
+    fun edit(uri: URI, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
+        if (exclusions.isURIIncluded(uri)) {
+            val existing = files[uri]!!
             var newText = existing.content
 
             if (newVersion <= existing.version) {
-                LOG.warn("Ignored {} version {}", file.fileName, newVersion)
+                LOG.warn("Ignored {} version {}", uri, newVersion)
                 return
             }
 
@@ -87,42 +95,38 @@ class SourceFiles(private val sp: SourcePath) {
                 else newText = patch(newText, change)
             }
 
-            files[file] = SourceVersion(newText, newVersion)
+            files[uri] = SourceVersion(newText, newVersion)
         }
     }
 
-    fun createdOnDisk(file: Path) {
-        changedOnDisk(file)
+    fun createdOnDisk(uri: URI) {
+        changedOnDisk(uri)
     }
 
-    fun deletedOnDisk(file: Path) {
-        if (isSource(file))
-            files.remove(file)
+    fun deletedOnDisk(uri: URI) {
+        if (isSource(uri))
+            files.remove(uri)
     }
 
-    fun changedOnDisk(file: Path) {
-        if (isSource(file))
-            files[file] = readFromDisk(file)
-                ?: throw KotlinLSException("Could not read source file '$file' after being changed on disk")
+    fun changedOnDisk(uri: URI) {
+        if (isSource(uri))
+            files[uri] = readFromDisk(uri)
+                ?: throw KotlinLSException("Could not read source file '$uri' after being changed on disk")
     }
 
-    private fun readFromDisk(file: Path): SourceVersion? {
-        if (!Files.exists(file)) return null
-
-        var content = ""
-
-        try {
-            content = Files.readAllLines(file).joinToString("\n")
-        } catch(exception: IOException) {
-            LOG.warn("Exception while parsing source file: {}", file.toFile().absolutePath)
-        }
-
-        return SourceVersion(content, -1)
+    private fun readFromDisk(uri: URI): SourceVersion? = try {
+        val content = contentProvider.contentOf(uri)
+        SourceVersion(content, -1)
+    } catch (e: FileNotFoundException) {
+        null
+    } catch (e: IOException) {
+        LOG.warn("Exception while reading source file {}", uri)
+        null
     }
 
-    private fun isSource(file: Path): Boolean {
-        val name = file.fileName.toString()
-        return (name.endsWith(".kt") || name.endsWith(".kts")) && exclusions.isIncluded(file)
+    private fun isSource(uri: URI): Boolean {
+        val path = uri.path
+        return (path.endsWith(".kt") || path.endsWith(".kts")) && exclusions.isURIIncluded(uri)
     }
 
     fun addWorkspaceRoot(root: Path) {
@@ -131,8 +135,8 @@ class SourceFiles(private val sp: SourcePath) {
         logAdded(addSources, root)
 
         for (file in addSources) {
-            readFromDisk(file)?.let {
-                files[file] = it
+            readFromDisk(file.toUri())?.let {
+                files[file.toUri()] = it
             } ?: LOG.warn("Could not read source file '{}'", file)
         }
 
@@ -141,9 +145,9 @@ class SourceFiles(private val sp: SourcePath) {
     }
 
     fun removeWorkspaceRoot(root: Path) {
-        val rmSources = files.keys.filter { it.startsWith(root) }
+        val rmSources = files.keys.filter { it.filePath?.startsWith(root) ?: false }
 
-        logRemoved(rmSources, root)
+        logRemoved(rmSources.map(Paths::get), root)
 
         files.removeAll(rmSources)
         workspaceRoots.remove(root)
@@ -154,7 +158,7 @@ class SourceFiles(private val sp: SourcePath) {
         exclusions = SourceExclusions(workspaceRoots)
     }
 
-    fun isOpen(file: Path): Boolean = open.contains(file)
+    fun isOpen(uri: URI): Boolean = open.contains(uri)
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
@@ -193,20 +197,23 @@ private fun findSourceFiles(root: Path): Set<Path> {
     val pattern = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
     val exclusions = SourceExclusions(root)
     return Files.walk(root)
-            .filter { pattern.matches(it.fileName) && exclusions.isIncluded(it) }
+            .filter { pattern.matches(it.fileName) && exclusions.isPathIncluded(it) }
             .collect(Collectors.toSet())
 }
 
 private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Adding {} under {} to source path", describeFiles(sources), rootPath)
+    LOG.info("Adding {} under {} to source path", describeURIs(sources.map(Path::toUri)), rootPath)
 }
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
-    LOG.info("Removing {} under {} to source path", describeFiles(sources), rootPath)
+    LOG.info("Removing {} under {} to source path", describeURIs(sources.map(Path::toUri)), rootPath)
 }
 
-fun describeFiles(files: Collection<Path>): String {
+fun describeURIs(files: Collection<URI>): String {
     return if (files.isEmpty()) "0 files"
     else if (files.size > 5) "${files.size} files"
-    else files.map { ".../" + it.parent.fileName + "/" + it.fileName }.joinToString(", ")
+    else files.map {
+        val (parent, fileName) = it.path.partitionAroundLast("/")
+        ".../" + parent.substringAfterLast("/") + "/" + fileName
+    }.joinToString(", ")
 }

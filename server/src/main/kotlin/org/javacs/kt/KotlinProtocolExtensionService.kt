@@ -15,6 +15,6 @@ class KotlinProtocolExtensionService(
     private val async = AsyncExecutor()
 
     override fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?> = async.compute {
-        uriContentProvider.contentOfEncoded(textDocument.uri)
+        uriContentProvider.contentOf(URI(textDocument.uri))
     }
 }

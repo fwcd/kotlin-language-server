@@ -11,6 +11,7 @@ import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.j2k.convertJavaToKotlin
 import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
+import org.javacs.kt.util.filePath
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -39,10 +40,9 @@ class KotlinWorkspaceService(
         when (params.command) {
             JAVA_TO_KOTLIN_COMMAND -> {
                 val fileUri = gson.fromJson(args[0] as JsonElement, String::class.java)
-                val filePath = Paths.get(URI.create(fileUri))
                 val range = gson.fromJson(args[1] as JsonElement, Range::class.java)
 
-                val selectedJavaCode = extractRange(sp.content(filePath), range)
+                val selectedJavaCode = extractRange(sp.content(URI(fileUri)), range)
                 val kotlinCode = convertJavaToKotlin(selectedJavaCode, cp.compiler)
 
                 languageClient?.applyEdit(ApplyWorkspaceEditParams(WorkspaceEdit(listOf(Either.forLeft<TextDocumentEdit, ResourceOperation>(
@@ -59,20 +59,21 @@ class KotlinWorkspaceService(
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         for (change in params.changes) {
-            val path = Paths.get(URI.create(change.uri))
+            val uri = URI.create(change.uri)
+            val path = uri.filePath
 
             when (change.type) {
                 FileChangeType.Created -> {
-                    sf.createdOnDisk(path)
-                    cp.createdOnDisk(path)
+                    sf.createdOnDisk(uri)
+                    path?.let(cp::createdOnDisk)
                 }
                 FileChangeType.Deleted -> {
-                    sf.deletedOnDisk(path)
-                    cp.deletedOnDisk(path)
+                    sf.deletedOnDisk(uri)
+                    path?.let(cp::deletedOnDisk)
                 }
                 FileChangeType.Changed -> {
-                    sf.changedOnDisk(path)
-                    cp.changedOnDisk(path)
+                    sf.changedOnDisk(uri)
+                    path?.let(cp::changedOnDisk)
                 }
                 null -> {
                     // Nothing to do

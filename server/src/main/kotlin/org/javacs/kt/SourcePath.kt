@@ -5,13 +5,19 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import java.nio.file.Path
+import java.nio.file.Paths
+import java.net.URI
 
-class SourcePath(private val cp: CompilerClassPath) {
-    private val files = mutableMapOf<Path, SourceFile>()
+class SourcePath(
+    private val cp: CompilerClassPath,
+    private val contentProvider: URIContentProvider
+) {
+    private val files = mutableMapOf<URI, SourceFile>()
 
     private inner class SourceFile(
-            val file: Path,
+            val uri: URI,
             var content: String,
+            val path: Path? = null,
             var parsed: KtFile? = null,
             var compiledFile: KtFile? = null,
             var compiledContext: BindingContext? = null,
@@ -23,7 +29,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         fun parseIfChanged(): SourceFile {
             if (content != parsed?.text) {
-                parsed = cp.compiler.createFile(content, file)
+                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.kt"))
             }
 
             return this
@@ -43,7 +49,7 @@ class SourcePath(private val cp: CompilerClassPath) {
 
         private fun doCompileIfChanged(): SourceFile {
             if (parsed?.text != compiledFile?.text) {
-                LOG.debug("Compiling {}", file.fileName)
+                LOG.debug("Compiling {}", path?.fileName)
 
                 val (context, container) = cp.compiler.compileFile(parsed!!, all())
                 compiledContext = context
@@ -61,50 +67,50 @@ class SourcePath(private val cp: CompilerClassPath) {
                 CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, all(), cp)
     }
 
-    private fun sourceFile(file: Path): SourceFile {
-        if (file !in files) {
-            LOG.warn("File {} is not on SourcePath, adding it now...", file)
-            put(file, file.toFile().readText())
+    private fun sourceFile(uri: URI): SourceFile {
+        if (uri !in files) {
+            LOG.warn("{} is not on SourcePath, adding it now...", uri)
+            put(uri, contentProvider.contentOf(uri))
         }
-        return files[file]!!
+        return files[uri]!!
     }
 
-    fun put(file: Path, content: String) {
+    fun put(uri: URI, content: String) {
         assert(!content.contains('\r'))
 
-        if (file in files)
-            sourceFile(file).put(content)
+        if (uri in files)
+            sourceFile(uri).put(content)
         else
-            files[file] = SourceFile(file, content)
+            files[uri] = SourceFile(uri, content)
     }
 
-    fun delete(file: Path) {
-        files.remove(file)
+    fun delete(uri: URI) {
+        files.remove(uri)
     }
 
     /**
      * Get the latest content of a file
      */
-    fun content(file: Path): String = sourceFile(file).content
+    fun content(uri: URI): String = sourceFile(uri).content
 
-    fun parsedFile(file: Path): KtFile = sourceFile(file).parseIfChanged().parsed!!
+    fun parsedFile(uri: URI): KtFile = sourceFile(uri).parseIfChanged().parsed!!
 
     /**
      * Compile the latest version of a file
      */
-    fun currentVersion(file: Path): CompiledFile =
-            sourceFile(file).compileIfChanged().prepareCompiledFile()
+    fun currentVersion(uri: URI): CompiledFile =
+            sourceFile(uri).compileIfChanged().prepareCompiledFile()
 
     /**
      * Return whatever is the most-recent already-compiled version of `file`
      */
-    fun latestCompiledVersion(file: Path): CompiledFile =
-            sourceFile(file).prepareCompiledFile()
+    fun latestCompiledVersion(uri: URI): CompiledFile =
+            sourceFile(uri).prepareCompiledFile()
 
     /**
      * Compile changed files
      */
-    fun compileFiles(all: Collection<Path>): BindingContext {
+    fun compileFiles(all: Collection<URI>): BindingContext {
         // Figure out what has changed
         val sources = all.map { files[it]!! }
         val changed = sources.filter { it.content != it.compiledFile?.text }

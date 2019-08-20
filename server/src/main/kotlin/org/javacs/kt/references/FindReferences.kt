@@ -31,12 +31,12 @@ fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
 }
 
 private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collection<KtElement> {
-    val recover = sp.currentVersion(file)
+    val recover = sp.currentVersion(file.toUri())
     val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
     val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
     val maybes = possibleReferences(declaration, sp).map { it.toPath() }
     LOG.debug("Scanning {} files for references to {}", maybes.size, element.fqName)
-    val recompile = sp.compileFiles(maybes)
+    val recompile = sp.compileFiles(maybes.map(Path::toUri))
 
     return when {
         isComponent(declaration) -> findComponentReferences(element, recompile) + findNameReferences(element, recompile)

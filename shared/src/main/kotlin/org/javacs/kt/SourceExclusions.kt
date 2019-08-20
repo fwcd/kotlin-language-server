@@ -1,6 +1,9 @@
 package org.javacs.kt
 
+import org.javacs.kt.util.filePath
+import java.net.URI
 import java.nio.file.Path
+import java.nio.file.Paths
 
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them
@@ -9,7 +12,9 @@ class SourceExclusions(private val workspaceRoots: Collection<Path>) {
 
 	constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
 
-    fun isIncluded(file: Path) =
+    fun isURIIncluded(uri: URI) = uri.filePath?.let(this::isPathIncluded) ?: true
+
+    fun isPathIncluded(file: Path) =
         excludedFolders.none {
             workspaceRoots.map { it.relativize(file) }
                 .flatMap { it } // Extract path segments
