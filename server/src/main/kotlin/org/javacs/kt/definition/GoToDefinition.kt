@@ -41,9 +41,9 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                     // Return the path to a temporary file
                     // since the client has not opted into
                     // or does not support KLS URIs
-                    val tmpFile = cachedTempFiles[klsURI] ?: run {
+                    val tmpFile = cachedTempFiles[klsSourceURI] ?: run {
                         val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
-                        val f = File.createTempFile(name, ".$extension")
+                        val f = File.createTempFile(name, extension)
                         f.deleteOnExit()
                         f.writeText(contents)
                         cachedTempFiles[klsSourceURI] = f
