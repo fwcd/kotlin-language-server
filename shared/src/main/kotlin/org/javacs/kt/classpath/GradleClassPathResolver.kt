@@ -36,9 +36,11 @@ internal class GradleClassPathResolver(private val path: Path) : ClassPathResolv
     }
 }
 
-private fun createTemporaryGradleFile(): File {
+private fun createTemporaryGradleFile(deleteOnExit: Boolean = false): File {
     val config = File.createTempFile("classpath", ".gradle")
-    config.deleteOnExit()
+    if (deleteOnExit) {
+        config.deleteOnExit()
+    }
 
     LOG.info("Creating temporary gradle file {}", config.absolutePath)
 
@@ -65,11 +67,12 @@ private fun getGradleCommand(workspace: Path): Path {
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI...", projectDirectory.fileName)
-    val config = createTemporaryGradleFile()
+    val config = createTemporaryGradleFile(deleteOnExit = false)
     val gradle = getGradleCommand(projectDirectory)
     val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
     LOG.debug("  -- executing {}", cmd)
     val dependencies = findGradleCLIDependencies(cmd, projectDirectory)
+    config.delete()
     return dependencies
 }
 

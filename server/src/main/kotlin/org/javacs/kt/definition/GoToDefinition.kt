@@ -43,11 +43,11 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                     // or does not support KLS URIs
                     val tmpFile = cachedTempFiles[klsURI] ?: run {
                         val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
-                        val file = File.createTempFile(name, ".$extension")
-                        file.deleteOnExit()
-                        file.writeText(contents)
-                        cachedTempFiles[klsSourceURI] = file
-                        file
+                        val f = File.createTempFile(name, ".$extension")
+                        f.deleteOnExit()
+                        f.writeText(contents)
+                        cachedTempFiles[klsSourceURI] = f
+                        f
                     }
 
                     destination.uri = tmpFile.toURI().toString()
