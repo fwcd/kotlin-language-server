@@ -8,10 +8,13 @@ import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.externalsources.toKlsURI
+import org.javacs.kt.externalsources.KlsURI
 import org.javacs.kt.position.location
 import org.javacs.kt.util.partitionAroundLast
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
+
+private val cachedTempFiles = mutableMapOf<KlsURI, File>()
 
 fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: JarClassContentProvider, config: ExternalSourcesConfiguration): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
@@ -36,11 +39,17 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                     destination.uri = klsSourceURI.toString()
                 } else {
                     // Return the path to a temporary file
-                    // since the client has not opted into KLS URIs
-                    val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
-                    val tmpFile = File.createTempFile(name, ".$extension")
-                    tmpFile.deleteOnExit()
-                    tmpFile.writeText(contents)
+                    // since the client has not opted into
+                    // or does not support KLS URIs
+                    val tmpFile = cachedTempFiles[klsURI] ?: run {
+                        val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
+                        val file = File.createTempFile(name, ".$extension")
+                        file.deleteOnExit()
+                        file.writeText(contents)
+                        cachedTempFiles[klsSourceURI] = file
+                        file
+                    }
+
                     destination.uri = tmpFile.toURI().toString()
                 }
             }
