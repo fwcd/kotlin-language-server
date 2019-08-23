@@ -18,7 +18,7 @@ class FormatTest : SingleFileTestFixture("formatting", "NonFormatted.kt") {
             )
         )).get()!!
         assertThat(edits.size, equalTo(1))
-        assertThat(edits[0].newText, equalTo("""class Door(
+        assertThat(edits[0].newText.replace("\r\n", "\n"), equalTo("""class Door(
     val width: Int = 3,
     val height: Int = 4
 )
@@ -28,7 +28,7 @@ class House {
 
     val window = "Window"
 }
-"""))
+""".replace("\r\n", "\n")))
     }
 }
 
@@ -41,7 +41,7 @@ class Format2SpacesTest : SingleFileTestFixture("formatting", "Spaces.kt") {
                 true // insertSpaces
             )
         )).get()!![0].newText
-        assertThat(formatted, equalTo("class Test(\n  val a: String,\n  val b: String\n)\n"))
+        assertThat(formatted.replace("\r\n", "\n"), equalTo("class Test(\n  val a: String,\n  val b: String\n)\n"))
     }
 }
 
@@ -56,6 +56,6 @@ class FormatTabsTest : SingleFileTestFixture("formatting", "Spaces.kt") {
                 false // insertSpaces
             )
         )).get()!![0].newText
-        assertThat(formatted, equalTo("class Test(\n\tval a: String,\n\tval b: String\n)\n"))
+        assertThat(formatted.replace("\r\n", "\n"), equalTo("class Test(\n\tval a: String,\n\tval b: String\n)\n"))
     }
 }
