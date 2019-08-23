@@ -16,7 +16,8 @@ class SourceExclusions(private val workspaceRoots: Collection<Path>) {
 
     fun isPathIncluded(file: Path) =
         excludedFolders.none {
-            workspaceRoots.map { it.relativize(file) }
+            workspaceRoots
+                .mapNotNull { try { it.relativize(file) } catch (e: IllegalArgumentException) { null } }
                 .flatMap { it } // Extract path segments
                 .any { segment -> segment.toString() == it }
         }
