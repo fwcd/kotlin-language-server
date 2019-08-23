@@ -1,6 +1,7 @@
 package org.javacs.kt.definition
 
 import org.eclipse.lsp4j.Location
+import org.eclipse.lsp4j.Range
 import java.net.URI
 import java.io.File
 import org.javacs.kt.CompiledFile
@@ -10,11 +11,15 @@ import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.externalsources.toKlsURI
 import org.javacs.kt.externalsources.KlsURI
 import org.javacs.kt.position.location
+import org.javacs.kt.position.isZero
+import org.javacs.kt.position.position
 import org.javacs.kt.util.partitionAroundLast
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 
 private val cachedTempFiles = mutableMapOf<KlsURI, File>()
+private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
 
 fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: JarClassContentProvider, config: ExternalSourcesConfiguration): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
@@ -32,7 +37,7 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
 
         if (isInsideJar(rawClassURI)) {
             URI(rawClassURI).toKlsURI()?.let { klsURI ->
-                val (klsSourceURI, contents) = jarClassContentProvider.contentOf(klsURI)
+                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {
                     // Defer decompilation until a jarClassContents request is sent
@@ -45,12 +50,25 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                         val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
                         val f = File.createTempFile(name, extension)
                         f.deleteOnExit()
-                        f.writeText(contents)
+                        f.writeText(content)
                         cachedTempFiles[klsSourceURI] = f
                         f
                     }
 
                     destination.uri = tmpFile.toURI().toString()
+                }
+
+                if (destination.range.isZero) {
+                    // Try to find the definition inside the source directly
+                    val name = when (target) {
+                        is ConstructorDescriptor -> target.constructedClass.name.toString()
+                        else -> target.name.toString()
+                    }
+                    definitionPattern.findAll(content)
+                        .map { it.groups[1]!! }
+                        .find { it.value == name }
+                        ?.let { it.range }
+                        ?.let { destination.range = Range(position(content, it.first), position(content, it.last)) }
                 }
             }
         }

@@ -96,7 +96,6 @@ fun location(declaration: DeclarationDescriptor): Location? {
         when (sourceFile) {
             is PsiSourceFile -> {
                 val file = sourceFile.psiFile.toURIString()
-                // TODO: Find the correct position
                 return Location(file, Range(Position(0, 0), Position(0, 0)))
             }
             SourceFile.NO_SOURCE_FILE -> Unit // If no source file is present, do nothing
@@ -108,6 +107,12 @@ fun location(declaration: DeclarationDescriptor): Location? {
 
     return null
 }
+
+val Position.isZero: Boolean
+    get() = (line == 0) && (character == 0)
+
+val Range.isZero: Boolean
+    get() = start.isZero && end.isZero
 
 fun location(expr: PsiElement): Location? {
     val content = try { expr.containingFile?.text } catch (e: NullPointerException) { null }
