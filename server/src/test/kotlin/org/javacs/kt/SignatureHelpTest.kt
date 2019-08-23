@@ -14,7 +14,7 @@ class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.
         assertThat(help.activeSignature, equalTo(0))
         assertThat(help.signatures.map { it.label }, hasItems("fun foo(bar: String): Unit", "fun foo(bar: Int): Unit"))
         assertThat(help.signatures.map { it.documentation.left }, hasItems("Call foo with a String", "Call foo with an Int"))
-        assertThat(help.signatures.flatMap { it.parameters.map { it.label }}, hasItems("bar: String", "bar: Int"))
+        assertThat(help.signatures.flatMap { it.parameters.map { it.label.left }}, hasItems("bar: String", "bar: Int"))
         assertThat(help.signatures.flatMap { it.parameters.map { it.documentation.left }}, hasItems("String param", "Int param"))
     }
 
@@ -26,7 +26,7 @@ class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.
         assertThat(help.activeSignature, equalTo(0))
         assertThat(help.signatures.map { it.label }, hasItems("constructor Constructor(bar: String)", "constructor Constructor(bar: Int)"))
         assertThat(help.signatures.map { it.documentation.left }, hasItems("Construct with a String", "Construct with an Int"))
-        assertThat(help.signatures.flatMap { it.parameters.map { it.label }}, hasItems("bar: String", "bar: Int"))
+        assertThat(help.signatures.flatMap { it.parameters.map { it.label.left }}, hasItems("bar: String", "bar: Int"))
         assertThat(help.signatures.flatMap { it.parameters.map { it.documentation.left }}, hasItems("String param", "Int param"))
     }
 

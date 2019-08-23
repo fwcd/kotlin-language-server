@@ -14,7 +14,7 @@ class DefinitionTest : SingleFileTestFixture("definition", "GoFrom.kt") {
 
     @Test
     fun `go to a definition in the same file`() {
-        val definitions = languageServer.textDocumentService.definition(textDocumentPosition(file, 3, 24)).get()
+        val definitions = languageServer.textDocumentService.definition(textDocumentPosition(file, 3, 24)).get().left
 
         assertThat(definitions, hasSize(1))
         assertThat(definitions, hasItem(hasProperty("uri", containsString("GoFrom.kt"))))
@@ -22,7 +22,7 @@ class DefinitionTest : SingleFileTestFixture("definition", "GoFrom.kt") {
 
     @Test
     fun `go to a definition in a different file`() {
-        val definitions = languageServer.textDocumentService.definition(textDocumentPosition(file, 4, 24)).get()
+        val definitions = languageServer.textDocumentService.definition(textDocumentPosition(file, 4, 24)).get().left
 
         assertThat(definitions, hasSize(1))
         assertThat(definitions, hasItem(hasProperty("uri", containsString("GoTo.kt"))))
@@ -66,7 +66,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
 
     private fun assertGoToProperty(of: Position, expect: Range) {
         val definitions = languageServer.textDocumentService
-            .definition(textDocumentPosition(file, of)).get()
+            .definition(textDocumentPosition(file, of)).get().left
 
         assertThat(definitions, hasSize(1))
         assertThat(definitions, hasItem(hasProperty("uri", containsString(file))))
