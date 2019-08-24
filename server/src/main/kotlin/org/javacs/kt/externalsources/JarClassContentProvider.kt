@@ -36,7 +36,7 @@ class JarClassContentProvider(
         val sourceURI = uri.withFileExtension(if (config.autoConvertToKotlin) "kt" else "java")
         val key = sourceURI.toString()
         val contents: String = cachedContents[key] ?: run {
-            LOG.info("Finding contents of {}", uri)
+            LOG.info("Finding contents of {}", describeURI(uri.uri))
             tryReadContentOf(uri)
                 ?: tryReadContentOf(uri.withFileExtension("class"))
                 ?: tryReadContentOf(uri.withFileExtension("java"))

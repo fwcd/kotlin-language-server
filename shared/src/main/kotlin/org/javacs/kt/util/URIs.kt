@@ -22,7 +22,8 @@ fun describeURIs(uris: Collection<URI>): String =
 
 fun describeURI(uri: String): String = describeURI(parseURI(uri))
 
-fun describeURI(uri: URI): String {
-    val (parent, fileName) = uri.path.partitionAroundLast("/")
-    return ".../" + parent.substringAfterLast("/") + fileName
-}
+fun describeURI(uri: URI): String =
+    uri.path?.let {
+        val (parent, fileName) = it.partitionAroundLast("/")
+        ".../" + parent.substringAfterLast("/") + fileName
+    } ?: uri.toString()
