@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
+import org.jetbrains.kotlin.com.intellij.psi.PsiIdentifier
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
@@ -8,6 +9,7 @@ import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -83,17 +85,38 @@ class CompiledFile(
         val oldParent = psi.parentsWithSelf
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
-        val recoveryRange = oldParent.textRange
 
-        LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
-        var surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
-        var offset = recoveryRange.startOffset
+        LOG.debug("PSI path: {}", psi.parentsWithSelf.toList())
 
-        if (!((oldParent as? KtParameter)?.hasValOrVar() ?: true)) {
-            // Prepend 'val' to (e.g. function) parameters
-            val prefix = "val "
-            surroundingContent = prefix + surroundingContent
-            offset -= prefix.length
+        var surroundingContent: String
+        var offset: Int
+
+        if (oldParent is KtClass) {
+            // Parsing class, currently only identifiers are supported
+            if (psi.node.elementType != KtTokens.IDENTIFIER) return null
+
+            // Parsing class name identifier: Use a fake property with the class name as type
+            //                                Otherwise the compiler/analyzer would throw an exception due to a missing TopLevelDescriptorProvider
+            val recoveryRange = psi.textRange
+            LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
+
+            val prefix = "val x: "
+            surroundingContent = prefix + psi.text
+            offset = recoveryRange.startOffset - prefix.length
+        } else {
+            // Parsing some other expression
+            val recoveryRange = oldParent.textRange
+            LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
+
+            surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
+            offset = recoveryRange.startOffset
+
+            if (!((oldParent as? KtParameter)?.hasValOrVar() ?: true)) {
+                // Prepend 'val' to (e.g. function) parameters
+                val prefix = "val "
+                surroundingContent = prefix + surroundingContent
+                offset -= prefix.length
+            }
         }
 
         val padOffset = " ".repeat(offset)
