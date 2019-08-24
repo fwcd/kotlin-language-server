@@ -34,7 +34,7 @@ class CompiledFile(
 
     fun typeOfExpression(expression: KtExpression, scopeWithImports: LexicalScope): KotlinType? =
             bindingContextOf(expression, scopeWithImports).getType(expression)
-    
+
     fun bindingContextOf(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext =
             classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath).first
 
@@ -55,7 +55,7 @@ class CompiledFile(
         LOG.info("Hovering {}", surroundingExpr)
         return referenceFromContext(cursor, context)
     }
-    
+
     private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
         return targets.asSequence()
@@ -84,9 +84,19 @@ class CompiledFile(
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
         val recoveryRange = oldParent.textRange
+
         LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
-        val surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
-        val padOffset = " ".repeat(recoveryRange.startOffset)
+        var surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
+        var offset = recoveryRange.startOffset
+
+        if (!((oldParent as? KtParameter)?.hasValOrVar() ?: true)) {
+            // Prepend 'val' to (e.g. function) parameters
+            val prefix = "val "
+            surroundingContent = prefix + surroundingContent
+            offset -= prefix.length
+        }
+
+        val padOffset = " ".repeat(offset)
         val recompile = classPath.compiler.createFile(padOffset + surroundingContent)
         return recompile.findElementAt(cursor)?.findParent<KtElement>()
     }
