@@ -127,10 +127,7 @@ class Logger {
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
             val nextChar = if (charIndex != lastIndex) msg.get(charIndex + 1) else '?'
-            if ((currentChar == '{') && (nextChar == '}')) {
-                if (placeholderIndex >= placeholders.size) {
-                    return "ERROR: Tried to log more '{}' placeholders than there are values"
-                }
+            if ((placeholderIndex < placeholders.size) && (currentChar == '{') && (nextChar == '}')) {
                 result.append(placeholders[placeholderIndex] ?: "null")
                 placeholderIndex += 1
                 charIndex += 2
