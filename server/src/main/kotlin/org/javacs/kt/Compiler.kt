@@ -155,7 +155,7 @@ class Compiler(classPath: Set<Path>) : Closeable {
         compileEnvironment.updateConfiguration(config)
     }
 
-    fun createFile(content: String, file: Path = Paths.get("dummy.kt")): KtFile {
+    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtFile {
         assert(!content.contains('\r'))
 
         val new = psiFileFactory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
@@ -164,13 +164,13 @@ class Compiler(classPath: Set<Path>) : Closeable {
         return new
     }
 
-    fun createExpression(content: String, file: Path = Paths.get("dummy.kt")): KtExpression {
+    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtExpression {
         val property = parseDeclaration("val x = $content", file) as KtProperty
 
         return property.initializer!!
     }
 
-    fun createDeclaration(content: String, file: Path = Paths.get("dummy.kt")): KtDeclaration =
+    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtDeclaration =
             parseDeclaration(content, file)
 
     private fun parseDeclaration(content: String, file: Path): KtDeclaration {
