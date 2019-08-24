@@ -3,6 +3,7 @@ package org.javacs.kt.externalsources
 import org.javacs.kt.CompilerClassPath
 import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.LOG
+import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.j2k.convertJavaToKotlin

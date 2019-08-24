@@ -54,8 +54,8 @@ class Logger {
     private var errBackend: ((LogMessage) -> Unit)? = null
     private val outQueue: Queue<LogMessage> = ArrayDeque()
     private val errQueue: Queue<LogMessage> = ArrayDeque()
-    private val errStream = DelegatePrintStream { outputError(LogMessage(LogLevel.ERROR, it.trim())) }
-    val outStream = DelegatePrintStream { output(LogMessage(LogLevel.INFO, it.trim())) }
+    private val errStream = DelegatePrintStream { outputError(LogMessage(LogLevel.ERROR, it.trimEnd())) }
+    val outStream = DelegatePrintStream { output(LogMessage(LogLevel.INFO, it.trimEnd())) }
 
     private val newline = System.lineSeparator()
     val logTime = false

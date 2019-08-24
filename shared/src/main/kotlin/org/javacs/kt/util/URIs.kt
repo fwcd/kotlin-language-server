@@ -14,3 +14,15 @@ import java.nio.file.Paths
 fun parseURI(uri: String): URI = URI.create(runCatching { URLDecoder.decode(uri, StandardCharsets.UTF_8.toString()) }.getOrDefault(uri))
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
+
+fun describeURIs(uris: Collection<URI>): String =
+    if (uris.isEmpty()) "0 files"
+    else if (uris.size > 5) "${uris.size} files"
+    else uris.map(::describeURI).joinToString(", ")
+
+fun describeURI(uri: String): String = describeURI(parseURI(uri))
+
+fun describeURI(uri: URI): String {
+    val (parent, fileName) = uri.path.partitionAroundLast("/")
+    return ".../" + parent.substringAfterLast("/") + fileName
+}

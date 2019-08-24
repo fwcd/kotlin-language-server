@@ -5,6 +5,8 @@ import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.partitionAroundLast
+import org.javacs.kt.util.describeURIs
+import org.javacs.kt.util.describeURI
 import java.io.BufferedReader
 import java.io.StringReader
 import java.io.StringWriter
@@ -86,7 +88,7 @@ class SourceFiles(
             var newText = existing.content
 
             if (newVersion <= existing.version) {
-                LOG.warn("Ignored {} version {}", uri, newVersion)
+                LOG.warn("Ignored {} version {}", describeURI(uri), newVersion)
                 return
             }
 
@@ -120,7 +122,7 @@ class SourceFiles(
     } catch (e: FileNotFoundException) {
         null
     } catch (e: IOException) {
-        LOG.warn("Exception while reading source file {}", uri)
+        LOG.warn("Exception while reading source file {}", describeURI(uri))
         null
     }
 
@@ -207,13 +209,4 @@ private fun logAdded(sources: Collection<Path>, rootPath: Path?) {
 
 private fun logRemoved(sources: Collection<Path>, rootPath: Path?) {
     LOG.info("Removing {} under {} to source path", describeURIs(sources.map(Path::toUri)), rootPath)
-}
-
-fun describeURIs(files: Collection<URI>): String {
-    return if (files.isEmpty()) "0 files"
-    else if (files.size > 5) "${files.size} files"
-    else files.map {
-        val (parent, fileName) = it.path.partitionAroundLast("/")
-        ".../" + parent.substringAfterLast("/") + "/" + fileName
-    }.joinToString(", ")
 }

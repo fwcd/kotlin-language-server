@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.javacs.kt.util.filePath
+import org.javacs.kt.util.describeURI
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -70,7 +71,7 @@ class SourcePath(
 
     private fun sourceFile(uri: URI): SourceFile {
         if (uri !in files) {
-            LOG.warn("{} is not on SourcePath, adding it now...", uri)
+            LOG.warn("{} is not on SourcePath, adding it now...", describeURI(uri))
             put(uri, contentProvider.contentOf(uri))
         }
         return files[uri]!!

@@ -22,6 +22,8 @@ import org.javacs.kt.util.Debouncer
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
+import org.javacs.kt.util.describeURI
+import org.javacs.kt.util.describeURIs
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -67,7 +69,7 @@ class KotlinTextDocumentService(
     }
 
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
-        val uri = parseURI(position.textDocument.uri) // TODO
+        val uri = parseURI(position.textDocument.uri)
         val content = sp.content(uri)
         val offset = offset(content, position.position.line, position.position.character)
         val shouldRecompile = when (recompile) {
@@ -103,7 +105,7 @@ class KotlinTextDocumentService(
 
     override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = async.compute {
         reportTime {
-            LOG.info("Hovering at {} {}:{}", position.textDocument.uri, position.position.line, position.position.character)
+            LOG.info("Hovering at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
             hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
@@ -167,7 +169,7 @@ class KotlinTextDocumentService(
     }
 
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> = async.compute {
-        LOG.info("Find symbols in {}", params.textDocument.uri)
+        LOG.info("Find symbols in {}", describeURI(params.textDocument.uri))
 
         reportTime {
             val uri = parseURI(params.textDocument.uri)
@@ -206,7 +208,7 @@ class KotlinTextDocumentService(
 
     override fun formatting(params: DocumentFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
         val code = params.textDocument.content
-        LOG.info("{}", params.textDocument.uri)
+        LOG.info("Formatting {}", describeURI(params.textDocument.uri))
         listOf(TextEdit(
             Range(Position(0, 0), position(code, code.length)),
             formatKotlinCode(
@@ -237,8 +239,7 @@ class KotlinTextDocumentService(
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {
-        val path = position.textDocument.filePath
-        return "${path?.fileName} ${position.position.line + 1}:${position.position.character + 1}"
+        return "${describeURI(position.textDocument.uri)} ${position.position.line + 1}:${position.position.character + 1}"
     }
 
     public fun updateDebouncer() {
@@ -284,9 +285,9 @@ class KotlinTextDocumentService(
             if (sf.isOpen(uri)) {
                 client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
 
-                LOG.info("Reported {} diagnostics in {}", diagnostics.size, uri)
+                LOG.info("Reported {} diagnostics in {}", diagnostics.size, describeURI(uri))
             }
-            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, uri)
+            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, describeURI(uri))
         }
 
         val noErrors = compiled - byFile.keys
