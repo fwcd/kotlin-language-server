@@ -16,7 +16,7 @@ internal class GradleClassPathResolver(private val path: Path) : ClassPathResolv
         val projectDirectory = path.getParent()
         return readDependenciesViaGradleCLI(projectDirectory)
             .orEmpty()
-            .apply { if (!isEmpty) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
+            .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
     }
 
     companion object {

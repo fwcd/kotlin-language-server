@@ -9,6 +9,7 @@ import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
 import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.parseURI
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
@@ -69,7 +70,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         if (params.rootUri != null) {
             LOG.info("Adding workspace {} to source path", params.rootUri)
 
-            val root = Paths.get(URI.create(params.rootUri))
+            val root = Paths.get(parseURI(params.rootUri))
 
             sourceFiles.addWorkspaceRoot(root)
             classPath.addWorkspaceRoot(root)

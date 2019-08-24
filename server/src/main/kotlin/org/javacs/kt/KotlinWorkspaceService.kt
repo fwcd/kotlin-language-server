@@ -12,6 +12,7 @@ import org.javacs.kt.j2k.convertJavaToKotlin
 import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.util.filePath
+import org.javacs.kt.util.parseURI
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -42,7 +43,7 @@ class KotlinWorkspaceService(
                 val fileUri = gson.fromJson(args[0] as JsonElement, String::class.java)
                 val range = gson.fromJson(args[1] as JsonElement, Range::class.java)
 
-                val selectedJavaCode = extractRange(sp.content(URI(fileUri)), range)
+                val selectedJavaCode = extractRange(sp.content(parseURI(fileUri)), range)
                 val kotlinCode = convertJavaToKotlin(selectedJavaCode, cp.compiler)
 
                 languageClient?.applyEdit(ApplyWorkspaceEditParams(WorkspaceEdit(listOf(Either.forLeft<TextDocumentEdit, ResourceOperation>(
@@ -59,7 +60,7 @@ class KotlinWorkspaceService(
 
     override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams) {
         for (change in params.changes) {
-            val uri = URI.create(change.uri)
+            val uri = parseURI(change.uri)
             val path = uri.filePath
 
             when (change.type) {
@@ -143,7 +144,7 @@ class KotlinWorkspaceService(
         for (change in params.event.added) {
             LOG.info("Adding workspace {} to source path", change.uri)
 
-            val root = Paths.get(URI.create(change.uri))
+            val root = Paths.get(parseURI(change.uri))
 
             sf.addWorkspaceRoot(root)
             cp.addWorkspaceRoot(root)
@@ -151,7 +152,7 @@ class KotlinWorkspaceService(
         for (change in params.event.removed) {
             LOG.info("Dropping workspace {} from source path", change.uri)
 
-            val root = Paths.get(URI.create(change.uri))
+            val root = Paths.get(parseURI(change.uri))
 
             sf.removeWorkspaceRoot(root)
             cp.removeWorkspaceRoot(root)

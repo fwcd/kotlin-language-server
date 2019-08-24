@@ -16,6 +16,7 @@ import org.javacs.kt.position.isZero
 import org.javacs.kt.position.position
 import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
@@ -44,7 +45,7 @@ fun goToDefinition(
         val rawClassURI = destination.uri
 
         if (isInsideJar(rawClassURI)) {
-            URI(rawClassURI).toKlsURI()?.let { klsURI ->
+            parseURI(rawClassURI).toKlsURI()?.let { klsURI ->
                 val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {

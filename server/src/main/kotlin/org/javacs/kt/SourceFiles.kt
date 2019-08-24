@@ -158,7 +158,7 @@ class SourceFiles(
         exclusions = SourceExclusions(workspaceRoots)
     }
 
-    fun isOpen(uri: URI): Boolean = open.contains(uri)
+    fun isOpen(uri: URI): Boolean = (uri in open)
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {

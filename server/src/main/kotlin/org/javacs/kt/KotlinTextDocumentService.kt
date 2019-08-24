@@ -21,6 +21,7 @@ import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.parseURI
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -50,23 +51,23 @@ class KotlinTextDocumentService(
     }
 
     private val TextDocumentItem.filePath: Path?
-        get() = URI.create(uri)?.filePath
+        get() = parseURI(uri).filePath
 
     private val TextDocumentIdentifier.filePath: Path?
-        get() = URI.create(uri)?.filePath
+        get() = parseURI(uri).filePath
 
     private val TextDocumentIdentifier.isKotlinScript: Boolean
         get() = uri.endsWith(".kts")
 
     private val TextDocumentIdentifier.content: String
-        get() = uriContentProvider.contentOf(URI(uri))
+        get() = uriContentProvider.contentOf(parseURI(uri))
 
     private enum class Recompile {
         ALWAYS, AFTER_DOT, WAIT_FOR_LINT, NEVER
     }
 
     private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
-        val uri = URI(position.textDocument.uri) // TODO
+        val uri = parseURI(position.textDocument.uri) // TODO
         val content = sp.content(uri)
         val offset = offset(content, position.position.line, position.position.character)
         val shouldRecompile = when (recompile) {
@@ -169,7 +170,7 @@ class KotlinTextDocumentService(
         LOG.info("Find symbols in {}", params.textDocument.uri)
 
         reportTime {
-            val uri = URI(params.textDocument.uri)
+            val uri = parseURI(params.textDocument.uri)
             val parsed = sp.parsedFile(uri)
 
             documentSymbols(parsed)
@@ -177,14 +178,14 @@ class KotlinTextDocumentService(
     }
 
     override fun didOpen(params: DidOpenTextDocumentParams) {
-        val uri = URI(params.textDocument.uri)
+        val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
         lintNow(uri)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
-        val uri = URI(params.textDocument.uri)
+        val uri = parseURI(params.textDocument.uri)
         lintNow(uri)
     }
 
@@ -198,7 +199,7 @@ class KotlinTextDocumentService(
     }
 
     override fun didClose(params: DidCloseTextDocumentParams) {
-        val uri = URI(params.textDocument.uri)
+        val uri = parseURI(params.textDocument.uri)
         sf.close(uri)
         clearDiagnostics(uri)
     }
@@ -217,7 +218,7 @@ class KotlinTextDocumentService(
     }
 
     override fun didChange(params: DidChangeTextDocumentParams) {
-        val uri = URI(params.textDocument.uri)
+        val uri = parseURI(params.textDocument.uri)
         sf.edit(uri, params.textDocument.version, params.contentChanges)
         lintLater(uri)
     }
@@ -225,7 +226,7 @@ class KotlinTextDocumentService(
     override fun references(position: ReferenceParams) = async.compute {
         position.textDocument.filePath
             ?.let { file ->
-                val content = sp.content(URI(position.textDocument.uri))
+                val content = sp.content(parseURI(position.textDocument.uri))
                 val offset = offset(content, position.position.line, position.position.character)
                 findReferences(file, offset, sp)
             }
