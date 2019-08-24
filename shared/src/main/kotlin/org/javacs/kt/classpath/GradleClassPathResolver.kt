@@ -14,18 +14,9 @@ internal class GradleClassPathResolver(private val path: Path) : ClassPathResolv
     override val resolverType: String = "Gradle"
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
-
-        // The first successful dependency resolver is used
-        // (evaluating them from top to bottom)
-        var dependencies = firstNonNull<Set<Path>>(
-            { tryResolving("dependencies using Gradle dependencies CLI") { readDependenciesViaGradleCLI(projectDirectory) } }
-        ).orEmpty()
-
-        if (dependencies.isEmpty()) {
-            LOG.warn("Could not resolve Gradle dependencies using any resolution strategy!")
-        }
-
-        return dependencies
+        return readDependenciesViaGradleCLI(projectDirectory)
+            .orEmpty()
+            .apply { if (!isEmpty) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
     }
 
     companion object {
@@ -42,7 +33,7 @@ private fun createTemporaryGradleFile(deleteOnExit: Boolean = false): File {
         config.deleteOnExit()
     }
 
-    LOG.info("Creating temporary gradle file {}", config.absolutePath)
+    LOG.debug("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
         ClassLoader.getSystemResourceAsStream("classpathFinder.gradle").bufferedReader().use { configReader ->

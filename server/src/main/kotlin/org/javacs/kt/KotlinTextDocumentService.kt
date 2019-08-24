@@ -166,7 +166,7 @@ class KotlinTextDocumentService(
     }
 
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> = async.compute {
-        LOG.info("Find symbols in {}", params.textDocument)
+        LOG.info("Find symbols in {}", params.textDocument.uri)
 
         reportTime {
             val uri = URI(params.textDocument.uri)
