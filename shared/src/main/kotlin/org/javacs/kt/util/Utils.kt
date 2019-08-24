@@ -36,7 +36,7 @@ fun winCompatiblePathOf(path: String): Path {
 fun String.partitionAroundLast(separator: String): Pair<String, String> = lastIndexOf(separator)
     .let { Pair(substring(0, it), substring(it, length)) }
 
-val URI.filePath: Path? get() = if (scheme == "file") Paths.get(this) else null
+val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
 
 fun Path.replaceExtensionWith(newExtension: String): Path {
 	val oldName = fileName.toString()

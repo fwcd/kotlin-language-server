@@ -1,12 +1,12 @@
 package org.javacs.kt
 
+import org.javacs.kt.util.filePath
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.InvalidPathException
 import java.net.URI
 
 class SourcePath(
@@ -18,7 +18,7 @@ class SourcePath(
     private inner class SourceFile(
             val uri: URI,
             var content: String,
-            val path: Path? = try { Paths.get(uri) } catch (e: InvalidPathException) { null },
+            val path: Path? = uri.filePath,
             var parsed: KtFile? = null,
             var compiledFile: KtFile? = null,
             var compiledContext: BindingContext? = null,
