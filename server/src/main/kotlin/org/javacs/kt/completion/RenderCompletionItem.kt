@@ -110,6 +110,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
 
     private fun valueParametersSnippet(parameters: List<ValueParameterDescriptor>) = parameters
         .asSequence()
+        .filterNot { it.declaresDefaultValue() }
         .mapIndexed { index, vpd -> "\${${index + 1}:${vpd.name}}" }
         .joinToString()
 
