@@ -20,6 +20,7 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
 import org.javacs.kt.util.filePath
+import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
@@ -33,6 +34,7 @@ class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
     private val config: Configuration,
+    private val tempDirectory: TemporaryDirectory,
     private val uriContentProvider: URIContentProvider
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
@@ -120,7 +122,7 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, config.externalSources)
+            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, tempDirectory, config.externalSources)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))

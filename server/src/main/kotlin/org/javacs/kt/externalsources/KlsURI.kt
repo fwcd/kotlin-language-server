@@ -2,11 +2,11 @@ package org.javacs.kt.externalsources
 
 import org.javacs.kt.j2k.convertJavaToKotlin
 import org.javacs.kt.util.partitionAroundLast
+import org.javacs.kt.util.TemporaryDirectory
 import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
 import java.io.BufferedReader
-import java.io.File.createTempFile
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.Files
@@ -69,16 +69,15 @@ data class KlsURI(val uri: URI) {
             .use(BufferedReader::readText)
     }
 
-    fun extractToTemporaryFile(): Path = withJarURLConnection {
-        val name = it.jarEntry.name.split(".")
-        val tmpFile = createTempFile(name[0], ".${name[1]}")
-        tmpFile.deleteOnExit()
+    fun extractToTemporaryFile(dir: TemporaryDirectory): Path = withJarURLConnection {
+        val name = it.jarEntry.name.substringAfterLast("/").split(".")
+        val tmpFile = dir.createTempFile(name[0], ".${name[1]}")
 
         it.jarFile
             .getInputStream(it.jarEntry)
-            .use { input -> tmpFile.outputStream().use { input.copyTo(it) } }
+            .use { input -> Files.newOutputStream(tmpFile).use { input.copyTo(it) } }
 
-        tmpFile.toPath()
+        tmpFile
     }
 
     override fun toString(): String = uri.toString()

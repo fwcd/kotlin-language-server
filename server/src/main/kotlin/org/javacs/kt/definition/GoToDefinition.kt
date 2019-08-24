@@ -3,7 +3,8 @@ package org.javacs.kt.definition
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Range
 import java.net.URI
-import java.io.File
+import java.nio.file.Path
+import java.nio.file.Files
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
@@ -14,14 +15,21 @@ import org.javacs.kt.position.location
 import org.javacs.kt.position.isZero
 import org.javacs.kt.position.position
 import org.javacs.kt.util.partitionAroundLast
+import org.javacs.kt.util.TemporaryDirectory
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 
-private val cachedTempFiles = mutableMapOf<KlsURI, File>()
+private val cachedTempFiles = mutableMapOf<KlsURI, Path>()
 private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
 
-fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: JarClassContentProvider, config: ExternalSourcesConfiguration): Location? {
+fun goToDefinition(
+    file: CompiledFile,
+    cursor: Int,
+    jarClassContentProvider: JarClassContentProvider,
+    tempDir: TemporaryDirectory,
+    config: ExternalSourcesConfiguration
+): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
 
     LOG.info("Found declaration descriptor {}", target)
@@ -48,14 +56,14 @@ fun goToDefinition(file: CompiledFile, cursor: Int, jarClassContentProvider: Jar
                     // or does not support KLS URIs
                     val tmpFile = cachedTempFiles[klsSourceURI] ?: run {
                         val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
-                        val f = File.createTempFile(name, extension)
-                        f.deleteOnExit()
-                        f.writeText(content)
-                        cachedTempFiles[klsSourceURI] = f
-                        f
+                        tempDir.createTempFile(name, extension)
+                            .also {
+                                it.toFile().writeText(content)
+                                cachedTempFiles[klsSourceURI] = it
+                            }
                     }
 
-                    destination.uri = tmpFile.toURI().toString()
+                    destination.uri = tmpFile.toUri().toString()
                 }
 
                 if (destination.range.isZero) {

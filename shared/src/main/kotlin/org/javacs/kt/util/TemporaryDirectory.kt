@@ -12,7 +12,7 @@ import java.nio.file.Files
  * of once no longer needed.
  */
 class TemporaryDirectory(prefix: String = "kotlinlangserver") : Closeable {
-    private val dirPath: Path = Files.createTempDirectory(prefix).toPath()
+    private val dirPath: Path = Files.createTempDirectory(prefix)
 
     fun createTempFile(prefix: String = "tmp", suffix: String = ""): Path = Files.createTempFile(dirPath, prefix, suffix)
 

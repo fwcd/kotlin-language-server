@@ -4,6 +4,7 @@ import org.javacs.kt.CompilerClassPath
 import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.LOG
 import org.javacs.kt.util.KotlinLSException
+import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.j2k.convertJavaToKotlin
 import java.io.BufferedReader
 import java.io.FileNotFoundException
@@ -17,6 +18,7 @@ import java.util.LinkedHashMap
 class JarClassContentProvider(
     private val config: ExternalSourcesConfiguration,
     private val cp: CompilerClassPath,
+    private val tempDir: TemporaryDirectory,
     private val decompiler: Decompiler = FernflowerDecompiler()
 ) {
     /** Maps recently used (source-)KLS-URIs to their source contents (e.g. decompiled code). */
@@ -51,7 +53,7 @@ class JarClassContentProvider(
 
     private fun tryReadContentOf(uri: KlsURI): String? = try {
         when (uri.fileExtension) {
-            "class" -> uri.extractToTemporaryFile()
+            "class" -> uri.extractToTemporaryFile(tempDir)
                 .let(decompiler::decompileClass)
                 .let { Files.newInputStream(it) }
                 .bufferedReader()

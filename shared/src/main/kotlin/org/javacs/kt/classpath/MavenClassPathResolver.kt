@@ -1,7 +1,6 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
-import org.javacs.kt.util.KotlinLSException
 import java.nio.file.Path
 import java.nio.file.Files
 import java.io.File
@@ -11,7 +10,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     override val resolverType: String = "Maven"
     override val classpath: Set<Path> get() {
         val mavenOutput = generateMavenDependencyList(pom)
-        val artifacts = mavenOutput?.let(::readMavenDependencyList) ?: throw KotlinLSException("No artifacts could be read from $pom")
+        val artifacts = readMavenDependencyList(mavenOutput)
 
         when {
             artifacts.isEmpty() -> LOG.warn("No artifacts found in {}", pom)
@@ -19,6 +18,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
             else -> LOG.info("Found {} artifacts in {}", artifacts.size, pom)
         }
 
+        Files.deleteIfExists(mavenOutput)
         return artifacts.mapNotNull { findMavenArtifact(it, false) }.toSet()
     }
 
@@ -57,7 +57,7 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
     if (source) "${a.artifact}-${a.version}-sources.jar"
     else "${a.artifact}-${a.version}.jar"
 
-private fun generateMavenDependencyList(pom: Path): Path? {
+private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val workingDirectory = pom.toAbsolutePath().parent.toFile()
     val cmd = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"

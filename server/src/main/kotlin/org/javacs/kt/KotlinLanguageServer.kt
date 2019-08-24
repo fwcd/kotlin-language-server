@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
 import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.util.TemporaryDirectory
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
@@ -18,12 +19,12 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
 
-    private val jarClassContentProvider = JarClassContentProvider(config.externalSources, classPath)
-    private val uriContentProvider = URIContentProvider(jarClassContentProvider)
+    private val tempDirectory = TemporaryDirectory()
+    private val uriContentProvider = URIContentProvider(JarClassContentProvider(config.externalSources, classPath, tempDirectory))
     val sourcePath = SourcePath(classPath, uriContentProvider)
     val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
-    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, uriContentProvider)
+    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
@@ -98,6 +99,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     override fun close() {
         textDocumentService.close()
         classPath.close()
+        tempDirectory.close()
     }
 
     override fun shutdown(): CompletableFuture<Any> {
