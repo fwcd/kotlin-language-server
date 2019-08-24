@@ -17,6 +17,8 @@ class TemporaryDirectory(prefix: String = "kotlinlangserver") : Closeable {
     fun createTempFile(prefix: String = "tmp", suffix: String = ""): Path = Files.createTempFile(dirPath, prefix, suffix)
 
     override fun close() {
-        Files.deleteIfExists(dirPath)
+        if (Files.exists(dirPath)) {
+            dirPath.toFile().deleteRecursively()
+        }
     }
 }
