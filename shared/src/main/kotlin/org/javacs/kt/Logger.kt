@@ -54,14 +54,14 @@ class Logger {
     private var errBackend: ((LogMessage) -> Unit)? = null
     private val outQueue: Queue<LogMessage> = ArrayDeque()
     private val errQueue: Queue<LogMessage> = ArrayDeque()
-    private val errStream = DelegatePrintStream { outputError(LogMessage(LogLevel.ERROR, it.trimEnd())) }
-    val outStream = DelegatePrintStream { output(LogMessage(LogLevel.INFO, it.trimEnd())) }
+    private val errStream = DelegatePrintStream { logError(LogMessage(LogLevel.ERROR, it.trimEnd())) }
+    val outStream = DelegatePrintStream { log(LogMessage(LogLevel.INFO, it.trimEnd())) }
 
     private val newline = System.lineSeparator()
     val logTime = false
     var level = LogLevel.INFO
 
-    private fun outputError(msg: LogMessage) {
+    fun logError(msg: LogMessage) {
         if (errBackend == null) {
             errQueue.offer(msg)
         } else {
@@ -69,7 +69,7 @@ class Logger {
         }
     }
 
-    private fun output(msg: LogMessage) {
+    fun log(msg: LogMessage) {
         if (outBackend == null) {
             outQueue.offer(msg)
         } else {
@@ -77,25 +77,47 @@ class Logger {
         }
     }
 
-    private fun log(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
+    private fun logWithPlaceholdersAt(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
         if (level.value <= msgLevel.value) {
-            output(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
+            log(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
+        }
+    }
+
+    inline fun logWithLambdaAt(msgLevel: LogLevel, msg: () -> String) {
+        if (level.value <= msgLevel.value) {
+            log(LogMessage(msgLevel, msg()))
         }
     }
 
     fun printStackTrace(throwable: Throwable) = throwable.printStackTrace(errStream)
 
-    fun error(msg: String, vararg placeholders: Any?) = log(LogLevel.ERROR, msg, placeholders)
+    // Convenience logging methods using the traditional placeholder syntax
 
-    fun warn(msg: String, vararg placeholders: Any?) = log(LogLevel.WARN, msg, placeholders)
+    fun error(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.ERROR, msg, placeholders)
 
-    fun info(msg: String, vararg placeholders: Any?) = log(LogLevel.INFO, msg, placeholders)
+    fun warn(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.WARN, msg, placeholders)
 
-    fun debug(msg: String, vararg placeholders: Any?) = log(LogLevel.DEBUG, msg, placeholders)
+    fun info(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.INFO, msg, placeholders)
 
-    fun trace(msg: String, vararg placeholders: Any?) = log(LogLevel.TRACE, msg, placeholders)
+    fun debug(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.DEBUG, msg, placeholders)
 
-    fun deepTrace(msg: String, vararg placeholders: Any?) = log(LogLevel.DEEP_TRACE, msg, placeholders)
+    fun trace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.TRACE, msg, placeholders)
+
+    fun deepTrace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.DEEP_TRACE, msg, placeholders)
+
+    // Convenience logging methods using inlined lambdas
+
+    inline fun error(msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
+
+    inline fun warn(msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
+
+    inline fun info(msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
+
+    inline fun debug(msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
+
+    inline fun trace(msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
+
+    inline fun deepTrace(msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
 
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")

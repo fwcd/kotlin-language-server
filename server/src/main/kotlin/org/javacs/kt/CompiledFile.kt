@@ -86,7 +86,7 @@ class CompiledFile(
                 .filterIsInstance<KtDeclaration>()
                 .firstOrNull { it.textRange.contains(oldChanged) } ?: parse
 
-        LOG.debug("PSI path: {}", psi.parentsWithSelf.toList())
+        LOG.debug { "PSI path: ${psi.parentsWithSelf.toList()}" }
 
         var surroundingContent: String
         var offset: Int
