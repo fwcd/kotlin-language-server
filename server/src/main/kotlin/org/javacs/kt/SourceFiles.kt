@@ -19,7 +19,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
-private class SourceVersion(val content: String, val version: Int)
+private class SourceVersion(val content: String, val version: Int, val isTemporary: Boolean)
 
 /**
  * Notify SourcePath whenever a file changes
@@ -33,7 +33,7 @@ private class NotifySourcePath(private val sp: SourcePath) {
         val content = convertLineSeparators(source.content)
 
         files[uri] = source
-        sp.put(uri, content)
+        sp.put(uri, content, source.isTemporary)
     }
 
     fun remove(uri: URI) {
@@ -69,24 +69,23 @@ class SourceFiles(
     private val open = mutableSetOf<URI>()
 
     fun open(uri: URI, content: String, version: Int) {
-        if (exclusions.isURIIncluded(uri)) {
-            files[uri] = SourceVersion(content, version)
-            open.add(uri)
-        }
+        files[uri] = SourceVersion(content, version, isTemporary = !exclusions.isURIIncluded(uri))
+        open.add(uri)
     }
 
     fun close(uri: URI) {
         if (uri in open) {
             open.remove(uri)
 
-            val disk = readFromDisk(uri)
+            val disk = readFromDisk(uri, true)
 
             if (disk != null) {
                 files[uri] = disk
-                files.removeIfTemporary(uri)
             } else {
                 files.remove(uri)
             }
+
+            files.removeIfTemporary(uri)
         }
     }
 
@@ -105,7 +104,7 @@ class SourceFiles(
                 else newText = patch(newText, change)
             }
 
-            files[uri] = SourceVersion(newText, newVersion)
+            files[uri] = SourceVersion(newText, newVersion, existing.isTemporary)
         }
     }
 
@@ -120,13 +119,13 @@ class SourceFiles(
 
     fun changedOnDisk(uri: URI) {
         if (isSource(uri))
-            files[uri] = readFromDisk(uri)
+            files[uri] = readFromDisk(uri, files[uri]?.isTemporary ?: true)
                 ?: throw KotlinLSException("Could not read source file '$uri' after being changed on disk")
     }
 
-    private fun readFromDisk(uri: URI): SourceVersion? = try {
+    private fun readFromDisk(uri: URI, temporary: Boolean): SourceVersion? = try {
         val content = contentProvider.contentOf(uri)
-        SourceVersion(content, -1)
+        SourceVersion(content, -1, isTemporary = temporary)
     } catch (e: FileNotFoundException) {
         null
     } catch (e: IOException) {
@@ -145,7 +144,7 @@ class SourceFiles(
         logAdded(addSources, root)
 
         for (file in addSources) {
-            readFromDisk(file.toUri())?.let {
+            readFromDisk(file.toUri(), temporary = false)?.let {
                 files[file.toUri()] = it
             } ?: LOG.warn("Could not read source file '{}'", file)
         }

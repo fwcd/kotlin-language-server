@@ -77,7 +77,9 @@ class SourcePath(
 
     private fun sourceFile(uri: URI): SourceFile {
         if (uri !in files) {
-            LOG.info("Adding temporary source file {} to source path", describeURI(uri))
+            // Fallback solution, usually *all* source files
+            // should be added/opened through SourceFiles
+            LOG.warn("Requested source file {} is not on source path, this is most likely a bug. Adding it now temporarily...", describeURI(uri))
             put(uri, contentProvider.contentOf(uri), temporary = true)
         }
         return files[uri]!!
@@ -86,10 +88,15 @@ class SourcePath(
     fun put(uri: URI, content: String, temporary: Boolean = false) {
         assert(!content.contains('\r'))
 
-        if (uri in files)
+        if (temporary) {
+            LOG.info("Adding temporary source file {} to source path", describeURI(uri))
+        }
+
+        if (uri in files) {
             sourceFile(uri).put(content)
-        else
+        } else {
             files[uri] = SourceFile(uri, content, isTemporary = temporary)
+        }
     }
 
     fun deleteIfTemporary(uri: URI): Boolean =
