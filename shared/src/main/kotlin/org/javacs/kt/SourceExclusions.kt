@@ -14,8 +14,8 @@ class SourceExclusions(private val workspaceRoots: Collection<Path>) {
 
     fun isURIIncluded(uri: URI) = uri.filePath?.let(this::isPathIncluded) ?: false
 
-    fun isPathIncluded(file: Path) =
-        excludedFolders.none {
+    fun isPathIncluded(file: Path): Boolean = workspaceRoots.any { file.startsWith(it) }
+        && excludedFolders.none {
             workspaceRoots
                 .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
                 .flatMap { it } // Extract path segments

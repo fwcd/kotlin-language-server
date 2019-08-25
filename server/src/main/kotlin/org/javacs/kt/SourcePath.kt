@@ -101,7 +101,7 @@ class SourcePath(
 
     fun deleteIfTemporary(uri: URI): Boolean =
         if (sourceFile(uri).isTemporary) {
-            LOG.info("Deleting temporary source file {} from source path", describeURI(uri))
+            LOG.info("Removing temporary source file {} from source path", describeURI(uri))
             delete(uri)
             true
         } else {
