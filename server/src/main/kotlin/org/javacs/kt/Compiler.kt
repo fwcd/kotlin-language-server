@@ -221,7 +221,7 @@ class Compiler(classPath: Set<Path>) : Closeable {
                 return Pair(trace.bindingContext, container)
             }
         } catch (e: KotlinFrontEndException) {
-            throw KotlinLSException("Error while analyzing: ${expression.text}", e)
+            throw KotlinLSException("Error while analyzing: ${describeExpression(expression.text)}", e)
         }
     }
 
@@ -232,5 +232,13 @@ class Compiler(classPath: Set<Path>) : Closeable {
         } else {
             LOG.warn("Compiler is already closed!")
         }
+    }
+}
+
+private fun describeExpression(expression: String): String = expression.lines().let { lines ->
+    if (lines.size < 5) {
+        expression
+    } else {
+        (lines.take(3) + listOf("...", lines.last())).joinToString(separator = "\n")
     }
 }
