@@ -163,6 +163,6 @@ class SourcePath(
      */
     fun all(includeHidden: Boolean = false): Collection<KtFile> =
             files.values
-                .filterNot { includeHidden && it.isTemporary }
+                .filter { includeHidden || !it.isTemporary }
                 .map { it.parseIfChanged().parsed!! }
 }
