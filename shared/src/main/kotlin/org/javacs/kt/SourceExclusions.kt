@@ -12,7 +12,7 @@ class SourceExclusions(private val workspaceRoots: Collection<Path>) {
 
 	constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
 
-    fun isURIIncluded(uri: URI) = uri.filePath?.let(this::isPathIncluded) ?: true
+    fun isURIIncluded(uri: URI) = uri.filePath?.let(this::isPathIncluded) ?: false
 
     fun isPathIncluded(file: Path) =
         excludedFolders.none {
