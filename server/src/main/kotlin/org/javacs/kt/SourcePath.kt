@@ -23,8 +23,9 @@ class SourcePath(
             var parsed: KtFile? = null,
             var compiledFile: KtFile? = null,
             var compiledContext: BindingContext? = null,
-            var compiledContainer: ComponentProvider? = null) {
-
+            var compiledContainer: ComponentProvider? = null,
+            val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
+    ) {
         fun put(newContent: String) {
             content = newContent
         }
@@ -53,7 +54,7 @@ class SourcePath(
             if (parsed?.text != compiledFile?.text) {
                 LOG.debug("Compiling {}", path?.fileName)
 
-                val (context, container) = cp.compiler.compileFile(parsed!!, all())
+                val (context, container) = cp.compiler.compileFile(parsed!!, allIncludingThis())
                 compiledContext = context
                 compiledContainer = container
                 compiledFile = parsed
@@ -66,25 +67,39 @@ class SourcePath(
                 parseIfChanged().compileIfNull().doPrepareCompiledFile()
 
         private fun doPrepareCompiledFile(): CompiledFile =
-                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, all(), cp)
+                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp)
+
+        private fun allIncludingThis(): Collection<KtFile> = parseIfChanged().let {
+            if (isTemporary) (all().asSequence() + sequenceOf(parsed!!)).toList()
+            else all()
+        }
     }
 
     private fun sourceFile(uri: URI): SourceFile {
         if (uri !in files) {
-            LOG.warn("{} is not on SourcePath, adding it now...", describeURI(uri))
-            put(uri, contentProvider.contentOf(uri))
+            LOG.info("Adding temporary source file {} to source path", describeURI(uri))
+            put(uri, contentProvider.contentOf(uri), temporary = true)
         }
         return files[uri]!!
     }
 
-    fun put(uri: URI, content: String) {
+    fun put(uri: URI, content: String, temporary: Boolean = false) {
         assert(!content.contains('\r'))
 
         if (uri in files)
             sourceFile(uri).put(content)
         else
-            files[uri] = SourceFile(uri, content)
+            files[uri] = SourceFile(uri, content, isTemporary = temporary)
     }
+
+    fun deleteIfTemporary(uri: URI): Boolean =
+        if (sourceFile(uri).isTemporary) {
+            LOG.info("Deleting temporary source file {} from source path", describeURI(uri))
+            delete(uri)
+            true
+        } else {
+            false
+        }
 
     fun delete(uri: URI) {
         files.remove(uri)
@@ -139,6 +154,8 @@ class SourcePath(
     /**
      * Get parsed trees for all .kt files on source path
      */
-    fun all(): Collection<KtFile> =
-            files.values.map { it.parseIfChanged().parsed!! }
+    fun all(includeHidden: Boolean = false): Collection<KtFile> =
+            files.values
+                .filterNot { includeHidden && it.isTemporary }
+                .map { it.parseIfChanged().parsed!! }
 }

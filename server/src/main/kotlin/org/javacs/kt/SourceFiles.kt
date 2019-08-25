@@ -41,6 +41,12 @@ private class NotifySourcePath(private val sp: SourcePath) {
         sp.delete(uri)
     }
 
+    fun removeIfTemporary(uri: URI) {
+        if (sp.deleteIfTemporary(uri)) {
+            files.remove(uri)
+        }
+    }
+
     fun removeAll(rm: Collection<URI>) {
         files -= rm
 
@@ -70,15 +76,17 @@ class SourceFiles(
     }
 
     fun close(uri: URI) {
-        if (exclusions.isURIIncluded(uri)) {
+        if (uri in open) {
             open.remove(uri)
 
             val disk = readFromDisk(uri)
 
-            if (disk != null)
+            if (disk != null) {
                 files[uri] = disk
-            else
+                files.removeIfTemporary(uri)
+            } else {
                 files.remove(uri)
+            }
         }
     }
 
