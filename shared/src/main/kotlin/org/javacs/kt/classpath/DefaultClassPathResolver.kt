@@ -10,8 +10,7 @@ fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolve
     WithStdlibResolver(
         ShellClassPathResolver.global(workspaceRoots.firstOrNull())
             .or(workspaceRoots.asSequence().flatMap(::workspaceResolvers).joined)
-    ).or(KotlinCliClassPathResolver.global())
-     .or(BackupArtifactClassPathResolver)
+    ).or(BackupClassPathResolver)
 
 /** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {

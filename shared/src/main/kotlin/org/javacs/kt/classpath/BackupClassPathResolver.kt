@@ -5,22 +5,23 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.function.BiPredicate
-import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.tryResolving
+import org.javacs.kt.util.findCommandOnPath
 import java.nio.file.Paths
 
-/** Backup classpath that just tries to find Kotlin artifacts in the user's Maven/Gradle home. */
-object BackupArtifactClassPathResolver : ClassPathResolver {
+/** Backup classpath that find Kotlin in the user's Maven/Gradle home or kotlinc's libraries folder. */
+object BackupClassPathResolver : ClassPathResolver {
     override val resolverType: String = "Backup"
     override val classpath: Set<Path> get() = findKotlinStdlib()?.let { setOf(it) }.orEmpty()
 }
 
-fun findKotlinStdlib(): Path? = findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
+fun findKotlinStdlib(): Path? =
+    findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
+    ?: findKotlinCliCompilerLibrary("kotlin-stdlib")
 
-private fun findLocalArtifact(group: String, artifact: String) = firstNonNull<Path>(
-    { tryResolving("$artifact using Maven") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingMaven(group, artifact)) } },
-    { tryResolving("$artifact using Gradle") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingGradle(group, artifact)) } }
-)
+private fun findLocalArtifact(group: String, artifact: String) =
+    tryResolving("$artifact using Maven") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingMaven(group, artifact)) }
+    ?: tryResolving("$artifact using Gradle") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingGradle(group, artifact)) }
 
 private fun tryFindingLocalArtifactUsing(@Suppress("UNUSED_PARAMETER") group: String, artifact: String, artifactDirResolution: LocalArtifactDirectoryResolution): Path? {
     val isCorrectArtifact = BiPredicate<Path, BasicFileAttributes> { file, _ ->
@@ -46,6 +47,22 @@ private fun tryFindingLocalArtifactUsing(@Suppress("UNUSED_PARAMETER") group: St
 }
 
 private data class LocalArtifactDirectoryResolution(val artifactDir: Path?, val buildTool: String)
+
+/** Tries to find the Kotlin command line compiler's standard library. */
+private fun findKotlinCliCompilerLibrary(prefix: String): Path? =
+    findCommandOnPath("kotlinc")
+        ?.toRealPath()
+        ?.parent // bin
+        ?.parent // Kotlin HOME
+        ?.resolve("lib")
+        ?.resolve("libexec")
+        ?.takeIf { Files.exists(it) }
+        ?.let(Files::list)
+        ?.filter { it.startsWith(prefix) }
+        ?.sorted(::compareVersions)
+        ?.findFirst()
+        ?.orElse(null)
+
 
 private fun Path.existsOrNull() =
     if (Files.exists(this)) this else null
