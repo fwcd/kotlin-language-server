@@ -2,11 +2,9 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.PathMatcher
 import java.nio.file.Files
 import java.nio.file.FileSystems
-import java.io.File
 
 fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver = WithStdlibResolver(
     ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
@@ -67,34 +65,3 @@ private fun asClassPathProvider(path: Path): ClassPathResolver? =
     MavenClassPathResolver.maybeCreate(path)
         ?: GradleClassPathResolver.maybeCreate(path)
         ?: ShellClassPathResolver.maybeCreate(path)
-
-internal val userHome = Paths.get(System.getProperty("user.home"))
-
-internal val mavenHome = userHome.resolve(".m2")
-
-internal fun isOSWindows() = (File.separatorChar == '\\')
-
-internal fun findCommandOnPath(name: String): Path? =
-        if (isOSWindows()) windowsCommand(name)
-        else unixCommand(name)
-
-private fun windowsCommand(name: String) =
-        findExecutableOnPath("$name.cmd")
-        ?: findExecutableOnPath("$name.bat")
-        ?: findExecutableOnPath("$name.exe")
-
-private fun unixCommand(name: String) = findExecutableOnPath(name)
-
-private fun findExecutableOnPath(fileName: String): Path? {
-    for (dir in System.getenv("PATH").split(File.pathSeparator)) {
-        val file = File(dir, fileName)
-
-        if (file.isFile && file.canExecute()) {
-            LOG.info("Found {} at {}", fileName, file.absolutePath)
-
-            return Paths.get(file.absolutePath)
-        }
-    }
-
-    return null
-}

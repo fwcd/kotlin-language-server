@@ -1,6 +1,7 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
+import org.javacs.kt.util.findCommandOnPath
 import java.nio.file.Path
 import java.nio.file.Files
 import java.io.File

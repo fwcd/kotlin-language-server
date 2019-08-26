@@ -3,6 +3,7 @@ package org.javacs.kt.classpath
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import org.javacs.kt.util.userHome
 import org.javacs.kt.LOG
 
 /** Executes a shell script to determine the classpath */

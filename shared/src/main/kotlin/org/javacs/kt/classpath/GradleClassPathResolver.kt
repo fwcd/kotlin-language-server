@@ -5,6 +5,8 @@ import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.execAndReadStdout
 import org.javacs.kt.util.KotlinLSException
+import org.javacs.kt.util.isOSWindows
+import org.javacs.kt.util.findCommandOnPath
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files

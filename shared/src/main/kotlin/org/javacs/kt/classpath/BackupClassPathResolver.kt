@@ -63,8 +63,6 @@ private fun findLocalArtifactDirUsingGradle(group: String, artifact: String) =
         ?.existsOrNull(), "Gradle")
 
 
-private val gradleHome = userHome.resolve(".gradle")
-
 // TODO: Resolve the gradleCaches dynamically instead of hardcoding this path
 private val gradleCaches by lazy {
     gradleHome.resolve("caches")
