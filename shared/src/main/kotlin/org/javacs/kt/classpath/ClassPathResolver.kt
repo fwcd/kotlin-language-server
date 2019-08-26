@@ -29,17 +29,20 @@ val Sequence<ClassPathResolver>.joined get() = fold(ClassPathResolver.empty) { a
 val Collection<ClassPathResolver>.joined get() = fold(ClassPathResolver.empty) { accum, next -> accum + next }
 
 /** Combines two classpath resolvers. */
-operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver =
-    object : ClassPathResolver {
-        override val resolverType: String get() = "${this@plus.resolverType} + ${other.resolverType}"
-        override val classpath get() = this@plus.classpath + other.classpath
-        override val classpathOrEmpty get() = this@plus.classpathOrEmpty + other.classpathOrEmpty
-    }
+operator fun ClassPathResolver.plus(other: ClassPathResolver): ClassPathResolver = UnionClassPathResolver(this, other)
 
 /** Uses the left-hand classpath if not empty, otherwise uses the right. */
-fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver =
-    object : ClassPathResolver {
-        override val resolverType: String get() = "${this@or.resolverType} or ${other.resolverType}"
-        override val classpath get() = this@or.classpath.takeIf { it.isNotEmpty() } ?: other.classpath
-        override val classpathOrEmpty get() = this@or.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: other.classpathOrEmpty
-    }
+infix fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver = FirstNonEmptyClassPathResolver(this, other)
+
+/** The union of two class path resolvers. */
+internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
+    override val resolverType: String get() = "(${lhs.resolverType} + ${rhs.resolverType})"
+    override val classpath get() = lhs.classpath + rhs.classpath
+    override val classpathOrEmpty get() = lhs.classpathOrEmpty + rhs.classpathOrEmpty
+}
+
+internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
+    override val resolverType: String get() = "(${lhs.resolverType} or ${rhs.resolverType})"
+    override val classpath get() = lhs.classpath.takeIf { it.isNotEmpty() } ?: rhs.classpath
+    override val classpathOrEmpty get() = lhs.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty
+}

@@ -9,8 +9,8 @@ import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.tryResolving
 import java.nio.file.Paths
 
-/** Backup classpath that just tries to find Kotlin. */
-object BackupClassPathResolver : ClassPathResolver {
+/** Backup classpath that just tries to find Kotlin artifacts in the user's Maven/Gradle home. */
+object BackupArtifactClassPathResolver : ClassPathResolver {
     override val resolverType: String = "Backup"
     override val classpath: Set<Path> get() = findKotlinStdlib()?.let { setOf(it) }.orEmpty()
 }

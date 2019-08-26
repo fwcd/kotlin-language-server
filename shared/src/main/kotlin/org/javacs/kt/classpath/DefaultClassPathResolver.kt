@@ -6,13 +6,12 @@ import java.nio.file.PathMatcher
 import java.nio.file.Files
 import java.nio.file.FileSystems
 
-fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver = WithStdlibResolver(
-    ShellClassPathResolver.global(workspaceRoots.firstOrNull()).or(
-        workspaceRoots.asSequence()
-            .flatMap(::workspaceResolvers)
-            .joined
-    )
-).or(BackupClassPathResolver)
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver =
+    WithStdlibResolver(
+        ShellClassPathResolver.global(workspaceRoots.firstOrNull())
+            .or(workspaceRoots.asSequence().flatMap(::workspaceResolvers).joined)
+    ).or(KotlinCliClassPathResolver.global())
+     .or(BackupArtifactClassPathResolver)
 
 /** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
