@@ -19,7 +19,8 @@ internal class KotlinCliClassPathResolver(private val libDir: Path) : ClassPathR
         fun global(): ClassPathResolver =
             findCommandOnPath("kotlinc")
                 ?.toRealPath()
-                ?.parent
+                ?.parent // bin
+                ?.parent // Kotlin HOME
                 ?.resolve("lib")
                 ?.resolve("libexec")
                 ?.takeIf { Files.exists(it) }
