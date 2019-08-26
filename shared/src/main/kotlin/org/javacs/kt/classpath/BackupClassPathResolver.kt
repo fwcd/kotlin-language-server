@@ -49,17 +49,15 @@ private fun tryFindingLocalArtifactUsing(@Suppress("UNUSED_PARAMETER") group: St
 private data class LocalArtifactDirectoryResolution(val artifactDir: Path?, val buildTool: String)
 
 /** Tries to find the Kotlin command line compiler's standard library. */
-private fun findKotlinCliCompilerLibrary(prefix: String): Path? =
+private fun findKotlinCliCompilerLibrary(name: String): Path? =
     findCommandOnPath("kotlinc")
         ?.toRealPath()
         ?.parent // bin
-        ?.parent // Kotlin HOME
+        ?.parent // libexec
         ?.resolve("lib")
-        ?.resolve("libexec")
         ?.takeIf { Files.exists(it) }
         ?.let(Files::list)
-        ?.filter { it.startsWith(prefix) }
-        ?.sorted(::compareVersions)
+        ?.filter { it.fileName.toString() == "$name.jar" }
         ?.findFirst()
         ?.orElse(null)
 
