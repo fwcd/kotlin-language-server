@@ -62,14 +62,13 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleTasks: Li
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
     val tmpFile = createTemporaryGradleFile(deleteOnExit = false).toPath()
     val gradle = getGradleCommand(projectDirectory)
-    val dependencies = gradleTasks.flatMap { queryGradleCLIDependencies(gradle, tmpFile, it, projectDirectory).orEmpty() }.toSet()
+    val command = "$gradle -I ${tmpFile.toAbsolutePath()} ${gradleTasks.joinToString(separator = " ")} --console=plain"
+    val dependencies = findGradleCLIDependencies(command, projectDirectory)
+        ?.also { LOG.debug("Classpath for task {}", it) }
+        .orEmpty()
     Files.delete(tmpFile)
     return dependencies
 }
-
-private fun queryGradleCLIDependencies(gradle: Path, tmpFile: Path, task: String, projectDirectory: Path): Set<Path>? =
-    findGradleCLIDependencies("$gradle -I ${tmpFile.toAbsolutePath()} $task --console=plain", projectDirectory)
-        ?.also { LOG.debug("Classpath for task {}", it) }
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
     val result = execAndReadStdout(command, projectDirectory)
