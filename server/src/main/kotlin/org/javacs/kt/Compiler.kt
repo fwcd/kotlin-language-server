@@ -85,14 +85,15 @@ private class CompilationEnvironment(
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
                     LOG.info("Configuring Kotlin DSL script templates...")
+
                     val scriptTemplates = listOf(
                         // "org.gradle.kotlin.dsl.KotlinInitScript",
                         // "org.gradle.kotlin.dsl.KotlinSettingsScript",
                         "org.gradle.kotlin.dsl.KotlinBuildScript"
                     )
-                    // Load templates
-                    val baseClassLoader = CompilationEnvironment::class.java.classLoader
-                    val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray(), baseClassLoader)
+
+                    // Load template classes
+                    val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
                     // TODO: Use org.jetbrains.kotlin.scripting.definitions.ScriptDefinition instead of
                     //       KotlinScriptDefinition since the latter will be deprecated soon.
                     scriptDefinitions = scriptTemplates.map { KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin) }
