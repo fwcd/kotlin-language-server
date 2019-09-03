@@ -1,6 +1,6 @@
 allprojects { project ->
-	task kotlinLSPDeps {
-		task -> doLast {
+	task kotlinProjectDeps { task ->
+        doLast {
 			System.out.println ""
 			System.out.println "gradle-version $gradleVersion"
 			System.out.println "kotlin-lsp-project ${project.name}"
@@ -41,7 +41,7 @@ allprojects { project ->
 				}.each {
 					it.resolve().each {
 						def inspected = it.inspect()
-						
+
 						if (inspected.endsWith("jar")) {
 							if (!inspected.contains("zip!")) {
 								System.out.println "kotlin-lsp-gradle $it"
@@ -61,4 +61,10 @@ allprojects { project ->
 			}
 		}
 	}
+
+    task kotlinGradleDeps {
+        doLast {
+            System.out.println "kotlin-lsp-gradle $gradle.gradleHomeDir/lib"
+        }
+    }
 }
