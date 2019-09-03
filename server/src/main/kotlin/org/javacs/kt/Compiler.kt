@@ -81,7 +81,7 @@ private class CompilationEnvironment(
                 addJvmClasspathRoots(classPath.map { it.toFile() })
 
                 // Setup script templates
-                val scriptDefinitions: List<KotlinScriptDefinition>
+                var scriptDefinitions: List<KotlinScriptDefinition> = listOf(StandardScriptDefinition)
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
                     LOG.info("Configuring Kotlin DSL script templates...")
@@ -92,13 +92,16 @@ private class CompilationEnvironment(
                         "org.gradle.kotlin.dsl.KotlinBuildScript"
                     )
 
-                    // Load template classes
-                    val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
-                    // TODO: Use org.jetbrains.kotlin.scripting.definitions.ScriptDefinition instead of
-                    //       KotlinScriptDefinition since the latter will be deprecated soon.
-                    scriptDefinitions = scriptTemplates.map { KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin) }
-                } else {
-                    scriptDefinitions = listOf(StandardScriptDefinition)
+                    try {
+                        // Load template classes
+                        val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
+                        // TODO: Use org.jetbrains.kotlin.scripting.definitions.ScriptDefinition instead of
+                        //       KotlinScriptDefinition since the latter will be deprecated soon.
+                        scriptDefinitions = scriptTemplates.map { KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin) }
+                    } catch (e: Exception) {
+                        LOG.error("Error while loading script template classes")
+                        LOG.printStackTrace(e)
+                    }
                 }
                 addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
             },
