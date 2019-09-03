@@ -12,12 +12,12 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 
-internal class GradleClassPathResolver(private val path: Path) : ClassPathResolver {
+internal class GradleClassPathResolver(private val path: Path, private val includeGradleLibs: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
-        return readDependenciesViaGradleCLI(projectDirectory)
-            .orEmpty()
+        val tasks = listOf("kotlinProjectDeps") + (if (includeGradleLibs) listOf("kotlinGradleDeps") else emptySet())
+        return readDependenciesViaGradleCLI(projectDirectory, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
     }
 
@@ -25,7 +25,7 @@ internal class GradleClassPathResolver(private val path: Path) : ClassPathResolv
         /** Create a Gradle resolver if a file is a pom. */
         fun maybeCreate(file: Path): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
-                ?.let { GradleClassPathResolver(it) }
+                ?.let { GradleClassPathResolver(it, file.endsWith(".kts")) }
     }
 }
 
@@ -58,16 +58,17 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-private fun readDependenciesViaGradleCLI(projectDirectory: Path): Set<Path>? {
+private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleTasks: List<String>): Set<Path> {
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI...", projectDirectory.fileName)
-    val config = createTemporaryGradleFile(deleteOnExit = false)
+    val tmpFile = createTemporaryGradleFile(deleteOnExit = false).toPath()
     val gradle = getGradleCommand(projectDirectory)
-    val cmd = "$gradle -I ${config.absolutePath} kotlinLSPDeps --console=plain"
-    LOG.debug("  -- executing {}", cmd)
-    val dependencies = findGradleCLIDependencies(cmd, projectDirectory)
-    config.delete()
+    val dependencies = gradleTasks.flatMap { queryGradleCLIDependencies(gradle, tmpFile, it, projectDirectory).orEmpty() }.toSet()
+    Files.delete(tmpFile)
     return dependencies
 }
+
+private fun queryGradleCLIDependencies(gradle: Path, tmpFile: Path, task: String, projectDirectory: Path): Set<Path>? =
+    findGradleCLIDependencies("$gradle -I ${tmpFile.toAbsolutePath()} $task --console=plain", projectDirectory)
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
     val result = execAndReadStdout(command, projectDirectory)
