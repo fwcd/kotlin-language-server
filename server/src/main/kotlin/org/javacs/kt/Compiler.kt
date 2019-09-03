@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.jvm.plugins.PluginCliParser
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
@@ -33,25 +34,28 @@ import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
-import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
-import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
-import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
+import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
+import org.jetbrains.kotlin.utils.PathUtil
 import java.io.Closeable
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.net.URLClassLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
+
+private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
 
 /**
  * Kotlin compiler APIs used to parse, analyze and compile
@@ -74,8 +78,28 @@ private class CompilationEnvironment(
                 put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
-                add(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, StandardScriptDefinition)
                 addJvmClasspathRoots(classPath.map { it.toFile() })
+
+                // Setup script templates
+                val scriptDefinitions: List<KotlinScriptDefinition>
+
+                if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
+                    LOG.info("Configuring Kotlin DSL script templates...")
+                    val scriptTemplates = listOf(
+                        // "org.gradle.kotlin.dsl.KotlinInitScript",
+                        // "org.gradle.kotlin.dsl.KotlinSettingsScript",
+                        "org.gradle.kotlin.dsl.KotlinBuildScript"
+                    )
+                    // Load templates
+                    val baseClassLoader = CompilationEnvironment::class.java.classLoader
+                    val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray(), baseClassLoader)
+                    // TODO: Use org.jetbrains.kotlin.scripting.definitions.ScriptDefinition instead of
+                    //       KotlinScriptDefinition since the latter will be deprecated soon.
+                    scriptDefinitions = scriptTemplates.map { KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin) }
+                } else {
+                    scriptDefinitions = listOf(StandardScriptDefinition)
+                }
+                addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
@@ -155,7 +179,7 @@ class Compiler(classPath: Set<Path>) : Closeable {
         compileEnvironment.updateConfiguration(config)
     }
 
-    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtFile {
+    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtFile {
         assert(!content.contains('\r'))
 
         val new = psiFileFactory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
@@ -164,13 +188,13 @@ class Compiler(classPath: Set<Path>) : Closeable {
         return new
     }
 
-    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtExpression {
+    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtExpression {
         val property = parseDeclaration("val x = $content", file) as KtProperty
 
         return property.initializer!!
     }
 
-    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtDeclaration =
+    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtDeclaration =
             parseDeclaration(content, file)
 
     private fun parseDeclaration(content: String, file: Path): KtDeclaration {
