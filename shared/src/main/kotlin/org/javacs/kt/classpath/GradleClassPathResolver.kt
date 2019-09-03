@@ -8,15 +8,15 @@ import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.isOSWindows
 import org.javacs.kt.util.findCommandOnPath
 import java.io.File
-import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 internal class GradleClassPathResolver(private val path: Path, private val includeGradleLibs: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
-        val tasks = listOf("kotlinProjectDeps") + (if (includeGradleLibs) listOf("kotlinGradleDeps") else emptySet())
+        val tasks = listOf("kotlinLSPProjectDeps") + (if (includeGradleLibs) listOf("kotlinLSPGradleDeps") else emptySet())
         return readDependenciesViaGradleCLI(projectDirectory, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
     }
@@ -25,7 +25,7 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
         /** Create a Gradle resolver if a file is a pom. */
         fun maybeCreate(file: Path): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
-                ?.let { GradleClassPathResolver(it, file.endsWith(".kts")) }
+                ?.let { GradleClassPathResolver(it, file.toString().endsWith(".kts")) }
     }
 }
 
@@ -59,7 +59,7 @@ private fun getGradleCommand(workspace: Path): Path {
 }
 
 private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleTasks: List<String>): Set<Path> {
-    LOG.info("Resolving dependencies for '{}' through Gradle's CLI...", projectDirectory.fileName)
+    LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
     val tmpFile = createTemporaryGradleFile(deleteOnExit = false).toPath()
     val gradle = getGradleCommand(projectDirectory)
     val dependencies = gradleTasks.flatMap { queryGradleCLIDependencies(gradle, tmpFile, it, projectDirectory).orEmpty() }.toSet()
@@ -69,6 +69,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleTasks: Li
 
 private fun queryGradleCLIDependencies(gradle: Path, tmpFile: Path, task: String, projectDirectory: Path): Set<Path>? =
     findGradleCLIDependencies("$gradle -I ${tmpFile.toAbsolutePath()} $task --console=plain", projectDirectory)
+        ?.also { LOG.debug("Classpath for task {}", it) }
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
     val result = execAndReadStdout(command, projectDirectory)
@@ -76,11 +77,12 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
     return parseGradleCLIDependencies(result)
 }
 
-private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(\r?\n)".toRegex() }
+private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(?:\r?\n)".toRegex() }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
+    LOG.debug(output)
     val artifacts = artifactPattern.findAll(output)
-        .mapNotNull { FileSystems.getDefault().getPath(it.groups[1]?.value) }
+        .mapNotNull { Paths.get(it.groups[1]?.value) }
         .filterNotNull()
     return artifacts.toSet()
 }

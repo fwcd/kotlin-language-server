@@ -1,5 +1,5 @@
 allprojects { project ->
-	task kotlinProjectDeps { task ->
+	task kotlinLSPProjectDeps { task ->
         doLast {
 			System.out.println ""
 			System.out.println "gradle-version $gradleVersion"
@@ -62,9 +62,11 @@ allprojects { project ->
 		}
 	}
 
-    task kotlinGradleDeps {
+    task kotlinLSPGradleDeps {
         doLast {
-            System.out.println "kotlin-lsp-gradle $gradle.gradleHomeDir/lib"
+            fileTree("$gradle.gradleHomeDir/lib")
+                .findAll { it.toString().endsWith '.jar' }
+                .forEach { System.out.println "kotlin-lsp-gradle $it" }
         }
     }
 }
