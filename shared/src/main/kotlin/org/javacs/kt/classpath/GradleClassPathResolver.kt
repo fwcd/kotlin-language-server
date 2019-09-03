@@ -16,8 +16,10 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
     override val resolverType: String = "Gradle"
     override val classpath: Set<Path> get() {
         val projectDirectory = path.getParent()
-        val tasks = listOf("kotlinLSPProjectDeps") + (if (includeKotlinDSL) listOf("kotlinLSPKotlinDSLDeps") else emptySet())
-        return readDependenciesViaGradleCLI(projectDirectory, tasks)
+        val scripts = listOf("projectClassPathFinder.gradle") + listOf("kotlinDSLClassPathFinder.gradle").takeIf { includeKotlinDSL }.orEmpty()
+        val tasks = listOf("kotlinLSPProjectDeps") + listOf("kotlinLSPKotlinDSLDeps").takeIf { includeKotlinDSL }.orEmpty()
+
+        return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
     }
 
@@ -29,7 +31,7 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
     }
 }
 
-private fun createTemporaryGradleFile(deleteOnExit: Boolean = false): File {
+private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = false): File {
     val config = File.createTempFile("classpath", ".gradle")
     if (deleteOnExit) {
         config.deleteOnExit()
@@ -38,7 +40,7 @@ private fun createTemporaryGradleFile(deleteOnExit: Boolean = false): File {
     LOG.debug("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
-        ClassLoader.getSystemResourceAsStream("classpathFinder.gradle").bufferedReader().use { configReader ->
+        ClassLoader.getSystemResourceAsStream(scriptName).bufferedReader().use { configReader ->
             configReader.copyTo(configWriter)
         }
     }
@@ -58,15 +60,18 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleTasks: List<String>): Set<Path> {
+private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<Path> {
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
-    val tmpFile = createTemporaryGradleFile(deleteOnExit = false).toPath()
+
+    val tmpScripts = gradleScripts.map { gradleScriptToTempFile(it, deleteOnExit = false).toPath().toAbsolutePath() }
     val gradle = getGradleCommand(projectDirectory)
-    val command = "$gradle -I ${tmpFile.toAbsolutePath()} ${gradleTasks.joinToString(separator = " ")} --console=plain"
+
+    val command = "$gradle ${tmpScripts.map { "-I $it" }.joinToString(" ")} ${gradleTasks.joinToString(" ")} --console=plain"
     val dependencies = findGradleCLIDependencies(command, projectDirectory)
         ?.also { LOG.debug("Classpath for task {}", it) }
         .orEmpty()
-    Files.delete(tmpFile)
+
+    tmpScripts.forEach(Files::delete)
     return dependencies
 }
 
