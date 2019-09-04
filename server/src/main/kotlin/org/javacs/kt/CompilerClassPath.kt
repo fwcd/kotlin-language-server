@@ -16,6 +16,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 
     private fun refresh() {
+        // TODO: Fetch class path and build script class path concurrently (and asynchronously)
         val resolver = defaultClassPathResolver(workspaceRoots)
         val newClassPath = resolver.classpathOrEmpty
         val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
