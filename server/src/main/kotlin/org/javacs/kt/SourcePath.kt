@@ -17,15 +17,19 @@ class SourcePath(
     private val files = mutableMapOf<URI, SourceFile>()
 
     private inner class SourceFile(
-            val uri: URI,
-            var content: String,
-            val path: Path? = uri.filePath,
-            var parsed: KtFile? = null,
-            var compiledFile: KtFile? = null,
-            var compiledContext: BindingContext? = null,
-            var compiledContainer: ComponentProvider? = null,
-            val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
+        val uri: URI,
+        var content: String,
+        val path: Path? = uri.filePath,
+        var parsed: KtFile? = null,
+        var compiledFile: KtFile? = null,
+        var compiledContext: BindingContext? = null,
+        var compiledContainer: ComponentProvider? = null,
+        val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
+        val kind: CompilationKind =
+            if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
+            else CompilationKind.DEFAULT
+
         fun put(newContent: String) {
             content = newContent
         }
@@ -54,7 +58,7 @@ class SourcePath(
             if (parsed?.text != compiledFile?.text) {
                 LOG.debug("Compiling {}", path?.fileName)
 
-                val (context, container) = cp.compiler.compileFile(parsed!!, allIncludingThis())
+                val (context, container) = cp.compiler.compileFile(parsed!!, allIncludingThis(), kind)
                 compiledContext = context
                 compiledContainer = container
                 compiledFile = parsed
@@ -67,7 +71,7 @@ class SourcePath(
                 parseIfChanged().compileIfNull().doPrepareCompiledFile()
 
         private fun doPrepareCompiledFile(): CompiledFile =
-                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp)
+                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp, kind)
 
         private fun allIncludingThis(): Collection<KtFile> = parseIfChanged().let {
             if (isTemporary) (all().asSequence() + sequenceOf(parsed!!)).toList()
@@ -137,23 +141,31 @@ class SourcePath(
     fun compileFiles(all: Collection<URI>): BindingContext {
         // Figure out what has changed
         val sources = all.map { files[it]!! }
-        val changed = sources.filter { it.content != it.compiledFile?.text }
+        val allChanged = sources.filter { it.content != it.compiledFile?.text }
+        val (changedBuildScripts, changedSources) = allChanged.partition { it.kind == CompilationKind.BUILD_SCRIPT }
 
         // Compile changed files
-        val parse = changed.map { it.parseIfChanged().parsed!! }
-        val (context, container) = cp.compiler.compileFiles(parse, all())
+        fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): BindingContext? {
+            if (changed.isEmpty()) return null
+            val parse = changed.map { it.parseIfChanged().parsed!! }
+            val (context, container) = cp.compiler.compileFiles(parse, all(), kind)
 
-        // Update cache
-        for (f in changed) {
-            f.compiledFile = f.parsed
-            f.compiledContext = context
-            f.compiledContainer = container
+            // Update cache
+            for (f in changed) {
+                f.compiledFile = f.parsed
+                f.compiledContext = context
+                f.compiledContainer = container
+            }
+
+            return context
         }
 
+        val buildScriptsContext = compileAndUpdate(changedBuildScripts, CompilationKind.BUILD_SCRIPT)
+        val sourcesContext = compileAndUpdate(changedSources, CompilationKind.DEFAULT)
+
         // Combine with past compilations
-        val combined = mutableListOf(context)
-        val same = sources - changed
-        combined.addAll(same.map { it.compiledContext!! })
+        val same = sources - allChanged
+        val combined = listOf(buildScriptsContext, sourcesContext).filterNotNull() + same.map { it.compiledContext!! }
 
         return CompositeBindingContext.create(combined)
     }

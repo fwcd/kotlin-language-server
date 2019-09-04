@@ -15,15 +15,17 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
+import java.nio.file.Path
 
 class CompiledFile(
-        val content: String,
-        val parse: KtFile,
-        val compile: BindingContext,
-        val container: ComponentProvider,
-        val sourcePath: Collection<KtFile>,
-        val classPath: CompilerClassPath) {
-
+    val content: String,
+    val parse: KtFile,
+    val compile: BindingContext,
+    val container: ComponentProvider,
+    val sourcePath: Collection<KtFile>,
+    val classPath: CompilerClassPath,
+    val kind: CompilationKind = CompilationKind.DEFAULT
+) {
     /**
      * Find the type of the expression at `cursor`
      */
@@ -38,7 +40,7 @@ class CompiledFile(
             bindingContextOf(expression, scopeWithImports).getType(expression)
 
     fun bindingContextOf(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext =
-            classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath).first
+            classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath, kind).first
 
     private fun expandForType(cursor: Int, surroundingExpr: KtExpression): KtExpression {
         val dotParent = surroundingExpr.parent as? KtDotQualifiedExpression

@@ -153,17 +153,30 @@ private class CompilationEnvironment(
 }
 
 /**
+ * Determines the compilation environment used
+ * by the compiler (and thus the class path).
+ */
+enum class CompilationKind {
+    /** Uses the default class path. */
+    DEFAULT,
+    /** Uses the Kotlin DSL class path if available. */
+    BUILD_SCRIPT
+}
+
+/**
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(classPath: Set<Path>) : Closeable {
+class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
     private var closed = false
     private val localFileSystem: VirtualFileSystem
-    private val compileEnvironment = CompilationEnvironment(classPath)
+
+    private val defaultCompileEnvironment = CompilationEnvironment(classPath)
+    private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let(::CompilationEnvironment)
     private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     val psiFileFactory
-        get() = PsiFileFactory.getInstance(compileEnvironment.environment.project)
+        get() = PsiFileFactory.getInstance(defaultCompileEnvironment.environment.project)
 
     companion object {
         init {
@@ -180,10 +193,11 @@ class Compiler(classPath: Set<Path>) : Closeable {
      * configuration (which is a class from this project).
      */
     fun updateConfiguration(config: CompilerConfiguration) {
-        compileEnvironment.updateConfiguration(config)
+        defaultCompileEnvironment.updateConfiguration(config)
+        buildScriptCompileEnvironment?.updateConfiguration(config)
     }
 
-    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtFile {
+    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtFile {
         assert(!content.contains('\r'))
 
         val new = psiFileFactory.createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
@@ -192,13 +206,13 @@ class Compiler(classPath: Set<Path>) : Closeable {
         return new
     }
 
-    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtExpression {
+    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtExpression {
         val property = parseDeclaration("val x = $content", file) as KtProperty
 
         return property.initializer!!
     }
 
-    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kts")): KtDeclaration =
+    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kt")): KtDeclaration =
             parseDeclaration(content, file)
 
     private fun parseDeclaration(content: String, file: Path): KtDeclaration {
@@ -219,12 +233,17 @@ class Compiler(classPath: Set<Path>) : Closeable {
         else return onlyDeclaration
     }
 
-    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> =
-            compileFiles(listOf(file), sourcePath)
+    private fun compileEnvironmentFor(kind: CompilationKind): CompilationEnvironment = when (kind) {
+        CompilationKind.DEFAULT -> defaultCompileEnvironment
+        CompilationKind.BUILD_SCRIPT -> buildScriptCompileEnvironment ?: defaultCompileEnvironment
+    }
 
-    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
+    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> =
+            compileFiles(listOf(file), sourcePath, kind)
+
+    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         compileLock.withLock {
-            val (container, trace) = compileEnvironment.createContainer(sourcePath)
+            val (container, trace) = compileEnvironmentFor(kind).createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
             topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
 
@@ -232,11 +251,11 @@ class Compiler(classPath: Set<Path>) : Closeable {
         }
     }
 
-    fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>): Pair<BindingContext, ComponentProvider> {
+    fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         try {
             // Use same lock as 'compileFile' to avoid concurrency issues such as #42
             compileLock.withLock {
-                val (container, trace) = compileEnvironment.createContainer(sourcePath)
+                val (container, trace) = compileEnvironmentFor(kind).createContainer(sourcePath)
                 val incrementalCompiler = container.get<ExpressionTypingServices>()
                 incrementalCompiler.getTypeInfo(
                         scopeWithImports,
@@ -255,7 +274,8 @@ class Compiler(classPath: Set<Path>) : Closeable {
 
     override fun close() {
         if (!closed) {
-            compileEnvironment.close()
+            defaultCompileEnvironment.close()
+            buildScriptCompileEnvironment?.close()
             closed = true
         } else {
             LOG.warn("Compiler is already closed!")
