@@ -47,6 +47,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
     implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable'
     implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host-embeddable'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains:fernflower:1.0'
     implementation 'com.pinterest.ktlint:ktlint-core:0.34.2'
@@ -62,10 +63,9 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'junit:junit:4.11'
     testImplementation 'org.openjdk.jmh:jmh-core:1.20'
-    testImplementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host-embeddable'
 
     // See https://github.com/JetBrains/kotlin/blob/65b0a5f90328f4b9addd3a10c6f24f3037482276/libraries/examples/scripting/jvm-embeddable-host/build.gradle.kts#L8
-    testCompileOnly 'org.jetbrains.kotlin:kotlin-scripting-jvm-host'
+    compileOnly 'org.jetbrains.kotlin:kotlin-scripting-jvm-host'
 
     annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.20'
 }

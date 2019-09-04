@@ -18,6 +18,10 @@ def is_plugin_artifact(art_name):
 def to_plugin_build(art_name):
     return art_name.lstrip("kotlin-plugin-").rstrip(".zip")
 
+class Unnamed:
+    def name(self):
+        return ""
+
 def main():
     props_file = "gradle.properties"
 
@@ -39,7 +43,7 @@ def main():
     build = prompt_by("build", builds, TeamCityNode.number).follow()
 
     artifacts = [art for art in build.follow("artifacts").findall("file") if is_plugin_artifact(art.name())]
-    artifact = prompt_by("plugin build", artifacts, lambda art: to_plugin_build(art.name()))
+    artifact = prompt_by("plugin build", artifacts, lambda art: to_plugin_build(art.name()), Unnamed())
 
     changes = {
         "kotlinVersion": version.name(),

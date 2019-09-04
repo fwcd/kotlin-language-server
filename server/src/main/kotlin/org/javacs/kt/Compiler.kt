@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.idea.KotlinLanguage
-import org.jetbrains.kotlin.load.java.JvmAbi
+import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
 import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.TopLevelDeclarations
 import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
+import org.jetbrains.kotlin.resolve.extensions.ExtraImportsProviderExtension
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
@@ -39,7 +40,8 @@ import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
-import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
+import org.jetbrains.kotlin.scripting.extensions.ScriptExtraImportsProviderExtension
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
@@ -51,6 +53,10 @@ import java.nio.file.Paths
 import java.net.URLClassLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.script.experimental.host.ScriptingHostConfiguration
+import kotlin.script.experimental.host.configurationDependencies
+import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
+import kotlin.script.experimental.jvm.JvmDependency
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
@@ -75,13 +81,13 @@ private class CompilationEnvironment(
             parentDisposable = disposable,
             // Not to be confused with the CompilerConfiguration in the language server Configuration
             configuration = KotlinCompilerConfiguration().apply {
-                put(CommonConfigurationKeys.MODULE_NAME, JvmAbi.DEFAULT_MODULE_NAME)
+                put(CommonConfigurationKeys.MODULE_NAME, JvmProtoBufUtil.DEFAULT_MODULE_NAME)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 addJvmClasspathRoots(classPath.map { it.toFile() })
 
                 // Setup script templates
-                var scriptDefinitions: List<KotlinScriptDefinition> = listOf(StandardScriptDefinition)
+                var scriptDefinitions: List<ScriptDefinition> = listOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
                     LOG.info("Configuring Kotlin DSL script templates...")
@@ -95,9 +101,10 @@ private class CompilationEnvironment(
                     try {
                         // Load template classes
                         val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
-                        // TODO: Use org.jetbrains.kotlin.scripting.definitions.ScriptDefinition instead of
-                        //       KotlinScriptDefinition since the latter will be deprecated soon.
-                        scriptDefinitions = scriptTemplates.map { KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin) }
+                        val scriptHostConfig = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
+                            configurationDependencies(JvmDependency(classPath.map { it.toFile() }))
+                        }
+                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
                     } catch (e: Exception) {
                         LOG.error("Error while loading script template classes")
                         LOG.printStackTrace(e)

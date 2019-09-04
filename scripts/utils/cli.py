@@ -21,7 +21,7 @@ def require_not_none(description, x):
     if x == None:
         sys.exit(description + " not present")
 
-def prompt_by(what, nodes, describer):
+def prompt_by(what, nodes, describer, default=None):
     node_dict = {describer(node): node for node in nodes}
     sorted_described = sorted(node_dict.keys(), key=alphanum_sort_key)
 
@@ -30,12 +30,12 @@ def prompt_by(what, nodes, describer):
     print()
 
     last_entry = sorted_described[-1] if len(sorted_described) > 0 else None
-    choice = input("Enter a " + what + " to choose [default: " + last_entry + "]: ").strip()
+    choice = input(f"Enter a {what} to choose [default: {last_entry}]: ").strip()
     print()
 
-    if len(choice) == 0:
+    if len(choice) == 0 and last_entry:
         return node_dict[last_entry]
     elif choice not in node_dict.keys():
-        sys.exit("Invalid " + what + "!")
+        return default
     else:
         return node_dict[choice]
