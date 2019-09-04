@@ -7,6 +7,8 @@ internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : Clas
     override val resolverType: String get() = "Stdlib + ${wrapped.resolverType}"
     override val classpath: Set<Path> get() = wrapWithStdlib(wrapped.classpath)
     override val classpathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.classpathOrEmpty)
+    override val buildScriptClasspath: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspath)
+    override val buildScriptClasspathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspathOrEmpty)
 }
 
 private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
