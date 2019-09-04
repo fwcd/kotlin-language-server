@@ -14,13 +14,24 @@ import java.nio.file.Paths
 
 internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
+    private val projectDirectory: Path get() = path.getParent()
     override val classpath: Set<Path> get() {
-        val projectDirectory = path.getParent()
-        val scripts = listOf("projectClassPathFinder.gradle") + listOf("kotlinDSLClassPathFinder.gradle").takeIf { includeKotlinDSL }.orEmpty()
-        val tasks = listOf("kotlinLSPProjectDeps") + listOf("kotlinLSPKotlinDSLDeps").takeIf { includeKotlinDSL }.orEmpty()
+        val scripts = listOf("projectClassPathFinder.gradle")
+        val tasks = listOf("kotlinLSPProjectDeps")
 
         return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
+    }
+    override val buildScriptClasspath: Set<Path> get() {
+        return if (includeKotlinDSL) {
+            val scripts = listOf("kotlinDSLClassPathFinder.gradle")
+            val tasks = listOf("kotlinLSPKotlinDSLDeps")
+
+            return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+                .apply { if (isNotEmpty()) LOG.info("Successfully resolved build script dependencies for '${projectDirectory.fileName}' using Gradle") }
+        } else {
+            emptySet()
+        }
     }
 
     companion object {
