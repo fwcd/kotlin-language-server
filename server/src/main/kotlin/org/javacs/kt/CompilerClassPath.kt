@@ -7,7 +7,8 @@ import java.nio.file.Path
 class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
-    var compiler = Compiler(classPath)
+    private val buildScriptClassPath = mutableSetOf<Path>()
+    var compiler = Compiler(classPath, buildScriptClassPath)
         private set
 
     init {
@@ -15,21 +16,37 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 
     private fun refresh() {
-        val newClassPath = defaultClassPathResolver(workspaceRoots).classpathOrEmpty
+        val resolver = defaultClassPathResolver(workspaceRoots)
+        val newClassPath = resolver.classpathOrEmpty
+        val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
+        var refreshCompiler = false
 
         if (newClassPath != classPath) {
-            val added = newClassPath - classPath
-            val removed = classPath - newClassPath
+            syncClassPath(classPath, newClassPath)
+            refreshCompiler = true
+        }
 
-            logAdded(added)
-            logRemoved(removed)
+        if (newBuildScriptClassPath != buildScriptClassPath) {
+            syncClassPath(buildScriptClassPath, newBuildScriptClassPath)
+            refreshCompiler = true
+        }
 
-            classPath.removeAll(removed)
-            classPath.addAll(added)
+        if (refreshCompiler) {
             compiler.close()
-            compiler = Compiler(classPath)
+            compiler = Compiler(classPath, buildScriptClassPath)
             updateCompilerConfiguration()
         }
+    }
+
+    private fun syncClassPath(dest: MutableSet<Path>, new: Set<Path>) {
+        val added = new - dest
+        val removed = dest - new
+
+        logAdded(added)
+        logRemoved(removed)
+
+        dest.removeAll(removed)
+        dest.addAll(added)
     }
 
     fun updateCompilerConfiguration() {
@@ -61,7 +78,8 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 
     fun changedOnDisk(file: Path) {
-        if (file.fileName.toString() == "pom.xml")
+        val name = file.fileName.toString()
+        if (name == "pom.xml" || name == "build.gradle" || name == "build.gradle.kts")
             refresh()
     }
 
