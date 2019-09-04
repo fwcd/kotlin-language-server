@@ -26,6 +26,7 @@ class SourcePath(
         var compiledContainer: ComponentProvider? = null,
         val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
+        val isScript: Boolean = uri.toString().endsWith(".kts")
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
             else CompilationKind.DEFAULT
@@ -71,7 +72,7 @@ class SourcePath(
                 parseIfChanged().compileIfNull().doPrepareCompiledFile()
 
         private fun doPrepareCompiledFile(): CompiledFile =
-                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp, kind)
+                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp, isScript, kind)
 
         private fun allIncludingThis(): Collection<KtFile> = parseIfChanged().let {
             if (isTemporary) (all().asSequence() + sequenceOf(parsed!!)).toList()

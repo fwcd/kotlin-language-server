@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
-import java.nio.file.Path
+import java.nio.file.Paths
 
 class CompiledFile(
     val content: String,
@@ -24,6 +24,7 @@ class CompiledFile(
     val container: ComponentProvider,
     val sourcePath: Collection<KtFile>,
     val classPath: CompilerClassPath,
+    val isScript: Boolean = false,
     val kind: CompilationKind = CompilationKind.DEFAULT
 ) {
     /**
@@ -122,7 +123,7 @@ class CompiledFile(
         }
 
         val padOffset = " ".repeat(offset)
-        val recompile = classPath.compiler.createFile(padOffset + surroundingContent)
+        val recompile = classPath.compiler.createFile(padOffset + surroundingContent, Paths.get(if (isScript) "dummy.virtual.kts" else "dummy.virtual.kt"))
         return recompile.findElementAt(cursor)?.findParent<KtElement>()
     }
 
