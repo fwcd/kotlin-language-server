@@ -15,21 +15,23 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         compiler.updateConfiguration(config)
     }
 
-    private fun refresh() {
+    private fun refresh(updateBuildScriptClassPath: Boolean = true) {
         // TODO: Fetch class path and build script class path concurrently (and asynchronously)
         val resolver = defaultClassPathResolver(workspaceRoots)
-        val newClassPath = resolver.classpathOrEmpty
-        val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
         var refreshCompiler = false
 
+        val newClassPath = resolver.classpathOrEmpty
         if (newClassPath != classPath) {
             syncClassPath(classPath, newClassPath)
             refreshCompiler = true
         }
 
-        if (newBuildScriptClassPath != buildScriptClassPath) {
-            syncClassPath(buildScriptClassPath, newBuildScriptClassPath)
-            refreshCompiler = true
+        if (updateBuildScriptClassPath) {
+            val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
+            if (newBuildScriptClassPath != buildScriptClassPath) {
+                syncClassPath(buildScriptClassPath, newBuildScriptClassPath)
+                refreshCompiler = true
+            }
         }
 
         if (refreshCompiler) {
@@ -81,7 +83,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     fun changedOnDisk(file: Path) {
         val name = file.fileName.toString()
         if (name == "pom.xml" || name == "build.gradle" || name == "build.gradle.kts")
-            refresh()
+            refresh(updateBuildScriptClassPath = false)
     }
 
     override fun close() {
