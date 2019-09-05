@@ -121,7 +121,7 @@ private class CompilationEnvironment(
                     configurationDependencies(JvmDependency(fileClassPath))
                 }
                 scriptDefinitions = scriptTemplates
-                    .map { object : ScriptDefinition.FromLegacy(defaultJvmScriptingHostConfiguration, KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin)) {
+                    .map { object : ScriptDefinition.FromLegacy(scriptHostConfig, KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin)) {
                         override val isDefault = true
                     } }
             } catch (e: Exception) {
