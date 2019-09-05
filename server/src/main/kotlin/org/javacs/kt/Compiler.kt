@@ -121,7 +121,7 @@ private class CompilationEnvironment(
                         //       ScriptDefinition.compilationConfiguration and its defaultImports instead
                         //       of KotlinScriptDefinition.dependencyResolver
                         // TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible
-                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin, fileClassPath) }
+                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
                         // scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
                         //     scriptClassLoader.loadClass(it).kotlin,
                         //     scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
@@ -138,6 +138,7 @@ private class CompilationEnvironment(
                     }
                 }
 
+                LOG.info("Adding script definitions ${scriptDefinitions.map { it.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName }}")
                 addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES

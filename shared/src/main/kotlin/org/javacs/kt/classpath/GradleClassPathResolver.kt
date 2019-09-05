@@ -3,7 +3,7 @@ package org.javacs.kt.classpath
 import org.javacs.kt.LOG
 import org.javacs.kt.util.firstNonNull
 import org.javacs.kt.util.tryResolving
-import org.javacs.kt.util.execAndReadStdout
+import org.javacs.kt.util.execAndReadStdoutAndStderr
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.isOSWindows
 import org.javacs.kt.util.findCommandOnPath
@@ -87,12 +87,16 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
 }
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
-    val result = execAndReadStdout(command, projectDirectory)
+    val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
     LOG.debug(result)
+    if ("FAILURE: Build failed" in errors) {
+        LOG.warn("Gradle task failed: {}", errors.lines().firstOrNull())
+    }
     return parseGradleCLIDependencies(result)
 }
 
 private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(?:\r?\n)".toRegex() }
+private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".toRegex() }
 
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
     LOG.debug(output)

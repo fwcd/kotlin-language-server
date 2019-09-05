@@ -10,11 +10,16 @@ import java.util.concurrent.CompletableFuture
 fun execAndReadStdout(shellCommand: String, directory: Path): String {
     val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
     val stdout = process.inputStream
-    var result = ""
-    stdout.bufferedReader().use {
-        result = it.readText()
-    }
-    return result
+    return stdout.bufferedReader().use { it.readText() }
+}
+
+fun execAndReadStdoutAndStderr(shellCommand: String, directory: Path): Pair<String, String> {
+    val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
+    val stdout = process.inputStream
+    val stderr = process.errorStream
+    val output = stdout.bufferedReader().use { it.readText() }
+    val errors = stderr.bufferedReader().use { it.readText() }
+    return Pair(output, errors)
 }
 
 inline fun withCustomStdout(delegateOut: PrintStream, task: () -> Unit) {
