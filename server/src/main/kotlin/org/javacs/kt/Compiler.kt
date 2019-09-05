@@ -99,7 +99,7 @@ private class CompilationEnvironment(
                 addJvmClasspathRoots(classPath.map { it.toFile() })
 
                 // Setup script templates (e.g. used by Gradle's Kotlin DSL)
-                var scriptDefinitions: List<ScriptDefinition> = listOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
+                val scriptDefinitions: MutableList<ScriptDefinition> = mutableListOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
                     LOG.info("Configuring Kotlin DSL script templates...")
@@ -122,7 +122,7 @@ private class CompilationEnvironment(
                         //       of KotlinScriptDefinition.dependencyResolver
                         // TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible
                         // scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
-                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
+                        scriptDefinitions.addAll(scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
                             scriptClassLoader.loadClass(it).kotlin,
                             scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
                         ) {
@@ -131,7 +131,7 @@ private class CompilationEnvironment(
                                     imports = listOf("org.gradle.kotlin.dsl.*")
                                 ))
                             }
-                        }) }
+                        }) })
                     } catch (e: Exception) {
                         LOG.error("Error while loading script template classes")
                         LOG.printStackTrace(e)
@@ -280,7 +280,7 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
     fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         if (kind == CompilationKind.BUILD_SCRIPT) {
             // Print the (legacy) script template used by the compiled Kotlin DSL build file
-            files.forEach { LOG.info("$it -> ScriptDefinition: ${it.findScriptDefinition()?.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName}") }
+            files.forEach { LOG.debug { "$it -> ScriptDefinition: ${it.findScriptDefinition()?.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName}" } }
         }
 
         compileLock.withLock {
