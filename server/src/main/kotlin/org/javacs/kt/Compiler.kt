@@ -121,17 +121,17 @@ private class CompilationEnvironment(
                         //       ScriptDefinition.compilationConfiguration and its defaultImports instead
                         //       of KotlinScriptDefinition.dependencyResolver
                         // TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible
-                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
-                        // scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
-                        //     scriptClassLoader.loadClass(it).kotlin,
-                        //     scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
-                        // ) {
-                        //     override val dependencyResolver: DependenciesResolver = object : DependenciesResolver {
-                        //         override fun resolve(scriptContents: ScriptContents, environment: Environment) = ResolveResult.Success(ScriptDependencies(
-                        //             imports = listOf("org.gradle.kotlin.api.*")
-                        //         ))
-                        //     }
-                        // }) }
+                        // scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
+                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
+                            scriptClassLoader.loadClass(it).kotlin,
+                            scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
+                        ) {
+                            override val dependencyResolver: DependenciesResolver = object : DependenciesResolver {
+                                override fun resolve(scriptContents: ScriptContents, environment: Environment) = ResolveResult.Success(ScriptDependencies(
+                                    imports = listOf("org.gradle.kotlin.dsl.*")
+                                ))
+                            }
+                        }) }
                     } catch (e: Exception) {
                         LOG.error("Error while loading script template classes")
                         LOG.printStackTrace(e)
