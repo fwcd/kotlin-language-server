@@ -88,7 +88,35 @@ private class CompilationEnvironment(
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 addJvmClasspathRoots(classPath.map { it.toFile() })
-                // addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
+                // Setup script templates
+                var scriptDefinitions: List<ScriptDefinition> = listOf()
+
+                if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
+                    LOG.info("Configuring Kotlin DSL script templates...")
+
+                    val scriptTemplates = listOf(
+                        // "org.gradle.kotlin.dsl.KotlinInitScript",
+                        // "org.gradle.kotlin.dsl.KotlinSettingsScript",
+                        "org.gradle.kotlin.dsl.KotlinBuildScript"
+                    )
+
+                    try {
+                        // Load template classes
+                        val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
+                        val fileClassPath = classPath.map { it.toFile() }
+                        val scriptHostConfig = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
+                            configurationDependencies(JvmDependency(fileClassPath))
+                        }
+                        scriptDefinitions = scriptTemplates
+                            .map { object : ScriptDefinition.FromLegacy(scriptHostConfig, KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin)) {
+                                override val isDefault = true
+                            } }
+                    } catch (e: Exception) {
+                        LOG.error("Error while loading script template classes")
+                        LOG.printStackTrace(e)
+                    }
+                }
+                addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
@@ -100,39 +128,6 @@ private class CompilationEnvironment(
 
         parser = KtPsiFactory(project)
         scripts = ScriptDefinitionProvider.getInstance(project)!! as CliScriptDefinitionProvider
-
-        // Setup script templates
-        var scriptDefinitions: List<ScriptDefinition> = listOf()
-
-        if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
-            LOG.info("Configuring Kotlin DSL script templates...")
-
-            val scriptTemplates = listOf(
-                // "org.gradle.kotlin.dsl.KotlinInitScript",
-                // "org.gradle.kotlin.dsl.KotlinSettingsScript",
-                "org.gradle.kotlin.dsl.KotlinBuildScript"
-            )
-
-            try {
-                // Load template classes
-                val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
-                val fileClassPath = classPath.map { it.toFile() }
-                val scriptHostConfig = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
-                    configurationDependencies(JvmDependency(fileClassPath))
-                }
-                scriptDefinitions = scriptTemplates
-                    .map { object : ScriptDefinition.FromLegacy(scriptHostConfig, KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin)) {
-                        override val isDefault = true
-                    } }
-            } catch (e: Exception) {
-                LOG.error("Error while loading script template classes")
-                LOG.printStackTrace(e)
-            }
-        }
-
-        LOG.info("Definitions: ${scriptDefinitions.map { it?.legacyDefinition?.template?.simpleName }}")
-        scripts.setScriptDefinitions(scriptDefinitions)
-        LOG.info("Default def: ${scripts.getDefaultDefinition()?.legacyDefinition?.template?.simpleName}")
     }
 
     fun updateConfiguration(config: CompilerConfiguration) {
