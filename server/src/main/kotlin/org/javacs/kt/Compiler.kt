@@ -36,11 +36,14 @@ import org.jetbrains.kotlin.resolve.extensions.ExtraImportsProviderExtension
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
+import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.findScriptDefinition
 import org.jetbrains.kotlin.scripting.extensions.ScriptExtraImportsProviderExtension
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
@@ -83,11 +86,9 @@ private class CompilationEnvironment(
             configuration = KotlinCompilerConfiguration().apply {
                 put(CommonConfigurationKeys.MODULE_NAME, JvmProtoBufUtil.DEFAULT_MODULE_NAME)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
-                add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 addJvmClasspathRoots(classPath.map { it.toFile() })
-
                 // Setup script templates
-                var scriptDefinitions: List<ScriptDefinition> = listOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
+                var scriptDefinitions: List<ScriptDefinition> = listOf()
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
                     LOG.info("Configuring Kotlin DSL script templates...")
@@ -101,16 +102,22 @@ private class CompilationEnvironment(
                     try {
                         // Load template classes
                         val scriptClassLoader = URLClassLoader(classPath.map { it.toUri().toURL() }.toTypedArray())
+                        val fileClassPath = classPath.map { it.toFile() }
                         val scriptHostConfig = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
-                            configurationDependencies(JvmDependency(classPath.map { it.toFile() }))
+                            configurationDependencies(JvmDependency(fileClassPath))
                         }
-                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
+                        scriptDefinitions = scriptTemplates
+                            .map { object : ScriptDefinition.FromLegacy(defaultJvmScriptingHostConfiguration, KotlinScriptDefinition(scriptClassLoader.loadClass(it).kotlin)) {
+                                override val isDefault = true
+                            } }
                     } catch (e: Exception) {
                         LOG.error("Error while loading script template classes")
                         LOG.printStackTrace(e)
                     }
                 }
                 addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
+                put(JVMConfigurationKeys.DISABLE_STANDARD_SCRIPT_DEFINITION, true)
+                add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
@@ -121,7 +128,7 @@ private class CompilationEnvironment(
         }
 
         parser = KtPsiFactory(project)
-        scripts = ScriptDefinitionProvider.getInstance(project)!!
+        scripts = ScriptDefinitionProvider.getInstance(project)!! as CliScriptDefinitionProvider
     }
 
     fun updateConfiguration(config: CompilerConfiguration) {
@@ -249,6 +256,7 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
             compileFiles(listOf(file), sourcePath, kind)
 
     fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
+        files.forEach { LOG.info("$it -> ScriptDefinition: ${it.findScriptDefinition()?.legacyDefinition?.template?.simpleName}") }
         compileLock.withLock {
             val (container, trace) = compileEnvironmentFor(kind).createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
