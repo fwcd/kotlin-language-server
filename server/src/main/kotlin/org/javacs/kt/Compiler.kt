@@ -38,13 +38,16 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
+import org.jetbrains.kotlin.scripting.definitions.ScriptCompilationConfigurationFromDefinition
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition // Legacy
 import org.jetbrains.kotlin.scripting.definitions.findScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.getEnvironment
 import org.jetbrains.kotlin.scripting.extensions.ScriptExtraImportsProviderExtension
+import org.jetbrains.kotlin.scripting.resolve.KotlinScriptDefinitionFromAnnotatedTemplate
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
 import org.jetbrains.kotlin.util.KotlinFrontEndException
@@ -56,6 +59,12 @@ import java.nio.file.Paths
 import java.net.URLClassLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.script.dependencies.Environment
+import kotlin.script.dependencies.ScriptContents
+import kotlin.script.experimental.dependencies.ScriptDependencies
+import kotlin.script.experimental.api.ScriptCompilationConfiguration
+import kotlin.script.experimental.dependencies.DependenciesResolver
+import kotlin.script.experimental.dependencies.DependenciesResolver.ResolveResult
 import kotlin.script.experimental.host.ScriptingHostConfiguration
 import kotlin.script.experimental.host.configurationDependencies
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
@@ -89,7 +98,7 @@ private class CompilationEnvironment(
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 addJvmClasspathRoots(classPath.map { it.toFile() })
 
-                // Setup script templates
+                // Setup script templates (e.g. used by Gradle's Kotlin DSL)
                 var scriptDefinitions: List<ScriptDefinition> = listOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
@@ -108,7 +117,21 @@ private class CompilationEnvironment(
                         val scriptHostConfig = ScriptingHostConfiguration(defaultJvmScriptingHostConfiguration) {
                             configurationDependencies(JvmDependency(fileClassPath))
                         }
-                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }
+                        // TODO: KotlinScriptDefinition will soon be deprecated, use
+                        //       ScriptDefinition.compilationConfiguration and its defaultImports instead
+                        //       of KotlinScriptDefinition.dependencyResolver
+                        // TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible
+                        scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin, fileClassPath) }
+                        // scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacy(scriptHostConfig, object : KotlinScriptDefinitionFromAnnotatedTemplate(
+                        //     scriptClassLoader.loadClass(it).kotlin,
+                        //     scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
+                        // ) {
+                        //     override val dependencyResolver: DependenciesResolver = object : DependenciesResolver {
+                        //         override fun resolve(scriptContents: ScriptContents, environment: Environment) = ResolveResult.Success(ScriptDependencies(
+                        //             imports = listOf("org.gradle.kotlin.api.*")
+                        //         ))
+                        //     }
+                        // }) }
                     } catch (e: Exception) {
                         LOG.error("Error while loading script template classes")
                         LOG.printStackTrace(e)
