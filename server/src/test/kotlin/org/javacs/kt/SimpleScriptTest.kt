@@ -32,6 +32,8 @@ private class SnippetRunner {
 }
 
 class SimpleScriptTest {
+    // TODO: Test a script using the language server instead
+    //       of just experimenting with the API
     @Test
     fun basicScript() {
         val runner = SnippetRunner()

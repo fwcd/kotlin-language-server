@@ -66,6 +66,7 @@ dependencies {
 
     // See https://github.com/JetBrains/kotlin/blob/65b0a5f90328f4b9addd3a10c6f24f3037482276/libraries/examples/scripting/jvm-embeddable-host/build.gradle.kts#L8
     compileOnly 'org.jetbrains.kotlin:kotlin-scripting-jvm-host'
+    testCompileOnly 'org.jetbrains.kotlin:kotlin-scripting-jvm-host'
 
     annotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.20'
 }
