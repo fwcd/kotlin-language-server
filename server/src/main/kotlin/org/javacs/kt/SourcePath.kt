@@ -37,7 +37,7 @@ class SourcePath(
 
         fun parseIfChanged(): SourceFile {
             if (content != parsed?.text) {
-                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.virtual.kt"))
+                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.virtual.kt"), kind)
             }
 
             return this

@@ -123,7 +123,7 @@ class CompiledFile(
         }
 
         val padOffset = " ".repeat(offset)
-        val recompile = classPath.compiler.createFile(padOffset + surroundingContent, Paths.get(if (isScript) "dummy.virtual.kts" else "dummy.virtual.kt"))
+        val recompile = classPath.compiler.createFile(padOffset + surroundingContent, Paths.get("dummy.virtual" + if (isScript) ".kts" else ".kt"), kind)
         return recompile.findElementAt(cursor)?.findParent<KtElement>()
     }
 
