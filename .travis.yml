@@ -6,20 +6,11 @@ jdk:
 env: NODE_VERSION=10.2.1
 before_install: nvm install $NODE_VERSION
 script:
-  - echo "Skip default build"
+  - ./gradlew :shared:test -i
+  - ./gradlew :server:test -i
 
 jobs:
   include:
-    - stage: "Shared module"
-      name: "Build"
-      script: ./gradlew :shared:build
-    - name: "Tests"
-      script: ./gradlew :shared:test -i
-    - stage: "Language server"
-      name: "Tests"
-      script: ./gradlew :server:test -i
-    - name: "Executable"
-      script: ./gradlew :server:installDist
     - stage: "Deploy"
       before_deploy:
         - ./gradlew :server:distZip
