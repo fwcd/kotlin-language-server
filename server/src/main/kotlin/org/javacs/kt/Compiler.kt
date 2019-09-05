@@ -42,6 +42,7 @@ import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.definitions.ScriptDependenciesProvider
 import org.jetbrains.kotlin.scripting.definitions.StandardScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinition
+import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition // Legacy
 import org.jetbrains.kotlin.scripting.definitions.findScriptDefinition
 import org.jetbrains.kotlin.scripting.extensions.ScriptExtraImportsProviderExtension
 import org.jetbrains.kotlin.types.TypeUtils
@@ -254,8 +255,10 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
 
     fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         if (kind == CompilationKind.BUILD_SCRIPT) {
-            files.forEach { LOG.info("$it -> ScriptDefinition: ${it.findScriptDefinition()?.legacyDefinition?.template?.simpleName}") }
+            // Print the (legacy) script template used by the compiled Kotlin DSL build file
+            files.forEach { LOG.info("$it -> ScriptDefinition: ${it.findScriptDefinition()?.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName}") }
         }
+
         compileLock.withLock {
             val (container, trace) = compileEnvironmentFor(kind).createContainer(sourcePath)
             val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
