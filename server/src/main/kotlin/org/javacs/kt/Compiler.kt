@@ -20,6 +20,10 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.config.JvmTarget
+import org.jetbrains.kotlin.config.LanguageFeature
+import org.jetbrains.kotlin.config.LanguageVersionSettingsImpl
+import org.jetbrains.kotlin.config.ApiVersion
+import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
@@ -72,8 +76,7 @@ import kotlin.script.experimental.jvm.JvmDependency
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
-import org.jetbrains.kotlin.config.*
-import java.util.*
+
 
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
@@ -342,51 +345,5 @@ private fun describeExpression(expression: String): String = expression.lines().
         expression
     } else {
         (lines.take(3) + listOf("...", lines.last())).joinToString(separator = "\n")
-    }
-}
-
-class LanguageVersionSettingsImpl @JvmOverloads constructor(
-    override val languageVersion: LanguageVersion,
-    override val apiVersion: ApiVersion,
-    analysisFlags: Map<AnalysisFlag<*>, Any?> = emptyMap(),
-    specificFeatures: Map<LanguageFeature, LanguageFeature.State> = emptyMap()
-) : LanguageVersionSettings {
-    private val analysisFlags: Map<AnalysisFlag<*>, *> = Collections.unmodifiableMap(analysisFlags)
-    private val specificFeatures: Map<LanguageFeature, LanguageFeature.State> = Collections.unmodifiableMap(specificFeatures)
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> getFlag(flag: AnalysisFlag<T>): T = analysisFlags[flag] as T? ?: flag.defaultValue
-
-    override fun getFeatureSupport(feature: LanguageFeature): LanguageFeature.State {
-        specificFeatures[feature]?.let { return it }
-
-        val since = feature.sinceVersion
-        if (since != null && languageVersion >= since && apiVersion >= feature.sinceApiVersion) {
-            return feature.defaultState
-        }
-
-        return LanguageFeature.State.DISABLED
-    }
-
-    override fun toString() = buildString {
-        append("Language = $languageVersion, API = $apiVersion")
-        specificFeatures.forEach { (feature, state) ->
-            val char = when (state) {
-                LanguageFeature.State.ENABLED -> '+'
-                LanguageFeature.State.ENABLED_WITH_WARNING -> '~'
-                LanguageFeature.State.ENABLED_WITH_ERROR, LanguageFeature.State.DISABLED -> '-'
-            }
-            append(" $char$feature")
-        }
-    }
-
-    override fun isPreRelease(): Boolean = languageVersion.isPreRelease() ||
-        specificFeatures.any { (feature, state) ->
-            state == LanguageFeature.State.ENABLED && feature.forcesPreReleaseBinariesIfEnabled()
-        }
-
-    companion object {
-        @JvmField
-        val DEFAULT = LanguageVersionSettingsImpl(LanguageVersion.LATEST_STABLE, ApiVersion.LATEST_STABLE)
     }
 }
