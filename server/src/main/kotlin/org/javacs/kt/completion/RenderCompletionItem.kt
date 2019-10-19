@@ -49,7 +49,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Property
+        result.kind = Field
 
         return result
     }
@@ -173,7 +173,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Property
+        result.kind = Field
 
         return result
     }
@@ -189,7 +189,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertyDescriptor(desc: PropertyDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Property
+        result.kind = Field
 
         return result
     }
