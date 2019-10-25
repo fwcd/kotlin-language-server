@@ -3,6 +3,14 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.4.0]
+- Add support for Kotlin DSL buildscripts
+- Add support for non-Maven/Gradle projects
+- Improve Java-to-Kotlin converter
+- Use the Field icon instead of Property icon in completion lists
+- Add experimental support for multiplatform projects
+- Introduce the 'kls' URI scheme
+
 ## [0.3.0]
 - Improve trailing lambda completions
 - Provide completions for generic extension methods
