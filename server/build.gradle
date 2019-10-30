@@ -19,6 +19,12 @@ def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspen
 
 startScripts {
     applicationName = "kotlin-language-server"
+    doLast {
+        def windowsScriptFile = file getWindowsScript()
+        def unixScriptFile    = file getUnixScript()
+        windowsScriptFile.text = windowsScriptFile.text.replace('%APP_HOME%\\lib', '%APP_HOME%\\install\\server\\lib')
+        unixScriptFile.text  = unixScriptFile.text.replace('$APP_HOME/lib', '$APP_HOME/install/server/lib')
+    }
 }
 
 repositories {
