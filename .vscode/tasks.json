@@ -4,18 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "type": "npm",
-            "script": "watch",
-            "problemMatcher": "$tsc-watch",
-            "isBackground": true,
-            "presentation": {
-                "reveal": "never"
-            }
-        },
-        {
             "label": "Build with Gradle",
             "type": "shell",
-            "command": "gradle installDist",
+            "command": "gradle build",
             "problemMatcher": [],
             "group": {
                 "kind": "build",

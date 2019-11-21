@@ -1,0 +1,7 @@
+task distZip(type: Zip) {
+    from(projectDir) {
+        include '*.json'
+    }
+    archiveName = "${project.name}.zip"
+    destinationDirectory = file("$buildDir/distributions")
+}
