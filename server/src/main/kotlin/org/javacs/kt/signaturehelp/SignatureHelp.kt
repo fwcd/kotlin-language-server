@@ -19,21 +19,29 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.javacs.kt.LOG
 
 fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
-    val (signatures, activeDeclaration, activeParameter) = getSignatures(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
+    val (signatures, activeDeclaration, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
     return SignatureHelp(signatures, activeDeclaration, activeParameter)
 }
 
+/**
+ * Returns the doc string of the first found CallableDescriptor
+ * 
+ * Avoids fetching the SignatureHelp triplet due to an OutOfBoundsException that can occur due to the offset difference math.
+ * When hovering, the cursor param is set to the doc offset where the mouse is hovering over, rather than where the actual cursor is,
+ * hence this is seen to cause issues when slicing the param list string
+ */
 fun getDocString(file: CompiledFile, cursor: Int): String {
     val signatures = getSignatures(file, cursor)
-    if (signatures == null || signatures.first.size == 0 || signatures.first[0].documentation == null) 
+    if (signatures == null || signatures.size == 0 || signatures[0].documentation == null) 
         return ""
-    return if (signatures.first[0].documentation.isLeft()) signatures.first[0].documentation.left else ""
+    return if (signatures[0].documentation.isLeft()) signatures[0].documentation.left else ""
 }
 
 // TODO better function name?
-private fun getSignatures(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int, Int>? {
+private fun getSignatureTriplet(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int, Int>? {
     val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return null
     val candidates = candidates(call, file)
     val activeDeclaration = activeDeclaration(call, candidates)
@@ -41,6 +49,12 @@ private fun getSignatures(file: CompiledFile, cursor: Int): Triple<List<Signatur
     val signatures = candidates.map(::toSignature)
 
     return Triple(signatures, activeDeclaration, activeParameter)
+}
+
+private fun getSignatures(file: CompiledFile, cursor: Int): List<SignatureInformation>? {
+    val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return null
+    val candidates = candidates(call, file)
+    return candidates.map(::toSignature)
 }
 
 private fun toSignature(desc: CallableDescriptor): SignatureInformation {
@@ -109,7 +123,8 @@ private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
     val text = args.text
     if (text.length == 2)
         return 0
-    val beforeCursor = text.subSequence(0, Math.max(args.textRange.startOffset, cursor) - Math.min(args.textRange.startOffset, cursor))
-
+    val min = Math.min(args.textRange.startOffset, cursor)
+    val max = Math.max(args.textRange.startOffset, cursor)
+    val beforeCursor = text.subSequence(0, max-min)
     return beforeCursor.count { it == ','}
 }
