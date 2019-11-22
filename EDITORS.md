@@ -32,7 +32,7 @@ Add the following to your coc-settings.json file:
 {
     "languageserver": {
         "kotlin": {
-            "command": "/pathWhereYouClonedKotlinLanguageServer/server/build/scripts/server",
+            "command": "[path to cloned language server]/server/build/install/server/bin/kotlin-language-server",
             "filetypes": ["kotlin"]
         }
     }
