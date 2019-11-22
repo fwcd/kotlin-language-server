@@ -1,11 +1,8 @@
 language: java
-
-matrix:
-  include:
-    - dist: trusty
-      jdk: openjdk8
-    - dist: xenial
-      jdk: openjdk11
+dist: trusty
+jdk:
+  - openjdk8
+  - openjdk11
 
 env: NODE_VERSION=10.2.1
 before_install: nvm install $NODE_VERSION
