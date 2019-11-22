@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
+import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.com.intellij.psi.PsiIdentifier
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
@@ -31,7 +32,7 @@ class CompiledFile(
      * Find the type of the expression at `cursor`
      */
     fun typeAtPoint(cursor: Int): KotlinType? {
-        var cursorExpr = parseAtPoint(cursor)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
+        var cursorExpr = parseAtPoint(cursor, asReference = true)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForType(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         return typeOfExpression(surroundingExpr, scope)
@@ -52,7 +53,7 @@ class CompiledFile(
     }
 
     fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
-        val element = parseAtPoint(cursor)
+        val element = parseAtPoint(cursor, asReference = true)
         var cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
@@ -79,9 +80,13 @@ class CompiledFile(
     }
 
     /**
-     * Parse the expression at `cursor`
+     * Parse the expression at `cursor`.
+     *
+     * If the `asReference` flag is set, the method will attempt to
+     * convert a declaration (e.g. of a class or a function) to a referencing
+     * expression before parsing it.
      */
-    fun parseAtPoint(cursor: Int): KtElement? {
+    fun parseAtPoint(cursor: Int, asReference: Boolean = false): KtElement? {
         val oldCursor = oldOffset(cursor)
         val oldChanged = changedRegion(parse.text, content)?.first ?: TextRange(cursor, cursor)
         val psi = parse.findElementAt(oldCursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
@@ -91,40 +96,52 @@ class CompiledFile(
 
         LOG.debug { "PSI path: ${psi.parentsWithSelf.toList()}" }
 
-        var surroundingContent: String
-        var offset: Int
-
-        if (oldParent is KtClass) {
-            // Parsing class, currently only identifiers are supported
-            if (psi.node.elementType != KtTokens.IDENTIFIER) return null
-
-            // Parsing class name identifier: Use a fake property with the class name as type
-            //                                Otherwise the compiler/analyzer would throw an exception due to a missing TopLevelDescriptorProvider
-            val recoveryRange = psi.textRange
-            LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
-
-            val prefix = "val x: "
-            surroundingContent = prefix + psi.text
-            offset = recoveryRange.startOffset - prefix.length
-        } else {
-            // Parsing some other expression
-            val recoveryRange = oldParent.textRange
-            LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
-
-            surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
-            offset = recoveryRange.startOffset
-
-            if (!((oldParent as? KtParameter)?.hasValOrVar() ?: true)) {
-                // Prepend 'val' to (e.g. function) parameters
-                val prefix = "val "
-                surroundingContent = prefix + surroundingContent
-                offset -= prefix.length
-            }
-        }
-
+        val (surroundingContent, offset) = contentAndOffsetFromElement(psi, oldParent, asReference)
         val padOffset = " ".repeat(offset)
         val recompile = classPath.compiler.createFile(padOffset + surroundingContent, Paths.get("dummy.virtual" + if (isScript) ".kts" else ".kt"), kind)
         return recompile.findElementAt(cursor)?.findParent<KtElement>()
+    }
+
+    /**
+     * Extracts the surrounding content and the text offset from a
+     * PSI element.
+     *
+     * See `parseAtPoint` for documentation of the `asReference` flag.
+     */
+    private fun contentAndOffsetFromElement(psi: PsiElement, parent: KtElement, asReference: Boolean): Pair<String, Int> {
+        var surroundingContent: String
+        var offset: Int
+
+        if (asReference) {
+            // Convert the declaration into a fake reference expression
+            when {
+                parent is KtClass && psi.node.elementType == KtTokens.IDENTIFIER -> {
+                    // Converting class name identifier: Use a fake property with the class name as type
+                    //                                   Otherwise the compiler/analyzer would throw an exception due to a missing TopLevelDescriptorProvider
+                    val prefix = "val x: "
+                    surroundingContent = prefix + psi.text
+                    offset = psi.textRange.startOffset - prefix.length
+
+                    return Pair(surroundingContent, offset)
+                }
+            }
+        }
+
+        // Otherwise just use the expression
+        val recoveryRange = parent.textRange
+        LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
+
+        surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
+        offset = recoveryRange.startOffset
+
+        if (asReference && !((parent as? KtParameter)?.hasValOrVar() ?: true)) {
+            // Prepend 'val' to (e.g. function) parameters
+            val prefix = "val "
+            surroundingContent = prefix + surroundingContent
+            offset -= prefix.length
+        }
+
+        return Pair(surroundingContent, offset)
     }
 
     /**
