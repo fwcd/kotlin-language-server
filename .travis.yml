@@ -38,8 +38,14 @@ jobs:
         - provider: script
           script: bash scripts/maven-deploy.sh
           skip_cleanup: true
+          on:
+            tags: true
+            repo: fwcd/kotlin-language-server
 
         # Docker (GitHub Packages)
         - provider: script
           script: bash scripts/docker-deploy.sh
           skip_cleanup: true
+          on:
+            tags: true
+            repo: fwcd/kotlin-language-server
