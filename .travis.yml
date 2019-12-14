@@ -20,13 +20,10 @@ jobs:
       before_deploy:
         - ./gradlew :server:distZip
         - ./gradlew :grammars:distZip
-        - docker login docker.pkg.github.com -u fwcd -p "$DOCKER_PASSWORD"
-        - docker build -t docker.pkg.github.com/fwcd/kotlin-language-server:latest .
-        - docker push fwcd/kotlin-language-server:latest
       deploy:
+        # Binaries (GitHub Releases)
         - provider: releases
-          api_key:
-            secure: "DQLsAAtr2u2X494FOR1Q3P181M+dWbT7jLkxJRxrgRQdGipeYcUp0c9/+uyEF7o4N3i4uCAWSh4yHJ0hGtOir/L9vd/EljftIU8d/qxDduuw9mmt6/7tVOzuQ3I8+Zap5XVXgDDSO0fsiwEBEShTbqCEdhzNJ2ZVbgd/C1N8dOfObmcRHtGuxox35TmbLlOoPCXEqsnirQFxxyH5e/G2DTnrUBpZ5ZeCJJsPzVxZzvTOMPwW4EeuOk9vYPPYQqfpQdJYiSwrlN+s6ELHHs7rJQhXUAzjiaJN5C/JxEPeCcFGZ9kak168tFp8ud6l+TGaT2ViuvChWIbKb3rJvHfIIKRtDGXi6vSR55Zj0p+EelIStRsUarru/Mhewocawmlwh4RPWvefD27FntHvzCW8tC2WoBo1VMYZdQ1Qcla/QN5psyLSr8XlaeFfBZgo66rctwb0opDtDROZ0oqlYq+CMcWEj0/TtRpQxWyzlNj2r4AomGKoqtaQWXfErMKbr3m24NhSq+4IWb7m8dx6WhcFOpTaWMmGyGoGDu8RNBQerigj2qd8hoIeC9U0VJNSh3DzF12jj3cYoIT4PVwAibQHIz9dhIMjdgwDgRKFGH/PFtKSPXVAtQGhfJA6gP/6qCMMEKHRYeFExhlCJtko0zBxeBToqJoEqKVojb72dclFG5o="
+          api_key: "$GH_TOKEN"
           file_glob: true
           file:
             - "server/build/distributions/*.zip"
@@ -36,12 +33,16 @@ jobs:
           on:
             tags: true
             repo: fwcd/kotlin-language-server
+
+        # Maven (GitHub Packages)
         - provider: script
           script:
-            - ./gradlew :shared:publish
+            - ./gradlew :shared:publish :server:publish -Pgpr.user=fwcd -Pgpr.key="$GH_TOKEN"
           skip_cleanup: true
+
+        # Docker (GitHub Packages)
         - provider: script
           script:
-            - docker login docker.pkg.github.com -u fwcd -p "$DOCKER_PASSWORD"
+            - docker login docker.pkg.github.com -u fwcd -p "$GH_TOKEN"
             - docker build -t docker.pkg.github.com/fwcd/kotlin-language-server:latest .
             - docker push fwcd/kotlin-language-server:latest
