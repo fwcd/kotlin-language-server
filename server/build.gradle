@@ -52,6 +52,7 @@ dependencies {
     implementation 'org.jetbrains:fernflower:1.0'
     implementation 'com.pinterest.ktlint:ktlint-core:0.34.2'
     implementation 'com.pinterest.ktlint:ktlint-ruleset-standard:0.34.2'
+    implementation 'com.beust:jcommander:1.78'
 
     // Re-add to depend on Kotlin plugin classes directly. Note that
     // this plugin uses the normal imports (com.intellij.*)

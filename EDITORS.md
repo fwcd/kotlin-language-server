@@ -42,4 +42,6 @@ Add the following to your coc-settings.json file:
 Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.
 
 ## Other Editors
-Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way. The server uses `stdio` to send and receive `JSON-RPC` messages.
+Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
+
+The server uses `stdio` by default to send and receive `JSON-RPC` messages, but can be launched with the argument `--tcpPort=port` for TCP support.
