@@ -6,7 +6,7 @@ repositories {
     mavenCentral()
 }
 
-subprojects {
+configure(subprojects.findAll { it.name != 'grammars' }) {
     apply plugin: 'kotlin'
     apply plugin: 'maven-publish'
 
