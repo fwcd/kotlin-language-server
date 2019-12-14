@@ -10,8 +10,8 @@ RUN ./gradlew :server:installDist
 FROM openjdk:11
 
 WORKDIR /
-COPY --from=builder /kotlin-language-server/server/build/install/server .
+COPY --from=builder /kotlin-language-server/server/build/install/server /server
 
-EXPOSE 2088
+EXPOSE 49100
 
-CMD ["/server/bin/kotlin-language-server", "--tcpPort=2088"]
+CMD ["/server/bin/kotlin-language-server", "--tcpPort=49100"]
