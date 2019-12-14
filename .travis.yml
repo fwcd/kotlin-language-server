@@ -36,14 +36,10 @@ jobs:
 
         # Maven (GitHub Packages)
         - provider: script
-          script:
-            - ./gradlew :shared:publish :server:publish -x test -Pgpr.user=fwcd -Pgpr.key="$GH_TOKEN"
+          script: bash scripts/maven-deploy.sh
           skip_cleanup: true
 
         # Docker (GitHub Packages)
         - provider: script
-          script:
-            - docker login docker.pkg.github.com -u fwcd -p "$GH_TOKEN"
-            - docker build -t docker.pkg.github.com/fwcd/kotlin-language-server:latest .
-            - docker push fwcd/kotlin-language-server:latest
+          script: bash scripts/docker-deploy.sh
           skip_cleanup: true

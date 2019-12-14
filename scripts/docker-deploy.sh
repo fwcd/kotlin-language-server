@@ -1,0 +1,4 @@
+#!/bin/bash
+docker login docker.pkg.github.com -u fwcd -p "$GH_TOKEN"
+docker build -t docker.pkg.github.com/fwcd/kotlin-language-server:latest .
+docker push fwcd/kotlin-language-server:latest
