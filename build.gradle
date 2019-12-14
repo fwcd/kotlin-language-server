@@ -1,97 +1,31 @@
-buildscript {
-	repositories {
-		mavenCentral()
-	}
-
-	dependencies {
-		classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-	}
-}
-
 plugins {
-	id "com.github.jk1.tcdeps" version "0.17"
-}
-
-apply plugin: 'kotlin'
-apply plugin: 'application'
-apply plugin: 'maven'
-
-group = 'org.javacs'
-version = '0.1.1'
-
-mainClassName = "org.javacs.kt.MainKt"
-description = "Code completions, diagnostics and more for Kotlin"
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-kotlin {
-	experimental {
-		coroutines 'enable'
-	}
+    id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
 }
 
 repositories {
-	mavenCentral()
-	maven { url 'https://repo.gradle.org/gradle/libs-releases' }
-	teamcityServer {
-		url = 'http://teamcity.jetbrains.com'
-		credentials {
-			username = 'guest'
-			password = 'guest'
-		}
-	}
+    mavenCentral()
 }
 
-configurations {
-	kotlinJVMLib
+subprojects {
+    apply plugin: 'kotlin'
+    apply plugin: 'maven-publish'
+
+    publishing {
+        repositories {
+            maven {
+                name = 'GitHubPackages'
+                url = uri('https://maven.pkg.github.com/fwcd/kotlin-language-server')
+                credentials {
+                    username = project.findProperty('gpr.user') ?: System.getenv('GPR_USERNAME')
+                    password = project.findProperty('gpr.key') ?: System.getenv('GPR_PASSWORD')
+                }
+            }
+        }
+
+        publications {
+            gpr(MavenPublication) {
+                from components.java
+            }
+        }
+    }
 }
-
-dependencies {
-	def kotlinTeamCity = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
-
-	implementation "com.google.guava:guava:21.0"
-	implementation "org.gradle:gradle-tooling-api:4.3"
-	implementation "org.eclipse.lsp4j:org.eclipse.lsp4j:0.4.1"
-
-	implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-	implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
-	kotlinJVMLib tc("$kotlinTeamCity/lib/kotlin-plugin.jar")
-
-	implementation fileTree(dir: "lib", include: ["*.jar"])
-	implementation fileTree(dir: "lib-kotlin", include: ["*.jar"])
-	testImplementation "org.hamcrest:hamcrest-all:1.3"
-	testImplementation "junit:junit:4.10"
-	testImplementation "org.openjdk.jmh:jmh-core:1.20"
-	annotationProcessor "org.openjdk.jmh:jmh-generator-annprocess:1.20"
-}
-
-configurations.all { config ->
-	config.resolutionStrategy {
-		preferProjectModules()
-	}
-}
-
-test {
-	testLogging {
-		events "failed"
-		exceptionFormat "short"
-	}
-}
-
-task copyKotlinLib(type: Copy) {
-	from configurations.kotlinJVMLib
-	into "$projectDir/lib-kotlin"
-}
-
-task fixFilePermissions(type: Exec) {
-	if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-		// When running on macOS or Linux the start script
-		// needs executable permissions to run.
-		commandLine 'chmod', '+x', 'build/install/kotlin-language-server/bin/kotlin-language-server'
-	}
-}
-
-compileKotlin.dependsOn copyKotlinLib
-installDist.finalizedBy fixFilePermissions
-build.finalizedBy installDist

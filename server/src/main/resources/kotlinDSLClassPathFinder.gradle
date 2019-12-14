@@ -1,0 +1,19 @@
+import org.gradle.kotlin.dsl.accessors.AccessorsClassPathKt
+import org.gradle.internal.classpath.ClassPath
+
+allprojects { project ->
+    task kotlinLSPKotlinDSLDeps {
+        // def pattern = ~/^(?:gradle-(?:kotlin-dsl|base-services|plugins|core)|kotlin-(?:compiler|stdlib)).*\.jar/
+        def pattern = ~/^.*\.jar/
+        doLast {
+            (fileTree("$gradle.gradleHomeDir/lib") + fileTree("$gradle.gradleUserHomeDir/caches/$gradle.gradleVersion/generated-gradle-jars"))
+                .findAll { it.name =~ pattern }
+                .forEach { System.out.println "kotlin-lsp-gradle $it" }
+
+            // List dynamically generated Kotlin DSL accessors (e.g. the 'compile' configuration method)
+            def accessors = AccessorsClassPathKt.projectAccessorsClassPath(project, ClassPath.EMPTY)
+            accessors.bin.asFiles
+                .forEach { System.out.println "kotlin-lsp-gradle $it" }
+        }
+    }
+}
