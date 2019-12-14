@@ -9,8 +9,19 @@ import org.eclipse.lsp4j.ConfigurationItem
 import org.javacs.kt.util.ExitingInputStream
 
 class Args {
-    @Parameter(names = ["--tcpPort", "-p"])
-    var tcpPort: Int? = null
+    /*
+     * The language server can currently be launched in three modes:
+     *  - Stdio, in which case no argument should be specified (used by default)
+     *  - TCP Server, in which case the client has to connect to the specified tcpServerPort (used by the Docker image)
+     *  - TCP Client, in whcih case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode)
+     */
+
+    @Parameter(names = ["--tcpServerPort", "-sp"])
+    var tcpServerPort: Int? = null
+    @Parameter(names = ["--tcpClientPort", "-p"])
+    var tcpClientPort: Int? = null
+    @Parameter(names = ["--tcpCllientHost", "-h"])
+    var tcpClientHost: String = "localhost"
 }
 
 fun main(argv: Array<String>) {
@@ -18,7 +29,15 @@ fun main(argv: Array<String>) {
     LOG.connectJULFrontend()
 
     val args = Args().also { JCommander.newBuilder().addObject(it).build().parse(*argv) }
-    val (inStream, outStream) = args.tcpPort?.let { tcpConnectToClient(it) } ?: Pair(System.`in`, System.out)
+    val (inStream, outStream) = args.tcpClientPort?.let {
+        // Launch as TCP Client
+        LOG.connectStdioBackend()
+        tcpConnectToClient(args.tcpClientHost, it)
+    } ?: args.tcpServerPort?.let {
+        // Launch as TCP Server
+        LOG.connectStdioBackend()
+        tcpStartServer(it)
+    } ?: Pair(System.`in`, System.out)
 
     val server = KotlinLanguageServer()
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }

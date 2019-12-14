@@ -44,4 +44,13 @@ Note that you may need to substitute `kotlin-language-server` with `kotlin-langu
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
 
-The server uses `stdio` by default to send and receive `JSON-RPC` messages, but can be launched with the argument `--tcpPort=port` for TCP support.
+The server can be launched in three modes:
+
+* `Stdio` (the default mode)
+    * The language server uses the standard streams for JSON-RPC communication
+* `TCP Server`
+    * The language server starts a server socket and listens on `--tcpServerPort`
+* `TCP Client`
+    * The language server tries to connect to `--tcpClientHost` and `--tcpClientPort`
+
+The mode is automatically determined by the arguments provided to the language server.
