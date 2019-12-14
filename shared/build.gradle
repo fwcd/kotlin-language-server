@@ -3,6 +3,8 @@ plugins {
     id 'maven'
 }
 
+version = projectVersion
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
