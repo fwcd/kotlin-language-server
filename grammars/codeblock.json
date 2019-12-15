@@ -13,10 +13,10 @@
 			"contentName": "meta.embedded.block.kotlin",
 			"patterns": [
 				{
-					"include": "source.Kotlin"
+					"include": "source.kotlin"
 				}
 			]
 		}
 	},
-	"scopeName": "markdown.Kotlin.codeblock"
+	"scopeName": "markdown.kotlin.codeblock"
 }
