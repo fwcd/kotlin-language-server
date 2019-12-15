@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.5.2]
+- Fix Docker image tag
+
 ## [0.5.1]
 - Fix Docker deployment and codeblock grammar
 
