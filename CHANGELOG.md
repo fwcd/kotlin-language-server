@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.5.1]
+- Fix Docker deployment and codeblock grammar
+
 ## [0.5.0]
 - Add Docker support
 - Add support for TCP transport
