@@ -1,4 +1,4 @@
-# Running this container will start a language server that listens for TCP connections on port 2088
+# Running this container will start a language server that listens for TCP connections on port 49100
 # Every connection will be run in a forked child process
 
 FROM openjdk:11 AS builder
