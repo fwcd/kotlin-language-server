@@ -18,5 +18,7 @@ fun tcpStartServer(port: Int): Pair<InputStream, OutputStream> = ServerSocket(po
  * Starts a TCP client socket and connects to the client at
  * the specified address, then returns a pair of IO streams.
  */
-fun tcpConnectToClient(host: String, port: Int): Pair<InputStream, OutputStream> = Socket(host, port)
+fun tcpConnectToClient(host: String, port: Int): Pair<InputStream, OutputStream> =
+    run { LOG.info("Connecting to client at {}:{}...", host, port) }
+    .let { Socket(host, port) }
     .let { Pair(it.inputStream, it.outputStream) }
