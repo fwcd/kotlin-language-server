@@ -15,20 +15,19 @@ import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
 fun documentSymbols(file: KtFile): List<Either<SymbolInformation, DocumentSymbol>> =
-        doDocumentSymbols(file).toList().map { Either.forRight<SymbolInformation, DocumentSymbol>(it) }
+        doDocumentSymbols(file).map { Either.forRight<SymbolInformation, DocumentSymbol>(it) }
 
 private fun doDocumentSymbols(element: PsiElement): List<DocumentSymbol> {
-        val children = element.children.flatMap(::doDocumentSymbols);
-        val currentDecl = pickImportantElements(element, true);
-        if (currentDecl != null) {
-            val file = element.containingFile
-            val span = range(file.text, currentDecl.textRange)
-            val nameIdentifier = currentDecl.nameIdentifier
-            val nameSpan = if (nameIdentifier != null) range(file.text, nameIdentifier.textRange) else span
-            return listOf(DocumentSymbol(currentDecl.name?:"<anonymous>", symbolKind(currentDecl), span, nameSpan, null, children));
-        } else {
-            return children;
-        }
+    val children = element.children.flatMap(::doDocumentSymbols)
+
+    return pickImportantElements(element, true)?.let { currentDecl ->
+        val file = element.containingFile
+        val span = range(file.text, currentDecl.textRange)
+        val nameIdentifier = currentDecl.nameIdentifier
+        val nameSpan = nameIdentifier?.let { range(file.text, it.textRange) } ?: span
+        val symbol = DocumentSymbol(currentDecl.name ?: "<anonymous>", symbolKind(currentDecl), span, nameSpan, null, children)
+        listOf(symbol)
+    } ?: children
 }
 
 private const val MAX_SYMBOLS = 50
