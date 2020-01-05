@@ -6,15 +6,18 @@ import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
+import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.net.URI
+import java.util.concurrent.locks.ReentrantLock
 
 class SourcePath(
     private val cp: CompilerClassPath,
     private val contentProvider: URIContentProvider
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
+    private val parseDataWriteLock = ReentrantLock()
 
     private inner class SourceFile(
         val uri: URI,
@@ -60,9 +63,11 @@ class SourcePath(
                 LOG.debug("Compiling {}", path?.fileName)
 
                 val (context, container) = cp.compiler.compileFile(parsed!!, allIncludingThis(), kind)
-                compiledContext = context
-                compiledContainer = container
-                compiledFile = parsed
+                parseDataWriteLock.withLock {
+                    compiledContext = context
+                    compiledContainer = container
+                    compiledFile = parsed
+                }
             }
 
             return this
@@ -136,6 +141,8 @@ class SourcePath(
     fun latestCompiledVersion(uri: URI): CompiledFile =
             sourceFile(uri).prepareCompiledFile()
 
+    var beforeCompileCallback: () -> Unit = { };
+
     /**
      * Compile changed files
      */
@@ -148,14 +155,21 @@ class SourcePath(
         // Compile changed files
         fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): BindingContext? {
             if (changed.isEmpty()) return null
-            val parse = changed.map { it.parseIfChanged().parsed!! }
-            val (context, container) = cp.compiler.compileFiles(parse, all(), kind)
+            val parse = changed.associateWith { it.parseIfChanged().parsed!! }
+            val all = all()
+            beforeCompileCallback.invoke()
+            val (context, container) = cp.compiler.compileFiles(parse.values, all, kind)
 
             // Update cache
-            for (f in changed) {
-                f.compiledFile = f.parsed
-                f.compiledContext = context
-                f.compiledContainer = container
+            for ((f, parsed) in parse) {
+                parseDataWriteLock.withLock {
+                    if (f.parsed == parsed) {
+                        //only updated if the parsed file didn't change:
+                        f.compiledFile = parsed
+                        f.compiledContext = context
+                        f.compiledContainer = container
+                    }
+                }
             }
 
             return context

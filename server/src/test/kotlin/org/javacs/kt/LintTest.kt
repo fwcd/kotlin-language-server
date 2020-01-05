@@ -1,6 +1,10 @@
 package org.javacs.kt
 
+import java.util.concurrent.CancellationException
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DocumentSymbolParams
+import org.eclipse.lsp4j.PublishDiagnosticsParams
+import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
@@ -25,5 +29,28 @@ class LintTest : SingleFileTestFixture("lint", "LintErrors.kt") {
 
         assertThat(diagnostics, not(empty<Diagnostic>()))
         assertThat(languageServer.textDocumentService.lintCount, lessThan(5))
+    }
+
+    @Test fun `lintting should not be dropped if another lintting is running`() {
+        var callbackCount = 0;
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.setTestLintRecompilationCallback({
+            if (callbackCount++ == 0) {
+                diagnostics.clear()
+                replace(file, 3, 9, "return 11", "")
+                languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(TextDocumentIdentifier(uri(file).toString()))).get()
+            }
+        })
+        replace(file, 3, 16, "", "1")
+
+        while (callbackCount < 2) {
+            try {
+                languageServer.textDocumentService.debounceLint.waitForPendingTask()
+            } catch (ex: CancellationException) {}
+        }
+
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        assertThat(diagnostics, empty<Diagnostic>())
+        languageServer.textDocumentService.setTestLintRecompilationCallback({})
     }
 }
