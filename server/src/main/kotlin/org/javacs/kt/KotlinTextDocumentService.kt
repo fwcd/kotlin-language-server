@@ -303,9 +303,8 @@ class KotlinTextDocumentService(
         shutdownExecutors(awaitTermination = true)
     }
 
-    fun setTestLintRecompilationCallback(callback: () -> Unit) {
-        sp.beforeCompileCallback = callback;
-    }
+    var lintRecompilationCallback: () -> Unit = {}
+        set(callback) { sp.beforeCompileCallback = callback }
 }
 
 private inline fun<T> reportTime(block: () -> T): T {

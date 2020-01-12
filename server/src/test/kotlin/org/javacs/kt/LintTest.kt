@@ -34,13 +34,13 @@ class LintTest : SingleFileTestFixture("lint", "LintErrors.kt") {
     @Test fun `linting should not be dropped if another linting is running`() {
         var callbackCount = 0;
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
-        languageServer.textDocumentService.setTestLintRecompilationCallback({
+        languageServer.textDocumentService.lintRecompilationCallback = {
             if (callbackCount++ == 0) {
                 diagnostics.clear()
                 replace(file, 3, 9, "return 11", "")
                 languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(TextDocumentIdentifier(uri(file).toString()))).get()
             }
-        })
+        }
         replace(file, 3, 16, "", "1")
 
         while (callbackCount < 2) {
@@ -51,6 +51,6 @@ class LintTest : SingleFileTestFixture("lint", "LintErrors.kt") {
 
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
         assertThat(diagnostics, empty<Diagnostic>())
-        languageServer.textDocumentService.setTestLintRecompilationCallback({})
+        languageServer.textDocumentService.lintRecompilationCallback = {}
     }
 }
