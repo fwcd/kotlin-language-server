@@ -19,6 +19,8 @@ class SourcePath(
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
 
+    var beforeCompileCallback: () -> Unit = {};
+
     private inner class SourceFile(
         val uri: URI,
         var content: String,
@@ -140,8 +142,6 @@ class SourcePath(
      */
     fun latestCompiledVersion(uri: URI): CompiledFile =
             sourceFile(uri).prepareCompiledFile()
-
-    var beforeCompileCallback: () -> Unit = { };
 
     /**
      * Compile changed files

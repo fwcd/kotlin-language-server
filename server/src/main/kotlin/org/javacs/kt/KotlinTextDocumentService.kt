@@ -47,9 +47,9 @@ class KotlinTextDocumentService(
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
-    fun connect(client: LanguageClient) {
-        this.client = client
-    }
+    var lintRecompilationCallback: () -> Unit
+        get() = sp.beforeCompileCallback
+        set(callback) { sp.beforeCompileCallback = callback }
 
     private val TextDocumentItem.filePath: Path?
         get() = parseURI(uri).filePath
@@ -62,6 +62,10 @@ class KotlinTextDocumentService(
 
     private val TextDocumentIdentifier.content: String
         get() = uriContentProvider.contentOf(parseURI(uri))
+
+    fun connect(client: LanguageClient) {
+        this.client = client
+    }
 
     private enum class Recompile {
         ALWAYS, AFTER_DOT, NEVER
@@ -302,9 +306,6 @@ class KotlinTextDocumentService(
     override fun close() {
         shutdownExecutors(awaitTermination = true)
     }
-
-    var lintRecompilationCallback: () -> Unit = {}
-        set(callback) { sp.beforeCompileCallback = callback }
 }
 
 private inline fun<T> reportTime(block: () -> T): T {
