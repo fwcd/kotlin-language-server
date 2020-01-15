@@ -156,9 +156,9 @@ class SourcePath(
         fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): BindingContext? {
             if (changed.isEmpty()) return null
             val parse = changed.associateWith { it.parseIfChanged().parsed!! }
-            val all = all()
+            val allFiles = all()
             beforeCompileCallback.invoke()
-            val (context, container) = cp.compiler.compileFiles(parse.values, all, kind)
+            val (context, container) = cp.compiler.compileFiles(parse.values, allFiles, kind)
 
             // Update cache
             for ((f, parsed) in parse) {

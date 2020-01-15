@@ -12,7 +12,7 @@ class DebouncerTest {
 
     @Test fun callQuickly() {
         for (i in 1..10) {
-            debounce.submit { ->
+            debounce.schedule {
                 counter++
             }
         }

@@ -253,7 +253,7 @@ class KotlinTextDocumentService(
 
     private fun lintLater(uri: URI) {
         lintTodo.add(uri)
-        debounceLint.submit(::doLint)
+        debounceLint.schedule(::doLint)
     }
 
     private fun lintNow(file: URI) {
@@ -261,7 +261,7 @@ class KotlinTextDocumentService(
         debounceLint.submitImmediately(::doLint)
     }
 
-    private fun doLint(cancelCallback : () -> Boolean) {
+    private fun doLint(cancelCallback: () -> Boolean) {
         LOG.info("Linting {}", describeURIs(lintTodo))
         val files = clearLint()
         val context = sp.compileFiles(files)
