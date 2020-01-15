@@ -19,7 +19,7 @@ class SourcePath(
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
 
-    var beforeCompileCallback: () -> Unit = {};
+    var beforeCompileCallback: () -> Unit = {}
 
     private inner class SourceFile(
         val uri: URI,

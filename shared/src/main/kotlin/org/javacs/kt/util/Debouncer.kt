@@ -25,7 +25,7 @@ class Debouncer(
         pendingTask?.cancel(false)
         val currentTaskRef = AtomicReference<Future<*>>()
         val currentTask = executor.submit { task { currentTaskRef.get()?.isCancelled() ?: false } }
-        currentTaskRef.set(currentTask);
+        currentTaskRef.set(currentTask)
         pendingTask = currentTask
     }
 
@@ -33,7 +33,7 @@ class Debouncer(
         pendingTask?.cancel(false)
         val currentTaskRef = AtomicReference<Future<*>>()
         val currentTask = executor.schedule({ task { currentTaskRef.get()?.isCancelled() ?: false } }, delayMs, TimeUnit.MILLISECONDS)
-        currentTaskRef.set(currentTask);
+        currentTaskRef.set(currentTask)
         pendingTask = currentTask
     }
 

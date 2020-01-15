@@ -32,7 +32,7 @@ class LintTest : SingleFileTestFixture("lint", "LintErrors.kt") {
     }
 
     @Test fun `linting should not be dropped if another linting is running`() {
-        var callbackCount = 0;
+        var callbackCount = 0
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
         languageServer.textDocumentService.lintRecompilationCallback = {
             if (callbackCount++ == 0) {
