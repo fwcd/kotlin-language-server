@@ -2,7 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'maven'
     id 'application'
-	id 'com.github.jk1.tcdeps' version '1.2'
+    id 'com.github.jk1.tcdeps' version '1.2'
     id 'com.jaredsburrows.license' version '0.8.42'
 }
 
