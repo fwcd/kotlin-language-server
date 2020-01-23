@@ -16,15 +16,15 @@ allprojects { project ->
 
 						def buildClasses = project.getBuildDir().absolutePath +
 							File.separator + "intermediates" +
-							File.separator + "classes" +
-							File.separator + variantBase
+							File.separator + variantBase +
+							File.separator + "classes"
 
 						System.out.println "kotlin-lsp-gradle $buildClasses"
 
 						def userClasses = project.getBuildDir().absolutePath +
 							File.separator + "intermediates" +
 							File.separator + "javac" +
-							File.separator + variant.baseName.replaceAll("-", File.separator) +
+							File.separator + variantBase +
 							File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
 
 						System.out.println "kotlin-lsp-gradle $userClasses"
