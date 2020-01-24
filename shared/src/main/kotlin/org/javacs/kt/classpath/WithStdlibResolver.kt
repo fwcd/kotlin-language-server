@@ -13,7 +13,10 @@ internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : Clas
 
 private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
     // Ensure that there is exactly one kotlin-stdlib present, and/or exactly one of kotlin-stdlib-common, -jdk8, etc.
-    val isStdlib: ((Path) -> Boolean) = { it.toString().contains("kotlin-stdlib") }
+    val isStdlib: ((Path) -> Boolean) = {
+        val pathString = it.toString()
+        pathString.contains("kotlin-stdlib") && !pathString.contains("kotlin-stdlib-common")
+    }
 
     val linkedStdLibs = paths.filter(isStdlib)
         .mapNotNull { StdLibItem.from(it) }
