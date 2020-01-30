@@ -2,10 +2,10 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findCommandOnPath
+import org.javacs.kt.util.execAndReadStdoutAndStderr
 import java.nio.file.Path
 import java.nio.file.Files
 import java.io.File
-import java.io.InputStream
 
 /** Resolver for reading maven dependencies */
 internal class MavenClassPathResolver private constructor(private val pom: Path) : ClassPathResolver {
@@ -59,35 +59,16 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
     if (source) "${a.artifact}-${a.version}-sources.jar"
     else "${a.artifact}-${a.version}.jar"
 
-private fun readInputStream(process: Process, inputStream: InputStream) {
-    inputStream.bufferedReader().use { reader ->
-        while (process.isAlive) {
-            val line = reader.readLine()?.trim() ?: break
-            if (line.isNotEmpty() && !line.startsWith("Progress")) {
-                LOG.info("Maven: {}", line)
-            }
-        }
-    }
-}
-
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
-    val workingDirectory = pom.toAbsolutePath().parent.toFile()
-    val cmd = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
-    LOG.info("Run {} in {}", cmd, workingDirectory)
-    val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
-
-    val inputStream = Thread() { readInputStream(process, process.inputStream) }
-    val errorStream = Thread() { readInputStream(process, process.errorStream) }
-
-    // start the streams in parallel...
-    inputStream.start()
-    errorStream.start()
-
-    // ...then block on both of them
-    inputStream.join()
-    errorStream.join()
-
+    val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    val workingDirectory = pom.toAbsolutePath().parent
+    LOG.info("Run {} in {}", command, workingDirectory)
+    val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory)
+    LOG.debug(result)
+    if ("BUILD FAILURE" in errors) {
+        LOG.warn("Maven task failed: {}", errors.lines().firstOrNull())
+    }
     return mavenOutput
 }
 
