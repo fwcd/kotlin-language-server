@@ -17,8 +17,14 @@ fun execAndReadStdoutAndStderr(shellCommand: String, directory: Path): Pair<Stri
     val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
     val stdout = process.inputStream
     val stderr = process.errorStream
-    val output = stdout.bufferedReader().use { it.readText() }
-    val errors = stderr.bufferedReader().use { it.readText() }
+    var output = ""
+    var errors = ""
+    val outputThread = Thread { stdout.bufferedReader().use { output += it.readText() } }
+    val errorsThread = Thread { stderr.bufferedReader().use { errors += it.readText() } }
+    outputThread.start()
+    errorsThread.start()
+    outputThread.join()
+    errorsThread.join()
     return Pair(output, errors)
 }
 

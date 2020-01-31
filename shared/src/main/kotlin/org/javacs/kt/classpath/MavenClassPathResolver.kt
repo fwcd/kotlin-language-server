@@ -2,6 +2,7 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findCommandOnPath
+import org.javacs.kt.util.execAndReadStdoutAndStderr
 import java.nio.file.Path
 import java.nio.file.Files
 import java.io.File
@@ -60,20 +61,14 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
-    val workingDirectory = pom.toAbsolutePath().parent.toFile()
-    val cmd = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
-    LOG.info("Run {} in {}", cmd, workingDirectory)
-    val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
-
-    process.inputStream.bufferedReader().use { reader ->
-        while (process.isAlive) {
-            val line = reader.readLine()?.trim() ?: break
-            if (line.isNotEmpty() && !line.startsWith("Progress")) {
-                LOG.info("Maven: {}", line)
-            }
-        }
+    val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    val workingDirectory = pom.toAbsolutePath().parent
+    LOG.info("Run {} in {}", command, workingDirectory)
+    val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory)
+    LOG.debug(result)
+    if ("BUILD FAILURE" in errors) {
+        LOG.warn("Maven task failed: {}", errors.lines().firstOrNull())
     }
-
     return mavenOutput
 }
 
