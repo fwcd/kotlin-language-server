@@ -8,7 +8,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 
 ![Icon](Icon128.png)
 
-Any editor conforming to LSP is supported, including [VSCode](https://github.com/fwcd/vscode-kotlin-ide) and [Atom](https://github.com/fwcd/atom-ide-kotlin).
+Any editor conforming to LSP is supported, including [VSCode](https://github.com/fwcd/vscode-kotlin) and [Atom](https://github.com/fwcd/atom-ide-kotlin).
 
 ## Getting Started
 * See [BUILDING.md](BUILDING.md) for build instructions
