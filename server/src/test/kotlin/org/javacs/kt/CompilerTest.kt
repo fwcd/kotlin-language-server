@@ -13,7 +13,7 @@ import org.junit.BeforeClass
 import java.nio.file.Files
 
 class CompilerTest {
-    val compiler = Compiler(setOf())
+    val compiler = Compiler(setOf(), setOf())
     val myTestResources = testResourcesRoot().resolve("compiler")
     val file = myTestResources.resolve("FileToEdit.kt")
     val editedText = """

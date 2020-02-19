@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
+import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.cli.jvm.plugins.PluginCliParser
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
@@ -86,6 +87,7 @@ private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*
  * files and expressions.
  */
 private class CompilationEnvironment(
+    workspaceRoots: Set<Path>,
     classPath: Set<Path>
 ) : Closeable {
     private val disposable = Disposer.newDisposable()
@@ -112,6 +114,7 @@ private class CompilationEnvironment(
                 put(CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS, languageVersionSettings)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
+                addJavaSourceRoots(workspaceRoots.map { it.toFile() })
                 addJvmClasspathRoots(classPath.map { it.toFile() })
 
                 // Setup script templates (e.g. used by Gradle's Kotlin DSL)
@@ -159,6 +162,8 @@ private class CompilationEnvironment(
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
+
+        // TODO: Use environment.addKotlinSourceRoots(workspaceRoots) and update those instead of using a custom SourcePath/SourceFile mechanism
 
         val project = environment.project
         if (project is MockProject) {
@@ -219,12 +224,12 @@ enum class CompilationKind {
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
+class Compiler(workspaceRoots: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
     private var closed = false
     private val localFileSystem: VirtualFileSystem
 
-    private val defaultCompileEnvironment = CompilationEnvironment(classPath)
-    private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let(::CompilationEnvironment)
+    private val defaultCompileEnvironment = CompilationEnvironment(workspaceRoots, classPath)
+    private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let { CompilationEnvironment(workspaceRoots, it) }
     private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     companion object {

@@ -8,7 +8,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val classPath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
-    var compiler = Compiler(classPath, buildScriptClassPath)
+    var compiler = Compiler(workspaceRoots, classPath, buildScriptClassPath)
         private set
 
     init {
@@ -36,7 +36,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
         if (refreshCompiler) {
             compiler.close()
-            compiler = Compiler(classPath, buildScriptClassPath)
+            compiler = Compiler(workspaceRoots, classPath, buildScriptClassPath)
             updateCompilerConfiguration()
         }
     }

@@ -15,13 +15,13 @@ class CompiledFileTest {
         }
     }
 
-    fun compileFile(): CompiledFile = Compiler(setOf()).use { compiler ->
+    fun compileFile(): CompiledFile = Compiler(setOf(), setOf()).use { compiler ->
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
-        val parse = compiler.createFile(content, file)
+        val parse = compiler.createKtFile(content, file)
         val classPath = CompilerClassPath(CompilerConfiguration())
         val sourcePath = listOf(parse)
-        val (context, container) = compiler.compileFiles(sourcePath, sourcePath)
+        val (context, container) = compiler.compileKtFiles(sourcePath, sourcePath)
         CompiledFile(content, parse, context, container, sourcePath, classPath)
     }
 
