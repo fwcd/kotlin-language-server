@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
+import org.jetbrains.kotlin.com.intellij.lang.Language
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -29,6 +30,7 @@ class SourcePath(
         var compiledFile: KtFile? = null,
         var compiledContext: BindingContext? = null,
         var compiledContainer: ComponentProvider? = null,
+        val language: Language? = null,
         val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
         val isScript: Boolean = uri.toString().endsWith(".kts")
@@ -42,7 +44,7 @@ class SourcePath(
 
         fun parseIfChanged(): SourceFile {
             if (content != parsed?.text) {
-                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.virtual.kt"), kind)
+                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.virtual.${language?.associatedFileType?.defaultExtension ?: "kt"}"), kind)
             }
 
             return this
@@ -92,12 +94,12 @@ class SourcePath(
             // Fallback solution, usually *all* source files
             // should be added/opened through SourceFiles
             LOG.warn("Requested source file {} is not on source path, this is most likely a bug. Adding it now temporarily...", describeURI(uri))
-            put(uri, contentProvider.contentOf(uri), temporary = true)
+            put(uri, contentProvider.contentOf(uri), null, temporary = true)
         }
         return files[uri]!!
     }
 
-    fun put(uri: URI, content: String, temporary: Boolean = false) {
+    fun put(uri: URI, content: String, language: Language?, temporary: Boolean = false) {
         assert(!content.contains('\r'))
 
         if (temporary) {
@@ -107,7 +109,7 @@ class SourcePath(
         if (uri in files) {
             sourceFile(uri).put(content)
         } else {
-            files[uri] = SourceFile(uri, content, isTemporary = temporary)
+            files[uri] = SourceFile(uri, content, language = language, isTemporary = temporary)
         }
     }
 

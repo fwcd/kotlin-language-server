@@ -22,7 +22,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Collectors
 
-private class SourceVersion(val content: String, val version: Int, val isTemporary: Boolean)
+private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
 
 /**
  * Notify SourcePath whenever a file changes
@@ -36,7 +36,7 @@ private class NotifySourcePath(private val sp: SourcePath) {
         val content = convertLineSeparators(source.content)
 
         files[uri] = source
-        sp.put(uri, content, source.isTemporary)
+        sp.put(uri, content, source.language, source.isTemporary)
     }
 
     fun remove(uri: URI) {
@@ -74,7 +74,7 @@ class SourceFiles(
     private val open = mutableSetOf<URI>()
 
     fun open(uri: URI, content: String, version: Int) {
-        files[uri] = SourceVersion(content, version, isTemporary = !exclusions.isURIIncluded(uri))
+        files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = !exclusions.isURIIncluded(uri))
         open.add(uri)
     }
 
@@ -110,7 +110,7 @@ class SourceFiles(
                 else newText = patch(newText, change)
             }
 
-            files[uri] = SourceVersion(newText, newVersion, existing.isTemporary)
+            files[uri] = SourceVersion(newText, newVersion, existing.language, existing.isTemporary)
         }
     }
 
@@ -133,7 +133,7 @@ class SourceFiles(
 
     private fun readFromDisk(uri: URI, temporary: Boolean): SourceVersion? = try {
         val content = contentProvider.contentOf(uri)
-        SourceVersion(content, -1, isTemporary = temporary)
+        SourceVersion(content, -1, languageOf(uri), isTemporary = temporary)
     } catch (e: FileNotFoundException) {
         null
     } catch (e: IOException) {
@@ -144,18 +144,13 @@ class SourceFiles(
     private fun isSource(uri: URI): Boolean = exclusions.isURIIncluded(uri) && languageOf(uri) != null
 
     private fun languageOf(uri: URI): Language? {
-        val path = uri.path
+        val fileName = uri.filePath?.fileName?.toString() ?: return null
         return when {
-            path.endsWith(".kt") || path.endsWith(".kts") -> KotlinLanguage.INSTANCE
-            path.endsWith(".java") -> JavaLanguage.INSTANCE
+            fileName.endsWith(".kt") || fileName.endsWith(".kts") -> KotlinLanguage.INSTANCE
+            fileName.endsWith(".java") -> JavaLanguage.INSTANCE
             else -> null
         }
     }
-
-    private fun findSourceFiles(root: Path): Set<URI> = Files.walk(root)
-        .map(Path::toUri)
-        .filter(this::isSource)
-        .collect(Collectors.toSet())
 
     fun addWorkspaceRoot(root: Path) {
         val addSources = findSourceFiles(root)
@@ -219,6 +214,15 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
         if (next == -1) return writer.toString()
         else writer.write(next)
     }
+}
+
+private fun findSourceFiles(root: Path): Set<URI> {
+    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts,java}")
+    val exclusions = SourceExclusions(root)
+    return Files.walk(root)
+        .filter { exclusions.isPathIncluded(it) && sourceMatcher.matches(it.fileName) }
+        .map(Path::toUri)
+        .collect(Collectors.toSet())
 }
 
 private fun logAdded(sources: Collection<URI>, rootPath: Path?) {
