@@ -1,11 +1,13 @@
 package org.javacs.kt
 
 import org.jetbrains.kotlin.com.intellij.codeInsight.NullableNotNullManager
+import org.jetbrains.kotlin.com.intellij.lang.Language
 import org.jetbrains.kotlin.com.intellij.openapi.Disposable
 import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileSystem
+import org.jetbrains.kotlin.com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.com.intellij.psi.PsiFileFactory
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
@@ -244,26 +246,25 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
         buildScriptCompileEnvironment?.updateConfiguration(config)
     }
 
-    fun createFile(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtFile {
+    fun createPsiFile(content: String, file: Path = Paths.get("dummy.virtual.kt"), language: Language = KotlinLanguage.INSTANCE, kind: CompilationKind = CompilationKind.DEFAULT): PsiFile {
         assert(!content.contains('\r'))
 
-        val new = psiFileFactoryFor(kind).createFileFromText(file.toString(), KotlinLanguage.INSTANCE, content, true, false) as KtFile
+        val new = psiFileFactoryFor(kind).createFileFromText(file.toString(), language, content, true, false)
         assert(new.virtualFile != null)
 
         return new
     }
 
-    fun createExpression(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtExpression {
-        val property = parseDeclaration("val x = $content", file, kind) as KtProperty
+    fun createKtFile(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtFile =
+            createPsiFile(content, file, language = KotlinLanguage.INSTANCE, kind = kind) as KtFile
 
+    fun createKtExpression(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtExpression {
+        val property = createKtDeclaration("val x = $content", file, kind) as KtProperty
         return property.initializer!!
     }
 
-    fun createDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtDeclaration =
-            parseDeclaration(content, file, kind)
-
-    private fun parseDeclaration(content: String, file: Path, kind: CompilationKind = CompilationKind.DEFAULT): KtDeclaration {
-        val parse = createFile(content, file, kind)
+    fun createKtDeclaration(content: String, file: Path = Paths.get("dummy.virtual.kt"), kind: CompilationKind = CompilationKind.DEFAULT): KtDeclaration {
+        val parse = createKtFile(content, file, kind)
         val declarations = parse.declarations
 
         assert(declarations.size == 1) { "${declarations.size} declarations in $content" }
@@ -288,10 +289,10 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
     fun psiFileFactoryFor(kind: CompilationKind): PsiFileFactory =
         PsiFileFactory.getInstance(compileEnvironmentFor(kind).environment.project)
 
-    fun compileFile(file: KtFile, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> =
-        compileFiles(listOf(file), sourcePath, kind)
+    fun compileKtFile(file: KtFile, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> =
+        compileKtFiles(listOf(file), sourcePath, kind)
 
-    fun compileFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
+    fun compileKtFiles(files: Collection<KtFile>, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         if (kind == CompilationKind.BUILD_SCRIPT) {
             // Print the (legacy) script template used by the compiled Kotlin DSL build file
             files.forEach { LOG.debug { "$it -> ScriptDefinition: ${it.findScriptDefinition()?.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName}" } }
@@ -306,7 +307,7 @@ class Compiler(classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(
         }
     }
 
-    fun compileExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
+    fun compileKtExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
         try {
             // Use same lock as 'compileFile' to avoid concurrency issues such as #42
             compileLock.withLock {

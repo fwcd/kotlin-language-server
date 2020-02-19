@@ -1,8 +1,10 @@
 package org.javacs.kt
 
+import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import org.jetbrains.kotlin.com.intellij.lang.Language
+import org.jetbrains.kotlin.com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -33,7 +35,8 @@ class SourcePath(
         val language: Language? = null,
         val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
-        val isScript: Boolean = uri.toString().endsWith(".kts")
+        val extension: String? = uri.fileExtension ?: language?.associatedFileType?.defaultExtension
+        val isScript: Boolean = extension == "kts"
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
             else CompilationKind.DEFAULT
@@ -44,7 +47,8 @@ class SourcePath(
 
         fun parseIfChanged(): SourceFile {
             if (content != parsed?.text) {
-                parsed = cp.compiler.createFile(content, path ?: Paths.get("sourceFile.virtual.${language?.associatedFileType?.defaultExtension ?: "kt"}"), kind)
+                // TODO: Create PsiFile using the stored language instead
+                parsed = cp.compiler.createKtFile(content, path ?: Paths.get("sourceFile.virtual.$extension"), kind)
             }
 
             return this
@@ -66,7 +70,7 @@ class SourcePath(
             if (parsed?.text != compiledFile?.text) {
                 LOG.debug("Compiling {}", path?.fileName)
 
-                val (context, container) = cp.compiler.compileFile(parsed!!, allIncludingThis(), kind)
+                val (context, container) = cp.compiler.compileKtFile(parsed!!, allIncludingThis(), kind)
                 parseDataWriteLock.withLock {
                     compiledContext = context
                     compiledContainer = container
@@ -160,7 +164,7 @@ class SourcePath(
             val parse = changed.associateWith { it.parseIfChanged().parsed!! }
             val allFiles = all()
             beforeCompileCallback.invoke()
-            val (context, container) = cp.compiler.compileFiles(parse.values, allFiles, kind)
+            val (context, container) = cp.compiler.compileKtFiles(parse.values, allFiles, kind)
 
             // Update cache
             for ((f, parsed) in parse) {

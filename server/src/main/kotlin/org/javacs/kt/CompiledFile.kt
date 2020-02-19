@@ -42,7 +42,7 @@ class CompiledFile(
             bindingContextOf(expression, scopeWithImports).getType(expression)
 
     fun bindingContextOf(expression: KtExpression, scopeWithImports: LexicalScope): BindingContext =
-            classPath.compiler.compileExpression(expression, scopeWithImports, sourcePath, kind).first
+            classPath.compiler.compileKtExpression(expression, scopeWithImports, sourcePath, kind).first
 
     private fun expandForType(cursor: Int, surroundingExpr: KtExpression): KtExpression {
         val dotParent = surroundingExpr.parent as? KtDotQualifiedExpression
@@ -98,7 +98,7 @@ class CompiledFile(
 
         val (surroundingContent, offset) = contentAndOffsetFromElement(psi, oldParent, asReference)
         val padOffset = " ".repeat(offset)
-        val recompile = classPath.compiler.createFile(padOffset + surroundingContent, Paths.get("dummy.virtual" + if (isScript) ".kts" else ".kt"), kind)
+        val recompile = classPath.compiler.createKtFile(padOffset + surroundingContent, Paths.get("dummy.virtual" + if (isScript) ".kts" else ".kt"), kind)
         return recompile.findElementAt(cursor)?.findParent<KtElement>()
     }
 

@@ -15,6 +15,14 @@ fun parseURI(uri: String): URI = URI.create(runCatching { URLDecoder.decode(uri,
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
 
+/** Fetches the file extension WITHOUT the dot. */
+val URI.fileExtension: String?
+    get() {
+        val str = toString()
+        val dotOffset = str.lastIndexOf(".")
+        return if (dotOffset < 0) null else str.substring(dotOffset + 1)
+    }
+
 fun describeURIs(uris: Collection<URI>): String =
     if (uris.isEmpty()) "0 files"
     else if (uris.size > 5) "${uris.size} files"
