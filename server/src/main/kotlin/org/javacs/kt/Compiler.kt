@@ -29,17 +29,21 @@ import org.jetbrains.kotlin.config.ApiVersion
 import org.jetbrains.kotlin.config.LanguageVersion
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
+import org.jetbrains.kotlin.context.ModuleContext
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.load.java.JavaClassesTracker
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
-import org.jetbrains.kotlin.resolve.TopDownAnalysisMode.TopLevelDeclarations
+import org.jetbrains.kotlin.resolve.TopDownAnalysisMode
 import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
 import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.extensions.ExtraImportsProviderExtension
+import org.jetbrains.kotlin.resolve.jvm.extensions.AnalysisHandlerExtension
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
@@ -114,8 +118,10 @@ private class CompilationEnvironment(
                 put(CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS, languageVersionSettings)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
-                addJavaSourceRoots(workspaceRoots.map { it.toFile() })
                 addJvmClasspathRoots(classPath.map { it.toFile() })
+
+                // HACK: Use the SourcePath instead
+                addJavaSourceRoots(workspaceRoots.flatMap { it.toFile().walk().filter { it.name.endsWith(".java") }.toList() })
 
                 // Setup script templates (e.g. used by Gradle's Kotlin DSL)
                 val scriptDefinitions: MutableList<ScriptDefinition> = mutableListOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
@@ -163,7 +169,11 @@ private class CompilationEnvironment(
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
-        // TODO: Update VFS source files directly inside the environment instead of using a custom SourcePath/SourceFile mechanism
+        // TODO: Update VFS source files dynamically inside the environment using updateClasspath
+        // and use VirtualFileManager.getInstance instead of using a custom SourcePath/SourceFile mechanism.
+        // Documentation on the VFS is available here: https://www.jetbrains.org/intellij/sdk/docs/basics/architectural_overview/virtual_file.html
+        // Virtual files can be manipulated using input-/output-stream-readers. Note that each virtual file has an associated charset.
+
         // environment.addKotlinSourceRoots(workspaceRoots.map { it.toFile() })
 
         val project = environment.project
@@ -306,9 +316,19 @@ class Compiler(workspaceRoots: Set<Path>, classPath: Set<Path>, buildScriptClass
         }
 
         compileLock.withLock {
-            val (container, trace) = compileEnvironmentFor(kind).createContainer(sourcePath)
-            val topDownAnalyzer = container.get<LazyTopDownAnalyzer>()
-            topDownAnalyzer.analyzeDeclarations(TopLevelDeclarations, files)
+            val compileEnv = compileEnvironmentFor(kind)
+            val (container, trace) = compileEnv.createContainer(sourcePath)
+            val module = container.get<ModuleDescriptor>()
+            val moduleContext = container.get<ModuleContext>()
+            val project = compileEnv.environment.project
+            val analysisHandlerExtensions = AnalysisHandlerExtension.getInstances(project)
+
+            analysisHandlerExtensions.forEach { it.doAnalysis(project, module, moduleContext, files, trace, container) }
+
+            container.get<LazyTopDownAnalyzer>().analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, files)
+            container.get<JavaClassesTracker>().onCompletedAnalysis(module)
+
+            analysisHandlerExtensions.forEach { it.analysisCompleted(project, module, trace, files) }
 
             return Pair(trace.bindingContext, container)
         }
