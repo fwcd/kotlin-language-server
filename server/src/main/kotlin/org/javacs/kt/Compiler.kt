@@ -163,7 +163,8 @@ private class CompilationEnvironment(
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
-        // TODO: Use environment.addKotlinSourceRoots(workspaceRoots) and update those instead of using a custom SourcePath/SourceFile mechanism
+        // TODO: Update VFS source files directly inside the environment instead of using a custom SourcePath/SourceFile mechanism
+        // environment.addKotlinSourceRoots(workspaceRoots.map { it.toFile() })
 
         val project = environment.project
         if (project is MockProject) {
@@ -194,13 +195,14 @@ private class CompilationEnvironment(
     fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {
         val trace = CliBindingTrace()
         val container = TopDownAnalyzerFacadeForJVM.createContainer(
-                project = environment.project,
-                files = listOf(),
-                trace = trace,
-                configuration = environment.configuration,
-                packagePartProvider = environment::createPackagePartProvider,
-                // TODO FileBasedDeclarationProviderFactory keeps indices, re-use it across calls
-                declarationProviderFactory = { storageManager, _ ->  FileBasedDeclarationProviderFactory(storageManager, sourcePath) })
+            project = environment.project,
+            files = sourcePath,
+            trace = trace,
+            configuration = environment.configuration,
+            packagePartProvider = environment::createPackagePartProvider,
+            // TODO FileBasedDeclarationProviderFactory keeps indices, re-use it across calls
+            declarationProviderFactory = ::FileBasedDeclarationProviderFactory
+        )
         return Pair(container, trace)
     }
 
