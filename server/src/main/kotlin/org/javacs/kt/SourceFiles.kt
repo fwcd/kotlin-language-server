@@ -147,7 +147,6 @@ class SourceFiles(
         val fileName = uri.filePath?.fileName?.toString() ?: return null
         return when {
             fileName.endsWith(".kt") || fileName.endsWith(".kts") -> KotlinLanguage.INSTANCE
-            fileName.endsWith(".java") -> JavaLanguage.INSTANCE
             else -> null
         }
     }
