@@ -216,8 +216,9 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
     }
 }
 
+// TODO: Cut off branches that are excluded in the walker directly
 private fun findSourceFiles(root: Path): Set<URI> {
-    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts,java}")
+    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
     val exclusions = SourceExclusions(root)
     return Files.walk(root)
         .filter { exclusions.isPathIncluded(it) && sourceMatcher.matches(it.fileName) }

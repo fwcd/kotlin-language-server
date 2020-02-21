@@ -66,15 +66,15 @@ class KotlinWorkspaceService(
             when (change.type) {
                 FileChangeType.Created -> {
                     sf.createdOnDisk(uri)
-                    path?.let(cp::createdOnDisk)
+                    path?.let(cp::createdOnDisk)?.let { if (it) sp.refresh() }
                 }
                 FileChangeType.Deleted -> {
                     sf.deletedOnDisk(uri)
-                    path?.let(cp::deletedOnDisk)
+                    path?.let(cp::deletedOnDisk)?.let { if (it) sp.refresh() }
                 }
                 FileChangeType.Changed -> {
                     sf.changedOnDisk(uri)
-                    path?.let(cp::changedOnDisk)
+                    path?.let(cp::changedOnDisk)?.let { if (it) sp.refresh() }
                 }
                 null -> {
                     // Nothing to do
@@ -147,7 +147,10 @@ class KotlinWorkspaceService(
             val root = Paths.get(parseURI(change.uri))
 
             sf.addWorkspaceRoot(root)
-            cp.addWorkspaceRoot(root)
+            val refreshed = cp.addWorkspaceRoot(root)
+            if (refreshed) {
+                sp.refresh()
+            }
         }
         for (change in params.event.removed) {
             LOG.info("Dropping workspace {} from source path", change.uri)
@@ -155,7 +158,10 @@ class KotlinWorkspaceService(
             val root = Paths.get(parseURI(change.uri))
 
             sf.removeWorkspaceRoot(root)
-            cp.removeWorkspaceRoot(root)
+            val refreshed = cp.removeWorkspaceRoot(root)
+            if (refreshed) {
+                sp.refresh()
+            }
         }
     }
 }

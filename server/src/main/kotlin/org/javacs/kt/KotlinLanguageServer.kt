@@ -73,7 +73,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             val root = Paths.get(parseURI(params.rootUri))
 
             sourceFiles.addWorkspaceRoot(root)
-            classPath.addWorkspaceRoot(root)
+            val refreshed = classPath.addWorkspaceRoot(root)
+            if (refreshed) {
+                sourcePath.refresh()
+            }
         }
 
         return completedFuture(InitializeResult(serverCapabilities))
