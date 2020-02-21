@@ -164,13 +164,6 @@ private class CompilationEnvironment(
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
-        // TODO: Update VFS source files dynamically inside the environment using updateClasspath
-        // and use VirtualFileManager.getInstance instead of using a custom SourcePath/SourceFile mechanism.
-        // Documentation on the VFS is available here: https://www.jetbrains.org/intellij/sdk/docs/basics/architectural_overview/virtual_file.html
-        // Virtual files can be manipulated using input-/output-stream-writers. Note that each virtual file has an associated charset.
-
-        // environment.addKotlinSourceRoots(workspaceRoots.map { it.toFile() })
-
         val project = environment.project
         if (project is MockProject) {
             project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
@@ -231,12 +224,12 @@ enum class CompilationKind {
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(workspaceRoots: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
+class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
     private var closed = false
     private val localFileSystem: VirtualFileSystem
 
-    private val defaultCompileEnvironment = CompilationEnvironment(workspaceRoots, classPath)
-    private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let { CompilationEnvironment(workspaceRoots, it) }
+    private val defaultCompileEnvironment = CompilationEnvironment(javaSourcePath, classPath)
+    private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let { CompilationEnvironment(emptySet(), it) }
     private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     companion object {
