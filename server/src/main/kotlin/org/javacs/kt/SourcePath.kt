@@ -68,6 +68,12 @@ class SourcePath(
 
         fun compile() = parse().apply { doCompile() }
 
+        fun compileIfInitialized() {
+            if (parsed != null) {
+                compile()
+            }
+        }
+
         private fun doCompile() {
             LOG.debug("Compiling {}", path?.fileName)
 
@@ -196,11 +202,11 @@ class SourcePath(
     }
 
     /**
-     * Recompiles ALL files.
+     * Recompiles all source files that are initialized.
      */
     fun refresh() {
         LOG.info("Refreshing source path")
-        files.values.forEach { it.compile() }
+        files.values.forEach { it.compileIfInitialized() }
     }
 
     /**
