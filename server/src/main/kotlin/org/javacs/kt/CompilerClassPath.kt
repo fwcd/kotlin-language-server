@@ -127,13 +127,17 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     }
 }
 
-// TODO: Cut off branches that are excluded in the walker directly
 private fun findJavaSourceFiles(root: Path): Set<Path> {
     val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
     val exclusions = SourceExclusions(root)
-    return Files.walk(root)
-        .filter { exclusions.isPathIncluded(it) && sourceMatcher.matches(it.fileName) }
-        .collect(Collectors.toSet())
+    return root.toFile().walk()
+        .onEnter { exclusions.isPathIncluded(it.toPath()) }
+        .map { it.toPath() }
+        .filter {
+            // LOG.info("At $it")
+            sourceMatcher.matches(it)
+        }
+        .toSet()
 }
 
 private fun logAdded(sources: Collection<Path>, name: String) {

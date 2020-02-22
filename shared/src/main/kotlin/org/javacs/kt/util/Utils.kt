@@ -2,10 +2,12 @@ package org.javacs.kt.util
 
 import org.javacs.kt.LOG
 import java.io.PrintStream
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.net.URI
 import java.util.concurrent.CompletableFuture
+import java.util.stream.Stream
 
 fun execAndReadStdout(shellCommand: String, directory: Path): String {
     val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())

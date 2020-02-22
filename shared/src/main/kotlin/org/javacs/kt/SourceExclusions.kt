@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.javacs.kt.util.filePath
+import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
