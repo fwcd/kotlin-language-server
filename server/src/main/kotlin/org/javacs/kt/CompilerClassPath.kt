@@ -130,7 +130,7 @@ private fun findJavaSourceFiles(root: Path): Set<Path> {
     val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
     return SourceExclusions(root)
         .walkIncluded()
-        .filter { sourceMatcher.matches(it) }
+        .filter { sourceMatcher.matches(it.fileName) }
         .toSet()
 }
 
