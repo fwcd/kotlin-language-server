@@ -26,7 +26,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private fun refresh(
         updateClassPath: Boolean = true,
         updateBuildScriptClassPath: Boolean = true,
-        updateJavaSourcePath: Boolean = false
+        updateJavaSourcePath: Boolean = true
     ): Boolean {
         // TODO: Fetch class path and build script class path concurrently (and asynchronously)
         val resolver = defaultClassPathResolver(workspaceRoots)
@@ -81,7 +81,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.add(root)
         javaSourcePath.addAll(findJavaSourceFiles(root))
 
-        return refresh(updateJavaSourcePath = true)
+        return refresh()
     }
 
     fun removeWorkspaceRoot(root: Path): Boolean {
@@ -90,7 +90,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.remove(root)
         javaSourcePath.removeAll(findJavaSourceFiles(root))
 
-        return refresh(updateJavaSourcePath = true)
+        return refresh()
     }
 
     fun createdOnDisk(file: Path): Boolean {
