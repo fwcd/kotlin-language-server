@@ -5,8 +5,9 @@ plugins {
     id("com.jaredsburrows.license") version "0.8.42"
 }
 
+version = BuildConstants.projectVersion
+
 application {
-    version = BuildConstants.projectVersion
     mainClassName = "org.javacs.kt.MainKt"
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDistribution.into("bin") {
