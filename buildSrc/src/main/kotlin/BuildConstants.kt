@@ -6,4 +6,5 @@ object BuildConstants {
     const val kotlinVersion = "1.3.50"
     const val kotlinBuildType = "Kotlin_1350_CompilerAllPlugins"
     const val kotlinBuild = "1.3.50-release-127"
+    const val kotlinPluginBuild = ""
 }
