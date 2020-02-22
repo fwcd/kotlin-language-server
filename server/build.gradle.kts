@@ -28,11 +28,6 @@ repositories {
 }
 
 dependencies {
-    val buildType = BuildConstants.kotlinBuildType
-    val build = BuildConstants.kotlinBuild
-    val pluginBuild = BuildConstants.kotlinPluginBuild
-    val kotlinPluginTC = "$buildType:$build:kotlin-plugin-$pluginBuild.zip!/Kotlin"
-
     implementation(project(":shared"))
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.0")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.0")
@@ -45,13 +40,6 @@ dependencies {
     implementation("com.pinterest.ktlint:ktlint-core:0.34.2")
     implementation("com.pinterest.ktlint:ktlint-ruleset-standard:0.34.2")
     implementation("com.beust:jcommander:1.78")
-
-    // Re-add to depend on Kotlin plugin classes directly. Note that
-    // this plugin uses the normal imports (com.intellij.*)
-    // instead of the embedded ones (org.jetbrains.kotlin.com.intellij.*)
-    // as used by kotlin-compiler-embeddable, ktlint, etc.
-
-    // kotlinJVMLib(tc("$kotlinPluginTC/lib/kotlin-plugin.jar"))
 
     testImplementation("org.hamcrest:hamcrest-all:1.3")
     testImplementation("junit:junit:4.11")
