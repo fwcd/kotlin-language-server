@@ -20,7 +20,6 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.stream.Collectors
 
 private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
 
@@ -215,14 +214,13 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
     }
 }
 
-// TODO: Cut off branches that are excluded in the walker directly
 private fun findSourceFiles(root: Path): Set<URI> {
     val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
-    val exclusions = SourceExclusions(root)
-    return Files.walk(root)
-        .filter { exclusions.isPathIncluded(it) && sourceMatcher.matches(it.fileName) }
+    return SourceExclusions(root)
+        .walkIncluded()
+        .filter { sourceMatcher.matches(it.fileName) }
         .map(Path::toUri)
-        .collect(Collectors.toSet())
+        .toSet()
 }
 
 private fun logAdded(sources: Collection<URI>, rootPath: Path?) {

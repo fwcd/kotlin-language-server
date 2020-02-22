@@ -5,7 +5,6 @@ import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.Path
-import java.util.stream.Collectors
 
 /**
  * Manages the class path (compiled JARs, etc), the Java source path
@@ -129,14 +128,9 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
 private fun findJavaSourceFiles(root: Path): Set<Path> {
     val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
-    val exclusions = SourceExclusions(root)
-    return root.toFile().walk()
-        .onEnter { exclusions.isPathIncluded(it.toPath()) }
-        .map { it.toPath() }
-        .filter {
-            // LOG.info("At $it")
-            sourceMatcher.matches(it)
-        }
+    return SourceExclusions(root)
+        .walkIncluded()
+        .filter { sourceMatcher.matches(it) }
         .toSet()
 }
 
