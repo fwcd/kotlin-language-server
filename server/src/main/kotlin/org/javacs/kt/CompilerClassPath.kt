@@ -7,6 +7,10 @@ import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.util.stream.Collectors
 
+/**
+ * Manages the class path (compiled JARs, etc), the Java source path
+ * and the compiler. Note that Kotlin sources are stored in SourcePath.
+ */
 class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val javaSourcePath = mutableSetOf<Path>()
@@ -19,6 +23,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         compiler.updateConfiguration(config)
     }
 
+    /** Updates and possibly reinstantiates the compiler using new paths. */
     private fun refresh(
         updateClassPath: Boolean = true,
         updateBuildScriptClassPath: Boolean = true,
@@ -31,7 +36,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         if (updateClassPath) {
             val newClassPath = resolver.classpathOrEmpty
             if (newClassPath != classPath) {
-                syncPath(classPath, newClassPath, "class path")
+                syncPaths(classPath, newClassPath, "class path")
                 refreshCompiler = true
             }
         }
@@ -40,7 +45,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             LOG.info("Update build script path")
             val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
             if (newBuildScriptClassPath != buildScriptClassPath) {
-                syncPath(buildScriptClassPath, newBuildScriptClassPath, "class path")
+                syncPaths(buildScriptClassPath, newBuildScriptClassPath, "class path")
                 refreshCompiler = true
             }
         }
@@ -55,7 +60,8 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         return refreshCompiler
     }
 
-    private fun syncPath(dest: MutableSet<Path>, new: Set<Path>, name: String) {
+    /** Synchronizes the given two path sets and logs the differences. */
+    private fun syncPaths(dest: MutableSet<Path>, new: Set<Path>, name: String) {
         val added = new - dest
         val removed = dest - new
 
