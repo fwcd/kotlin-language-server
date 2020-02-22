@@ -79,7 +79,7 @@ configurations.all { config ->
 }
 
 applicationDistribution.into('bin') {
-    fileMode = 0755
+    fileMode = 755
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
@@ -148,7 +148,7 @@ test {
 }
 
 distZip {
-    archiveName = "${project.name}.zip"
+    archiveFileName = "${project.name}.zip"
 }
 
 compileKotlin.dependsOn copyKotlinJVMLib
