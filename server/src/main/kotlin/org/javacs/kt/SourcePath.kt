@@ -45,6 +45,13 @@ class SourcePath(
             content = newContent
         }
 
+        fun clean() {
+            parsed = null
+            compiledFile = null
+            compiledContext = null
+            compiledContainer = null
+        }
+
         fun parse() {
             // TODO: Create PsiFile using the stored language instead
             parsed = cp.compiler.createKtFile(content, path ?: Paths.get("sourceFile.virtual.$extension"), kind)
@@ -67,12 +74,6 @@ class SourcePath(
         fun compileIfChanged() = parseIfChanged().apply { doCompileIfChanged() }
 
         fun compile() = parse().apply { doCompile() }
-
-        fun compileIfInitialized() {
-            if (parsed != null) {
-                compile()
-            }
-        }
 
         private fun doCompile() {
             LOG.debug("Compiling {}", path?.fileName)
@@ -205,8 +206,12 @@ class SourcePath(
      * Recompiles all source files that are initialized.
      */
     fun refresh() {
-        LOG.info("Refreshing source path")
-        files.values.forEach { it.compileIfInitialized() }
+        val initialized = files.values.any { it.parsed != null }
+        if (initialized) {
+            LOG.info("Refreshing source path")
+            files.values.forEach { it.clean() }
+            files.values.forEach { it.compile() }
+        }
     }
 
     /**

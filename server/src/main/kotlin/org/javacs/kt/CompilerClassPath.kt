@@ -46,6 +46,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         }
 
         if (refreshCompiler) {
+            LOG.info("Reinstantiating compiler")
             compiler.close()
             compiler = Compiler(javaSourcePath, classPath, buildScriptClassPath)
             updateCompilerConfiguration()
