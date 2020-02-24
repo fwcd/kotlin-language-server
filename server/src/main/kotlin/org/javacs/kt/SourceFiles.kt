@@ -113,10 +113,6 @@ class SourceFiles(
         }
     }
 
-    fun contentOfTracked(uri: URI):String? {
-        return files[uri]?.content
-    }
-
     fun createdOnDisk(uri: URI) {
         changedOnDisk(uri)
     }
