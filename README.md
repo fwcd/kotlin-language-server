@@ -4,7 +4,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 [![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Build Status](https://travis-ci.org/fwcd/kotlin-language-server.svg?branch=master)](https://travis-ci.org/fwcd/kotlin-language-server)
 [![Downloads](https://img.shields.io/github/downloads/fwcd/kotlin-language-server/total)](https://github.com/fwcd/kotlin-language-server/releases)
-[![Gitter](https://badges.gitter.im/fwcd-projects/KotlinLanguageServer.png)](https://gitter.im/fwcd-projects/KotlinLanguageServer)
+[![Chat](https://img.shields.io/badge/chat-on%20discord-7289da)](https://discord.gg/fDGMeJ)
 
 ![Icon](Icon128.png)
 
