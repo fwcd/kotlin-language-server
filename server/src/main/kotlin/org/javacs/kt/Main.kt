@@ -20,7 +20,7 @@ class Args {
     var tcpServerPort: Int? = null
     @Parameter(names = ["--tcpClientPort", "-p"])
     var tcpClientPort: Int? = null
-    @Parameter(names = ["--tcpCllientHost", "-h"])
+    @Parameter(names = ["--tcpClientHost", "-h"])
     var tcpClientHost: String = "localhost"
 }
 
