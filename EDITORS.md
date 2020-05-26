@@ -39,7 +39,8 @@ Add the following to your coc-settings.json file:
 }
 ```
 
-Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.
+Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.\
+You should also note, that you need a syntax highlighter like [udalov/kotlin-vim](https://github.com/udalov/kotlin-vim) or [sheerun/vim-polyglot](https://github.com/sheerun/vim-polyglot) to work well with coc.
 
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
