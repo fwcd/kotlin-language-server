@@ -141,6 +141,8 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
     val el = file.parseAtPoint(cursor - 1) ?: return null
             // import x.y.?
     return el.findParent<KtImportDirective>()
+            // package x.y.?
+            ?: el.findParent<KtPackageDirective>()
             // :?
             ?: el.parent as? KtTypeElement
             // .?
@@ -167,6 +169,18 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             LOG.debug("Looking for members of package '{}'", parent)
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
             parentPackage.memberScope.getContributedDescriptors().asSequence()
+        }
+        // package x.y.?
+        is KtPackageDirective -> {
+            LOG.info("Completing package '{}'", surroundingElement.text)
+            val module = file.container.get<ModuleDescriptor>()
+            val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
+                ?: return doesntLookLikePackage(surroundingElement)
+            val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
+            val parent = parentDot.substring(0, parentDot.length - 1)
+            LOG.debug("Looking for members of package '{}'", parent)
+            val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
+            parentPackage.memberScope.getDescriptorsFiltered(DescriptorKindFilter.PACKAGES).asSequence()
         }
         // :?
         is KtTypeElement -> {
@@ -470,6 +484,12 @@ private fun describeDeclaration(declaration: DeclarationDescriptor): String {
 
 private fun doesntLookLikeImport(importDirective: KtImportDirective): Sequence<DeclarationDescriptor> {
     LOG.debug("{} doesn't look like import a.b...", importDirective.text)
+
+    return emptySequence()
+}
+
+private fun doesntLookLikePackage(packageDirective: KtPackageDirective): Sequence<DeclarationDescriptor> {
+    LOG.debug("{} doesn't look like package a.b...", packageDirective.text)
 
     return emptySequence()
 }
