@@ -3,6 +3,13 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.6.0]
+- Add package completion
+- Support Java imports
+- Provide tree-structured document symbols
+- Improve lint scheduling
+- Fix formatOnSave and some other bugs
+
 ## [0.5.2]
 - Fix Docker image tag
 
