@@ -1,6 +1,6 @@
 allprojects { project ->
 	task kotlinLSPProjectDeps { task ->
-        doLast {
+		doLast {
 			System.out.println ""
 			System.out.println "gradle-version $gradleVersion"
 			System.out.println "kotlin-lsp-project ${project.name}"
@@ -28,6 +28,14 @@ allprojects { project ->
 							File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
 
 						System.out.println "kotlin-lsp-gradle $userClasses"
+
+						def userVariantClasses = project.getBuildDir().absolutePath +
+							File.separator + "intermediates" +
+							File.separator + "javac" +
+							File.separator + variantBase +
+							File.separator + "classes"
+
+						System.out.println "kotlin-lsp-gradle $userVariantClasses"
 
 						variant.getCompileClasspath().each {
 							System.out.println "kotlin-lsp-gradle $it"
@@ -62,11 +70,11 @@ allprojects { project ->
 		}
 	}
 
-    task kotlinLSPAllGradleDeps {
-        doLast {
-            fileTree("$gradle.gradleHomeDir/lib")
-                .findAll { it.toString().endsWith '.jar' }
-                .forEach { System.out.println "kotlin-lsp-gradle $it" }
-        }
-    }
+	task kotlinLSPAllGradleDeps {
+		doLast {
+			fileTree("$gradle.gradleHomeDir/lib")
+				.findAll { it.toString().endsWith '.jar' }
+				.forEach { System.out.println "kotlin-lsp-gradle $it" }
+		}
+	}
 }
