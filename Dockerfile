@@ -14,4 +14,4 @@ COPY --from=builder /kotlin-language-server/server/build/install/server /server
 
 EXPOSE 49100
 
-CMD ["/server/bin/kotlin-language-server", "--tcpServerPort=49100"]
+CMD ["/server/bin/kotlin-language-server", "--tcpServerPort", "49100"]
