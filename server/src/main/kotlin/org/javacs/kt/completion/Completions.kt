@@ -76,10 +76,9 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
     val completions = elementCompletions(file, cursor, surroundingElement)
 
-    val matchesName = completions
-        .filter { containsCharactersInOrder(name(it), partial, false) }
-        .sortedBy { stringDistance(name(it), partial) }
-    val visible = matchesName.filter(isVisible(file, cursor))
+    val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, false) }
+    val sorted = matchesName.takeIf { partial.isNotEmpty() }?.sortedBy { stringDistance(name(it), partial) } ?: matchesName
+    val visible = sorted.filter(isVisible(file, cursor))
 
     return visible.map { completionItem(it, surroundingElement, file, config) }
 }
