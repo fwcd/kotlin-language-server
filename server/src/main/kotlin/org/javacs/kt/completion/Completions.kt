@@ -45,7 +45,6 @@ import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
-private const val MAX_STRING_DISTANCE = 10
 
 /** Finds completions at the specified position. */
 fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
@@ -77,7 +76,9 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
     val completions = elementCompletions(file, cursor, surroundingElement)
 
-    val matchesName = completions.sortedBy { stringDistance(name(it), partial).takeIf { it < MAX_STRING_DISTANCE || partial.isEmpty() } }
+    val matchesName = completions
+        .filter { containsCharactersInOrder(name(it), partial, false) }
+        .sortedBy { stringDistance(name(it), partial) }
     val visible = matchesName.filter(isVisible(file, cursor))
 
     return visible.map { completionItem(it, surroundingElement, file, config) }

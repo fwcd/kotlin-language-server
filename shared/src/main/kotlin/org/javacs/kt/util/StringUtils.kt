@@ -37,6 +37,9 @@ fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: In
                     val iMax = Math.max(iCandidate, iPattern)
                     iCandidate = iMax
                     iPattern = iMax
+                    if (iMax >= Math.min(candidateLength, patternLength)) {
+                        break
+                    }
                 }
 
                 searchWindow@
