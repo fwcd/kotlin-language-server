@@ -7,8 +7,10 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
+import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
+import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
 import org.jetbrains.kotlin.container.get
@@ -43,6 +45,7 @@ import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
 private const val MAX_COMPLETION_ITEMS = 50
+private const val MAX_STRING_DISTANCE = 10
 
 /** Finds completions at the specified position. */
 fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
@@ -74,8 +77,7 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
     val completions = elementCompletions(file, cursor, surroundingElement)
 
-    val nameFilter = matchesPartialIdentifier(partial)
-    val matchesName = completions.filter(nameFilter)
+    val matchesName = completions.sortedBy { stringDistance(name(it), partial).takeIf { it < MAX_STRING_DISTANCE || partial.isEmpty() } }
     val visible = matchesName.filter(isVisible(file, cursor))
 
     return visible.map { completionItem(it, surroundingElement, file, config) }
@@ -348,44 +350,14 @@ private fun implicitMembers(scope: HierarchicalScope): Sequence<DeclarationDescr
     return implicit.type.memberScope.getContributedDescriptors().asSequence()
 }
 
-private fun equalsIdentifier(identifier: String): (DeclarationDescriptor) -> Boolean {
-    return { name(it) == identifier }
-}
-
-private fun matchesPartialIdentifier(partialIdentifier: String): (DeclarationDescriptor) -> Boolean {
-    return {
-        containsCharactersInOrder(name(it), partialIdentifier, false)
-    }
-}
+private fun equalsIdentifier(identifier: String): (DeclarationDescriptor) -> Boolean =
+    { name(it) == identifier }
 
 private fun name(d: DeclarationDescriptor): String {
     if (d is ConstructorDescriptor)
         return d.constructedClass.name.identifier
     else
         return d.name.identifier
-}
-
-fun containsCharactersInOrder(
-        candidate: CharSequence, pattern: CharSequence, caseSensitive: Boolean): Boolean {
-    var iCandidate = 0
-    var iPattern = 0
-
-    while (iCandidate < candidate.length && iPattern < pattern.length) {
-        var patternChar = pattern[iPattern]
-        var testChar = candidate[iCandidate]
-
-        if (!caseSensitive) {
-            patternChar = Character.toLowerCase(patternChar)
-            testChar = Character.toLowerCase(testChar)
-        }
-
-        if (patternChar == testChar) {
-            iPattern++
-            iCandidate++
-        } else iCandidate++
-    }
-
-    return iPattern == pattern.length
 }
 
 private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) -> Boolean {
