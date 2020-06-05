@@ -79,17 +79,14 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
-    val completions = elementCompletions(file, cursor, surroundingElement).toList() // DEBUG
+    val completions = elementCompletions(file, cursor, surroundingElement)
 
-    println("Before: " + completions.map { name(it) }) // DEBUG
-
-    val matchesName = completions.filter { name(it).startsWith(partial) }
-    val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) } ?: matchesName
+    val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
+    val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
+        ?: matchesName.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
-    println("After: " + visible.map { name(it) }) // DEBUG
-
-    return visible.map { completionItem(it, surroundingElement, file, config) }.asSequence() // DEBUG
+    return visible.map { completionItem(it, surroundingElement, file, config) }
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
