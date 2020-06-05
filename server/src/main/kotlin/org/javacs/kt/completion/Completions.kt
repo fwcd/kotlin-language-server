@@ -44,19 +44,24 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
+// The maxmimum number of completion items
 private const val MAX_COMPLETION_ITEMS = 50
+
+// The minimum length after which completion lists are sorted
+private const val MIN_SORT_LENGTH = 4
 
 /** Finds completions at the specified position. */
 fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial) }
+    var isIncomplete = false
+    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
         .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
-    val isIncomplete = (itemList.size == MAX_COMPLETION_ITEMS)
+    isIncomplete = isIncomplete || (itemList.size == MAX_COMPLETION_ITEMS)
 
     return CompletionList(isIncomplete, itemList)
 }
@@ -74,13 +79,17 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
-    val completions = elementCompletions(file, cursor, surroundingElement)
+    val completions = elementCompletions(file, cursor, surroundingElement).toList() // DEBUG
 
-    val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, false) }
-    val sorted = matchesName.takeIf { partial.isNotEmpty() }?.sortedBy { stringDistance(name(it), partial) } ?: matchesName
+    println("Before: " + completions.map { name(it) }) // DEBUG
+
+    val matchesName = completions.filter { name(it).startsWith(partial) }
+    val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) } ?: matchesName
     val visible = sorted.filter(isVisible(file, cursor))
 
-    return visible.map { completionItem(it, surroundingElement, file, config) }
+    println("After: " + visible.map { name(it) }) // DEBUG
+
+    return visible.map { completionItem(it, surroundingElement, file, config) }.asSequence() // DEBUG
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
