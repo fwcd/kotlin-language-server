@@ -45,10 +45,10 @@ import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
 // The maxmimum number of completion items
-private const val MAX_COMPLETION_ITEMS = 50
+private const val MAX_COMPLETION_ITEMS = 75
 
 // The minimum length after which completion lists are sorted
-private const val MIN_SORT_LENGTH = 4
+private const val MIN_SORT_LENGTH = 3
 
 /** Finds completions at the specified position. */
 fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
