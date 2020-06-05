@@ -80,7 +80,6 @@ class FunctionScopeTest : SingleFileTestFixture("completions", "FunctionScope.kt
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
-        println("ok lol"  + labels.toString())
         assertThat(labels, hasItem("anArgument"))
         assertThat(labels, hasItem("aLocal"))
         assertThat(labels, hasItem("aClassVal"))
