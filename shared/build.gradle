@@ -10,6 +10,7 @@ targetCompatibility = 1.8
 
 repositories {
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap/' }
     mavenCentral()
 }
 

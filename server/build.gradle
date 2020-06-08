@@ -24,6 +24,7 @@ startScripts {
 repositories {
     maven { url 'https://repo.gradle.org/gradle/libs-releases' }
     maven { url uri("$projectDir/lib") }
+    maven { url 'https://dl.bintray.com/kotlin/kotlin-eap/' }
     mavenCentral()
     teamcityServer {
         url = teamCityUrl
@@ -39,7 +40,7 @@ configurations {
 }
 
 dependencies {
-    def kotlinPluginTC = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
+    // def kotlinPluginTC = "$kotlinBuildType:$kotlinBuild:kotlin-plugin-${kotlinPluginBuild}.zip!/Kotlin"
 
     implementation project(':shared')
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.0'
