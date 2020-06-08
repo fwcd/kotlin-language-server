@@ -42,6 +42,7 @@ import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.extensions.ExtraImportsProviderExtension
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.samWithReceiver.SamWithReceiverComponentRegistrar
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.configuration.ScriptingConfigurationKeys
@@ -115,7 +116,10 @@ private class CompilationEnvironment(
                 put(CommonConfigurationKeys.MODULE_NAME, JvmProtoBufUtil.DEFAULT_MODULE_NAME)
                 put(CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS, languageVersionSettings)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
-                add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
+                addAll(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, listOf(
+                    ScriptingCompilerConfigurationComponentRegistrar(),
+                    SamWithReceiverComponentRegistrar()
+                ))
 
                 addJvmClasspathRoots(classPath.map { it.toFile() })
                 addJavaSourceRoots(javaSourcePath.map { it.toFile() })
