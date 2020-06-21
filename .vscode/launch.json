@@ -4,16 +4,25 @@
         {
             "type": "kotlin",
             "request": "launch",
-            "name": "Kotlin Launch",
+            "name": "Launch KLS",
             "projectRoot": "${workspaceFolder}/server",
             "mainClass": "org.javacs.kt.MainKt"
         },
         {
-            "type": "java",
-            "name": "Attach Kotlin Language Server",
+            "type": "kotlin",
+            "name": "Attach running KLS",
             "request": "attach",
             "hostName": "localhost",
-            "port": 8000
+            "projectRoot": "${workspaceFolder}/server",
+            "port": 5005,
+            "timeout": 30000
+        },
+        {
+            "type": "java",
+            "name": "Attach running KLS with Java Debugger",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005
         },
         {
             "type": "java",
