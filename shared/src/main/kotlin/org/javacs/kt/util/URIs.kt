@@ -1,6 +1,5 @@
 package org.javacs.kt.util
 
-import org.eclipse.core.runtime.URIUtil
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -13,7 +12,7 @@ import java.nio.file.Paths
  * (including VSCode) invalidly percent-encode colons.
  */
 fun parseURI(uri: String): URI =
-    URIUtil.fromString(runCatching { URLDecoder.decode(uri, StandardCharsets.UTF_8.toString()) }.getOrDefault(uri))
+    URI.create(runCatching { URLDecoder.decode(uri.replace(" ", "%20"), StandardCharsets.UTF_8.toString()) }.getOrDefault(uri))
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
 
