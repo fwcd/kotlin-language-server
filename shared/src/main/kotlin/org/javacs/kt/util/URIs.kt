@@ -12,7 +12,7 @@ import java.nio.file.Paths
  * (including VSCode) invalidly percent-encode colons.
  */
 fun parseURI(uri: String): URI =
-    URI.create(runCatching { URLDecoder.decode(uri.replace(" ", "%20"), StandardCharsets.UTF_8.toString()) }.getOrDefault(uri))
+    URI.create(runCatching { URLDecoder.decode(uri, StandardCharsets.UTF_8.toString()).replace(" ", "%20") }.getOrDefault(uri))
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
 
