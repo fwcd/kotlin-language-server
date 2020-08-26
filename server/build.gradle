@@ -47,7 +47,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
     implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable'
     implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable'
-    implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host-embeddable'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains:fernflower:1.0'
     implementation 'com.pinterest.ktlint:ktlint-core:0.34.2'

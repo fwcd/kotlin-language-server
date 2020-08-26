@@ -16,13 +16,11 @@ class KotlinNullableNotNullManager(project: Project) : NullableNotNullManager(pr
     private val notNullsList = mutableListOf<String>()
 
     override fun getNullables(): List<String> = nullablesList
-    
+
     override fun setInstrumentedNotNulls(names: MutableList<String>) {}
 
     override fun getInstrumentedNotNulls(): List<String> = emptyList()
 
-    override fun isJsr305Default(annotation: PsiAnnotation, placeTargetTypes: Array<out PsiAnnotation.TargetType>): NullabilityAnnotationInfo? = null
-    
     override fun setNullables(vararg annotations: String) {
         nullablesList.clear()
         nullablesList.addAll(annotations)
