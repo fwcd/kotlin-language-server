@@ -7,7 +7,7 @@ allprojects { project ->
         // def pattern = ~/^(?:gradle-(?:kotlin-dsl|base-services|plugins|core)|kotlin-(?:compiler|stdlib)).*\.jar/
         def pattern = ~/^.*\.jar/
         doLast {
-            (fileTree("$gradle.gradleHomeDir/lib") + fileTree("$gradle.gradleUserHomeDir/caches/$gradle.gradleVersion/generated-gradle-jars"))
+            (fileTree("$gradle.gradleHomeDir/lib") + fileTree("$gradle.gradleUserHomeDir/caches/$gradle.gradleVersion/generated-gradle-jars") + fileTree("$gradle.gradleUserHomeDir/caches/modules-2/files-2.1"))
                 .findAll { it.name =~ pattern }
                 .forEach { System.out.println "kotlin-lsp-gradle $it" }
 
