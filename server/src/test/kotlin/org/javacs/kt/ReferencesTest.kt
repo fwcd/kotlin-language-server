@@ -8,9 +8,10 @@ class ReferencesTest : SingleFileTestFixture("references", "ReferenceTo.kt") {
     @Test fun `find referencs to foo`() {
         val request = referenceParams(file, 2, 11)
         val references = languageServer.textDocumentService.references(request).get()
+        val referenceStrs = references?.map { it.toString() }
 
-        assertThat("Finds references within a file", references, hasItem(containsString("ReferenceTo.kt")))
-        assertThat("Finds references across files", references, hasItem(containsString("ReferenceFrom.kt")))
+        assertThat("Finds references within a file", referenceStrs, hasItem(containsString("ReferenceTo.kt")))
+        assertThat("Finds references across files", referenceStrs, hasItem(containsString("ReferenceFrom.kt")))
     }
 }
 
