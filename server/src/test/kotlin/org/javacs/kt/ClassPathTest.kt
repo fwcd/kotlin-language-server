@@ -21,9 +21,9 @@ class ClassPathTest {
 
         assertTrue(Files.exists(buildFile))
 
-        val classPath = defaultClassPathResolver(listOf(workspaceRoot)).classpathOrEmpty
+        val classPath = defaultClassPathResolver(listOf(workspaceRoot)).classpathOrEmpty.map { it.toString() }
 
-        assertThat(classPath, hasItem(hasToString(containsString("junit"))))
+        assertThat(classPath, hasItem(containsString("junit")))
     }
 
     @Test fun `find kotlin stdlib`() {
