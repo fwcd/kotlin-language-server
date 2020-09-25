@@ -30,13 +30,10 @@ private fun doDocumentSymbols(element: PsiElement): List<DocumentSymbol> {
     } ?: children
 }
 
-private const val MAX_SYMBOLS = 50
-
 fun workspaceSymbols(query: String, sp: SourcePath): List<SymbolInformation> =
         doWorkspaceSymbols(sp)
                 .filter { containsCharactersInOrder(it.name!!, query, false) }
                 .mapNotNull(::symbolInformation)
-                .take(MAX_SYMBOLS)
                 .toList()
 
 private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
