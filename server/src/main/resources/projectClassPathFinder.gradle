@@ -44,26 +44,9 @@ allprojects { project ->
 				}
 			} else {
 				// Print the list of all dependencies jar files.
-				project.configurations.findAll {
-					it.metaClass.respondsTo(it, "isCanBeResolved") ? it.isCanBeResolved() : false
-				}.each {
-					it.resolve().each {
-						def inspected = it.inspect()
-
-						if (inspected.endsWith("jar")) {
-							if (!inspected.contains("zip!")) {
-								System.out.println "kotlin-lsp-gradle $it"
-							}
-						} else if (inspected.endsWith("aar")) {
-							// If the dependency is an AAR file we try to determine the location
-							// of the classes.jar file in the exploded aar folder.
-							def splitted = inspected.split("/")
-							def namespace = splitted[-5]
-							def name = splitted[-4]
-							def version = splitted[-3]
-							def explodedPath = "$project.buildDir/intermediates/exploded-aar/$namespace/$name/$version/jars/classes.jar"
-							System.out.println "kotlin-lsp-gradle $explodedPath"
-						}
+				sourceSets.forEach {
+					it.compileClasspath.forEach {
+						System.out.println "kotlin-lsp-gradle $it"
 					}
 				}
 			}
