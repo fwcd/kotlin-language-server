@@ -15,22 +15,19 @@ fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolve
 /** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
     val ignored: List<PathMatcher> = ignoredPathPatterns(workspaceRoot.resolve(".gitignore"))
-    return folderResolvers(workspaceRoot, workspaceRoot, ignored).asSequence()
+    return folderResolvers(workspaceRoot, ignored).asSequence()
 }
 
 /** Searches the folder for all build-files. */
-private fun folderResolvers(workspaceRoot: Path, folder: Path, ignored: List<PathMatcher>): Collection<ClassPathResolver> {
-    var resolvers = mutableListOf<ClassPathResolver>()
+private fun folderResolvers(root: Path, ignored: List<PathMatcher>): Collection<ClassPathResolver> {
+    val resolvers = mutableListOf<ClassPathResolver>()
 
-    for (file in Files.list(folder)) {
+    for (file in Files.walk(root)) {
         // Only test whether non-ignored file is a build-file
-        if (ignored.none { it.matches(workspaceRoot.relativize(file)) }) {
+        if (ignored.none { it.matches(root.relativize(file)) }) {
             val resolver = asClassPathProvider(file)
             if (resolver != null) {
                 resolvers.add(resolver)
-                break
-            } else if (Files.isDirectory(file)) {
-                resolvers.addAll(folderResolvers(workspaceRoot, file, ignored))
             }
         }
     }
