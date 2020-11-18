@@ -27,7 +27,24 @@ There are two hard parts of implementing a language server:
 
 The project uses the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler).
 
-Dependencies are determined by the [findClassPath](server/src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or Gradle and tells it to output a list of dependencies. Currently, both Maven and Gradle projects are supported.
+
+### Figuring out the dependencies 
+
+Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven, Gradle or `$HOME/.config/KotlinLanguageServer/classpath.{sh,bat,cmd}` and tells it to output a list of dependencies.
+
+* Example of the `~/.config/KotlinLanguageServer/classpath.sh` on Linux:
+```bash
+#!/bin/bash
+echo /my/path/kotlin-compiler-1.4.10/lib/kotlin-stdlib.jar:/my/path/my-lib.jar
+```
+
+* Example of the `%HOMEPATH%\.config\KotlinLanguageServer\classpath.bat` on Windows:
+```cmd
+@echo off
+echo C:\my\path\kotlin-compiler-1.4.10\lib\kotlin-stdlib.jar;C:\my\path\my-lib.jar
+```
+
+### Incrementally re-compiling as the user types
 
 I get incremental compilation at the file-level by keeping the same `KotlinCoreEnvironment` alive between compilations in [Compiler.kt](server/src/main/kotlin/org/javacs/kt/compiler/Compiler.kt). There is a performance benchmark in [OneFilePerformance.kt](server/src/test/kotlin/org/javacs/kt/OneFilePerformance.kt) that verifies this works.
 
