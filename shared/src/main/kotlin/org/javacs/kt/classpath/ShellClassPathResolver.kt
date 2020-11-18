@@ -1,5 +1,6 @@
 package org.javacs.kt.classpath
 
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -19,7 +20,7 @@ internal class ShellClassPathResolver(
         val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
 
         return process.inputStream.bufferedReader().readText()
-            .split(':')
+            .split(File.pathSeparator)
             .asSequence()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
@@ -38,8 +39,11 @@ internal class ShellClassPathResolver(
 
         /** Returns the ShellClassPathResolver for the global home directory shell script. */
         fun global(workingDir: Path?): ClassPathResolver =
-            globalConfigRoot.resolve("KotlinLanguageServer").resolve("classpath.sh")
-                .takeIf { Files.exists(it) }
+            globalConfigRoot.resolve("KotlinLanguageServer")?.let {
+                    it.resolve("classpath.sh").takeIf { Files.exists(it) } ?:
+                    it.resolve("classpath.bat").takeIf { Files.exists(it) } ?:
+                    it.resolve("classpath.cmd").takeIf { Files.exists(it) }
+                }
                 ?.let { ShellClassPathResolver(it, workingDir) }
                 ?: ClassPathResolver.empty
     }
