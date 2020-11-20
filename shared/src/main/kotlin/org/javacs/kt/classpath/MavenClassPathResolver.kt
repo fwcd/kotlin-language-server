@@ -40,7 +40,7 @@ private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
         .map { parseMavenArtifact(it) }
         .toSet()
 
-private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
+internal fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
     val result = mavenHome.resolve("repository")
         .resolve(a.group.replace('.', File.separatorChar))
         .resolve(a.artifact)
