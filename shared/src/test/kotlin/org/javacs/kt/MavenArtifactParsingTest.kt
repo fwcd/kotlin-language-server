@@ -17,7 +17,7 @@ class MavenArtifactParsingTest {
             version = "2.4",
             scope = "compile"
         )))
-        
+
         assertThat(parseMavenArtifact("io.netty:netty-transport-native-epoll:jar:linux-x86_64:4.1.36.Final:compile"), equalTo(Artifact(
             group = "io.netty",
             artifact = "netty-transport-native-epoll",
@@ -26,7 +26,7 @@ class MavenArtifactParsingTest {
             version = "4.1.36.Final",
             scope = "compile"
         )))
-        
+
         assertThat(parseMavenArtifact("org.codehaus.mojo:my-project:1.0"), equalTo(Artifact(
             group = "org.codehaus.mojo",
             artifact = "my-project",
@@ -35,7 +35,7 @@ class MavenArtifactParsingTest {
             version = "1.0",
             scope = null
         )))
-        
+
         assertThat(parseMavenArtifact("io.vertx:vertx-sql-client:test-jar:tests:3.8.0-SNAPSHOT:compile"), equalTo(Artifact(
             group = "io.vertx",
             artifact = "vertx-sql-client",
@@ -43,6 +43,18 @@ class MavenArtifactParsingTest {
             classifier = "tests",
             version = "3.8.0-SNAPSHOT",
             scope = "compile"
+        )))
+    }
+    @Test
+    fun `parse source artifact`() {
+        assertThat(parseMavenArtifact("com.googlecode.lanterna:lanterna:jar:sources:3.0.2:compile"), equalTo(Artifact(
+            group = "com.googlecode.lanterna",
+            artifact = "lanterna",
+            packaging = "jar",
+            source = true,
+            version = "3.0.2",
+            scope = "compile",
+            classifier = null
         )))
     }
 }
