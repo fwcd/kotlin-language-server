@@ -19,8 +19,8 @@ configure(subprojects.findAll { it.name != 'grammars' }) {
                 name = 'GitHubPackages'
                 url = uri('https://maven.pkg.github.com/fwcd/kotlin-language-server')
                 credentials {
-                    username = project.findProperty('gpr.user') ?: System.getenv('GPR_USERNAME')
-                    password = project.findProperty('gpr.key') ?: System.getenv('GPR_PASSWORD')
+                    username = System.getenv('GITHUB_ACTOR')
+                    password = System.getenv('GITHUB_TOKEN')
                 }
             }
         }

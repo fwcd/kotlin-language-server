@@ -44,6 +44,14 @@ jobs:
           asset_name: grammars.zip
           asset_content_type: application/zip
       - name: Deploy Docker image to GitHub Packages
-        run: ./scripts/deploy-docker
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: fwcd/kotlin-language-server/server
+          tag_with_ref: true
       - name: Deploy Maven artifacts to GitHub Packages
-        run: ./scripts/deploy-maven
+        run: ./gradlew :shared:publish :server:publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
