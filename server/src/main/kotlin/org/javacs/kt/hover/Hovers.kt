@@ -4,8 +4,8 @@ import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -87,7 +87,7 @@ private fun renderTypeOf(element: KtExpression, bindingContext: BindingContext):
 
     val expressionType = bindingContext[BindingContext.EXPRESSION_TYPE_INFO, element]?.type ?: element.getType(bindingContext)
     val result = expressionType?.let { TYPE_RENDERER.renderType(it) } ?: return null
-    
+
     val smartCast = bindingContext[BindingContext.SMARTCAST, element]
     if (smartCast != null && element is KtReferenceExpression) {
         val declaredType = (bindingContext[BindingContext.REFERENCE_TARGET, element] as? CallableDescriptor)?.returnType

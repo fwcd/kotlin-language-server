@@ -44,14 +44,12 @@ dependencies {
     implementation project(':shared')
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.0'
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.0'
-    implementation 'org.jetbrains.kotlin:kotlin-compiler-embeddable'
-    implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable'
-    implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable'
+    implementation 'org.jetbrains.kotlin:kotlin-compiler'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-compiler-impl'
     implementation 'org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
     implementation 'org.jetbrains:fernflower:1.0'
-    implementation 'com.pinterest.ktlint:ktlint-core:0.38.1'
-    implementation 'com.pinterest.ktlint:ktlint-ruleset-standard:0.38.1'
     implementation 'com.beust:jcommander:1.78'
 
     // Re-add to depend on Kotlin plugin classes directly. Note that

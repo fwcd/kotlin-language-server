@@ -1,8 +1,8 @@
 package org.javacs.kt
 
-import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.com.intellij.psi.PsiIdentifier
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiIdentifier
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent

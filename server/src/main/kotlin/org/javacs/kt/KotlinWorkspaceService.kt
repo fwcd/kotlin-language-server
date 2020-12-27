@@ -1,6 +1,6 @@
 package org.javacs.kt
 
-import org.jetbrains.kotlin.com.intellij.openapi.project.Project
+import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.eclipse.lsp4j.services.LanguageClient

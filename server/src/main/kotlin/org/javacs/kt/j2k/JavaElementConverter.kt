@@ -1,8 +1,8 @@
 package org.javacs.kt.j2k
 
 import org.javacs.kt.LOG
-import org.jetbrains.kotlin.com.intellij.psi.*
-import org.jetbrains.kotlin.com.intellij.psi.javadoc.*
+import com.intellij.psi.*
+import com.intellij.psi.javadoc.*
 
 /**
  * A Psi visitor that converts Java elements into
