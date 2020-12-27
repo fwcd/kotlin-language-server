@@ -1,0 +1,79 @@
+name: Deploy
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Build distribution
+        run: ./gradlew :server:distZip :grammars:distZip
+      - name: Create release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Version ${{ github.ref }}
+          draft: false
+          prerelease: false
+      - name: Upload server asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./server/build/distributions/server.zip
+          asset_name: server.zip
+          asset_content_type: application/zip
+      - name: Upload grammar asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./grammars/build/distributions/grammars.zip
+          asset_name: grammars.zip
+          asset_content_type: application/zip
+
+  # deploy:
+  #   - stage: "Deploy"
+  #     before_deploy:
+  #       - ./gradlew :server:distZip :grammars:distZip --no-watch-fs
+  #     deploy:
+  #       # Binaries (GitHub Releases)
+  #       - provider: releases
+  #         api_key: "$GITHUB_TOKEN"
+  #         file_glob: true
+  #         file:
+  #           - "server/build/distributions/*.zip"
+  #           - "grammars/build/distributions/*.zip"
+  #         skip_cleanup: true
+  #         name: "Version $TRAVIS_TAG"
+  #         on:
+  #           tags: true
+  #           repo: fwcd/kotlin-language-server
+
+  #       # Maven (GitHub Packages)
+  #       - provider: script
+  #         script: bash scripts/maven-deploy.sh
+  #         skip_cleanup: true
+  #         on:
+  #           tags: true
+  #           repo: fwcd/kotlin-language-server
+
+  #       # Docker (GitHub Packages)
+  #       - provider: script
+  #         script: bash scripts/docker-deploy.sh
+  #         skip_cleanup: true
+  #         on:
+  #           tags: true
+  #           repo: fwcd/kotlin-language-server
