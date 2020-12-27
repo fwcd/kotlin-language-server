@@ -77,7 +77,6 @@ import kotlin.script.experimental.host.configurationDependencies
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.JvmDependency
 import org.javacs.kt.util.KotlinLSException
-import org.javacs.kt.util.KotlinNullableNotNullManager
 import org.javacs.kt.util.LoggingMessageCollector
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
@@ -385,10 +384,6 @@ private class CompilationEnvironment(
         )
 
         val project = environment.project
-        if (project is MockProject) {
-            project.registerService(NullableNotNullManager::class.java, KotlinNullableNotNullManager(project))
-        }
-
         parser = KtPsiFactory(project)
         scripts = ScriptDefinitionProvider.getInstance(project)!! as CliScriptDefinitionProvider
     }

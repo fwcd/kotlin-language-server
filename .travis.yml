@@ -5,21 +5,18 @@ services:
   - docker
 
 jdk:
-  - openjdk8
   - oraclejdk11
 
 env: NODE_VERSION=10.2.1
 before_install: nvm install $NODE_VERSION
 script:
-  - ./gradlew :shared:test -i
-  - ./gradlew :server:test -i
+  - ./gradlew :shared:test :server:test --no-watch-fs -i
 
 jobs:
   include:
     - stage: "Deploy"
       before_deploy:
-        - ./gradlew :server:distZip
-        - ./gradlew :grammars:distZip
+        - ./gradlew :server:distZip :grammars:distZip --no-watch-fs
       deploy:
         # Binaries (GitHub Releases)
         - provider: releases

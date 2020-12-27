@@ -2,8 +2,11 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    repositories {
+        mavenCentral()
+        maven { url 'https://cache-redirector.jetbrains.com/kotlin.bintray.com/kotlin-plugin' }
+    }
 }
 
 configure(subprojects.findAll { it.name != 'grammars' }) {

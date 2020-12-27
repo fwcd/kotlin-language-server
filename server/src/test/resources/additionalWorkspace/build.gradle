@@ -12,6 +12,7 @@ targetCompatibility = 1.8
 
 repositories {
     mavenCentral()
+    maven { url 'https://cache-redirector.jetbrains.com/kotlin.bintray.com/kotlin-plugin' }
 }
 
 dependencies {
