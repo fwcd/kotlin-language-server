@@ -2,7 +2,7 @@
 Describes how to build and run the language server and the editor extensions.
 
 ## Setup
-* Java 8+ should be installed and located under `JAVA_HOME` or `PATH`.
+* Java 11+ should be installed and located under `JAVA_HOME` or `PATH`.
 * Note that you might need to use `gradlew` instead of `./gradlew` for the commands on Windows.
 
 ## Language Server
