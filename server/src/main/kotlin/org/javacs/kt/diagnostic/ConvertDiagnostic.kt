@@ -26,8 +26,8 @@ fun convertDiagnostic(diagnostic: KotlinDiagnostic): List<Pair<URI, LangServerDi
             val factoryName = diagnostic.factory.name
             tags = mutableListOf<DiagnosticTag>()
 
-            if ("UNUSED_VARIABLE" in factoryName) tags.add(DiagnosticTag.Unnecessary)
-            if ("DEPRECATION"     in factoryName) tags.add(DiagnosticTag.Deprecated)
+            if ("UNUSED_"     in factoryName) tags.add(DiagnosticTag.Unnecessary)
+            if ("DEPRECATION" in factoryName) tags.add(DiagnosticTag.Deprecated)
         }
         Pair(uri, d)
     }
