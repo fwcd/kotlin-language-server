@@ -2,6 +2,7 @@ package org.javacs.kt.diagnostic
 
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.Diagnostic as LangServerDiagnostic
+import org.eclipse.lsp4j.DiagnosticTag
 import org.javacs.kt.position.range
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.diagnostics.Severity
@@ -16,11 +17,18 @@ fun convertDiagnostic(diagnostic: KotlinDiagnostic): List<Pair<URI, LangServerDi
 
     return diagnostic.textRanges.map {
         val d = LangServerDiagnostic(
-                range(content, it),
-                message(diagnostic),
-                severity(diagnostic.severity),
-                "kotlin",
-                code(diagnostic))
+            range(content, it),
+            message(diagnostic),
+            severity(diagnostic.severity),
+            "kotlin",
+            code(diagnostic)
+        ).apply {
+            val factoryName = diagnostic.factory.name
+            tags = mutableListOf<DiagnosticTag>()
+
+            if ("UNUSED_VARIABLE" in factoryName) tags.add(DiagnosticTag.Unnecessary)
+            if ("DEPRECATION"     in factoryName) tags.add(DiagnosticTag.Deprecated)
+        }
         Pair(uri, d)
     }
 }
