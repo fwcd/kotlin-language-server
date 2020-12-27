@@ -3,6 +3,7 @@ package org.javacs.kt
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiIdentifier
+import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent

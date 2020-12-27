@@ -5,8 +5,8 @@ import com.intellij.psi.PsiFileFactory
 import com.intellij.openapi.project.Project
 // import org.jetbrains.kotlin.j2k.JavaToKotlinTranslator
 import org.javacs.kt.LOG
-import org.javacs.kt.Compiler
-import org.javacs.kt.CompilationKind
+import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.util.nonNull
 
 fun convertJavaToKotlin(javaCode: String, compiler: Compiler): String {

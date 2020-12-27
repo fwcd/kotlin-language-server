@@ -1,4 +1,4 @@
-package org.javacs.kt
+package org.javacs.kt.compiler
 
 import com.intellij.codeInsight.NullableNotNullManager
 import com.intellij.lang.Language
@@ -76,6 +76,8 @@ import kotlin.script.experimental.host.ScriptingHostConfiguration
 import kotlin.script.experimental.host.configurationDependencies
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.JvmDependency
+import org.javacs.kt.LOG
+import org.javacs.kt.CompilerConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
 

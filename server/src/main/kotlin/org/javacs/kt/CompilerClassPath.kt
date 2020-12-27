@@ -1,6 +1,7 @@
 package org.javacs.kt
 
 import org.javacs.kt.classpath.defaultClassPathResolver
+import org.javacs.kt.compiler.Compiler
 import java.io.Closeable
 import java.nio.file.Files
 import java.nio.file.FileSystems

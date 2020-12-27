@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
