@@ -28,9 +28,7 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
         open(file)
 
         val hover = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get()!!
-
-        assertThat(hover.contents.left, not(emptyList()))
-        assertThat(hover.contents.left.first().right.value, containsString("fun assertTrue"))
+        assertThat(hover.contents.right.value, containsString("fun assertTrue"))
     }
 
     @Ignore // TODO
@@ -42,7 +40,6 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
 
         addWorkspaceRoot()
         val hoverAgain = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get() ?: return fail("No hover")
-        assertThat(hoverAgain.contents.left, not(emptyList()))
-        assertThat(hoverAgain.contents.left.first().right.value, containsString("fun assertTrue"))
+        assertThat(hoverAgain.contents.right.value, containsString("fun assertTrue"))
     }
 }
