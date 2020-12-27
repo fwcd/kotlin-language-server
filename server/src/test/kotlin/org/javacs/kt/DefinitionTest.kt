@@ -67,7 +67,7 @@ class GoToDefinitionOfPropertiesTest : SingleFileTestFixture("definition", "GoTo
     }
 
     private fun assertGoToProperty(of: Position, expect: Range) {
-        val definitions = languageServer.textDocumentService.definition(definitionParams(file, of.line, of.character)).get().left
+        val definitions = languageServer.textDocumentService.definition(definitionParams(file, of)).get().left
         val uris = definitions.map { it.uri }
         val ranges = definitions.map { it.range }
 

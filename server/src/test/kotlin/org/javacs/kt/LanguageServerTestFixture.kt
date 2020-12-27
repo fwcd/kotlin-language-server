@@ -70,6 +70,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     fun definitionParams(relativePath: String, line: Int, column: Int): DefinitionParams =
         textDocumentPosition(relativePath, line, column).run { DefinitionParams(textDocument, position) }
 
+    fun definitionParams(relativePath: String, position: Position): DefinitionParams =
+        textDocumentPosition(relativePath, position).run { DefinitionParams(textDocument, position) }
+
     fun textDocumentPosition(relativePath: String, position: Position): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
