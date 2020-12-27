@@ -508,8 +508,11 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         CompilationKind.BUILD_SCRIPT -> buildScriptCompileEnvironment ?: defaultCompileEnvironment
     }
 
+    fun coreEnvironmentFor(kind: CompilationKind): KotlinCoreEnvironment =
+        compileEnvironmentFor(kind).environment
+
     fun psiFileFactoryFor(kind: CompilationKind): PsiFileFactory =
-        PsiFileFactory.getInstance(compileEnvironmentFor(kind).environment.project)
+        PsiFileFactory.getInstance(coreEnvironmentFor(kind).project)
 
     fun compileKtFile(file: KtFile, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> =
         compileKtFiles(listOf(file), sourcePath, kind)

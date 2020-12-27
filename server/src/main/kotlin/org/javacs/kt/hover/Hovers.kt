@@ -7,7 +7,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiDocCommentBase
-import org.jetbrains.kotlin.idea.kdoc.findKDoc
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -32,7 +31,7 @@ import org.javacs.kt.signaturehelp.getDocString
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
-    val javaDoc = target.findKDoc()?.getContent() ?: ""
+    val javaDoc = getDocString(file, cursor)
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
     val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))

@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
+import org.javacs.kt.compiler.KotlinResolutionFacade
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
@@ -166,11 +167,16 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
 }
 
 private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
+    val module = file.container.get<ModuleDescriptor>()
+    val resolutionFacade = KotlinResolutionFacade(
+        project = file.classPath.compiler.coreEnvironmentFor(file.kind).project,
+        moduleDescriptor = module,
+        componentProvider = file.container
+    )
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {
             LOG.info("Completing import '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
             val parent = parentDot.substring(0, parentDot.length - 1)
@@ -181,7 +187,6 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // package x.y.?
         is KtPackageDirective -> {
             LOG.info("Completing package '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
             val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
                 ?: return doesntLookLikePackage(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
