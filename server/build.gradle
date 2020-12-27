@@ -32,9 +32,10 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-compiler-impl:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:ide-common-ij201:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:ide-common-ij201:$kotlinVersion"
+    // implementation("org.jetbrains.kotlin:kotlin-plugin-ij201:$kotlinVersion") { transitive = false }
     implementation 'org.jetbrains:fernflower:1.0'
     implementation 'com.beust:jcommander:1.78'
 
