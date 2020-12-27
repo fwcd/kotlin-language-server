@@ -3,6 +3,12 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.8.0]
+- Tagged deprecation/unused variable warnings
+- Kotlin 1.4.20 support
+- New formatter (ktfmt)
+- Java 11+ is now required
+
 ## [0.7.1]
 
 ## [0.7.0]
