@@ -102,7 +102,7 @@ class KotlinTextDocumentService(
         }
     }
 
-    override fun hover(position: TextDocumentPositionParams): CompletableFuture<Hover?> = async.compute {
+    override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {
         reportTime {
             LOG.info("Hovering at {}", describePosition(position))
 
@@ -111,7 +111,7 @@ class KotlinTextDocumentService(
         }
     }
 
-    override fun documentHighlight(position: TextDocumentPositionParams): CompletableFuture<List<DocumentHighlight>> {
+    override fun documentHighlight(position: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>> {
         TODO("not implemented")
     }
 
@@ -119,7 +119,7 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun definition(position: TextDocumentPositionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
+    override fun definition(position: DefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
@@ -190,7 +190,7 @@ class KotlinTextDocumentService(
         lintNow(uri)
     }
 
-    override fun signatureHelp(position: TextDocumentPositionParams): CompletableFuture<SignatureHelp?> = async.compute {
+    override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
         reportTime {
             LOG.info("Signature help at {}", describePosition(position))
 
