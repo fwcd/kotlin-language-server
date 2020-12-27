@@ -27,7 +27,7 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
         addWorkspaceRoot()
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 5, 14)).get()!!
+        val hover = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get()!!
 
         assertThat(hover.contents.left, not(emptyList()))
         assertThat(hover.contents.left.first().right.value, containsString("fun assertTrue"))
@@ -37,11 +37,11 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
     @Test fun `recompile all when classpath changes`() {
         open(file)
 
-        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 5, 14)).get()
+        val hover = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get()
         assertThat("No hover before JUnit is added to classpath", hover, nullValue())
 
         addWorkspaceRoot()
-        val hoverAgain = languageServer.textDocumentService.hover(textDocumentPosition(file, 5, 14)).get() ?: return fail("No hover")
+        val hoverAgain = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get() ?: return fail("No hover")
         assertThat(hoverAgain.contents.left, not(emptyList()))
         assertThat(hoverAgain.contents.left.first().right.value, containsString("fun assertTrue"))
     }

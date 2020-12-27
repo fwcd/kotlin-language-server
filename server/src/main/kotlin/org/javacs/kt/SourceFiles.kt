@@ -196,14 +196,18 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
     }
 
     // Skip unchanged chars
-    for (character in 0 until range.start.character)
+    for (character in 0 until range.start.character) {
         writer.write(reader.read())
+    }
 
     // Write replacement text
     writer.write(change.text)
 
     // Skip replaced text
-    reader.skip(change.rangeLength!!.toLong())
+    for (i in 0 until (range.end.line - range.start.line)) {
+        reader.readLine()
+    }
+    reader.skip(range.end.character.toLong())
 
     // Write remaining text
     while (true) {

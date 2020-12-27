@@ -38,11 +38,11 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
 
         return languageServer
     }
-    
+
     @After fun closeLanguageServer() {
         languageServer.close()
     }
-    
+
     @After fun printMemoryUsage() {
         val rt = Runtime.getRuntime()
         val total = rt.totalMemory().toDouble() / 1000000.0
@@ -58,9 +58,17 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         return CompletionParams(fileId, position)
     }
 
-    fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams {
-        return textDocumentPosition(relativePath, position(line, column))
-    }
+    fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams =
+        textDocumentPosition(relativePath, position(line, column))
+
+    fun hoverParams(relativePath: String, line: Int, column: Int): HoverParams =
+        textDocumentPosition(relativePath, line, column).run { HoverParams(textDocument, position) }
+
+    fun signatureHelpParams(relativePath: String, line: Int, column: Int): SignatureHelpParams =
+        textDocumentPosition(relativePath, line, column).run { SignatureHelpParams(textDocument, position) }
+
+    fun definitionParams(relativePath: String, line: Int, column: Int): DefinitionParams =
+        textDocumentPosition(relativePath, line, column).run { DefinitionParams(textDocument, position) }
 
     fun textDocumentPosition(relativePath: String, position: Position): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
@@ -76,12 +84,12 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     fun uri(relativePath: String) =
             workspaceRoot.resolve(relativePath).toUri()
 
-    fun referenceParams(relativePath: String, line: Int, column: Int): ReferenceParams {
-        val request = ReferenceParams(ReferenceContext(true))
-        request.textDocument = TextDocumentIdentifier(uri(relativePath).toString())
-        request.position = position(line, column)
-        return request
-    }
+    fun referenceParams(relativePath: String, line: Int, column: Int): ReferenceParams =
+        ReferenceParams(
+            TextDocumentIdentifier(uri(relativePath).toString()),
+            position(line, column),
+            ReferenceContext(true)
+        )
 
     fun open(relativePath: String) {
         val file =  workspaceRoot.resolve(relativePath)
@@ -119,7 +127,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     override fun logMessage(message: MessageParams?) = printMessage(message)
 
     override fun showMessage(message: MessageParams?) = printMessage(message)
-    
+
     private fun printMessage(message: MessageParams?) {
         println("[${message?.type}] ${message?.message}")
     }

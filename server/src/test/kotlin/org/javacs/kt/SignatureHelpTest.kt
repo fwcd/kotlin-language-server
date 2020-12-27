@@ -7,7 +7,7 @@ import org.junit.Test
 
 class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.kt") {
     @Test fun `provide signature help for a function call`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 3, 20)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 3, 20)).get()!!
 
         assertThat(help.signatures, hasSize(2))
         assertThat(help.activeParameter, equalTo(0))
@@ -19,7 +19,7 @@ class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.
     }
 
     @Test fun `provide signature help for a constructor`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 4, 21)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 4, 21)).get()!!
 
         assertThat(help.signatures, hasSize(2))
         assertThat(help.activeParameter, equalTo(0))
@@ -31,25 +31,25 @@ class SignatureHelpTest : SingleFileTestFixture("signatureHelp", "SignatureHelp.
     }
 
     @Test fun `find active parameter`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 5, 32)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 5, 32)).get()!!
 
         assertThat(help.activeParameter, equalTo(1))
     }
 
     @Test fun `find active parameter in the middle of list`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 5, 30)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 5, 30)).get()!!
 
         assertThat(help.activeParameter, equalTo(0))
     }
 
     @Ignore @Test fun `find active signature using types`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 5, 32)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 5, 32)).get()!!
 
         assertThat(help.signatures[help.activeSignature].label, equalTo("fun multiParam(first: String, second: String): Unit"))
     }
 
     @Test fun `find active signature using number of arguments`() {
-        val help = languageServer.textDocumentService.signatureHelp(textDocumentPosition(file, 6, 34)).get()!!
+        val help = languageServer.textDocumentService.signatureHelp(signatureHelpParams(file, 6, 34)).get()!!
 
         assertThat(help.signatures[help.activeSignature].label, equalTo("fun oneOrTwoArgs(first: String, second: String): Unit"))
     }

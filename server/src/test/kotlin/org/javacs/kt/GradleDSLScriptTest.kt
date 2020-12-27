@@ -14,7 +14,7 @@ class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.g
     }
 
     @Test fun `hover plugin`() {
-        val hover = languageServer.textDocumentService.hover(textDocumentPosition(file, 4, 8)).get()!!
+        val hover = languageServer.textDocumentService.hover(hoverParams(file, 4, 8)).get()!!
         val contents = hover.contents.left.first().right
 
         assertThat(contents, equalTo(MarkedString("kotlin", "fun PluginDependenciesSpec.kotlin(module: String): PluginDependencySpec")))
