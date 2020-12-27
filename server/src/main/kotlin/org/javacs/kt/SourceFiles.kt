@@ -207,7 +207,11 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
     for (i in 0 until (range.end.line - range.start.line)) {
         reader.readLine()
     }
-    reader.skip(range.end.character.toLong())
+    if (range.start.line == range.end.line) {
+        reader.skip((range.end.character - range.start.character).toLong())
+    } else {
+        reader.skip(range.end.character.toLong())
+    }
 
     // Write remaining text
     while (true) {
