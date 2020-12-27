@@ -16,6 +16,7 @@ import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.idea.codeInsight.ReferenceVariantsHelper
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.load.java.descriptors.JavaMethodDescriptor
 import org.jetbrains.kotlin.load.java.sources.JavaSourceElement
@@ -231,6 +232,21 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
                 val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
                 identifiers(scope)
             }
+        }
+        // ?
+        is KtSimpleNameExpression -> {
+            ReferenceVariantsHelper(
+                file.compile,
+                resolutionFacade,
+                module,
+                { true }
+            ).getReferenceVariants(
+                expression = surroundingElement,
+                kindFilter = DescriptorKindFilter.ALL,
+                nameFilter = { !it.isSpecial },
+                filterOutJavaGettersAndSetters = true,
+                useReceiverType = null
+            ).asSequence()
         }
         // ?
         is KtNameReferenceExpression -> {
