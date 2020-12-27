@@ -390,14 +390,14 @@ private fun isDeclarationVisible(target: DeclarationDescriptor, from: Declaratio
             .none { isNotVisible(it, from) }
 
 private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean {
-    when (target.visibility) {
-        Visibilities.PRIVATE, Visibilities.PRIVATE_TO_THIS -> {
+    when (target.visibility.delegate) {
+        Visibilities.Private, Visibilities.PrivateToThis -> {
             if (DescriptorUtils.isTopLevelDeclaration(target))
                 return !sameFile(target, from)
             else
                 return !sameParent(target, from)
         }
-        Visibilities.PROTECTED -> {
+        Visibilities.Protected -> {
             return !subclassParent(target, from)
         }
         else -> return false
