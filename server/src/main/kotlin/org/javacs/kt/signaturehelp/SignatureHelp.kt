@@ -28,14 +28,14 @@ fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
 
 /**
  * Returns the doc string of the first found CallableDescriptor
- * 
+ *
  * Avoids fetching the SignatureHelp triplet due to an OutOfBoundsException that can occur due to the offset difference math.
  * When hovering, the cursor param is set to the doc offset where the mouse is hovering over, rather than where the actual cursor is,
  * hence this is seen to cause issues when slicing the param list string
  */
 fun getDocString(file: CompiledFile, cursor: Int): String {
     val signatures = getSignatures(file, cursor)
-    if (signatures == null || signatures.size == 0 || signatures[0].documentation == null) 
+    if (signatures == null || signatures.size == 0 || signatures[0].documentation == null)
         return ""
     return if (signatures[0].documentation.isLeft()) signatures[0].documentation.left else ""
 }

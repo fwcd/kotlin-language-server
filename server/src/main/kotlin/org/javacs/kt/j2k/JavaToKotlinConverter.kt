@@ -1,8 +1,8 @@
 package org.javacs.kt.j2k
 
-import org.jetbrains.kotlin.com.intellij.lang.java.JavaLanguage
-import org.jetbrains.kotlin.com.intellij.psi.PsiFileFactory
-import org.jetbrains.kotlin.com.intellij.openapi.project.Project
+import com.intellij.lang.java.JavaLanguage
+import com.intellij.psi.PsiFileFactory
+import com.intellij.openapi.project.Project
 // import org.jetbrains.kotlin.j2k.JavaToKotlinTranslator
 import org.javacs.kt.LOG
 import org.javacs.kt.Compiler

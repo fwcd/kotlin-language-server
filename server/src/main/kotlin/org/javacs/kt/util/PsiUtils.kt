@@ -1,8 +1,8 @@
 package org.javacs.kt.util
 
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.com.intellij.psi.PsiFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
 import java.nio.file.Path
 
 inline fun<reified Find> PsiElement.findParent() =

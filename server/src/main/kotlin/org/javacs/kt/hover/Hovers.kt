@@ -4,8 +4,10 @@ import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiDocCommentBase
+import org.jetbrains.kotlin.idea.kdoc.findKDoc
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -30,7 +32,7 @@ import org.javacs.kt.signaturehelp.getDocString
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
-    val javaDoc = getDocString(file, cursor)
+    val javaDoc = target.findKDoc()?.getContent() ?: ""
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
     val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
@@ -42,9 +44,7 @@ fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
 
 private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
     val expression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
-    var javaDoc: String = ""
-    if (expression.children.size > 0 && expression.children[0] is KDoc)
-        javaDoc = renderJavaDoc(expression.children[0].text)
+    var javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
     val scope = file.scopeAtPoint(cursor) ?: return null
     val hoverText = renderTypeOf(expression, file.bindingContextOf(expression, scope)) ?: return null
     return Hover(listOf(Either.forRight(MarkedString("kotlin", hoverText)), Either.forLeft(javaDoc)))
