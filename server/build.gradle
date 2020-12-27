@@ -29,14 +29,15 @@ dependencies {
     implementation project(':shared')
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j:0.7.0'
     implementation 'org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:0.7.0'
-    implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinVersion"
-    implementation "org.jetbrains.kotlin:kotlin-scripting-compiler-impl:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-compiler-embeddable:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     implementation "org.jetbrains.kotlin:ide-common-ij201:$kotlinVersion"
     // implementation("org.jetbrains.kotlin:kotlin-plugin-ij201:$kotlinVersion") { transitive = false }
     implementation 'org.jetbrains:fernflower:1.0'
+    implementation 'com.facebook:ktfmt:0.19'
     implementation 'com.beust:jcommander:1.78'
 
     testImplementation 'org.hamcrest:hamcrest-all:1.3'

@@ -1,7 +1,7 @@
 package org.javacs.kt.j2k
 
 import org.javacs.kt.LOG
-import com.intellij.psi.*
+import org.jetbrains.kotlin.com.intellij.psi.*
 
 object JavaTypeConverter : PsiTypeVisitor<String>() {
     override fun visitType(type: PsiType): String {

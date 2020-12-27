@@ -4,8 +4,8 @@ import org.eclipse.lsp4j.Hover
 import org.eclipse.lsp4j.MarkedString
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
-import com.intellij.openapi.util.TextRange
-import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.com.intellij.openapi.util.TextRange
+import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
