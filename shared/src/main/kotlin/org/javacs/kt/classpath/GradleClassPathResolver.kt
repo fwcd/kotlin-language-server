@@ -90,7 +90,7 @@ private fun findGradleCLIDependencies(command: String, projectDirectory: Path): 
     val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
     LOG.debug(result)
     if ("FAILURE: Build failed" in errors) {
-        LOG.warn("Gradle task failed: {}", errors.lines().firstOrNull())
+        LOG.warn("Gradle task failed: {}", errors.lines().joinToString("\n"))
     }
     return parseGradleCLIDependencies(result)
 }

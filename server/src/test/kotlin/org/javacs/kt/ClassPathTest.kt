@@ -21,7 +21,9 @@ class ClassPathTest {
 
         assertTrue(Files.exists(buildFile))
 
-        val classPath = defaultClassPathResolver(listOf(workspaceRoot)).classpathOrEmpty.map { it.toString() }
+        val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
+        print(resolvers)
+        val classPath = resolvers.classpathOrEmpty.map { it.toString() }
 
         assertThat(classPath, hasItem(containsString("junit")))
     }
