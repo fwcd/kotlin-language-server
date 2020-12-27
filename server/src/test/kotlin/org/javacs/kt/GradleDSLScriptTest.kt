@@ -3,7 +3,7 @@ package org.javacs.kt
 import org.junit.Test
 import org.junit.Assert.assertThat
 import org.hamcrest.Matchers.*
-import org.eclipse.lsp4j.MarkedString
+import org.eclipse.lsp4j.MarkupContent
 
 class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.gradle.kts") {
     @Test fun `edit repositories`() {
@@ -17,6 +17,6 @@ class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.g
         val hover = languageServer.textDocumentService.hover(hoverParams(file, 4, 8)).get()!!
         val contents = hover.contents.left.first().right
 
-        assertThat(contents, equalTo(MarkedString("kotlin", "fun PluginDependenciesSpec.kotlin(module: String): PluginDependencySpec")))
+        assertThat(contents, equalTo(MarkupContent("kotlin", "fun PluginDependenciesSpec.kotlin(module: String): PluginDependencySpec")))
     }
 }

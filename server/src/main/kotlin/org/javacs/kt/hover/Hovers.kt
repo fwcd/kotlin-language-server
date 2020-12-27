@@ -1,13 +1,12 @@
 package org.javacs.kt.hover
 
 import org.eclipse.lsp4j.Hover
-import org.eclipse.lsp4j.MarkedString
+import org.eclipse.lsp4j.MarkupContent
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiDocCommentBase
-import org.jetbrains.kotlin.idea.kdoc.findKDoc
 import org.jetbrains.kotlin.psi.KtExpression
 import org.jetbrains.kotlin.psi.KtCallableDeclaration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -32,14 +31,14 @@ import org.javacs.kt.signaturehelp.getDocString
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
-    val javaDoc = target.findKDoc()?.getContent() ?: ""
+    val javaDoc = getDocString(file, cursor)
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
-    val hover = Either.forRight<String, MarkedString>(MarkedString("kotlin", hoverText))
+    val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
     val range = Range(
             position(file.content, location.startOffset),
             position(file.content, location.endOffset))
-    return Hover(listOf(hover, Either.forLeft(javaDoc)), range)
+    return Hover(hover, range)
 }
 
 private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
@@ -47,7 +46,8 @@ private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
     var javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
     val scope = file.scopeAtPoint(cursor) ?: return null
     val hoverText = renderTypeOf(expression, file.bindingContextOf(expression, scope)) ?: return null
-    return Hover(listOf(Either.forRight(MarkedString("kotlin", hoverText)), Either.forLeft(javaDoc)))
+    val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
+    return Hover(hover)
 }
 
 // Source: https://github.com/JetBrains/kotlin/blob/master/idea/src/org/jetbrains/kotlin/idea/codeInsight/KotlinExpressionTypeProvider.kt
