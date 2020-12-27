@@ -23,6 +23,7 @@ startScripts {
 
 repositories {
     maven { url uri("$projectDir/lib") }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -37,7 +38,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:ide-common-ij201:$kotlinVersion"
     // implementation("org.jetbrains.kotlin:kotlin-plugin-ij201:$kotlinVersion") { transitive = false }
     implementation 'org.jetbrains:fernflower:1.0'
-    implementation 'com.facebook:ktfmt:0.19'
+    implementation 'com.github.fwcd:ktfmt:22bd538a1c'
     implementation 'com.beust:jcommander:1.78'
 
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
