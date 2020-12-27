@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.8.1]
+- Minor fixes
+
 ## [0.8.0]
 - Tagged deprecation/unused variable warnings
 - Kotlin 1.4.20 support
