@@ -16,9 +16,7 @@ object BackupClassPathResolver : ClassPathResolver {
 }
 
 fun findKotlinStdlib(): Path? =
-    findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib-jdk8")
-    ?: findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib-jdk7")
-    ?: findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
+    findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
     ?: findKotlinCliCompilerLibrary("kotlin-stdlib")
 
 private fun findLocalArtifact(group: String, artifact: String) =
