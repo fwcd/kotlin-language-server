@@ -11,8 +11,11 @@ version = projectVersion
 mainClassName = 'org.javacs.kt.MainKt'
 description = 'Code completions, diagnostics and more for Kotlin'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(javaVersion)
+    }
+}
 
 def debugPort = 8000
 def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
