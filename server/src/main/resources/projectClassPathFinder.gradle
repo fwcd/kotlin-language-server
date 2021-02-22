@@ -1,63 +1,71 @@
 allprojects { project ->
-	task kotlinLSPProjectDeps { task ->
-		doLast {
-			System.out.println ""
-			System.out.println "gradle-version $gradleVersion"
-			System.out.println "kotlin-lsp-project ${project.name}"
+    task kotlinLSPProjectDeps { task ->
+        doLast {
+            System.out.println ""
+            System.out.println "gradle-version $gradleVersion"
+            System.out.println "kotlin-lsp-project ${project.name}"
 
-			if (project.hasProperty('android')) {
-				project.android.getBootClasspath().each {
-					System.out.println "kotlin-lsp-gradle $it"
-				}
-				if (project.android.hasProperty('applicationVariants')) {
-					project.android.applicationVariants.all { variant ->
+            if (project.hasProperty('android')) {
+                project.android.getBootClasspath().each {
+                    System.out.println "kotlin-lsp-gradle $it"
+                }
 
-						def variantBase = variant.baseName.replaceAll("-", File.separator)
+                def variants = []
 
-						def buildClasses = project.getBuildDir().absolutePath +
-							File.separator + "intermediates" +
-							File.separator + variantBase +
-							File.separator + "classes"
+                if (project.android.hasProperty('applicationVariants')) {
+                    variants += project.android.applicationVariants
+                }
 
-						System.out.println "kotlin-lsp-gradle $buildClasses"
+                if (project.android.hasProperty('libraryVariants')) {
+                    variants += project.android.libraryVariants
+                }
 
-						def userClasses = project.getBuildDir().absolutePath +
-							File.separator + "intermediates" +
-							File.separator + "javac" +
-							File.separator + variantBase +
-							File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
+                variants.each { variant ->
+                    def variantBase = variant.baseName.replaceAll("-", File.separator)
 
-						System.out.println "kotlin-lsp-gradle $userClasses"
+                    def buildClasses = project.getBuildDir().absolutePath +
+                        File.separator + "intermediates" +
+                        File.separator + variantBase +
+                        File.separator + "classes"
 
-						def userVariantClasses = project.getBuildDir().absolutePath +
-							File.separator + "intermediates" +
-							File.separator + "javac" +
-							File.separator + variantBase +
-							File.separator + "classes"
+                    System.out.println "kotlin-lsp-gradle $buildClasses"
 
-						System.out.println "kotlin-lsp-gradle $userVariantClasses"
+                    def userClasses = project.getBuildDir().absolutePath +
+                        File.separator + "intermediates" +
+                        File.separator + "javac" +
+                        File.separator + variantBase +
+                        File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
 
-						variant.getCompileClasspath().each {
-							System.out.println "kotlin-lsp-gradle $it"
-						}
-					}
-				}
-			} else {
-				// Print the list of all dependencies jar files.
-				sourceSets.forEach {
-					it.compileClasspath.forEach {
-						System.out.println "kotlin-lsp-gradle $it"
-					}
-				}
-			}
-		}
-	}
+                    System.out.println "kotlin-lsp-gradle $userClasses"
 
-	task kotlinLSPAllGradleDeps {
-		doLast {
-			fileTree("$gradle.gradleHomeDir/lib")
-				.findAll { it.toString().endsWith '.jar' }
-				.forEach { System.out.println "kotlin-lsp-gradle $it" }
-		}
-	}
+                    def userVariantClasses = project.getBuildDir().absolutePath +
+                        File.separator + "intermediates" +
+                        File.separator + "javac" +
+                        File.separator + variantBase +
+                        File.separator + "classes"
+
+                    System.out.println "kotlin-lsp-gradle $userVariantClasses"
+
+                    variant.getCompileClasspath().each {
+                        System.out.println "kotlin-lsp-gradle $it"
+                    }
+                }
+            } else {
+                // Print the list of all dependencies jar files.
+                sourceSets.forEach {
+                    it.compileClasspath.forEach {
+                        System.out.println "kotlin-lsp-gradle $it"
+                    }
+                }
+            }
+        }
+    }
+
+    task kotlinLSPAllGradleDeps {
+        doLast {
+            fileTree("$gradle.gradleHomeDir/lib")
+                .findAll { it.toString().endsWith '.jar' }
+                .forEach { System.out.println "kotlin-lsp-gradle $it" }
+        }
+    }
 }
