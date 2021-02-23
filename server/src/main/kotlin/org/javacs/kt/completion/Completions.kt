@@ -3,6 +3,7 @@ package org.javacs.kt.completion
 import com.google.common.cache.CacheBuilder
 import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
+import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
@@ -13,6 +14,7 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
+import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
@@ -107,6 +109,10 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
         result.label = name
         result.insertText = name
         result.filterText = name
+    }
+
+    if (KotlinBuiltIns.isDeprecated(d)) {
+        result.tags = listOf(CompletionItemTag.Deprecated)
     }
 
     val matchCall = callPattern.matchEntire(result.insertText)
