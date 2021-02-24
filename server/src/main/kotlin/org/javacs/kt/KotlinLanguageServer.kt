@@ -30,10 +30,12 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
+    private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
 
     override fun connect(client: LanguageClient) {
-        connectLoggingBackend(client)
+        this.client = client
+        connectLoggingBackend()
 
         workspaces.connect(client)
         textDocuments.connect(client)
@@ -70,12 +72,22 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (params.rootUri != null) {
+        val folders = params.workspaceFolders
+        client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressBegin().apply {
+            title = "Adding workspace folders"
+            percentage = 0
+        }))
+
+        folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace {} to source path", params.rootUri)
+            client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressReport().apply {
+                message = "[${i + 1}/${folders.size}] ${folder.name}"
+                percentage = (100 * i) / folders.size
+            }))
 
-            val root = Paths.get(parseURI(params.rootUri))
-
+            val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
+
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
                 sourcePath.refresh()
@@ -85,7 +97,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         InitializeResult(serverCapabilities)
     }
 
-    private fun connectLoggingBackend(client: LanguageClient) {
+    private fun connectLoggingBackend() {
         val backend: (LogMessage) -> Unit = {
             client.logMessage(MessageParams().apply {
                 type = it.level.toLSPMessageType()
