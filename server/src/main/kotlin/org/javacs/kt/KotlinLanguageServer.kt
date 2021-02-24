@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
 import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import java.net.URI
@@ -29,6 +30,8 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
+    private val async = AsyncExecutor()
+
     override fun connect(client: LanguageClient) {
         connectLoggingBackend(client)
 
@@ -45,7 +48,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     @JsonDelegate
     fun getProtocolExtensionService(): KotlinProtocolExtensions = protocolExtensions
 
-    override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
+    override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> = async.compute {
         val serverCapabilities = ServerCapabilities()
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
         serverCapabilities.workspace = WorkspaceServerCapabilities()
@@ -79,7 +82,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             }
         }
 
-        return completedFuture(InitializeResult(serverCapabilities))
+        InitializeResult(serverCapabilities)
     }
 
     private fun connectLoggingBackend(client: LanguageClient) {
@@ -104,6 +107,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         textDocumentService.close()
         classPath.close()
         tempDirectory.close()
+        async.shutdown(awaitTermination = true)
     }
 
     override fun shutdown(): CompletableFuture<Any> {
