@@ -73,17 +73,23 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
         val folders = params.workspaceFolders
-        client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressBegin().apply {
-            title = "Adding workspace folders"
-            percentage = 0
-        }))
+
+        params.workDoneToken?.let {
+            client.notifyProgress(ProgressParams(it, WorkDoneProgressBegin().apply {
+                title = "Adding workspace folders"
+                percentage = 0
+            }))
+        }
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace {} to source path", params.rootUri)
-            client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressReport().apply {
-                message = "[${i + 1}/${folders.size}] ${folder.name}"
-                percentage = (100 * i) / folders.size
-            }))
+
+            params.workDoneToken?.let {
+                client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressReport().apply {
+                    message = "[${i + 1}/${folders.size}] ${folder.name}"
+                    percentage = (100 * i) / folders.size
+                }))
+            }
 
             val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
