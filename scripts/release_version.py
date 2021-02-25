@@ -4,14 +4,16 @@
 # updates the npm package versions of the editor extensions,
 # updates the changelog and creates an annotated Git tag.
 
-from utils.cli import prompt_by, title
-from utils.properties import PropertiesFile
-from utils.changelog import ChangelogFile
-from pathlib import Path
+import argparse
 import subprocess
 import re
 import os
 import tempfile
+from pathlib import Path
+
+from utils.cli import prompt_by, title
+from utils.properties import PropertiesFile
+from utils.changelog import ChangelogFile
 
 class Version:
     def __init__(self, major, minor, patch):
@@ -62,6 +64,11 @@ PROJECT_DIR = Path(__file__).parent.parent
 PROJECT_VERSION_KEY = "projectVersion"
 
 def main():
+    parser = argparse.ArgumentParser(description="A small utility for updating the project's version and creating tags.")
+    parser.add_argument("--bump-only", action="store_true", help="Whether only the version should be bumped, without tagging the current version.")
+
+    args = parser.parse_args()
+
     title("Project Version Updater")
 
     if not git_working_dir_is_clean(PROJECT_DIR):
@@ -71,46 +78,55 @@ def main():
         print("Switch to the master branch first!")
         return
 
-    increment = None
     properties = PropertiesFile(str(PROJECT_DIR / "gradle.properties"))
     version = parse_version(properties[PROJECT_VERSION_KEY])
 
-    print()
-    print(f"Releasing version {version}.")
-    print()
+    # Current version
 
-    # Fetch new changelog message from user
-    temp = tempfile.NamedTemporaryFile(delete=False)
-    temp_path = Path(temp.name).absolute()
+    if not args.bump_only:
+        print()
+        print(f"Releasing version {version}.")
+        print()
 
-    history = git_history_since_last_tag(PROJECT_DIR)
-    formatted_history = [f"# {commit}" for commit in history]
-    initial_message = [
-        "",
-        "",
-        "# Please enter a changelog/release message.",
-        f"# This is the history since the last tag:"
-    ] + formatted_history
+        # Fetch new changelog message from user
+        temp = tempfile.NamedTemporaryFile(delete=False)
+        temp_path = Path(temp.name).absolute()
 
-    with open(temp_path, "w") as temp_contents:
-        temp_contents.write("\n".join(initial_message))
+        history = git_history_since_last_tag(PROJECT_DIR)
+        formatted_history = [f"# {commit}" for commit in history]
+        initial_message = [
+            "",
+            "",
+            "# Please enter a changelog/release message.",
+            f"# This is the history since the last tag:"
+        ] + formatted_history
 
-    subprocess.call([EDITOR, str(temp_path)])
+        with open(temp_path, "w") as temp_contents:
+            temp_contents.write("\n".join(initial_message))
 
-    with open(temp_path, "r") as temp_contents:
-        changelog_message = [line.strip() for line in temp_contents.readlines() if not line.startswith("#") and len(line.strip()) > 0]
+        subprocess.call([EDITOR, str(temp_path)])
 
-    temp.close()
-    temp_path.unlink()
+        with open(temp_path, "r") as temp_contents:
+            changelog_message = [line.strip() for line in temp_contents.readlines() if not line.startswith("#") and len(line.strip()) > 0]
 
-    print("Updating changelog...")
-    changelog = ChangelogFile(PROJECT_DIR / "CHANGELOG.md")
-    changelog.prepend_version(version, changelog_message)
+        temp.close()
+        temp_path.unlink()
 
-    print("Creating Git tag...")
-    tag_message = "\n".join([f"Version {version}", ""] + changelog_message)
-    subprocess.run(["git", "tag", "-a", f"{version}", "-m", tag_message], cwd=PROJECT_DIR)
+        if not changelog_message:
+            print("No message, exiting...")
+            return
 
+        print("Updating changelog...")
+        changelog = ChangelogFile(PROJECT_DIR / "CHANGELOG.md")
+        changelog.prepend_version(version, changelog_message)
+
+        print("Creating Git tag...")
+        tag_message = "\n".join([f"Version {version}", ""] + changelog_message)
+        subprocess.run(["git", "tag", "-a", f"{version}", "-m", tag_message], cwd=PROJECT_DIR)
+
+    # Next version
+
+    increment = None
     while increment not in INCREMENTS.keys():
         increment = input("How do you want to increment? [major/minor/patch] ")
 
