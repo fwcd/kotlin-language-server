@@ -76,7 +76,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         params.workDoneToken?.let {
             client.notifyProgress(ProgressParams(it, WorkDoneProgressBegin().apply {
-                title = "Adding workspace folders"
+                title = "Adding Kotlin workspace folders"
                 percentage = 0
             }))
         }
