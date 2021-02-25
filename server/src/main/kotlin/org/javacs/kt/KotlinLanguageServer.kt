@@ -74,43 +74,41 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         val folders = params.workspaceFolders
 
-        params.workDoneToken?.let {
-            client.notifyProgress(ProgressParams(it, WorkDoneProgressBegin().apply {
-                title = "Adding Kotlin workspace folders"
-                percentage = 0
-            }))
+        fun reportProgress(notification: WorkDoneProgressNotification) {
+            params.workDoneToken?.let {
+                client.notifyProgress(ProgressParams(it, notification))
+            }
         }
+
+        reportProgress(WorkDoneProgressBegin().apply {
+            title = "Adding Kotlin workspace folders"
+            percentage = 0
+        })
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace folder {}", folder.name)
             val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
             val progressPercent = (100 * i) / folders.size
 
-            params.workDoneToken?.let {
-                client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
-                    message = "$progressPrefix: Updating source path"
-                    percentage = progressPercent
-                }))
-            }
+            reportProgress(WorkDoneProgressReport().apply {
+                message = "$progressPrefix: Updating source path"
+                percentage = progressPercent
+            })
 
             val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
 
-            params.workDoneToken?.let {
-                client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
-                    message = "$progressPrefix: Updating class path"
-                    percentage = progressPercent
-                }))
-            }
+            reportProgress(WorkDoneProgressReport().apply {
+                message = "$progressPrefix: Updating class path"
+                percentage = progressPercent
+            })
 
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
-                params.workDoneToken?.let {
-                    client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
-                        message = "$progressPrefix: Refreshing source path"
-                        percentage = progressPercent
-                    }))
-                }
+                reportProgress(WorkDoneProgressReport().apply {
+                    message = "$progressPrefix: Refreshing source path"
+                    percentage = progressPercent
+                })
 
                 sourcePath.refresh()
             }
