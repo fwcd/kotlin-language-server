@@ -71,20 +71,11 @@ def main():
 
     increment = None
     properties = PropertiesFile(str(PROJECT_DIR / "gradle.properties"))
-    previous_version = parse_version(properties[PROJECT_VERSION_KEY])
+    version = parse_version(properties[PROJECT_VERSION_KEY])
 
     print()
-    print(f"Currently @{previous_version}.")
+    print(f"Releasing version {version}.")
     print()
-
-    while increment not in INCREMENTS.keys():
-        increment = input("How do you want to increment? [major/minor/patch] ")
-
-    new_version = INCREMENTS[increment](previous_version)
-
-    # Apply new version to project
-    print(f"Updating project version to {new_version}...")
-    properties[PROJECT_VERSION_KEY] = str(new_version)
 
     # Fetch new changelog message from user
     temp = tempfile.NamedTemporaryFile(delete=False)
@@ -112,14 +103,24 @@ def main():
 
     print("Updating changelog...")
     changelog = ChangelogFile(PROJECT_DIR / "CHANGELOG.md")
-    changelog.prepend_version(new_version, changelog_message)
+    changelog.prepend_version(version, changelog_message)
 
-    print("Creating Git commit and tag...")
-    tag_message = "\n".join([f"Update version to {new_version}", ""] + changelog_message)
-    commit_message = "\n".join([f"Update version to {new_version}", "", f"Increment to the next {increment} version."])
+    print("Creating Git tag...")
+    tag_message = "\n".join([f"Version {version}", ""] + changelog_message)
+    subprocess.run(["git", "tag", "-a", f"{version}", "-m", tag_message], cwd=PROJECT_DIR)
 
+    while increment not in INCREMENTS.keys():
+        increment = input("How do you want to increment? [major/minor/patch] ")
+
+    new_version = INCREMENTS[increment](version)
+
+    # Apply new (development) version to project
+    print(f"Updating next dev version to {new_version}...")
+    properties[PROJECT_VERSION_KEY] = str(new_version)
+
+    print("Creating Git commit for next dev version...")
+    commit_message = f"Bump version to {new_version}"
     subprocess.run(["git", "add", "."], cwd=PROJECT_DIR)
     subprocess.run(["git", "commit", "-m", commit_message], cwd=PROJECT_DIR)
-    subprocess.run(["git", "tag", "-a", f"{new_version}", "-m", tag_message], cwd=PROJECT_DIR)
 
 main()
