@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.commands.ALL_COMMANDS
 import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import java.net.URI
@@ -29,8 +30,12 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
+    private lateinit var client: LanguageClient
+    private val async = AsyncExecutor()
+
     override fun connect(client: LanguageClient) {
-        connectLoggingBackend(client)
+        this.client = client
+        connectLoggingBackend()
 
         workspaces.connect(client)
         textDocuments.connect(client)
@@ -45,7 +50,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     @JsonDelegate
     fun getProtocolExtensionService(): KotlinProtocolExtensions = protocolExtensions
 
-    override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> {
+    override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> = async.compute {
         val serverCapabilities = ServerCapabilities()
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
         serverCapabilities.workspace = WorkspaceServerCapabilities()
@@ -67,22 +72,52 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (params.rootUri != null) {
-            LOG.info("Adding workspace {} to source path", params.rootUri)
+        val folders = params.workspaceFolders
 
-            val root = Paths.get(parseURI(params.rootUri))
+        fun reportProgress(notification: WorkDoneProgressNotification) {
+            params.workDoneToken?.let {
+                client.notifyProgress(ProgressParams(it, notification))
+            }
+        }
 
+        reportProgress(WorkDoneProgressBegin().apply {
+            title = "Adding Kotlin workspace folders"
+            percentage = 0
+        })
+
+        folders.forEachIndexed { i, folder ->
+            LOG.info("Adding workspace folder {}", folder.name)
+            val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
+            val progressPercent = (100 * i) / folders.size
+
+            reportProgress(WorkDoneProgressReport().apply {
+                message = "$progressPrefix: Updating source path"
+                percentage = progressPercent
+            })
+
+            val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
+
+            reportProgress(WorkDoneProgressReport().apply {
+                message = "$progressPrefix: Updating class path"
+                percentage = progressPercent
+            })
+
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
+                reportProgress(WorkDoneProgressReport().apply {
+                    message = "$progressPrefix: Refreshing source path"
+                    percentage = progressPercent
+                })
+
                 sourcePath.refresh()
             }
         }
 
-        return completedFuture(InitializeResult(serverCapabilities))
+        InitializeResult(serverCapabilities)
     }
 
-    private fun connectLoggingBackend(client: LanguageClient) {
+    private fun connectLoggingBackend() {
         val backend: (LogMessage) -> Unit = {
             client.logMessage(MessageParams().apply {
                 type = it.level.toLSPMessageType()
@@ -104,6 +139,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         textDocumentService.close()
         classPath.close()
         tempDirectory.close()
+        async.shutdown(awaitTermination = true)
     }
 
     override fun shutdown(): CompletableFuture<Any> {
