@@ -88,7 +88,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
             params.workDoneToken?.let {
                 client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
-                    message = "$progressPrefix: Updating source and class path"
+                    message = "$progressPrefix: Updating source path"
                     percentage = progressPercent
                 }))
             }
@@ -96,8 +96,22 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
 
+            params.workDoneToken?.let {
+                client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
+                    message = "$progressPrefix: Updating class path"
+                    percentage = progressPercent
+                }))
+            }
+
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
+                params.workDoneToken?.let {
+                    client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
+                        message = "$progressPrefix: Refreshing source path"
+                        percentage = progressPercent
+                    }))
+                }
+
                 sourcePath.refresh()
             }
         }
