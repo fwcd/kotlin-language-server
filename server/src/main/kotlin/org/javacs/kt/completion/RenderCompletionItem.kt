@@ -1,8 +1,7 @@
 package org.javacs.kt.completion
 
 import org.eclipse.lsp4j.CompletionItem
-import org.eclipse.lsp4j.CompletionItemKind.*
-import org.eclipse.lsp4j.CompletionItemKind.Function
+import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.InsertTextFormat.PlainText
 import org.eclipse.lsp4j.InsertTextFormat.Snippet
 import org.jetbrains.kotlin.descriptors.*
@@ -49,7 +48,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Field
+        result.kind = CompletionItemKind.Field
 
         return result
     }
@@ -57,7 +56,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitConstructorDescriptor(desc: ConstructorDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Constructor
+        result.kind = CompletionItemKind.Constructor
         result.insertText = functionInsertText(desc)
         result.insertTextFormat = functionInsertFormat
 
@@ -67,7 +66,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Variable
+        result.kind = CompletionItemKind.Variable
 
         return result
     }
@@ -75,7 +74,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPackageViewDescriptor(desc: PackageViewDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Module
+        result.kind = CompletionItemKind.Module
 
         return result
     }
@@ -83,7 +82,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitFunctionDescriptor(desc: FunctionDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Function
+        result.kind = CompletionItemKind.Function
         result.insertText = functionInsertText(desc)
         result.insertTextFormat = functionInsertFormat
 
@@ -117,7 +116,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitModuleDeclaration(desc: ModuleDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Module
+        result.kind = CompletionItemKind.Module
 
         return result
     }
@@ -125,7 +124,12 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitClassDescriptor(desc: ClassDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Class
+        result.kind = when (desc.kind) {
+            ClassKind.INTERFACE -> CompletionItemKind.Interface
+            ClassKind.ENUM_CLASS -> CompletionItemKind.Enum
+            ClassKind.ENUM_ENTRY -> CompletionItemKind.EnumMember
+            else -> CompletionItemKind.Class
+        }
 
         return result
     }
@@ -133,7 +137,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Module
+        result.kind = CompletionItemKind.Module
 
         return result
     }
@@ -141,7 +145,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Variable
+        result.kind = CompletionItemKind.Variable
 
         return result
     }
@@ -149,7 +153,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitTypeParameterDescriptor(desc: TypeParameterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Variable
+        result.kind = CompletionItemKind.Variable
 
         return result
     }
@@ -157,7 +161,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitScriptDescriptor(desc: ScriptDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Module
+        result.kind = CompletionItemKind.Module
 
         return result
     }
@@ -165,7 +169,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitTypeAliasDescriptor(desc: TypeAliasDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Variable
+        result.kind = CompletionItemKind.Variable
 
         return result
     }
@@ -173,7 +177,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Field
+        result.kind = CompletionItemKind.Field
 
         return result
     }
@@ -181,7 +185,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitVariableDescriptor(desc: VariableDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Variable
+        result.kind = CompletionItemKind.Variable
 
         return result
     }
@@ -189,7 +193,7 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
     override fun visitPropertyDescriptor(desc: PropertyDescriptor, nothing: Unit?): CompletionItem {
         setDefaults(desc)
 
-        result.kind = Field
+        result.kind = CompletionItemKind.Field
 
         return result
     }
