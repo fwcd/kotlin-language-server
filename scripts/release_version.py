@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # A script that increments the language server version,
 # updates the npm package versions of the editor extensions,
 # updates the changelog and creates an annotated Git tag.
