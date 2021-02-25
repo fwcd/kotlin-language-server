@@ -83,11 +83,13 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace folder {}", folder.name)
+            val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
+            val progressPercent = (100 * i) / folders.size
 
             params.workDoneToken?.let {
-                client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressReport().apply {
-                    message = "[${i + 1}/${folders.size}] ${folder.name}"
-                    percentage = (100 * i) / folders.size
+                client.notifyProgress(ProgressParams(it, WorkDoneProgressReport().apply {
+                    message = "$progressPrefix: Updating source and class path"
+                    percentage = progressPercent
                 }))
             }
 
