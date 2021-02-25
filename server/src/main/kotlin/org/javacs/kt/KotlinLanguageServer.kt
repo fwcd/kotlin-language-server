@@ -82,7 +82,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         }
 
         folders.forEachIndexed { i, folder ->
-            LOG.info("Adding workspace {} to source path", params.rootUri)
+            LOG.info("Adding workspace folder {}", folder.name)
 
             params.workDoneToken?.let {
                 client.notifyProgress(ProgressParams(params.workDoneToken, WorkDoneProgressReport().apply {

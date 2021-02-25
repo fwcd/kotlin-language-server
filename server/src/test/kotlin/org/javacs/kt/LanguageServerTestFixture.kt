@@ -32,7 +32,10 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
             }
         }
 
-        init.rootUri = workspaceRoot.toUri().toString()
+        init.workspaceFolders = listOf(WorkspaceFolder().apply {
+            name = workspaceRoot.fileName.toString()
+            uri = workspaceRoot.toUri().toString()
+        })
         languageServer.initialize(init)
         languageServer.connect(this)
 
