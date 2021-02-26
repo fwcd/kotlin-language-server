@@ -1,9 +1,10 @@
-package org.javacs.kt
+package org.javacs.kt.util
 
 import java.io.InputStream
 import java.io.OutputStream
 import java.net.Socket
 import java.net.ServerSocket
+import org.javacs.kt.LOG
 
 /**
  * Starts a TCP server socket. Blocks until the first

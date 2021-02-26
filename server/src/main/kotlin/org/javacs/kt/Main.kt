@@ -7,6 +7,8 @@ import org.eclipse.lsp4j.launch.LSPLauncher
 import org.eclipse.lsp4j.ConfigurationParams
 import org.eclipse.lsp4j.ConfigurationItem
 import org.javacs.kt.util.ExitingInputStream
+import org.javacs.kt.util.tcpStartServer
+import org.javacs.kt.util.tcpConnectToClient
 
 class Args {
     /*
