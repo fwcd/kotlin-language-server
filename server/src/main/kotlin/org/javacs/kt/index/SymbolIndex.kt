@@ -22,7 +22,7 @@ private object Symbols : Table() {
  * A global view of all available symbols across all packages.
  */
 class SymbolIndex {
-    private val db = Database.connect("jdbc:h2:mem:symbolindex", "org.h2.Driver")
+    private val db = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
 
     init {
         transaction(db) {
