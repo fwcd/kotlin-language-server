@@ -22,12 +22,17 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        for (descriptor in allDescriptors(module)) {
-            globalDescriptors[descriptor.fqNameSafe] = descriptor
-        }
+        try {
+            for (descriptor in allDescriptors(module)) {
+                globalDescriptors[descriptor.fqNameSafe] = descriptor
+            }
 
-        val finished = System.currentTimeMillis()
-        LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
+            val finished = System.currentTimeMillis()
+            LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
+        } catch (e: Exception) {
+            LOG.error("Error while updating symbol index")
+            LOG.printStackTrace(e)
+        }
     }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
