@@ -26,7 +26,7 @@ class SymbolIndex {
         }
 
         val finished = System.currentTimeMillis()
-        LOG.info("Updated symbol index in ${finished - started} ms!")
+        LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
     }
 
     fun <T> withGlobalDescriptors(action: (Set<DeclarationDescriptor>) -> T): T = lock.withLock { action(globalDescriptors) }

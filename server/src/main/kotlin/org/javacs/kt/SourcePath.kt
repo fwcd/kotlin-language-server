@@ -90,6 +90,8 @@ class SourcePath(
                 compiledContainer = container
                 compiledFile = parsed
             }
+
+            updateIndexAsync(container)
         }
 
         private fun doCompileIfChanged() {
@@ -195,11 +197,7 @@ class SourcePath(
                 }
             }
 
-            // Update symbol index asynchronously
-            val module = container.getService(ModuleDescriptor::class.java)
-            indexAsync.execute {
-                index.update(module)
-            }
+            updateIndexAsync(container)
 
             return context
         }
@@ -212,6 +210,14 @@ class SourcePath(
         val combined = listOf(buildScriptsContext, sourcesContext).filterNotNull() + same.map { it.compiledContext!! }
 
         return CompositeBindingContext.create(combined)
+    }
+
+    /**
+     * Updates the symbol index asynchronously.
+     */
+    private fun updateIndexAsync(container: ComponentProvider) = indexAsync.execute {
+        val module = container.getService(ModuleDescriptor::class.java)
+        index.update(module)
     }
 
     /**
