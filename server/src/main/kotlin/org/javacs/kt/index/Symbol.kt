@@ -7,10 +7,19 @@ data class Symbol(
     private val fqName: FqName,
     private val kind: Kind
 ) {
-    enum class Kind {
-        CLASS,
-        INTERFACE,
-        FUNCTION,
-        VARIABLE
+    enum class Kind(val rawValue: Int) {
+        CLASS(0),
+        INTERFACE(1),
+        FUNCTION(2),
+        VARIABLE(3),
+        MODULE(4),
+        ENUM(5),
+        ENUM_MEMBER(6),
+        CONSTRUCTOR(7),
+        FIELD(8);
+
+        companion object {
+            fun fromRaw(rawValue: Int) = Kind.values().first { it.rawValue == rawValue }
+        }
     }
 }
