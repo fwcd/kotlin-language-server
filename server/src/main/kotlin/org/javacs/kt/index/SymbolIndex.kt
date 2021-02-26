@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.LOG
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.insert
 
 private object Symbols : Table() {
@@ -23,6 +24,7 @@ private object Symbols : Table() {
  */
 class SymbolIndex {
     private val db = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
+    private var initialized = false
 
     init {
         transaction(db) {
@@ -31,6 +33,10 @@ class SymbolIndex {
     }
 
     fun update(module: ModuleDescriptor) {
+        // TODO: Remove this once a proper debounce mechanism (and ideally incremental updates) are in place.
+        if (initialized) return
+        initialized = true
+
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
@@ -70,7 +76,7 @@ class SymbolIndex {
 
     fun query(prefix: String, limit: Int = 20): List<Symbol> = transaction(db) {
         Symbols
-            .selectAll()
+            .select { Symbols.shortName.like("$prefix%") }
             .limit(limit)
             .map { Symbol(FqName(it[Symbols.fqName]), Symbol.Kind.fromRaw(it[Symbols.kind])) }
     }

@@ -59,22 +59,22 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    var isIncomplete = false
     // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
-    val items = (elementCompletionItems(file, cursor, config, partial) + indexCompletionItems(index, partial))
-            .ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
+    val elementItems = elementCompletionItems(file, cursor, config, partial)
+    val elementItemList = elementItems.take(MAX_COMPLETION_ITEMS).toList()
+    val items = (elementItemList.asSequence() + indexCompletionItems(index, partial)).ifEmpty { keywordCompletionItems(partial) }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
         .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
-    isIncomplete = isIncomplete || (itemList.size == MAX_COMPLETION_ITEMS)
+    val isIncomplete = itemList.size >= MAX_COMPLETION_ITEMS || elementItemList.isEmpty()
 
     return CompletionList(isIncomplete, itemList)
 }
 
 /** Finds completions in the symbol index. */
 private fun indexCompletionItems(index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
-    .query(partial)
+    .query(partial, limit = MAX_COMPLETION_ITEMS)
     .map { CompletionItem().apply {
         label = it.fqName.shortName().toString()
         kind = when (it.kind) {
