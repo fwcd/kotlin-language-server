@@ -36,6 +36,6 @@ class SymbolIndex {
         .flatMap { it.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER) }
 
     private fun allPackages(module: ModuleDescriptor, pkgName: FqName = FqName.ROOT): Collection<FqName> = module
-        .getSubPackagesOf(pkgName) { true }
+        .getSubPackagesOf(pkgName) { it.toString() != "META-INF" }
         .flatMap { allPackages(module, it) }
 }
