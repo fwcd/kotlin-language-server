@@ -41,6 +41,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:ide-common-ij202:$kotlinVersion"
     // implementation("org.jetbrains.kotlin:kotlin-plugin-ij201:$kotlinVersion") { transitive = false }
     implementation 'org.jetbrains:fernflower:1.0'
+    implementation 'com.h2database:h2:1.4.200'
     implementation 'com.github.fwcd:ktfmt:22bd538a1c'
     implementation 'com.beust:jcommander:1.78'
 
