@@ -1,4 +1,4 @@
-package org.javacs.kt
+package org.javacs.kt.index
 
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.LOG
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 

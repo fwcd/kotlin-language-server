@@ -7,8 +7,8 @@ import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
-import org.javacs.kt.SymbolIndex
 import org.javacs.kt.CompletionConfiguration
+import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult

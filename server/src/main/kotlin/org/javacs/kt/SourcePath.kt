@@ -5,6 +5,7 @@ import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
+import org.javacs.kt.index.SymbolIndex
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import com.intellij.openapi.fileTypes.FileType
