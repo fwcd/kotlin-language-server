@@ -6,18 +6,24 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.compiler.Compiler
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * A global view of all available symbols across all packages.
  */
 class SymbolIndex {
     val globalDescriptors: MutableSet<DeclarationDescriptor> = mutableSetOf()
+    private val lock = ReentrantLock()
 
     fun update(module: ModuleDescriptor) {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        globalDescriptors += allDescriptors(module)
+        val foundDescriptors = allDescriptors(module)
+        lock.withLock {
+            globalDescriptors += foundDescriptors
+        }
 
         val finished = System.currentTimeMillis()
         LOG.info("Updated symbol index in ${finished - started} ms!")
