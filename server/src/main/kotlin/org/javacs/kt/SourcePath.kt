@@ -7,6 +7,8 @@ import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.LanguageFileType
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.getService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -41,7 +43,7 @@ class SourcePath(
         val language: Language? = null,
         val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
-        val extension: String? = uri.fileExtension ?: language?.associatedFileType?.defaultExtension
+        val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
