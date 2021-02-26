@@ -41,13 +41,20 @@ class SymbolIndex {
             transaction(db) {
                 Symbols.deleteAll()
 
+                // TODO: Workaround, since insertIgnore seems to throw UnsupportedByDialectExceptions
+                //       when used with H2.
+                val addedFqns = mutableSetOf<FqName>()
+
                 for (descriptor in descriptors) {
                     val fqn = descriptor.fqNameSafe
 
-                    Symbols.insertIgnore {
-                        it[fqName] = fqn.toString()
-                        it[shortName] = fqn.shortName().toString()
-                        it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                    if (!addedFqns.contains(fqn)) {
+                        addedFqns.add(fqn)
+                        Symbols.insert {
+                            it[fqName] = fqn.toString()
+                            it[shortName] = fqn.shortName().toString()
+                            it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                        }
                     }
                 }
 
