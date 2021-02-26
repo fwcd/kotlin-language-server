@@ -20,13 +20,17 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        val foundDescriptors = allDescriptors(module)
-        lock.withLock {
-            globalDescriptors += foundDescriptors
-        }
+        try {
+            val foundDescriptors = allDescriptors(module)
+            lock.withLock {
+                globalDescriptors += foundDescriptors
+            }
 
-        val finished = System.currentTimeMillis()
-        LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
+            val finished = System.currentTimeMillis()
+            LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
+        } catch (e: Exception) {
+            LOG.warn("Could not update symbol index: $e")
+        }
     }
 
     fun <T> withGlobalDescriptors(action: (Set<DeclarationDescriptor>) -> T): T = lock.withLock { action(globalDescriptors) }
@@ -37,5 +41,5 @@ class SymbolIndex {
 
     private fun allPackages(module: ModuleDescriptor, pkgName: FqName = FqName.ROOT): Collection<FqName> = module
         .getSubPackagesOf(pkgName) { it.toString() != "META-INF" }
-        .flatMap { allPackages(module, it) }
+        .flatMap { setOf(it) + allPackages(module, it) }
 }
