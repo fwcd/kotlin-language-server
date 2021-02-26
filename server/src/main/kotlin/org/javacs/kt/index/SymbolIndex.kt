@@ -35,11 +35,16 @@ class SymbolIndex {
         LOG.info("Updating symbol index...")
 
         try {
+            val descriptors = allDescriptors(module)
+
+            // TODO: Incremental updates
             transaction(db) {
-                for (descriptor in allDescriptors(module)) {
+                Symbols.deleteAll()
+
+                for (descriptor in descriptors) {
                     val fqn = descriptor.fqNameSafe
 
-                    Symbols.insert {
+                    Symbols.insertIgnore {
                         it[fqName] = fqn.toString()
                         it[shortName] = fqn.shortName().toString()
                         it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
