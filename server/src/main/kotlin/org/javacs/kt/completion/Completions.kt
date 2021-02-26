@@ -5,6 +5,9 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
+import org.eclipse.lsp4j.TextEdit
+import org.eclipse.lsp4j.Range
+import org.eclipse.lsp4j.Position
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
@@ -89,6 +92,9 @@ private fun indexCompletionItems(index: SymbolIndex, partial: String): Sequence<
             Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
             Symbol.Kind.FIELD -> CompletionItemKind.Field
         }
+        detail = "(import from ${it.fqName.parent()})"
+        // TODO: Use actual range
+        additionalTextEdits = listOf(TextEdit(Range(Position(0, 0), Position(0, 0)), "import ${it.fqName}\n"))
     } }
     .asSequence()
 
