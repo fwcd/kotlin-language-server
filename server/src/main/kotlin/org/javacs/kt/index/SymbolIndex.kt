@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.insert
 
 private object Symbols : Table() {
     val fqName = varchar("fqname", length = 255).autoIncrement().primaryKey()
+    val shortName = varchar("shortname", length = 127)
     val kind = integer("kind")
 }
 
@@ -36,8 +37,11 @@ class SymbolIndex {
         try {
             transaction(db) {
                 for (descriptor in allDescriptors(module)) {
+                    val fqn = descriptor.fqNameSafe
+
                     Symbols.insert {
-                        it[fqName] = descriptor.fqNameSafe.toString()
+                        it[fqName] = fqn.toString()
+                        it[shortName] = fqn.shortName().toString()
                         it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
                     }
                 }
@@ -50,6 +54,13 @@ class SymbolIndex {
             LOG.error("Error while updating symbol index")
             LOG.printStackTrace(e)
         }
+    }
+
+    fun query(prefix: String, limit: Int = 20): List<Symbol> = transaction(db) {
+        Symbols
+            .selectAll()
+            .limit(limit)
+            .map { Symbol(FqName(it[Symbols.fqName]), Symbol.Kind.fromRaw(it[Symbols.kind])) }
     }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
