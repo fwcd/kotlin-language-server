@@ -81,6 +81,8 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
 private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
     .query(partial, limit = MAX_COMPLETION_ITEMS)
+    .asSequence()
+    .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
     .map { CompletionItem().apply {
         label = it.fqName.shortName().toString()
         kind = when (it.kind) {
@@ -98,7 +100,6 @@ private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial
         val pos = findImportInsertionPosition(parsedFile, it.fqName)
         additionalTextEdits = listOf(TextEdit(Range(pos, pos), "\nimport ${it.fqName}")) // TODO: CRLF?
     } }
-    .asSequence()
 
 /** Finds a good insertion position for a new import of the given fully-qualified name. */
 private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
