@@ -19,6 +19,7 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
+import org.javacs.kt.position.location
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
@@ -62,10 +63,11 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
+    // TODO: Filter out already imported completions (i.e. those for which elementCompletions were already found)
+    //       from the index completion items.
     val (elementItems, isExhaustive) = elementCompletionItems(file, cursor, config, partial)
     val elementItemList = elementItems.take(MAX_COMPLETION_ITEMS).toList()
-    val items = (elementItemList.asSequence() + if (isExhaustive) emptySequence() else indexCompletionItems(index, partial))
+    val items = (elementItemList.asSequence() + if (isExhaustive) emptySequence() else indexCompletionItems(file.parse, index, partial))
         .ifEmpty { keywordCompletionItems(partial) }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
@@ -76,8 +78,8 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     return CompletionList(isIncomplete, itemList)
 }
 
-/** Finds completions in the symbol index. */
-private fun indexCompletionItems(index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
+/** Finds completions in the global symbol index, for potentially unimported symbols. */
+private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
     .query(partial, limit = MAX_COMPLETION_ITEMS)
     .map { CompletionItem().apply {
         label = it.fqName.shortName().toString()
@@ -93,10 +95,19 @@ private fun indexCompletionItems(index: SymbolIndex, partial: String): Sequence<
             Symbol.Kind.FIELD -> CompletionItemKind.Field
         }
         detail = "(import from ${it.fqName.parent()})"
-        // TODO: Use actual range
-        additionalTextEdits = listOf(TextEdit(Range(Position(0, 0), Position(0, 0)), "import ${it.fqName}\n"))
+        val pos = findImportInsertionPosition(parsedFile, it.fqName)
+        additionalTextEdits = listOf(TextEdit(Range(pos, pos), "\nimport ${it.fqName}")) // TODO: CRLF?
     } }
     .asSequence()
+
+/** Finds a good insertion position for a new import of the given fully-qualified name. */
+private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
+    // TODO: Insert lexicographically instead of at the end
+    (parsedFile.importDirectives.lastOrNull() as? KtElement ?: parsedFile.packageDirective as? KtElement)
+        ?.let(::location)
+        ?.range
+        ?.end
+        ?: Position(0, 0)
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
