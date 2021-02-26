@@ -4,9 +4,11 @@ import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.LOG
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -14,23 +16,19 @@ import kotlin.concurrent.withLock
  * A global view of all available symbols across all packages.
  */
 class SymbolIndex {
-    private val globalDescriptors: MutableSet<DeclarationDescriptor> = mutableSetOf()
-    private val lock = ReentrantLock()
+    val globalDescriptors = ConcurrentHashMap<FqName, DeclarationDescriptor>()
 
     fun update(module: ModuleDescriptor) {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        val foundDescriptors = allDescriptors(module)
-        lock.withLock {
-            globalDescriptors += foundDescriptors
+        for (descriptor in allDescriptors(module)) {
+            globalDescriptors[descriptor.fqNameSafe] = descriptor
         }
 
         val finished = System.currentTimeMillis()
         LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
     }
-
-    fun <T> withGlobalDescriptors(action: (Set<DeclarationDescriptor>) -> T): T = lock.withLock { action(globalDescriptors) }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)

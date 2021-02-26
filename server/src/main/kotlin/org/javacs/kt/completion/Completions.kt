@@ -82,11 +82,7 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, index: SymbolIndex, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
-    var completions = elementCompletions(file, cursor, surroundingElement)
-
-    index.withGlobalDescriptors {
-        completions += it // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
-    }
+    val completions = elementCompletions(file, cursor, surroundingElement) + index.globalDescriptors.values // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
     val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
