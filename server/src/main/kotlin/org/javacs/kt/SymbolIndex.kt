@@ -20,24 +20,27 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        try {
-            val foundDescriptors = allDescriptors(module)
-            lock.withLock {
-                globalDescriptors += foundDescriptors
-            }
-
-            val finished = System.currentTimeMillis()
-            LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
-        } catch (e: Exception) {
-            LOG.warn("Could not update symbol index: $e")
+        val foundDescriptors = allDescriptors(module)
+        lock.withLock {
+            globalDescriptors += foundDescriptors
         }
+
+        val finished = System.currentTimeMillis()
+        LOG.info("Updated symbol index in ${finished - started} ms! (${globalDescriptors.size} symbol(s))")
     }
 
     fun <T> withGlobalDescriptors(action: (Set<DeclarationDescriptor>) -> T): T = lock.withLock { action(globalDescriptors) }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
-        .flatMap { it.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER) }
+        .flatMap {
+            try {
+                it.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
+            } catch (e: IllegalStateException) {
+                LOG.warn("Could not query descriptors in package $it")
+                emptyList()
+            }
+        }
 
     private fun allPackages(module: ModuleDescriptor, pkgName: FqName = FqName.ROOT): Collection<FqName> = module
         .getSubPackagesOf(pkgName) { it.toString() != "META-INF" }
