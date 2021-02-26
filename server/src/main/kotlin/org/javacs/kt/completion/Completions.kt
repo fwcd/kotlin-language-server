@@ -48,7 +48,7 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
-// The maxmimum number of completion items
+// The maximum number of completion items
 private const val MAX_COMPLETION_ITEMS = 75
 
 // The minimum length after which completion lists are sorted
