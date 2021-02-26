@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.name.FqName
 
 data class Symbol(
     // TODO: Store location (e.g. using a URI)
-    private val fqName: FqName,
-    private val kind: Kind
+    val fqName: FqName,
+    val kind: Kind
 ) {
     enum class Kind(val rawValue: Int) {
         CLASS(0),

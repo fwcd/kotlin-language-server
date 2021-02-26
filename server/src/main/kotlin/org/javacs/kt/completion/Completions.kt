@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
+import org.javacs.kt.index.Symbol
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
@@ -59,7 +60,9 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     LOG.debug("Looking for completions that match '{}'", partial)
 
     var isIncomplete = false
-    val items = elementCompletionItems(file, cursor, index, config, partial).ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
+    // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
+    val items = (elementCompletionItems(file, cursor, config, partial) + indexCompletionItems(index, partial))
+            .ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
@@ -68,6 +71,25 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 
     return CompletionList(isIncomplete, itemList)
 }
+
+/** Finds completions in the symbol index. */
+private fun indexCompletionItems(index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
+    .query(partial)
+    .map { CompletionItem().apply {
+        label = it.fqName.shortName().toString()
+        kind = when (it.kind) {
+            Symbol.Kind.CLASS -> CompletionItemKind.Class
+            Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
+            Symbol.Kind.FUNCTION -> CompletionItemKind.Function
+            Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
+            Symbol.Kind.MODULE -> CompletionItemKind.Module
+            Symbol.Kind.ENUM -> CompletionItemKind.Enum
+            Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
+            Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
+            Symbol.Kind.FIELD -> CompletionItemKind.Field
+        }
+    } }
+    .asSequence()
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
@@ -80,9 +102,9 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
         } }
 
 /** Finds completions based on the element around the user's cursor. */
-private fun elementCompletionItems(file: CompiledFile, cursor: Int, index: SymbolIndex, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
+private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
-    val completions = elementCompletions(file, cursor, surroundingElement) + index.globalDescriptors.values // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
+    val completions = elementCompletions(file, cursor, surroundingElement)
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
     val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
