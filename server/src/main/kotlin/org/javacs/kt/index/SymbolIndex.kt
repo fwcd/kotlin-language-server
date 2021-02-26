@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.insert
 
 private object Symbols : Table() {
-    val fqName = varchar("fqname", length = 255).autoIncrement().primaryKey()
+    val fqName = varchar("fqname", length = 255).primaryKey()
     val shortName = varchar("shortname", length = 127)
     val kind = integer("kind")
 }
