@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
+import org.javacs.kt.SymbolIndex
 import org.javacs.kt.CompletionConfiguration
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
@@ -53,12 +54,12 @@ private const val MAX_COMPLETION_ITEMS = 75
 private const val MIN_SORT_LENGTH = 3
 
 /** Finds completions at the specified position. */
-fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
+fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: CompletionConfiguration): CompletionList {
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
     var isIncomplete = false
-    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
+    val items = elementCompletionItems(file, cursor, index, config, partial).ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
@@ -79,9 +80,13 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
         } }
 
 /** Finds completions based on the element around the user's cursor. */
-private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
+private fun elementCompletionItems(file: CompiledFile, cursor: Int, index: SymbolIndex, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
     val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
-    val completions = elementCompletions(file, cursor, surroundingElement)
+    var completions = elementCompletions(file, cursor, surroundingElement)
+
+    index.withGlobalDescriptors {
+        completions += it // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
+    }
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
     val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }

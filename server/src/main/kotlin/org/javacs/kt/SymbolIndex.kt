@@ -13,7 +13,7 @@ import kotlin.concurrent.withLock
  * A global view of all available symbols across all packages.
  */
 class SymbolIndex {
-    val globalDescriptors: MutableSet<DeclarationDescriptor> = mutableSetOf()
+    private val globalDescriptors: MutableSet<DeclarationDescriptor> = mutableSetOf()
     private val lock = ReentrantLock()
 
     fun update(module: ModuleDescriptor) {
@@ -28,6 +28,8 @@ class SymbolIndex {
         val finished = System.currentTimeMillis()
         LOG.info("Updated symbol index in ${finished - started} ms!")
     }
+
+    fun <T> withGlobalDescriptors(action: (Set<DeclarationDescriptor>) -> T): T = lock.withLock { action(globalDescriptors) }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
