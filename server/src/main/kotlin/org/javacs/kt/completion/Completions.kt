@@ -60,9 +60,10 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     LOG.debug("Looking for completions that match '{}'", partial)
 
     // TODO: Filter non-imported (i.e. the elementCompletions already found) and auto-import these when selected by the user
-    val elementItems = elementCompletionItems(file, cursor, config, partial)
+    val (elementItems, isExhaustive) = elementCompletionItems(file, cursor, config, partial)
     val elementItemList = elementItems.take(MAX_COMPLETION_ITEMS).toList()
-    val items = (elementItemList.asSequence() + indexCompletionItems(index, partial)).ifEmpty { keywordCompletionItems(partial) }
+    val items = (elementItemList.asSequence() + if (isExhaustive) emptySequence() else indexCompletionItems(index, partial))
+        .ifEmpty { keywordCompletionItems(partial) }
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
@@ -101,9 +102,12 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
             kind = CompletionItemKind.Keyword
         } }
 
+data class ElementCompletionItems(val items: Sequence<CompletionItem>, val isExhaustive: Boolean)
+
 /** Finds completions based on the element around the user's cursor. */
-private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
-    val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
+private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
+    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence(), isExhaustive = false)
+    val isExhaustive = surroundingElement !is KtNameReferenceExpression && surroundingElement !is KtTypeElement
     val completions = elementCompletions(file, cursor, surroundingElement)
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
@@ -111,7 +115,7 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
         ?: matchesName.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
-    return visible.map { completionItem(it, surroundingElement, file, config) }
+    return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, isExhaustive)
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
