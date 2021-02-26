@@ -13,7 +13,7 @@ import org.javacs.kt.compiler.Compiler
 class SymbolIndex {
     val globalDescriptors: MutableSet<DeclarationDescriptor> = mutableSetOf()
 
-    private fun update(module: ModuleDescriptor) {
+    fun update(module: ModuleDescriptor) {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 

@@ -1,12 +1,15 @@
 package org.javacs.kt
 
 import org.javacs.kt.compiler.CompilationKind
+import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.container.getService
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
@@ -22,7 +25,9 @@ class SourcePath(
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
+    private val indexAsync = AsyncExecutor()
 
+    val index = SymbolIndex()
     var beforeCompileCallback: () -> Unit = {}
 
     private inner class SourceFile(
@@ -188,6 +193,12 @@ class SourcePath(
                         f.compiledContainer = container
                     }
                 }
+            }
+
+            // Update symbol index asynchronously
+            val module = container.getService(ModuleDescriptor::class.java)
+            indexAsync.execute {
+                index.update(module)
             }
 
             return context
