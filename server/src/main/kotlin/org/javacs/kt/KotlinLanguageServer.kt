@@ -11,6 +11,8 @@ import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
+import org.javacs.kt.progress.Progress
+import org.javacs.kt.progress.LanguageClientProgress
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
@@ -31,11 +33,15 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
     private lateinit var client: LanguageClient
+    private lateinit var progressFactory: Progress.Factory
+
     private val async = AsyncExecutor()
 
     override fun connect(client: LanguageClient) {
         this.client = client
         connectLoggingBackend()
+
+        progressFactory = LanguageClientProgress.Factory(client)
 
         workspaces.connect(client)
         textDocuments.connect(client)
@@ -73,43 +79,21 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
         val folders = params.workspaceFolders
-
-        fun reportProgress(notification: WorkDoneProgressNotification) {
-            params.workDoneToken?.let {
-                client.notifyProgress(ProgressParams(it, notification))
-            }
-        }
-
-        reportProgress(WorkDoneProgressBegin().apply {
-            title = "Adding Kotlin workspace folders"
-            percentage = 0
-        })
+        val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace folder {}", folder.name)
             val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
             val progressPercent = (100 * i) / folders.size
 
-            reportProgress(WorkDoneProgressReport().apply {
-                message = "$progressPrefix: Updating source path"
-                percentage = progressPercent
-            })
-
+            progress?.update("$progressPrefix: Updating source path", progressPercent)
             val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
 
-            reportProgress(WorkDoneProgressReport().apply {
-                message = "$progressPrefix: Updating class path"
-                percentage = progressPercent
-            })
-
+            progress?.update("$progressPrefix: Updating class path", progressPercent)
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
-                reportProgress(WorkDoneProgressReport().apply {
-                    message = "$progressPrefix: Refreshing source path"
-                    percentage = progressPercent
-                })
-
+                progress?.update("$progressPrefix: Refreshing source path", progressPercent)
                 sourcePath.refresh()
             }
         }
