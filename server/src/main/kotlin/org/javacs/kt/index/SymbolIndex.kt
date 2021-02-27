@@ -16,11 +16,19 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.insert
 
 private object Symbols : Table() {
-    val fqName = varchar("fqname", length = 255).primaryKey()
-    val shortName = varchar("shortname", length = 80)
+    val fqName = varchar("fqname", length = 255) references FqNames.fqName
     val kind = integer("kind")
     val visibility = integer("visibility")
     val extensionReceiverType = varchar("extensionreceivertype", length = 255).nullable()
+
+    override val primaryKey = PrimaryKey(fqName)
+}
+
+private object FqNames : Table() {
+    val fqName = varchar("fqname", length = 255)
+    val shortName = varchar("shortname", length = 80)
+
+    override val primaryKey = PrimaryKey(fqName)
 }
 
 /**
@@ -33,7 +41,7 @@ class SymbolIndex {
 
     init {
         transaction(db) {
-            SchemaUtils.create(Symbols)
+            SchemaUtils.create(Symbols, FqNames)
         }
     }
 
@@ -50,22 +58,27 @@ class SymbolIndex {
                 transaction(db) {
                     Symbols.deleteAll()
 
-                    // TODO: Workaround, since insertIgnore seems to throw UnsupportedByDialectExceptions
-                    //       when used with H2.
-                    val addedFqns = mutableSetOf<FqName>()
-
                     for (descriptor in descriptors) {
                         val fqn = descriptor.fqNameSafe
+                        val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)
 
-                        if (!addedFqns.contains(fqn)) {
-                            addedFqns.add(fqn)
-                            Symbols.insert {
-                                it[fqName] = fqn.toString()
-                                it[shortName] = fqn.shortName().toString()
-                                it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
-                                it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
-                                it[extensionReceiverType] = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.toString()
+                        FqNames.replace {
+                            it[fqName] = fqn.toString()
+                            it[shortName] = fqn.shortName().toString()
+                        }
+
+                        extensionReceiverFqn?.let { rFqn ->
+                            FqNames.replace {
+                                it[fqName] = rFqn.toString()
+                                it[shortName] = rFqn.shortName().toString()
                             }
+                        }
+
+                        Symbols.replace {
+                            it[fqName] = fqn.toString()
+                            it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                            it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
+                            it[extensionReceiverType] = extensionReceiverFqn?.toString()
                         }
                     }
 
@@ -82,9 +95,17 @@ class SymbolIndex {
         }
     }
 
-    fun query(prefix: String, limit: Int = 20): List<Symbol> = transaction(db) {
-        Symbols
-            .select { Symbols.shortName.like("$prefix%") }
+    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
+        (Symbols innerJoin FqNames)
+            .select {
+                FqNames.shortName
+                    .like("$prefix%")
+                    .let { q ->
+                        receiverType?.let { t ->
+                            q and (Symbols.extensionReceiverType eq wrapAsExpression(FqNames.slice(FqNames.fqName.count()).select { FqNames.shortName.like("$t%") }))
+                        } ?: q
+                    }
+            }
             .limit(limit)
             .map { Symbol(
                 fqName = FqName(it[Symbols.fqName]),

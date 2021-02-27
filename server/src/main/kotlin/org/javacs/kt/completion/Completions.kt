@@ -97,7 +97,7 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtEx
     val receiverTypeFqName = receiverType?.constructor?.declarationDescriptor?.fqNameSafe
 
     return index
-        .query(partial, limit = MAX_COMPLETION_ITEMS)
+        .query(partial, receiverTypeFqName, limit = MAX_COMPLETION_ITEMS)
         .asSequence()
         .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
         .filter { it.fqName.shortName() !in importedNames && it.fqName.parent() !in wildcardPackages }
@@ -107,7 +107,6 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtEx
             || it.visibility == Symbol.Visibility.PROTECTED
             || it.visibility == Symbol.Visibility.INTERNAL
         }
-        .filter { receiverTypeFqName == it.extensionReceiverType } // if both are null, it's not an extension
         .map { CompletionItem().apply {
             label = it.fqName.shortName().toString()
             kind = when (it.kind) {
