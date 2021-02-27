@@ -200,7 +200,10 @@ class SourcePath(
                 }
             }
 
-            updateIndexAsync(container)
+            // Only index normal files, not build files
+            if (kind == CompilationKind.DEFAULT) {
+                updateIndexAsync(container)
+            }
 
             return context
         }
@@ -219,8 +222,8 @@ class SourcePath(
      * Updates the symbol index asynchronously.
      */
     private fun updateIndexAsync(container: ComponentProvider) = indexAsync.execute {
-        val module = container.getService(ModuleDescriptor::class.java)
-        index.update(module)
+        // val module = container.getService(ModuleDescriptor::class.java)
+        // index.update(module)
     }
 
     /**
