@@ -33,9 +33,13 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
     private lateinit var client: LanguageClient
-    private lateinit var progressFactory: Progress.Factory
 
     private val async = AsyncExecutor()
+    private var progressFactory: Progress.Factory = Progress.Factory.None
+        set(factory: Progress.Factory) {
+            field = factory
+            sourcePath.progressFactory = factory
+        }
 
     override fun connect(client: LanguageClient) {
         this.client = client

@@ -9,6 +9,7 @@ import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.LOG
+import org.javacs.kt.progress.Progress
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.insert
@@ -26,6 +27,8 @@ class SymbolIndex {
     private val db = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
     private var initialized = false
 
+    var progressFactory: Progress.Factory = Progress.Factory.None
+
     init {
         transaction(db) {
             SchemaUtils.create(Symbols)
@@ -40,37 +43,41 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        try {
-            val descriptors = allDescriptors(module)
+        progressFactory.create("Indexing").thenApply { progress ->
+            try {
+                val descriptors = allDescriptors(module)
 
-            // TODO: Incremental updates
-            transaction(db) {
-                Symbols.deleteAll()
+                // TODO: Incremental updates
+                transaction(db) {
+                    Symbols.deleteAll()
 
-                // TODO: Workaround, since insertIgnore seems to throw UnsupportedByDialectExceptions
-                //       when used with H2.
-                val addedFqns = mutableSetOf<FqName>()
+                    // TODO: Workaround, since insertIgnore seems to throw UnsupportedByDialectExceptions
+                    //       when used with H2.
+                    val addedFqns = mutableSetOf<FqName>()
 
-                for (descriptor in descriptors) {
-                    val fqn = descriptor.fqNameSafe
+                    for (descriptor in descriptors) {
+                        val fqn = descriptor.fqNameSafe
 
-                    if (!addedFqns.contains(fqn)) {
-                        addedFqns.add(fqn)
-                        Symbols.insert {
-                            it[fqName] = fqn.toString()
-                            it[shortName] = fqn.shortName().toString()
-                            it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                        if (!addedFqns.contains(fqn)) {
+                            addedFqns.add(fqn)
+                            Symbols.insert {
+                                it[fqName] = fqn.toString()
+                                it[shortName] = fqn.shortName().toString()
+                                it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                            }
                         }
                     }
-                }
 
-                val finished = System.currentTimeMillis()
-                val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
-                LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
+                    val finished = System.currentTimeMillis()
+                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                    LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
+                }
+            } catch (e: Exception) {
+                LOG.error("Error while updating symbol index")
+                LOG.printStackTrace(e)
             }
-        } catch (e: Exception) {
-            LOG.error("Error while updating symbol index")
-            LOG.printStackTrace(e)
+
+            progress.close()
         }
     }
 

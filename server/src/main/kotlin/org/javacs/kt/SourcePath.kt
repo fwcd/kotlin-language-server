@@ -6,6 +6,7 @@ import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
+import org.javacs.kt.progress.Progress
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import com.intellij.openapi.fileTypes.FileType
@@ -33,6 +34,12 @@ class SourcePath(
     val index = SymbolIndex()
     var indexEnabled = true
     var beforeCompileCallback: () -> Unit = {}
+
+    var progressFactory: Progress.Factory = Progress.Factory.None
+        set(factory: Progress.Factory) {
+            field = factory
+            index.progressFactory = factory
+        }
 
     private inner class SourceFile(
         val uri: URI,
