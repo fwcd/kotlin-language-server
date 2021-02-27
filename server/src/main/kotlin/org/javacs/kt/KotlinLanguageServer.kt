@@ -45,8 +45,6 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         this.client = client
         connectLoggingBackend()
 
-        progressFactory = LanguageClientProgress.Factory(client)
-
         workspaces.connect(client)
         textDocuments.connect(client)
 
@@ -81,6 +79,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
+
+        if (clientCapabilities.window.workDoneProgress) {
+            progressFactory = LanguageClientProgress.Factory(client)
+        }
 
         val folders = params.workspaceFolders
         val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }
