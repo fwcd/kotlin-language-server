@@ -3,6 +3,11 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.0.0]
+- Symbol indexing
+- Code completion for unimported members
+- Improved progress bars
+
 ## [0.9.0]
 - More detailed initialization progress
 - Improved completion icons
