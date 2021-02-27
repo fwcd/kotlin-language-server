@@ -82,13 +82,22 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
 private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
-    val importedNames = parsedFile.importDirectives.mapNotNull { it.importedFqName?.shortName() }.toSet()
+    val imports = parsedFile.importDirectives
+    // TODO: Deal with alias imports
+    val wildcardPackages = imports
+        .mapNotNull { it.importPath }
+        .filter { it.isAllUnder }
+        .map { it.fqName }
+        .toSet()
+    val importedNames = imports
+        .mapNotNull { it.importedFqName?.shortName() }
+        .toSet()
 
     return index
         .query(partial, limit = MAX_COMPLETION_ITEMS)
         .asSequence()
         .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
-        .filter { it.fqName.shortName() !in importedNames }
+        .filter { it.fqName.shortName() !in importedNames && it.fqName.parent() !in wildcardPackages }
         .filter {
             // TODO: Visibility checker should be less liberal
                it.visibility == Symbol.Visibility.PUBLIC
