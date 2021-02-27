@@ -396,14 +396,17 @@ private class CompilationEnvironment(
     }
 
     private fun jvmTargetFrom(target: String): JvmTarget? = when (target) {
-        // See https://github.com/JetBrains/kotlin/blob/master/compiler/frontend.java/src/org/jetbrains/kotlin/config/JvmTarget.kt
+        // See https://github.com/JetBrains/kotlin/blob/master/compiler/config.jvm/src/org/jetbrains/kotlin/config/JvmTarget.kt
         "default" -> JvmTarget.DEFAULT
         "1.6" -> JvmTarget.JVM_1_6
         "1.8" -> JvmTarget.JVM_1_8
-        // "9" -> JvmTarget.JVM_9
-        // "10" -> JvmTarget.JVM_10
-        // "11" -> JvmTarget.JVM_11
-        // "12" -> JvmTarget.JVM_12
+        "9" -> JvmTarget.JVM_9
+        "10" -> JvmTarget.JVM_10
+        "11" -> JvmTarget.JVM_11
+        "12" -> JvmTarget.JVM_12
+        "13" -> JvmTarget.JVM_13
+        "14" -> JvmTarget.JVM_14
+        "15" -> JvmTarget.JVM_15
         else -> null
     }
 
