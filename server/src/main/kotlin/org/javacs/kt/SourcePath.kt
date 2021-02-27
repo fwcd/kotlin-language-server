@@ -31,10 +31,12 @@ class SourcePath(
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
-    private val indexAsync = AsyncExecutor()
 
-    val index = SymbolIndex()
+    private val indexAsync = AsyncExecutor()
+    private var indexInitialized: Boolean = false
     var indexEnabled: Boolean by indexingConfig::enabled
+    val index = SymbolIndex()
+
     var beforeCompileCallback: () -> Unit = {}
 
     var progressFactory: Progress.Factory = Progress.Factory.None
@@ -104,7 +106,7 @@ class SourcePath(
                 compiledFile = parsed
             }
 
-            updateIndexAsync(container)
+            initializeIndexAsyncIfNeeded(container)
         }
 
         private fun doCompileIfChanged() {
@@ -211,8 +213,8 @@ class SourcePath(
             }
 
             // Only index normal files, not build files
-            if (indexEnabled && kind == CompilationKind.DEFAULT) {
-                updateIndexAsync(container)
+            if (kind == CompilationKind.DEFAULT) {
+                initializeIndexAsyncIfNeeded(container)
             }
 
             return context
@@ -229,11 +231,15 @@ class SourcePath(
     }
 
     /**
-     * Updates the symbol index asynchronously.
+     * Initialized the symbol index asynchronously, if not
+     * already done.
      */
-    private fun updateIndexAsync(container: ComponentProvider) = indexAsync.execute {
-        val module = container.getService(ModuleDescriptor::class.java)
-        index.update(module)
+    private fun initializeIndexAsyncIfNeeded(container: ComponentProvider) = indexAsync.execute {
+        if (indexEnabled && !indexInitialized) {
+            indexInitialized = true
+            val module = container.getService(ModuleDescriptor::class.java)
+            index.refresh(module)
+        }
     }
 
     /**

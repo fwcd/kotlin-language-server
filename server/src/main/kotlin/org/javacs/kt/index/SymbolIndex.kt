@@ -26,7 +26,6 @@ private object Symbols : Table() {
  */
 class SymbolIndex {
     private val db = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
-    private var initialized = false
 
     var progressFactory: Progress.Factory = Progress.Factory.None
 
@@ -36,11 +35,8 @@ class SymbolIndex {
         }
     }
 
-    fun update(module: ModuleDescriptor) {
-        // TODO: Remove this once a proper debounce mechanism (and ideally incremental updates) are in place.
-        if (initialized) return
-        initialized = true
-
+    /** Rebuilds the entire index. May take a while. */
+    fun refresh(module: ModuleDescriptor) {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
