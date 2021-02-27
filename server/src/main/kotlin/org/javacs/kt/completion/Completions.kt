@@ -103,7 +103,8 @@ private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial
             }
             detail = "(import from ${it.fqName.parent()})"
             val pos = findImportInsertionPosition(parsedFile, it.fqName)
-            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "\nimport ${it.fqName}")) // TODO: CRLF?
+            val prefix = if (importedNames.isEmpty()) "\n\n" else "\n"
+            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "${prefix}import ${it.fqName}")) // TODO: CRLF?
         } }
 }
 
