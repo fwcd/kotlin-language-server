@@ -80,7 +80,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (clientCapabilities.window.workDoneProgress) {
+        if (clientCapabilities?.window?.workDoneProgress ?: false) {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
