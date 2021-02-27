@@ -36,6 +36,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
             name = workspaceRoot.fileName.toString()
             uri = workspaceRoot.toUri().toString()
         })
+        languageServer.sourcePath.indexEnabled = false
         languageServer.connect(this)
         languageServer.initialize(init).join()
 
