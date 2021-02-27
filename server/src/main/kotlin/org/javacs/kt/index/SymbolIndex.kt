@@ -96,16 +96,10 @@ class SymbolIndex {
     }
 
     fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
+        // TODO: Extension completion currently only works if the receiver matches exactly,
+        //       ideally this should work with subtypes as well
         (Symbols innerJoin FqNames)
-            .select {
-                FqNames.shortName
-                    .like("$prefix%")
-                    .let { q ->
-                        receiverType?.let { t ->
-                            q and (Symbols.extensionReceiverType eq wrapAsExpression(FqNames.slice(FqNames.fqName.count()).select { FqNames.shortName.like("$t%") }))
-                        } ?: q
-                    }
-            }
+            .select { FqNames.shortName.like("$prefix%") and (Symbols.extensionReceiverType eq receiverType?.toString()) }
             .limit(limit)
             .map { Symbol(
                 fqName = FqName(it[Symbols.fqName]),
