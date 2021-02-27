@@ -1,5 +1,5 @@
-import org.gradle.kotlin.dsl.accessors.AccessorsClassPathKt
-import org.gradle.kotlin.dsl.accessors.PluginAccessorsClassPathKt
+import org.gradle.kotlin.dsl.accessors.ProjectAccessorsClassPathGenerator
+import org.gradle.kotlin.dsl.accessors.PluginAccessorClassPathGenerator
 import org.gradle.internal.classpath.ClassPath
 
 allprojects { project ->
@@ -12,12 +12,12 @@ allprojects { project ->
                 .forEach { System.out.println "kotlin-lsp-gradle $it" }
 
             // List dynamically generated Kotlin DSL accessors (e.g. the 'compile' configuration method)
-            AccessorsClassPathKt.projectAccessorsClassPath(project, ClassPath.EMPTY)
+            gradle.services.get(ProjectAccessorsClassPathGenerator.class).projectAccessorsClassPath(project, ClassPath.EMPTY)
                 .bin
                 .asFiles
                 .forEach { System.out.println "kotlin-lsp-gradle $it" }
 
-            PluginAccessorsClassPathKt.pluginSpecBuildersClassPath(project)
+            gradle.services.get(PluginAccessorClassPathGenerator.class).pluginSpecBuildersClassPath(project)
                 .bin
                 .asFiles
                 .forEach { System.out.println "kotlin-lsp-gradle $it" }
