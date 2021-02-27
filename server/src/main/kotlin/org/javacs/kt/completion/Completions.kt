@@ -63,8 +63,6 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    // TODO: Filter out already imported completions (i.e. those for which elementCompletions were already found)
-    //       from the index completion items.
     val (elementItems, isExhaustive) = elementCompletionItems(file, cursor, config, partial)
     val elementItemList = elementItems.take(MAX_COMPLETION_ITEMS).toList()
     val items = (elementItemList.asSequence() + if (isExhaustive) emptySequence() else indexCompletionItems(file.parse, index, partial))
@@ -79,27 +77,32 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 }
 
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
-private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> = index
-    .query(partial, limit = MAX_COMPLETION_ITEMS)
-    .asSequence()
-    .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
-    .map { CompletionItem().apply {
-        label = it.fqName.shortName().toString()
-        kind = when (it.kind) {
-            Symbol.Kind.CLASS -> CompletionItemKind.Class
-            Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
-            Symbol.Kind.FUNCTION -> CompletionItemKind.Function
-            Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
-            Symbol.Kind.MODULE -> CompletionItemKind.Module
-            Symbol.Kind.ENUM -> CompletionItemKind.Enum
-            Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
-            Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
-            Symbol.Kind.FIELD -> CompletionItemKind.Field
-        }
-        detail = "(import from ${it.fqName.parent()})"
-        val pos = findImportInsertionPosition(parsedFile, it.fqName)
-        additionalTextEdits = listOf(TextEdit(Range(pos, pos), "\nimport ${it.fqName}")) // TODO: CRLF?
-    } }
+private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+    val importedFqNames = parsedFile.importDirectives.mapNotNull { it.importedFqName }.toSet()
+
+    return index
+        .query(partial, limit = MAX_COMPLETION_ITEMS)
+        .asSequence()
+        .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
+        .filter { it.fqName !in importedFqNames }
+        .map { CompletionItem().apply {
+            label = it.fqName.shortName().toString()
+            kind = when (it.kind) {
+                Symbol.Kind.CLASS -> CompletionItemKind.Class
+                Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
+                Symbol.Kind.FUNCTION -> CompletionItemKind.Function
+                Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
+                Symbol.Kind.MODULE -> CompletionItemKind.Module
+                Symbol.Kind.ENUM -> CompletionItemKind.Enum
+                Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
+                Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
+                Symbol.Kind.FIELD -> CompletionItemKind.Field
+            }
+            detail = "(import from ${it.fqName.parent()})"
+            val pos = findImportInsertionPosition(parsedFile, it.fqName)
+            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "\nimport ${it.fqName}")) // TODO: CRLF?
+        } }
+}
 
 /** Finds a good insertion position for a new import of the given fully-qualified name. */
 private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
