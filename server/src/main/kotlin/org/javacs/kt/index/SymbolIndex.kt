@@ -16,8 +16,9 @@ import org.jetbrains.exposed.sql.insert
 
 private object Symbols : Table() {
     val fqName = varchar("fqname", length = 255).primaryKey()
-    val shortName = varchar("shortname", length = 127)
+    val shortName = varchar("shortname", length = 80)
     val kind = integer("kind")
+    val visibility = integer("visibility")
 }
 
 /**
@@ -64,6 +65,7 @@ class SymbolIndex {
                                 it[fqName] = fqn.toString()
                                 it[shortName] = fqn.shortName().toString()
                                 it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                                it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
                             }
                         }
                     }
@@ -85,7 +87,11 @@ class SymbolIndex {
         Symbols
             .select { Symbols.shortName.like("$prefix%") }
             .limit(limit)
-            .map { Symbol(FqName(it[Symbols.fqName]), Symbol.Kind.fromRaw(it[Symbols.kind])) }
+            .map { Symbol(
+                fqName = FqName(it[Symbols.fqName]),
+                kind = Symbol.Kind.fromRaw(it[Symbols.kind]),
+                visibility = Symbol.Visibility.fromRaw(it[Symbols.visibility])
+            ) }
     }
 
     private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)

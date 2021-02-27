@@ -101,6 +101,7 @@ private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial
                 Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
                 Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
                 Symbol.Kind.FIELD -> CompletionItemKind.Field
+                Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
             }
             detail = "(import from ${it.fqName.parent()})"
             val pos = findImportInsertionPosition(parsedFile, it.fqName)
