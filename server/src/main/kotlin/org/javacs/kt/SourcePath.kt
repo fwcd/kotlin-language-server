@@ -1,12 +1,20 @@
 package org.javacs.kt
 
 import org.javacs.kt.compiler.CompilationKind
+import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.fileExtension
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
+import org.javacs.kt.index.SymbolIndex
+import org.javacs.kt.progress.Progress
+import org.javacs.kt.IndexingConfiguration
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
+import com.intellij.openapi.fileTypes.FileType
+import com.intellij.openapi.fileTypes.LanguageFileType
 import org.jetbrains.kotlin.container.ComponentProvider
+import org.jetbrains.kotlin.container.getService
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
@@ -18,12 +26,24 @@ import java.util.concurrent.locks.ReentrantLock
 
 class SourcePath(
     private val cp: CompilerClassPath,
-    private val contentProvider: URIContentProvider
+    private val contentProvider: URIContentProvider,
+    private val indexingConfig: IndexingConfiguration
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
 
+    private val indexAsync = AsyncExecutor()
+    private var indexInitialized: Boolean = false
+    var indexEnabled: Boolean by indexingConfig::enabled
+    val index = SymbolIndex()
+
     var beforeCompileCallback: () -> Unit = {}
+
+    var progressFactory: Progress.Factory = Progress.Factory.None
+        set(factory: Progress.Factory) {
+            field = factory
+            index.progressFactory = factory
+        }
 
     private inner class SourceFile(
         val uri: URI,
@@ -36,7 +56,7 @@ class SourcePath(
         val language: Language? = null,
         val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
     ) {
-        val extension: String? = uri.fileExtension ?: language?.associatedFileType?.defaultExtension
+        val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
@@ -85,6 +105,8 @@ class SourcePath(
                 compiledContainer = container
                 compiledFile = parsed
             }
+
+            initializeIndexAsyncIfNeeded(container)
         }
 
         private fun doCompileIfChanged() {
@@ -190,6 +212,11 @@ class SourcePath(
                 }
             }
 
+            // Only index normal files, not build files
+            if (kind == CompilationKind.DEFAULT) {
+                initializeIndexAsyncIfNeeded(container)
+            }
+
             return context
         }
 
@@ -201,6 +228,18 @@ class SourcePath(
         val combined = listOf(buildScriptsContext, sourcesContext).filterNotNull() + same.map { it.compiledContext!! }
 
         return CompositeBindingContext.create(combined)
+    }
+
+    /**
+     * Initialized the symbol index asynchronously, if not
+     * already done.
+     */
+    private fun initializeIndexAsyncIfNeeded(container: ComponentProvider) = indexAsync.execute {
+        if (indexEnabled && !indexInitialized) {
+            indexInitialized = true
+            val module = container.getService(ModuleDescriptor::class.java)
+            index.refresh(module)
+        }
     }
 
     /**

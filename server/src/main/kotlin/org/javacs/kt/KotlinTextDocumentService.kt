@@ -156,7 +156,7 @@ class KotlinTextDocumentService(
             LOG.info("Completing at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER) // TODO: Investigate when to recompile
-            val completions = completions(file, cursor, config.completion)
+            val completions = completions(file, cursor, sp.index, config.completion)
             LOG.info("Found {} items", completions.items.size)
 
             Either.forRight<List<CompletionItem>, CompletionList>(completions)

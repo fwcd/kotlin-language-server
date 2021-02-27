@@ -5,15 +5,21 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
+import org.eclipse.lsp4j.TextEdit
+import org.eclipse.lsp4j.Range
+import org.eclipse.lsp4j.Position
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
+import org.javacs.kt.index.Symbol
+import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.noResult
 import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
+import org.javacs.kt.position.location
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
@@ -46,27 +52,100 @@ import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
 
-// The maxmimum number of completion items
+// The maximum number of completion items
 private const val MAX_COMPLETION_ITEMS = 75
 
 // The minimum length after which completion lists are sorted
 private const val MIN_SORT_LENGTH = 3
 
 /** Finds completions at the specified position. */
-fun completions(file: CompiledFile, cursor: Int, config: CompletionConfiguration): CompletionList {
+fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: CompletionConfiguration): CompletionList {
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    var isIncomplete = false
-    val items = elementCompletionItems(file, cursor, config, partial).ifEmpty { keywordCompletionItems(partial).also { isIncomplete = true } }
+    val (elementItems, isExhaustive, receiver) = elementCompletionItems(file, cursor, config, partial)
+    val elementItemList = elementItems.toList()
+    val elementItemLabels = elementItemList.mapNotNull { it.label }.toSet()
+    val items = (
+        elementItemList.asSequence()
+        + (if (!isExhaustive) indexCompletionItems(file, cursor, receiver, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
+        + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
+    )
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
         .onEachIndexed { i, item -> item.sortText = i.toString().padStart(2, '0') }
-    isIncomplete = isIncomplete || (itemList.size == MAX_COMPLETION_ITEMS)
+    val isIncomplete = itemList.size >= MAX_COMPLETION_ITEMS || elementItemList.isEmpty()
 
     return CompletionList(isIncomplete, itemList)
 }
+
+/** Finds completions in the global symbol index, for potentially unimported symbols. */
+private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtExpression?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+    val parsedFile = file.parse
+    val imports = parsedFile.importDirectives
+    // TODO: Deal with alias imports
+    val wildcardPackages = imports
+        .mapNotNull { it.importPath }
+        .filter { it.isAllUnder }
+        .map { it.fqName }
+        .toSet()
+    val importedNames = imports
+        .mapNotNull { it.importedFqName?.shortName() }
+        .toSet()
+    val receiverType = receiver?.let { expr -> file.scopeAtPoint(cursor)?.let { file.typeOfExpression(expr, it) } }
+    val receiverTypeFqName = receiverType?.constructor?.declarationDescriptor?.fqNameSafe
+
+    return index
+        .query(partial, receiverTypeFqName, limit = MAX_COMPLETION_ITEMS)
+        .asSequence()
+        .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
+        .filter { it.fqName.shortName() !in importedNames && it.fqName.parent() !in wildcardPackages }
+        .filter {
+            // TODO: Visibility checker should be less liberal
+               it.visibility == Symbol.Visibility.PUBLIC
+            || it.visibility == Symbol.Visibility.PROTECTED
+            || it.visibility == Symbol.Visibility.INTERNAL
+        }
+        .map { CompletionItem().apply {
+            label = it.fqName.shortName().toString()
+            kind = when (it.kind) {
+                Symbol.Kind.CLASS -> CompletionItemKind.Class
+                Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
+                Symbol.Kind.FUNCTION -> CompletionItemKind.Function
+                Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
+                Symbol.Kind.MODULE -> CompletionItemKind.Module
+                Symbol.Kind.ENUM -> CompletionItemKind.Enum
+                Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
+                Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
+                Symbol.Kind.FIELD -> CompletionItemKind.Field
+                Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
+            }
+            detail = "(import from ${it.fqName.parent()})"
+            val pos = findImportInsertionPosition(parsedFile, it.fqName)
+            val prefix = if (importedNames.isEmpty()) "\n\n" else "\n"
+            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "${prefix}import ${it.fqName}")) // TODO: CRLF?
+        } }
+}
+
+/** Finds a good insertion position for a new import of the given fully-qualified name. */
+private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
+    (closestImport(parsedFile.importDirectives, fqName) as? KtElement ?: parsedFile.packageDirective as? KtElement)
+        ?.let(::location)
+        ?.range
+        ?.end
+        ?: Position(0, 0)
+
+// TODO: Lexicographic insertion
+private fun closestImport(imports: List<KtImportDirective>, fqName: FqName): KtImportDirective? =
+    imports
+        .asReversed()
+        .maxByOrNull { it.importedFqName?.let { matchingPrefixLength(it, fqName) } ?: 0 }
+
+private fun matchingPrefixLength(left: FqName, right: FqName): Int =
+    left.pathSegments().asSequence().zip(right.pathSegments().asSequence())
+        .takeWhile { it.first == it.second }
+        .count()
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
@@ -78,9 +157,11 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
             kind = CompletionItemKind.Keyword
         } }
 
+data class ElementCompletionItems(val items: Sequence<CompletionItem>, val isExhaustive: Boolean, val receiver: KtExpression? = null)
+
 /** Finds completions based on the element around the user's cursor. */
-private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): Sequence<CompletionItem> {
-    val surroundingElement = completableElement(file, cursor) ?: return emptySequence()
+private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
+    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence(), isExhaustive = true)
     val completions = elementCompletions(file, cursor, surroundingElement)
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
@@ -88,7 +169,12 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
         ?: matchesName.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
-    return visible.map { completionItem(it, surroundingElement, file, config) }
+    val isExhaustive = surroundingElement !is KtNameReferenceExpression
+                    && surroundingElement !is KtTypeElement
+                    && surroundingElement !is KtQualifiedExpression
+    val receiver = (surroundingElement as? KtQualifiedExpression)?.receiverExpression
+
+    return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, isExhaustive, receiver)
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")

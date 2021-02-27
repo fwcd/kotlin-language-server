@@ -11,6 +11,8 @@ import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
+import org.javacs.kt.progress.Progress
+import org.javacs.kt.progress.LanguageClientProgress
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
@@ -18,12 +20,12 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
-    private val config = Configuration()
+    val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(JarClassContentProvider(config.externalSources, classPath, tempDirectory))
-    val sourcePath = SourcePath(classPath, uriContentProvider)
+    val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing)
     val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider)
@@ -31,7 +33,13 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
     private lateinit var client: LanguageClient
+
     private val async = AsyncExecutor()
+    private var progressFactory: Progress.Factory = Progress.Factory.None
+        set(factory: Progress.Factory) {
+            field = factory
+            sourcePath.progressFactory = factory
+        }
 
     override fun connect(client: LanguageClient) {
         this.client = client
@@ -72,44 +80,26 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        val folders = params.workspaceFolders
-
-        fun reportProgress(notification: WorkDoneProgressNotification) {
-            params.workDoneToken?.let {
-                client.notifyProgress(ProgressParams(it, notification))
-            }
+        if (clientCapabilities?.window?.workDoneProgress ?: false) {
+            progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        reportProgress(WorkDoneProgressBegin().apply {
-            title = "Adding Kotlin workspace folders"
-            percentage = 0
-        })
+        val folders = params.workspaceFolders
+        val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace folder {}", folder.name)
             val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
             val progressPercent = (100 * i) / folders.size
 
-            reportProgress(WorkDoneProgressReport().apply {
-                message = "$progressPrefix: Updating source path"
-                percentage = progressPercent
-            })
-
+            progress?.update("$progressPrefix: Updating source path", progressPercent)
             val root = Paths.get(parseURI(folder.uri))
             sourceFiles.addWorkspaceRoot(root)
 
-            reportProgress(WorkDoneProgressReport().apply {
-                message = "$progressPrefix: Updating class path"
-                percentage = progressPercent
-            })
-
+            progress?.update("$progressPrefix: Updating class path", progressPercent)
             val refreshed = classPath.addWorkspaceRoot(root)
             if (refreshed) {
-                reportProgress(WorkDoneProgressReport().apply {
-                    message = "$progressPrefix: Refreshing source path"
-                    percentage = progressPercent
-                })
-
+                progress?.update("$progressPrefix: Refreshing source path", progressPercent)
                 sourcePath.refresh()
             }
         }
