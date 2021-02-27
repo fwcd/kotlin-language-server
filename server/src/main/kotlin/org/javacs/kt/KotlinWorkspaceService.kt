@@ -128,7 +128,6 @@ class KotlinWorkspaceService(
                 val indexing = config.indexing
                 get("enabled")?.asBoolean?.let {
                     indexing.enabled = it
-                    sp.indexEnabled = it
                 }
             }
 

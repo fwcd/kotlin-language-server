@@ -7,6 +7,7 @@ import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.progress.Progress
+import org.javacs.kt.IndexingConfiguration
 import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import com.intellij.openapi.fileTypes.FileType
@@ -25,14 +26,15 @@ import java.util.concurrent.locks.ReentrantLock
 
 class SourcePath(
     private val cp: CompilerClassPath,
-    private val contentProvider: URIContentProvider
+    private val contentProvider: URIContentProvider,
+    private val indexingConfig: IndexingConfiguration
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
     private val indexAsync = AsyncExecutor()
 
     val index = SymbolIndex()
-    var indexEnabled = true
+    var indexEnabled: Boolean by indexingConfig::enabled
     var beforeCompileCallback: () -> Unit = {}
 
     var progressFactory: Progress.Factory = Progress.Factory.None
