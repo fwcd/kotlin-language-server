@@ -64,10 +64,11 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     LOG.debug("Looking for completions that match '{}'", partial)
 
     val (elementItems, isExhaustive) = elementCompletionItems(file, cursor, config, partial)
-    val elementItemList = elementItems.take(MAX_COMPLETION_ITEMS).toList()
+    val elementItemList = elementItems.toList()
+    val elementItemLabels = elementItemList.mapNotNull { it.label }.toSet()
     val items = (
         elementItemList.asSequence()
-        + (if (!isExhaustive) indexCompletionItems(file.parse, index, partial) else emptySequence())
+        + (if (!isExhaustive) indexCompletionItems(file.parse, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
         + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
     )
     val itemList = items
