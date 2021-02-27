@@ -158,7 +158,7 @@ data class ElementCompletionItems(val items: Sequence<CompletionItem>, val isExh
 
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
-    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence(), isExhaustive = false)
+    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence(), isExhaustive = true)
     val isExhaustive = surroundingElement !is KtNameReferenceExpression && surroundingElement !is KtTypeElement
     val completions = elementCompletions(file, cursor, surroundingElement)
 
