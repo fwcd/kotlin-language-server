@@ -89,6 +89,12 @@ private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial
         .asSequence()
         .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
         .filter { it.fqName.shortName() !in importedNames }
+        .filter {
+            // TODO: Visibility checker should be less liberal
+               it.visibility == Symbol.Visibility.PUBLIC
+            || it.visibility == Symbol.Visibility.PROTECTED
+            || it.visibility == Symbol.Visibility.INTERNAL
+        }
         .map { CompletionItem().apply {
             label = it.fqName.shortName().toString()
             kind = when (it.kind) {
