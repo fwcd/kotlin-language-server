@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.psi2ir.intermediate.extensionReceiverType
 import org.javacs.kt.LOG
 import org.javacs.kt.progress.Progress
 import org.jetbrains.exposed.sql.Database
@@ -19,6 +20,7 @@ private object Symbols : Table() {
     val shortName = varchar("shortname", length = 80)
     val kind = integer("kind")
     val visibility = integer("visibility")
+    val extensionReceiverType = varchar("extensionreceivertype", length = 255).nullable()
 }
 
 /**
@@ -62,6 +64,7 @@ class SymbolIndex {
                                 it[shortName] = fqn.shortName().toString()
                                 it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
                                 it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
+                                it[extensionReceiverType] = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.toString()
                             }
                         }
                     }
@@ -86,7 +89,8 @@ class SymbolIndex {
             .map { Symbol(
                 fqName = FqName(it[Symbols.fqName]),
                 kind = Symbol.Kind.fromRaw(it[Symbols.kind]),
-                visibility = Symbol.Visibility.fromRaw(it[Symbols.visibility])
+                visibility = Symbol.Visibility.fromRaw(it[Symbols.visibility]),
+                extensionReceiverType = it[Symbols.extensionReceiverType]?.let(::FqName)
             ) }
     }
 

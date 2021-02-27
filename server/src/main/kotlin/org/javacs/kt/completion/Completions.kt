@@ -68,7 +68,7 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val elementItemLabels = elementItemList.mapNotNull { it.label }.toSet()
     val items = (
         elementItemList.asSequence()
-        + (if (!isExhaustive) indexCompletionItems(file.parse, receiver, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
+        + (if (!isExhaustive) indexCompletionItems(file, cursor, receiver, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
         + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
     )
     val itemList = items
@@ -81,7 +81,8 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 }
 
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
-private fun indexCompletionItems(parsedFile: KtFile, receiver: KtExpression?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtExpression?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+    val parsedFile = file.parse
     val imports = parsedFile.importDirectives
     // TODO: Deal with alias imports
     val wildcardPackages = imports
@@ -92,6 +93,8 @@ private fun indexCompletionItems(parsedFile: KtFile, receiver: KtExpression?, in
     val importedNames = imports
         .mapNotNull { it.importedFqName?.shortName() }
         .toSet()
+    val receiverType = receiver?.let { expr -> file.scopeAtPoint(cursor)?.let { file.typeOfExpression(expr, it) } }
+    val receiverTypeFqName = receiverType?.constructor?.declarationDescriptor?.fqNameSafe
 
     return index
         .query(partial, limit = MAX_COMPLETION_ITEMS)
@@ -104,6 +107,7 @@ private fun indexCompletionItems(parsedFile: KtFile, receiver: KtExpression?, in
             || it.visibility == Symbol.Visibility.PROTECTED
             || it.visibility == Symbol.Visibility.INTERNAL
         }
+        .filter { receiverTypeFqName == it.extensionReceiverType } // if both are null, it's not an extension
         .map { CompletionItem().apply {
             label = it.fqName.shortName().toString()
             kind = when (it.kind) {

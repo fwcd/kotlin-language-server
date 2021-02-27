@@ -6,7 +6,8 @@ data class Symbol(
     // TODO: Store location (e.g. using a URI)
     val fqName: FqName,
     val kind: Kind,
-    val visibility: Visibility
+    val visibility: Visibility,
+    val extensionReceiverType: FqName?
 ) {
     enum class Kind(val rawValue: Int) {
         CLASS(0),
