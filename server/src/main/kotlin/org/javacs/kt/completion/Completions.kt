@@ -78,13 +78,13 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
 
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
 private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
-    val importedFqNames = parsedFile.importDirectives.mapNotNull { it.importedFqName }.toSet()
+    val importedNames = parsedFile.importDirectives.mapNotNull { it.importedFqName?.shortName() }.toSet()
 
     return index
         .query(partial, limit = MAX_COMPLETION_ITEMS)
         .asSequence()
         .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
-        .filter { it.fqName !in importedFqNames }
+        .filter { it.fqName.shortName() !in importedNames }
         .map { CompletionItem().apply {
             label = it.fqName.shortName().toString()
             kind = when (it.kind) {
