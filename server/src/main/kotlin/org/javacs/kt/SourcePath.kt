@@ -31,6 +31,7 @@ class SourcePath(
     private val indexAsync = AsyncExecutor()
 
     val index = SymbolIndex()
+    var indexEnabled = true
     var beforeCompileCallback: () -> Unit = {}
 
     private inner class SourceFile(
@@ -201,7 +202,7 @@ class SourcePath(
             }
 
             // Only index normal files, not build files
-            if (kind == CompilationKind.DEFAULT) {
+            if (indexEnabled && kind == CompilationKind.DEFAULT) {
                 updateIndexAsync(container)
             }
 
@@ -222,8 +223,8 @@ class SourcePath(
      * Updates the symbol index asynchronously.
      */
     private fun updateIndexAsync(container: ComponentProvider) = indexAsync.execute {
-        // val module = container.getService(ModuleDescriptor::class.java)
-        // index.update(module)
+        val module = container.getService(ModuleDescriptor::class.java)
+        index.update(module)
     }
 
     /**

@@ -123,6 +123,15 @@ class KotlinWorkspaceService(
                 }
             }
 
+            // Update indexing options
+            get("indexing")?.asJsonObject?.apply {
+                val indexing = config.indexing
+                get("enabled")?.asBoolean?.let {
+                    indexing.enabled = it
+                    sp.indexEnabled = it
+                }
+            }
+
             // Update options about external sources e.g. JAR files, decompilers, etc
             get("externalSources")?.asJsonObject?.apply {
                 val externalSources = config.externalSources
