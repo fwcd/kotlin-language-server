@@ -103,12 +103,22 @@ private fun indexCompletionItems(parsedFile: KtFile, index: SymbolIndex, partial
 
 /** Finds a good insertion position for a new import of the given fully-qualified name. */
 private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
-    // TODO: Insert lexicographically instead of at the end
-    (parsedFile.importDirectives.lastOrNull() as? KtElement ?: parsedFile.packageDirective as? KtElement)
+    (closestImport(parsedFile.importDirectives, fqName) as? KtElement ?: parsedFile.packageDirective as? KtElement)
         ?.let(::location)
         ?.range
         ?.end
         ?: Position(0, 0)
+
+// TODO: Lexicographic insertion
+private fun closestImport(imports: List<KtImportDirective>, fqName: FqName): KtImportDirective? =
+    imports
+        .asReversed()
+        .maxByOrNull { it.importedFqName?.let { matchingPrefixLength(it, fqName) } ?: 0 }
+
+private fun matchingPrefixLength(left: FqName, right: FqName): Int =
+    left.pathSegments().asSequence().zip(right.pathSegments().asSequence())
+        .takeWhile { it.first == it.second }
+        .count()
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
