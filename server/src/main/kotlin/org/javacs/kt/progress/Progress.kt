@@ -11,6 +11,12 @@ interface Progress : Closeable {
      */
     fun update(message: String? = null, percent: Int? = null)
 
+    object None : Progress {
+        override fun update(message: String?, percent: Int?) {}
+
+        override fun close() {}
+    }
+
     interface Factory {
         /**
          * Creates a new progress listener with
@@ -18,5 +24,9 @@ interface Progress : Closeable {
          * to be human-readable.
          */
         fun create(label: String): CompletableFuture<Progress>
+
+        object None : Factory {
+            override fun create(label: String): CompletableFuture<Progress> = CompletableFuture.completedFuture(Progress.None)
+        }
     }
 }
