@@ -15,8 +15,11 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.insert
 
+private val MAX_FQNAME_LENGTH = 255
+private val MAX_SHORT_NAME_LENGTH = 80
+
 private object Symbols : Table() {
-    val fqName = varchar("fqname", length = 255) references FqNames.fqName
+    val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH) references FqNames.fqName
     val kind = integer("kind")
     val visibility = integer("visibility")
     val extensionReceiverType = varchar("extensionreceivertype", length = 255).nullable()
@@ -25,8 +28,8 @@ private object Symbols : Table() {
 }
 
 private object FqNames : Table() {
-    val fqName = varchar("fqname", length = 255)
-    val shortName = varchar("shortname", length = 80)
+    val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH)
+    val shortName = varchar("shortname", length = MAX_SHORT_NAME_LENGTH)
 
     override val primaryKey = PrimaryKey(fqName)
 }
@@ -62,18 +65,20 @@ class SymbolIndex {
                         val descriptorFqn = descriptor.fqNameSafe
                         val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.takeIf { !it.isRoot }
 
-                        for (fqn in listOf(descriptorFqn, extensionReceiverFqn).filterNotNull()) {
-                            FqNames.replace {
-                                it[fqName] = fqn.toString()
-                                it[shortName] = fqn.shortName().toString()
+                        if (canStoreFqName(descriptorFqn) && (extensionReceiverFqn?.let { canStoreFqName(it) } ?: true)) {
+                            for (fqn in listOf(descriptorFqn, extensionReceiverFqn).filterNotNull()) {
+                                FqNames.replace {
+                                    it[fqName] = fqn.toString()
+                                    it[shortName] = fqn.shortName().toString()
+                                }
                             }
-                        }
 
-                        Symbols.replace {
-                            it[fqName] = descriptorFqn.toString()
-                            it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
-                            it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
-                            it[extensionReceiverType] = extensionReceiverFqn?.toString()
+                            Symbols.replace {
+                                it[fqName] = descriptorFqn.toString()
+                                it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
+                                it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
+                                it[extensionReceiverType] = extensionReceiverFqn?.toString()
+                            }
                         }
                     }
 
@@ -89,6 +94,10 @@ class SymbolIndex {
             progress.close()
         }
     }
+
+    private fun canStoreFqName(fqName: FqName) =
+           fqName.toString().length <= MAX_FQNAME_LENGTH
+        && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
     fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
         // TODO: Extension completion currently only works if the receiver matches exactly,
