@@ -79,6 +79,8 @@ class SymbolIndex {
                                 it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
                                 it[extensionReceiverType] = extensionReceiverFqn?.toString()
                             }
+                        } else {
+                            LOG.warn("Excluding symbol {} from index since its name is too long", descriptorFqn.toString())
                         }
                     }
 
