@@ -17,6 +17,10 @@ java {
     }
 }
 
+application {
+    applicationDefaultJvmArgs = ["-DkotlinLanguageServer.version=$projectVersion"]
+}
+
 def debugPort = 8000
 def debugArgs = '-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y'
 

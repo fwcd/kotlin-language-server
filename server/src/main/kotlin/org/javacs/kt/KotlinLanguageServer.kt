@@ -41,6 +41,14 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             sourcePath.progressFactory = factory
         }
 
+    companion object {
+        val VERSION: String = System.getProperty("kotlinLanguageServer.version")
+    }
+
+    init {
+        LOG.info("Kotlin Language Server: Version $VERSION")
+    }
+
     override fun connect(client: LanguageClient) {
         this.client = client
         connectLoggingBackend()
@@ -104,7 +112,9 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             }
         }
 
-        InitializeResult(serverCapabilities)
+        val serverInfo = ServerInfo("Kotlin Language Server", VERSION)
+
+        InitializeResult(serverCapabilities, serverInfo)
     }
 
     private fun connectLoggingBackend() {
