@@ -22,7 +22,7 @@ private object Symbols : Table() {
     val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH) references FqNames.fqName
     val kind = integer("kind")
     val visibility = integer("visibility")
-    val extensionReceiverType = varchar("extensionreceivertype", length = 255).nullable()
+    val extensionReceiverType = varchar("extensionreceivertype", length = MAX_FQNAME_LENGTH).nullable()
 
     override val primaryKey = PrimaryKey(fqName)
 }
