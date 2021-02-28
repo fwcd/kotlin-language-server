@@ -42,11 +42,11 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         }
 
     companion object {
-        val VERSION: String = System.getProperty("kotlinLanguageServer.version")
+        val VERSION: String? = System.getProperty("kotlinLanguageServer.version")
     }
 
     init {
-        LOG.info("Kotlin Language Server: Version $VERSION")
+        LOG.info("Kotlin Language Server: Version ${VERSION ?: "?"}")
     }
 
     override fun connect(client: LanguageClient) {
