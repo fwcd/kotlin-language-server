@@ -3,6 +3,10 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.1.0]
+- Provide ServerInfo via LSP's initialize
+- Make Gradle class path resolver slightly more robust
+
 ## [1.0.0]
 - Symbol indexing
 - Code completion for unimported members
