@@ -59,23 +59,18 @@ class SymbolIndex {
                     Symbols.deleteAll()
 
                     for (descriptor in descriptors) {
-                        val fqn = descriptor.fqNameSafe
-                        val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)
+                        val descriptorFqn = descriptor.fqNameSafe
+                        val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.takeIf { !it.isRoot }
 
-                        FqNames.replace {
-                            it[fqName] = fqn.toString()
-                            it[shortName] = fqn.shortName().toString()
-                        }
-
-                        extensionReceiverFqn?.let { rFqn ->
+                        for (fqn in listOf(descriptorFqn, extensionReceiverFqn).filterNotNull()) {
                             FqNames.replace {
-                                it[fqName] = rFqn.toString()
-                                it[shortName] = rFqn.shortName().toString()
+                                it[fqName] = fqn.toString()
+                                it[shortName] = fqn.shortName().toString()
                             }
                         }
 
                         Symbols.replace {
-                            it[fqName] = fqn.toString()
+                            it[fqName] = descriptorFqn.toString()
                             it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
                             it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
                             it[extensionReceiverType] = extensionReceiverFqn?.toString()
