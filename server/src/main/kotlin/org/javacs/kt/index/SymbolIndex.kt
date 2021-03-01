@@ -1,7 +1,15 @@
 package org.javacs.kt.index
 
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.innerJoin
+import org.jetbrains.exposed.sql.replace
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
@@ -55,13 +63,11 @@ class SymbolIndex {
 
         progressFactory.create("Indexing").thenApply { progress ->
             try {
-                val descriptors = allDescriptors(module)
-
                 // TODO: Incremental updates
                 transaction(db) {
                     Symbols.deleteAll()
 
-                    for (descriptor in descriptors) {
+                    for (descriptor in allDescriptors(module)) {
                         val descriptorFqn = descriptor.fqNameSafe
                         val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.takeIf { !it.isRoot }
 
@@ -115,7 +121,7 @@ class SymbolIndex {
             ) }
     }
 
-    private fun allDescriptors(module: ModuleDescriptor): Collection<DeclarationDescriptor> = allPackages(module)
+    private fun allDescriptors(module: ModuleDescriptor): Sequence<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
         .flatMap {
             try {
@@ -126,7 +132,8 @@ class SymbolIndex {
             }
         }
 
-    private fun allPackages(module: ModuleDescriptor, pkgName: FqName = FqName.ROOT): Collection<FqName> = module
+    private fun allPackages(module: ModuleDescriptor, pkgName: FqName = FqName.ROOT): Sequence<FqName> = module
         .getSubPackagesOf(pkgName) { it.toString() != "META-INF" }
-        .flatMap { setOf(it) + allPackages(module, it) }
+        .asSequence()
+        .flatMap { sequenceOf(it) + allPackages(module, it) }
 }
