@@ -50,7 +50,7 @@ allprojects { project ->
                         System.out.println "kotlin-lsp-gradle $it"
                     }
                 }
-            } else {
+            } else if (project.hasProperty('sourceSets')) {
                 // Print the list of all dependencies jar files.
                 sourceSets.forEach {
                     it.compileClasspath.forEach {
