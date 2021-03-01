@@ -92,7 +92,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        val folders = params.workspaceFolders
+        val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
+            ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)
+            ?: listOf()
+
         val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }
 
         folders.forEachIndexed { i, folder ->
