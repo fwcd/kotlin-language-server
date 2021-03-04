@@ -10,6 +10,7 @@ allprojects { project ->
                 .forEach { System.out.println "kotlin-lsp-gradle $it" }
 
             def projectAccessorsClassPathProperty = "gradleKotlinDsl.projectAccessorsClassPath"
+            def pluginAccessorsClassPathProperty = "gradleKotlinDsl.pluginAccessorsClassPath"
 
             // List dynamically generated Kotlin DSL accessors (e.g. the 'compile' configuration method)
             if (project.hasProperty(projectAccessorsClassPathProperty)) {
@@ -19,10 +20,12 @@ allprojects { project ->
                     .forEach { System.out.println "kotlin-lsp-gradle $it" }
             }
 
-            // gradle.services.get(PluginAccessorClassPathGenerator.class).pluginSpecBuildersClassPath(project)
-            //     .bin
-            //     .asFiles
-            //     .forEach { System.out.println "kotlin-lsp-gradle $it" }
+            if (project.hasProperty(pluginAccessorsClassPathProperty)) {
+                project.getProperty(pluginAccessorsClassPathProperty)
+                    .bin
+                    .asFiles
+                    .forEach { System.out.println "kotlin-lsp-gradle $it" }
+            }
         }
     }
 }
