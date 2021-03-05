@@ -58,8 +58,8 @@ private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
 private fun encodeType(type: SemanticTokenType): Int = type.ordinal
 
 private fun encodeModifiers(modifiers: Set<SemanticTokenModifier>): Int = modifiers
-    .map { 1 << it.ordinal }
-    .fold(0, |)
+    .map { 1 shl it.ordinal }
+    .fold(0, Int::or)
 
 private fun elementTokens(element: PsiElement): Sequence<SemanticToken> = element
     .preOrderTraversal()
