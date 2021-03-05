@@ -14,6 +14,7 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
+import org.javacs.kt.semantictokens.semanticTokens
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
@@ -226,8 +227,14 @@ class KotlinTextDocumentService(
     }
 
     override fun semanticTokensFull(params: SemanticTokensParams) = async.compute {
-        // TODO
-        SemanticTokens(listOf())
+        LOG.info("Full semantic tokens in {}", describeURI(params.textDocument.uri))
+
+        reportTime {
+            val uri = parseURI(params.textDocument.uri)
+            val parsed = sp.parsedFile(uri)
+
+            SemanticTokens(semanticTokens(parsed))
+        }
     }
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
