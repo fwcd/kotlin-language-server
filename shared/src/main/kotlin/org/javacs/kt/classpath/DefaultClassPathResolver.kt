@@ -50,4 +50,5 @@ private fun ignoredPathPatterns(root: Path, gitignore: Path): List<PathMatcher> 
 private fun asClassPathProvider(path: Path): ClassPathResolver? =
     MavenClassPathResolver.maybeCreate(path)
         ?: GradleClassPathResolver.maybeCreate(path)
+        ?: KScriptClassPathResolver.maybeCreate(path)
         ?: ShellClassPathResolver.maybeCreate(path)
