@@ -117,6 +117,7 @@ private class CompilationEnvironment(
                 put(CommonConfigurationKeys.LANGUAGE_VERSION_SETTINGS, languageVersionSettings)
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
+                put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
 
                 addJvmClasspathRoots(classPath.map { it.toFile() })
                 addJavaSourceRoots(javaSourcePath.map { it.toFile() })
