@@ -3,17 +3,19 @@ package org.javacs.kt.classpath
 import org.javacs.kt.LOG
 import java.nio.file.Path
 
+data class ClassPathEntry(val compiledJar: Path, val sourceJar: Path?)
+
 /** A source for creating class paths */
 interface ClassPathResolver {
     val resolverType: String
 
-    val classpath: Set<Path> // may throw exceptions
-    val classpathOrEmpty: Set<Path> // does not throw exceptions
+    val classpath: Set<ClassPathEntry> // may throw exceptions
+    val classpathOrEmpty: Set<ClassPathEntry> // does not throw exceptions
         get() = try {
             classpath
         } catch (e: Exception) {
             LOG.warn("Could not resolve classpath using {}: {}", resolverType, e.message)
-            emptySet<Path>()
+            emptySet<ClassPathEntry>()
         }
 
     val buildScriptClasspath: Set<Path>
@@ -26,11 +28,13 @@ interface ClassPathResolver {
             emptySet<Path>()
         }
 
+    fun fetchClasspathWithSources(): Set<ClassPathEntry> = classpath
+
     companion object {
         /** A default empty classpath implementation */
         val empty = object : ClassPathResolver {
             override val resolverType = "[]"
-            override val classpath = emptySet<Path>()
+            override val classpath = emptySet<ClassPathEntry>()
         }
     }
 }
@@ -52,6 +56,7 @@ internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: Class
     override val classpathOrEmpty get() = lhs.classpathOrEmpty + rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath + rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty + rhs.buildScriptClasspathOrEmpty
+    override fun fetchClasspathWithSources() = lhs.fetchClasspathWithSources() + rhs.fetchClasspathWithSources()
 }
 
 internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
@@ -60,4 +65,5 @@ internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rh
     override val classpathOrEmpty get() = lhs.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty
+    override fun fetchClasspathWithSources() = lhs.fetchClasspathWithSources().takeIf { it.isNotEmpty() } ?: rhs.fetchClasspathWithSources()
 }

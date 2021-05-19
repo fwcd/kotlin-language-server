@@ -1,8 +1,6 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
-import org.javacs.kt.util.firstNonNull
-import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.execAndReadStdoutAndStderr
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.isOSWindows
@@ -15,12 +13,13 @@ import java.nio.file.Paths
 internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
     private val projectDirectory: Path get() = path.getParent()
-    override val classpath: Set<Path> get() {
+    override val classpath: Set<ClassPathEntry> get() {
         val scripts = listOf("projectClassPathFinder.gradle")
         val tasks = listOf("kotlinLSPProjectDeps")
 
         return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
+            .map { ClassPathEntry(it, null) }.toSet()
     }
     override val buildScriptClasspath: Set<Path> get() {
         return if (includeKotlinDSL) {

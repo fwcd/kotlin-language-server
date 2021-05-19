@@ -21,7 +21,9 @@ val URI.fileExtension: String?
     get() {
         val str = toString()
         val dotOffset = str.lastIndexOf(".")
-        return if (dotOffset < 0) null else str.substring(dotOffset + 1)
+        val queryStart = str.indexOf("?")
+        val end = if (queryStart != -1) queryStart else str.length
+        return if (dotOffset < 0) null else str.substring(dotOffset + 1, end)
     }
 
 fun describeURIs(uris: Collection<URI>): String =

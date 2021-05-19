@@ -8,6 +8,7 @@ import java.nio.file.Files
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
+import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.externalsources.toKlsURI
 import org.javacs.kt.externalsources.KlsURI
@@ -20,6 +21,9 @@ import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
+import org.jetbrains.kotlin.js.parser.parse
+import org.jetbrains.kotlin.resolve.descriptorUtil.module
+import java.nio.file.Paths
 
 private val cachedTempFiles = mutableMapOf<KlsURI, Path>()
 private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
@@ -29,7 +33,8 @@ fun goToDefinition(
     cursor: Int,
     jarClassContentProvider: JarClassContentProvider,
     tempDir: TemporaryDirectory,
-    config: ExternalSourcesConfiguration
+    config: ExternalSourcesConfiguration,
+    compilerClassPath: Set<ClassPathEntry>
 ): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
 
@@ -45,8 +50,10 @@ fun goToDefinition(
         val rawClassURI = destination.uri
 
         if (isInsideJar(rawClassURI)) {
-            parseURI(rawClassURI).toKlsURI()?.let { klsURI ->
-                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
+            val sourceURI = getSourceURI(rawClassURI, compilerClassPath)
+            val actualClassURI = sourceURI ?: rawClassURI
+            parseURI(actualClassURI).toKlsURI()?.let { klsURI ->
+                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI, sourceURI != null)
 
                 if (config.useKlsScheme) {
                     // Defer decompilation until a jarClassContents request is sent
@@ -84,6 +91,15 @@ fun goToDefinition(
     }
 
     return destination
+}
+
+private fun getSourceURI(rawClassURI: String, compilerClassPath: Set<ClassPathEntry>): String? {
+    val rawClassPath = parseURI(rawClassURI).path.toString()
+    val jarUri = rawClassPath.substring(0, rawClassPath.indexOf("!"))
+    val classPartUri = rawClassPath.substring(rawClassPath.indexOf("!"))
+    val sourceJar = compilerClassPath.find { it.compiledJar.toUri().path == jarUri }?.sourceJar
+
+    return if (sourceJar != null) sourceJar.toUri().toString() + classPartUri else null
 }
 
 private fun isInsideJar(uri: String) = uri.contains(".jar!")

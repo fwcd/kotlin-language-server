@@ -28,7 +28,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing)
     val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
-    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider)
+    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 

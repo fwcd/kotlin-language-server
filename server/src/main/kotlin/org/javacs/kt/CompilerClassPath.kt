@@ -1,9 +1,10 @@
 package org.javacs.kt
 
+import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
-import java.nio.file.Files
 import java.nio.file.FileSystems
 import java.nio.file.Path
 
@@ -14,10 +15,11 @@ import java.nio.file.Path
 class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val javaSourcePath = mutableSetOf<Path>()
-    private val classPath = mutableSetOf<Path>()
+    val classPath = mutableSetOf<ClassPathEntry>()
     private val buildScriptClassPath = mutableSetOf<Path>()
-    var compiler = Compiler(javaSourcePath, classPath, buildScriptClassPath)
+    var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set
+    private val async = AsyncExecutor()
 
     init {
         compiler.updateConfiguration(config)
@@ -36,8 +38,17 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         if (updateClassPath) {
             val newClassPath = resolver.classpathOrEmpty
             if (newClassPath != classPath) {
-                syncPaths(classPath, newClassPath, "class path")
+                synchronized(classPath) {
+                    syncClassPathEntries(classPath, newClassPath, "class path")
+                }
                 refreshCompiler = true
+            }
+
+            async.compute {
+                val newClassPathWithSources = resolver.fetchClasspathWithSources()
+                synchronized(classPath) {
+                    syncClassPathEntries(classPath, newClassPathWithSources, "class path")
+                }
             }
         }
 
@@ -53,11 +64,23 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         if (refreshCompiler) {
             LOG.info("Reinstantiating compiler")
             compiler.close()
-            compiler = Compiler(javaSourcePath, classPath, buildScriptClassPath)
+            compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
             updateCompilerConfiguration()
         }
 
         return refreshCompiler
+    }
+
+    /** Synchronizes the given two class path entry sets and logs the differences. */
+    private fun syncClassPathEntries(dest: MutableSet<ClassPathEntry>, new: Set<ClassPathEntry>, name: String) {
+        val added = new - dest
+        val removed = dest - new
+
+        logAdded(added.map { it.compiledJar }, name)
+        logRemoved(removed.map { it.compiledJar }, name)
+
+        dest.removeAll(removed)
+        dest.addAll(added)
     }
 
     /** Synchronizes the given two path sets and logs the differences. */

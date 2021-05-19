@@ -37,16 +37,28 @@ data class KlsURI(val uri: URI) {
             .split(".")
             .takeIf { it.size > 1 }
             ?.lastOrNull()
+    val source: Boolean get() = uri.schemeSpecificPart.split("?").getOrNull(1)?.split("&")?.find {
+        it.matches("source=(true|false)".toRegex())
+    }?.split("=")?.get(1)?.toBoolean() ?: false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
     fun withFileExtension(newExtension: String): KlsURI {
-        val (parentURI, fileName) = uri.toString().partitionAroundLast("/")
-        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension"
+        val (parentURI, fileNamePlusQuery) = uri.toString().partitionAroundLast("/")
+        val (fileName, query) = if (fileNamePlusQuery.contains("?")) fileNamePlusQuery.partitionAroundLast("?") else Pair(fileNamePlusQuery, "")
+        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension$query"
         return KlsURI(URI(newURI))
     }
 
-    private fun toFileURI(): URI = URI(uri.schemeSpecificPart)
+    fun withSource(source: Boolean): KlsURI {
+        return KlsURI(URI("${uri.toString()}?source=$source"))
+    }
+
+    fun withoutQuery(): KlsURI {
+        return KlsURI(URI(uri.toString().split("?")[0]))
+    }
+
+    fun toFileURI(): URI = URI(uri.schemeSpecificPart)
 
     private fun toJarURL(): URL = URL("jar:${uri.schemeSpecificPart}")
 

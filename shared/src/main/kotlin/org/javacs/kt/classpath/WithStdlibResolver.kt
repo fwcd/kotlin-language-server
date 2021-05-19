@@ -5,10 +5,15 @@ import java.nio.file.Path
 /** A classpath resolver that ensures another resolver contains the stdlib */
 internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : ClassPathResolver {
     override val resolverType: String get() = "Stdlib + ${wrapped.resolverType}"
-    override val classpath: Set<Path> get() = wrapWithStdlib(wrapped.classpath)
-    override val classpathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.classpathOrEmpty)
+    override val classpath: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpath)
+    override val classpathOrEmpty: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathOrEmpty)
     override val buildScriptClasspath: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspath)
     override val buildScriptClasspathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspathOrEmpty)
+    override fun fetchClasspathWithSources(): Set<ClassPathEntry> = wrapWithStdlibEntries(wrapped.fetchClasspathWithSources())
+}
+
+private fun wrapWithStdlibEntries(paths: Set<ClassPathEntry>): Set<ClassPathEntry> {
+    return wrapWithStdlib(paths.map { it.compiledJar }.toSet()).map { ClassPathEntry(it, paths.find { it1 -> it1.compiledJar == it }?.sourceJar) }.toSet()
 }
 
 private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
@@ -32,9 +37,7 @@ private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
             ).first().path
         }
 
-    val stdlibs = if (linkedStdLibs.isNotEmpty()) {
-        linkedStdLibs
-    } else {
+    val stdlibs = linkedStdLibs.ifEmpty {
         findKotlinStdlib()?.let { listOf(it) } ?: listOf()
     }
 

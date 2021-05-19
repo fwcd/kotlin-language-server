@@ -9,10 +9,12 @@ import java.io.File
 
 /** Resolver for reading maven dependencies */
 internal class MavenClassPathResolver private constructor(private val pom: Path) : ClassPathResolver {
+    private var artifacts: Set<Artifact>? = null
+
     override val resolverType: String = "Maven"
-    override val classpath: Set<Path> get() {
-        val mavenOutput = generateMavenDependencyList(pom)
-        val artifacts = readMavenDependencyList(mavenOutput)
+    override val classpath: Set<ClassPathEntry> get() {
+        val dependenciesOutput = generateMavenDependencyList(pom)
+        val artifacts = readMavenDependencyList(dependenciesOutput)
 
         when {
             artifacts.isEmpty() -> LOG.warn("No artifacts found in {}", pom)
@@ -20,8 +22,30 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
             else -> LOG.info("Found {} artifacts in {}", artifacts.size, pom)
         }
 
-        Files.deleteIfExists(mavenOutput)
-        return artifacts.mapNotNull { findMavenArtifact(it, false) }.toSet()
+        Files.deleteIfExists(dependenciesOutput)
+
+        this.artifacts = artifacts
+        return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
+    }
+
+    override fun fetchClasspathWithSources(): Set<ClassPathEntry> {
+        // Fetch artifacts if not yet present.
+        var artifacts: Set<Artifact>
+        if (this.artifacts != null) {
+            artifacts = this.artifacts!!
+        } else {
+            val dependenciesOutput = generateMavenDependencyList(pom)
+            artifacts = readMavenDependencyList(dependenciesOutput)
+
+            Files.deleteIfExists(dependenciesOutput)
+        }
+
+        // Fetch the sources and update the source flag for each artifact.
+        val sourcesOutput = generateMavenDependencySourcesList(pom)
+        artifacts = readMavenDependencyListWithSources(artifacts, sourcesOutput)
+
+        Files.deleteIfExists(sourcesOutput)
+        return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, findMavenArtifact(it, it.source)) } }.toSet()
     }
 
     companion object {
@@ -33,12 +57,24 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
 
 private val artifactPattern = "^[^:]+:(?:[^:]+:)+[^:]+".toRegex()
 
-private fun readMavenDependencyList(mavenOutput: Path): Set<Artifact> =
-    mavenOutput.toFile()
+private fun readMavenDependencyList(dependenciesOutput: Path): Set<Artifact> =
+    dependenciesOutput.toFile()
         .readLines()
         .filter { it.matches(artifactPattern) }
         .map { parseMavenArtifact(it) }
         .toSet()
+
+private fun readMavenDependencyListWithSources(artifacts: Set<Artifact>, sourcesOutput: Path): Set<Artifact> {
+    val sources = sourcesOutput.toFile()
+        .readLines()
+        .filter { it.matches(artifactPattern) }
+        .map { parseMavenSource(it) }
+        .toSet()
+
+    artifacts.forEach { it.source = sources.any { it1 -> it1.group == it.group && it1.artifact == it.artifact && it1.version == it.version }}
+
+    return artifacts
+}
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
     val result = mavenHome.resolve("repository")
@@ -62,6 +98,18 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
     val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    runCommand(pom, command)
+    return mavenOutput
+}
+
+private fun generateMavenDependencySourcesList(pom: Path): Path {
+    val mavenOutput = Files.createTempFile("sources", ".txt")
+    val command = "$mvnCommand dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput"
+    runCommand(pom, command)
+    return mavenOutput
+}
+
+private fun runCommand(pom: Path, command: String) {
     val workingDirectory = pom.toAbsolutePath().parent
     LOG.info("Run {} in {}", command, workingDirectory)
     val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory)
@@ -69,7 +117,6 @@ private fun generateMavenDependencyList(pom: Path): Path {
     if ("BUILD FAILURE" in errors) {
         LOG.warn("Maven task failed: {}", errors.lines().firstOrNull())
     }
-    return mavenOutput
 }
 
 private val mvnCommand: Path by lazy {
@@ -86,7 +133,8 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
             packaging = null,
             classifier = null,
             version = version ?: parts[2],
-            scope = null
+            scope = null,
+            source = false
         )
         4 -> Artifact(
             group = parts[0],
@@ -94,7 +142,8 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
             packaging = parts[2],
             classifier = null,
             version = version ?: parts[3],
-            scope = null
+            scope = null,
+            source = false
         )
         5 -> Artifact(
             group = parts[0],
@@ -102,7 +151,8 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
             packaging = parts[2],
             classifier = null,
             version = version ?: parts[3],
-            scope = parts[4]
+            scope = parts[4],
+            source = false
         )
         6 -> Artifact(
             group = parts[0],
@@ -110,7 +160,25 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
             packaging = parts[2],
             classifier = parts[3],
             version = version ?: parts[4],
-            scope = parts[5]
+            scope = parts[5],
+            source = false
+        )
+        else -> throw IllegalArgumentException("$rawArtifact is not a properly formed Maven/Gradle artifact")
+    }
+}
+
+fun parseMavenSource(rawArtifact: String, version: String? = null): Artifact {
+    val parts = rawArtifact.trim().split(':')
+
+    return when (parts.size) {
+        5 -> Artifact(
+            group = parts[0],
+            artifact = parts[1],
+            packaging = parts[2],
+            classifier = null,
+            version = version ?: parts[4],
+            scope = null,
+            source = parts[3] == "sources"
         )
         else -> throw IllegalArgumentException("$rawArtifact is not a properly formed Maven/Gradle artifact")
     }
@@ -122,7 +190,8 @@ data class Artifact(
     val packaging: String?,
     val classifier: String?,
     val version: String,
-    val scope: String?
+    val scope: String?,
+    var source: Boolean
 ) {
     override fun toString() = "$group:$artifact:$version"
 }

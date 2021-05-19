@@ -12,7 +12,7 @@ internal class ShellClassPathResolver(
     private val workingDir: Path? = null
 ) : ClassPathResolver {
     override val resolverType: String = "Shell"
-    override val classpath: Set<Path> get() {
+    override val classpath: Set<ClassPathEntry> get() {
         val workingDirectory = workingDir?.toFile() ?: script.toAbsolutePath().parent.toFile()
         val cmd = script.toString()
         LOG.info("Run {} in {}", cmd, workingDirectory)
@@ -23,7 +23,7 @@ internal class ShellClassPathResolver(
             .asSequence()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
-            .map { Paths.get(it) }
+            .map { ClassPathEntry(Paths.get(it), null) }
             .toSet()
     }
 

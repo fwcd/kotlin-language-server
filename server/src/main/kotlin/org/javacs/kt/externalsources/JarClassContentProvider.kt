@@ -22,27 +22,30 @@ class JarClassContentProvider(
     private val tempDir: TemporaryDirectory,
     private val decompiler: Decompiler = FernflowerDecompiler()
 ) {
-    /** Maps recently used (source-)KLS-URIs to their source contents (e.g. decompiled code). */
-    private val cachedContents = object : LinkedHashMap<String, String>() {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>) = size > 5
+    /** Maps recently used (source-)KLS-URIs to their source contents (e.g. decompiled code) and the file extension. */
+    private val cachedContents = object : LinkedHashMap<String, Pair<String, String>>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<String, String>>) = size > 5
     }
 
     /**
      * Fetches the contents of a compiled class/source file in a JAR
      * and another URI which can be used to refer to these extracted
      * contents.
+     * If the file is inside a source JAR, the source code is returned as is.
      */
-    public fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
-        val sourceURI = uri.withFileExtension(if (config.autoConvertToKotlin) "kt" else "java")
-        val key = sourceURI.toString()
-        val contents: String = cachedContents[key] ?: run {
-            LOG.info("Finding contents of {}", describeURI(uri.uri))
-            tryReadContentOf(uri)
-                ?: tryReadContentOf(uri.withFileExtension("class"))
-                ?: tryReadContentOf(uri.withFileExtension("java"))
-                ?: tryReadContentOf(uri.withFileExtension("kt"))
-                ?: throw KotlinLSException("Could not find $uri")
-        }.also { cachedContents[key] = it }
+    public fun contentOf(uri: KlsURI, source: Boolean): Pair<KlsURI, String> {
+        val key = uri.toString()
+        val (contents, extension) = cachedContents[key] ?: run {
+                LOG.info("Finding contents of {}", describeURI(uri.uri))
+                tryReadContentOf(uri, source)
+                    ?: tryReadContentOf(uri.withFileExtension("class"), source)
+                    ?: tryReadContentOf(uri.withFileExtension("java"), source)
+                    ?: tryReadContentOf(uri.withFileExtension("kt"), source)
+                    ?: throw KotlinLSException("Could not find $uri")
+            }.also {
+                cachedContents[key] = Pair(it.first, it.second)
+            }
+        val sourceURI = uri.withFileExtension(extension).withSource(source)
         return Pair(sourceURI, contents)
     }
 
@@ -52,16 +55,17 @@ class JarClassContentProvider(
         javaCode
     }
 
-    private fun tryReadContentOf(uri: KlsURI): String? = try {
-        when (uri.fileExtension) {
-            "class" -> uri.extractToTemporaryFile(tempDir)
+    private fun tryReadContentOf(uri: KlsURI, source: Boolean): Pair<String, String>? = try {
+        val actualUri = uri.withoutQuery()
+        when (actualUri.fileExtension) {
+            "class" -> Pair(actualUri.extractToTemporaryFile(tempDir)
                 .let(decompiler::decompileClass)
                 .let { Files.newInputStream(it) }
                 .bufferedReader()
                 .use(BufferedReader::readText)
-                .let(this::convertToKotlinIfNeeded)
-            "java" -> convertToKotlinIfNeeded(uri.readContents())
-            else -> uri.readContents() // e.g. for Kotlin source files
+                .let(this::convertToKotlinIfNeeded), if (config.autoConvertToKotlin) "kt" else "java")
+            "java" -> if (source) Pair(actualUri.readContents(), "java") else Pair(convertToKotlinIfNeeded(actualUri.readContents()), "kt")
+            else -> Pair(actualUri.readContents(), "kt") // e.g. for Kotlin source files
         }
     } catch (e: FileNotFoundException) { null }
 }
