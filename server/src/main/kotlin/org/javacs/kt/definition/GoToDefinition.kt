@@ -63,7 +63,8 @@ fun goToDefinition(
                     // since the client has not opted into
                     // or does not support KLS URIs
                     val tmpFile = cachedTempFiles[klsSourceURI] ?: run {
-                        val (name, extension) = klsSourceURI.fileName.partitionAroundLast(".")
+                        val (name, rest) = klsSourceURI.fileName.partitionAroundLast(".")
+                        val extension = rest.split("?")[0]
                         tempDir.createTempFile(name, extension)
                             .also {
                                 it.toFile().writeText(content)
