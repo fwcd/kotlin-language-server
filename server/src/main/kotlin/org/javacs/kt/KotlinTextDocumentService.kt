@@ -25,6 +25,7 @@ import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
+import org.javacs.kt.color.documentColors
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -238,8 +239,14 @@ class KotlinTextDocumentService(
     }
 
     override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>> = async.compute {
-        // TODO
-        listOf()
+        LOG.info("Finding colors in {}", describeURI(params.textDocument.uri))
+
+        reportTime {
+            val uri = parseURI(params.textDocument.uri)
+            val file = sp.latestCompiledVersion(uri)
+
+            documentColors(file)
+        }
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {

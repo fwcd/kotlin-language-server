@@ -114,8 +114,13 @@ val Position.isZero: Boolean
 val Range.isZero: Boolean
     get() = start.isZero && end.isZero
 
+fun range(expr: PsiElement): Range? {
+    val content: String? = expr.containingFile?.text
+    return content?.let { range(it, expr.textRange) }
+}
+
 fun location(expr: PsiElement): Location? {
-    val content = try { expr.containingFile?.text } catch (e: NullPointerException) { null }
+    val content: String? = expr.containingFile?.text
     val file = expr.containingFile.toURIString()
     return content?.let { Location(file, range(it, expr.textRange)) }
 }
