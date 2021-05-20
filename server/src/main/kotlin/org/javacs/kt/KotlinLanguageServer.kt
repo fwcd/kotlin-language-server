@@ -83,6 +83,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = true
         serverCapabilities.documentRangeFormattingProvider = true
+        serverCapabilities.colorProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
         val clientCapabilities = params.capabilities

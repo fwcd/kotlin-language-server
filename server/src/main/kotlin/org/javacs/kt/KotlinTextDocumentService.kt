@@ -237,6 +237,11 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
+    override fun documentColor(params: DocumentColorParams): CompletableFuture<List<ColorInformation>> = async.compute {
+        // TODO
+        listOf()
+    }
+
     private fun describePosition(position: TextDocumentPositionParams): String {
         return "${describeURI(position.textDocument.uri)} ${position.position.line + 1}:${position.position.character + 1}"
     }
