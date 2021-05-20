@@ -28,7 +28,7 @@ interface ClassPathResolver {
             emptySet<Path>()
         }
 
-    fun fetchClasspathWithSources(): Set<ClassPathEntry> = classpath
+    val classpathWithSources: Set<ClassPathEntry> get() = classpath
 
     companion object {
         /** A default empty classpath implementation */
@@ -56,7 +56,7 @@ internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: Class
     override val classpathOrEmpty get() = lhs.classpathOrEmpty + rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath + rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty + rhs.buildScriptClasspathOrEmpty
-    override fun fetchClasspathWithSources() = lhs.fetchClasspathWithSources() + rhs.fetchClasspathWithSources()
+    override val classpathWithSources = lhs.classpathWithSources + rhs.classpathWithSources
 }
 
 internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
@@ -65,5 +65,5 @@ internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rh
     override val classpathOrEmpty get() = lhs.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty
-    override fun fetchClasspathWithSources() = lhs.fetchClasspathWithSources().takeIf { it.isNotEmpty() } ?: rhs.fetchClasspathWithSources()
+    override val classpathWithSources = lhs.classpathWithSources.takeIf { it.isNotEmpty() } ?: rhs.classpathWithSources
 }

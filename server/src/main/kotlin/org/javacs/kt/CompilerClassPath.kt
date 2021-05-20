@@ -45,7 +45,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             }
 
             async.compute {
-                val newClassPathWithSources = resolver.fetchClasspathWithSources()
+                val newClassPathWithSources = resolver.classpathWithSources
                 synchronized(classPath) {
                     syncClassPathEntries(classPath, newClassPathWithSources, "class path")
                 }

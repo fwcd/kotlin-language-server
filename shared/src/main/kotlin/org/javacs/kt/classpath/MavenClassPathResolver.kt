@@ -28,7 +28,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
     }
 
-    override fun fetchClasspathWithSources(): Set<ClassPathEntry> {
+    override val classpathWithSources: Set<ClassPathEntry> get() {
         // Fetch artifacts if not yet present.
         var artifacts: Set<Artifact>
         if (this.artifacts != null) {
