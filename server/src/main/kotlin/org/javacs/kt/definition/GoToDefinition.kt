@@ -2,9 +2,7 @@ package org.javacs.kt.definition
 
 import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Range
-import java.net.URI
 import java.nio.file.Path
-import java.nio.file.Files
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
@@ -21,9 +19,6 @@ import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
-import org.jetbrains.kotlin.js.parser.parse
-import org.jetbrains.kotlin.resolve.descriptorUtil.module
-import java.nio.file.Paths
 
 private val cachedTempFiles = mutableMapOf<KlsURI, Path>()
 private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
