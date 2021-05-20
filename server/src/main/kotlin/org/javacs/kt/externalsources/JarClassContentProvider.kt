@@ -36,7 +36,7 @@ class JarClassContentProvider(
     public fun contentOf(uri: KlsURI, source: Boolean): Pair<KlsURI, String> {
         val key = uri.toString()
         val (contents, extension) = cachedContents[key] ?: run {
-                LOG.info("Finding contents of {}", describeURI(uri.uri))
+                LOG.info("Finding contents of {}", describeURI(uri.fileUri))
                 tryReadContentOf(uri, source)
                     ?: tryReadContentOf(uri.withFileExtension("class"), source)
                     ?: tryReadContentOf(uri.withFileExtension("java"), source)

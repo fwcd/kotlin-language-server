@@ -1,6 +1,5 @@
 package org.javacs.kt.externalsources
 
-import org.javacs.kt.j2k.convertJavaToKotlin
 import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.TemporaryDirectory
 import java.net.URI
@@ -8,7 +7,6 @@ import java.net.URL
 import java.net.JarURLConnection
 import java.io.BufferedReader
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.Files
 
 fun URI.toKlsURI(): KlsURI? = when (scheme) {
@@ -29,33 +27,53 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * Other file extensions for classes (such as .kt and .java) are supported too, in
  * which case the file will directly be used without invoking the decompiler.
  */
-data class KlsURI(val uri: URI) {
+data class KlsURI(val fileUri: URI, val query: Map<QueryParams, Any>) {
+
+    /**
+     * Possible KLS URI query parameters
+     */
+    enum class QueryParams(val parameterName: String) {
+        SOURCE("source");
+
+        override fun toString(): String = parameterName
+
+        companion object {
+            val ValueParsers: Map<QueryParams, (String) -> Any> = mapOf(
+                Pair(QueryParams.SOURCE) { it.toBoolean() }
+            )
+        }
+    }
+
+    constructor(uri: URI) : this(parseKlsURIFileName(uri), parseKlsURIQuery(uri))
+
     val fileName: String
-        get() = uri.toString().substringAfterLast("/")
+        get() = fileUri.toString().substringAfterLast("/")
     val fileExtension: String?
         get() = fileName
             .split(".")
             .takeIf { it.size > 1 }
             ?.lastOrNull()
-    val source: Boolean get() = uri.schemeSpecificPart.split("?").getOrNull(1)?.split("&")?.find {
-        it.matches("source=(true|false)".toRegex())
-    }?.split("=")?.get(1)?.toBoolean() ?: false
+    private val queryString get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -> "$accum${next.key}=${next.value}" }
+    private val uri: URI get() = URI(fileUri.toString() + queryString)
+    val source: Boolean get() = if (query[QueryParams.SOURCE] != null) query[QueryParams.SOURCE] as Boolean else false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
     fun withFileExtension(newExtension: String): KlsURI {
-        val (parentURI, fileNamePlusQuery) = uri.toString().partitionAroundLast("/")
-        val (fileName, query) = if (fileNamePlusQuery.contains("?")) fileNamePlusQuery.partitionAroundLast("?") else Pair(fileNamePlusQuery, "")
-        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension$query"
-        return KlsURI(URI(newURI))
+        val (parentURI, fileName) = uri.toString().partitionAroundLast("/")
+        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension"
+        return KlsURI(URI(newURI), query)
     }
 
     fun withSource(source: Boolean): KlsURI {
-        return KlsURI(URI("${uri.toString()}?source=$source"))
+        val newQuery: MutableMap<QueryParams, Any> = mutableMapOf()
+        newQuery.putAll(query)
+        newQuery[QueryParams.SOURCE] = source.toString()
+        return KlsURI(fileUri, newQuery)
     }
 
     fun withoutQuery(): KlsURI {
-        return KlsURI(URI(uri.toString().split("?")[0]))
+        return KlsURI(fileUri, mapOf())
     }
 
     fun toFileURI(): URI = URI(uri.schemeSpecificPart)
@@ -93,4 +111,26 @@ data class KlsURI(val uri: URI) {
     }
 
     override fun toString(): String = uri.toString()
+}
+
+private fun parseKlsURIFileName(uri: URI): URI = URI(uri.toString().split("?")[0])
+
+private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParams, Any> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
+
+private fun parseQuery(query: String): Map<KlsURI.QueryParams, Any> =
+    query.split("&").mapNotNull {
+        val parts = it.split("=")
+        if (parts.size == 2) getQueryParameter(parts[0], parts[1]) else null
+    }.toMap()
+
+private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParams, Any>? {
+    val queryParam: KlsURI.QueryParams? = KlsURI.QueryParams.values().find { it.parameterName == property }
+
+    if (queryParam != null) {
+        val typeParser = KlsURI.QueryParams.ValueParsers[queryParam]
+        val queryParamValue = typeParser?.invoke(value)
+        return if (queryParamValue != null) Pair(queryParam, queryParamValue) else null
+    }
+
+    return null
 }

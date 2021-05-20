@@ -45,7 +45,11 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         artifacts = readMavenDependencyListWithSources(artifacts, sourcesOutput)
 
         Files.deleteIfExists(sourcesOutput)
-        return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, findMavenArtifact(it, it.source)) } }.toSet()
+        return artifacts.mapNotNull {
+            findMavenArtifact(it, false)?.let {
+                it1 -> ClassPathEntry(it1, if (it.source) findMavenArtifact(it, it.source) else null)
+            }
+        }.toSet()
     }
 
     companion object {
@@ -68,10 +72,12 @@ private fun readMavenDependencyListWithSources(artifacts: Set<Artifact>, sources
     val sources = sourcesOutput.toFile()
         .readLines()
         .filter { it.matches(artifactPattern) }
-        .map { parseMavenSource(it) }
+        .mapNotNull { parseMavenSource(it) }
         .toSet()
 
-    artifacts.forEach { it.source = sources.any { it1 -> it1.group == it.group && it1.artifact == it.artifact && it1.version == it.version }}
+    artifacts.forEach { it.source = sources.any {
+        it1 -> it1.group == it.group && it1.artifact == it.artifact && it1.version == it.version
+    }}
 
     return artifacts
 }
@@ -104,7 +110,7 @@ private fun generateMavenDependencyList(pom: Path): Path {
 
 private fun generateMavenDependencySourcesList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("sources", ".txt")
-    val command = "$mvnCommand dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput"
+    val command = "$mvnCommand dependency:sources -DincludeScope=test > $mavenOutput"
     runCommand(pom, command)
     return mavenOutput
 }
@@ -167,20 +173,20 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
     }
 }
 
-fun parseMavenSource(rawArtifact: String, version: String? = null): Artifact {
-    val parts = rawArtifact.trim().split(':')
+fun parseMavenSource(rawArtifact: String, version: String? = null): Artifact? {
+    val parts = rawArtifact.removePrefix("[INFO]").trim().split(':')
 
     return when (parts.size) {
-        5 -> Artifact(
-            group = parts[0],
-            artifact = parts[1],
-            packaging = parts[2],
-            classifier = null,
-            version = version ?: parts[4],
-            scope = null,
-            source = parts[3] == "sources"
-        )
-        else -> throw IllegalArgumentException("$rawArtifact is not a properly formed Maven/Gradle artifact")
+        5 -> if (parts[3] == "sources") Artifact(
+                group = parts[0],
+                artifact = parts[1],
+                packaging = parts[2],
+                classifier = null,
+                version = version ?: parts[4].split(" ")[0], // Needed to avoid the rest of the line from being captured.
+                scope = null,
+                source = true
+             ) else null
+        else -> null
     }
 }
 
