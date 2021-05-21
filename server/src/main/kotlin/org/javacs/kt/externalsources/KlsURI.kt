@@ -27,24 +27,24 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * Other file extensions for classes (such as .kt and .java) are supported too, in
  * which case the file will directly be used without invoking the decompiler.
  */
-data class KlsURI(val fileUri: URI, val query: Map<QueryParams, Any>) {
+data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
 
     /**
      * Possible KLS URI query parameters
      */
-    enum class QueryParams(val parameterName: String) {
+    enum class QueryParam(val parameterName: String) {
         SOURCE("source");
 
         override fun toString(): String = parameterName
 
         companion object {
-            val ValueParsers: Map<QueryParams, (String) -> Any> = mapOf(
-                Pair(QueryParams.SOURCE) { it.toBoolean() }
+            val VALUE_PARSERS: Map<QueryParam, (String) -> Any> = mapOf(
+                Pair(QueryParam.SOURCE) { it.toBoolean() }
             )
         }
     }
 
-    constructor(uri: URI) : this(parseKlsURIFileName(uri), parseKlsURIQuery(uri))
+    constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
 
     val fileName: String
         get() = fileUri.toString().substringAfterLast("/")
@@ -55,7 +55,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParams, Any>) {
             ?.lastOrNull()
     private val queryString get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -> "$accum${next.key}=${next.value}" }
     private val uri: URI get() = URI(fileUri.toString() + queryString)
-    val source: Boolean get() = if (query[QueryParams.SOURCE] != null) query[QueryParams.SOURCE] as Boolean else false
+    val source: Boolean get() = query[QueryParam.SOURCE] as? Boolean ?: false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
@@ -66,9 +66,9 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParams, Any>) {
     }
 
     fun withSource(source: Boolean): KlsURI {
-        val newQuery: MutableMap<QueryParams, Any> = mutableMapOf()
+        val newQuery: MutableMap<QueryParam, Any> = mutableMapOf()
         newQuery.putAll(query)
-        newQuery[QueryParams.SOURCE] = source.toString()
+        newQuery[QueryParam.SOURCE] = source.toString()
         return KlsURI(fileUri, newQuery)
     }
 
@@ -113,23 +113,23 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParams, Any>) {
     override fun toString(): String = uri.toString()
 }
 
-private fun parseKlsURIFileName(uri: URI): URI = URI(uri.toString().split("?")[0])
+private fun parseKlsURIFileURI(uri: URI): URI = URI(uri.toString().split("?")[0])
 
-private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParams, Any> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
+private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParam, Any> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
 
-private fun parseQuery(query: String): Map<KlsURI.QueryParams, Any> =
+private fun parseQuery(query: String): Map<KlsURI.QueryParam, Any> =
     query.split("&").mapNotNull {
         val parts = it.split("=")
         if (parts.size == 2) getQueryParameter(parts[0], parts[1]) else null
     }.toMap()
 
-private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParams, Any>? {
-    val queryParam: KlsURI.QueryParams? = KlsURI.QueryParams.values().find { it.parameterName == property }
+private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParam, Any>? {
+    val queryParam: KlsURI.QueryParam? = KlsURI.QueryParam.values().find { it.parameterName == property }
 
     if (queryParam != null) {
-        val typeParser = KlsURI.QueryParams.ValueParsers[queryParam]
+        val typeParser = KlsURI.QueryParam.VALUE_PARSERS[queryParam]
         val queryParamValue = typeParser?.invoke(value)
-        return if (queryParamValue != null) Pair(queryParam, queryParamValue) else null
+        return queryParamValue?.let { Pair(queryParam, it) }
     }
 
     return null

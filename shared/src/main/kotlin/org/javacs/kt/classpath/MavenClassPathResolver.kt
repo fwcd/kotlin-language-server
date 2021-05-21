@@ -103,14 +103,14 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
-    val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput"
+    val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
     runCommand(pom, command)
     return mavenOutput
 }
 
 private fun generateMavenDependencySourcesList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("sources", ".txt")
-    val command = "$mvnCommand dependency:sources -DincludeScope=test > $mavenOutput"
+    val command = "$mvnCommand dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
     runCommand(pom, command)
     return mavenOutput
 }
@@ -174,7 +174,7 @@ fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
 }
 
 fun parseMavenSource(rawArtifact: String, version: String? = null): Artifact? {
-    val parts = rawArtifact.removePrefix("[INFO]").trim().split(':')
+    val parts = rawArtifact.trim().split(':')
 
     return when (parts.size) {
         5 -> if (parts[3] == "sources") Artifact(
