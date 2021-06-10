@@ -54,9 +54,9 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
             ?.lastOrNull()
 
     val jarPath: Path
-        get() = Paths.get(fileUri.path.split("!")[0])
+        get() = Paths.get(fileUri.schemeSpecificPart.split("!")[0])
     val innerPath: String?
-        get() = fileUri.path.split("!", limit = 2).get(1)
+        get() = fileUri.schemeSpecificPart.split("!", limit = 2).get(1)
 
     val source: Boolean
         get() = query[QueryParam.SOURCE] as? Boolean ?: false
@@ -83,7 +83,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
 
     fun toURI(): URI = URI(fileUri.toString() + queryString)
 
-    private fun toJarURL(): URL = URL("jar:${toURI().schemeSpecificPart}")
+    private fun toJarURL(): URL = URL("jar:${fileUri.schemeSpecificPart}")
 
     private fun openJarURLConnection() = toJarURL().openConnection() as JarURLConnection
 
