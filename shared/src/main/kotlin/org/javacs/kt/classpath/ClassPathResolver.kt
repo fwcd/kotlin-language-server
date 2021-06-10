@@ -3,8 +3,6 @@ package org.javacs.kt.classpath
 import org.javacs.kt.LOG
 import java.nio.file.Path
 
-data class ClassPathEntry(val compiledJar: Path, val sourceJar: Path?)
-
 /** A source for creating class paths */
 interface ClassPathResolver {
     val resolverType: String
