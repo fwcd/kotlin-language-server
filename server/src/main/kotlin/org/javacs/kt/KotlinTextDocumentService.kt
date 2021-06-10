@@ -36,7 +36,6 @@ import java.util.concurrent.CompletableFuture
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
-    private val classPath: CompilerClassPath,
     private val config: Configuration,
     private val tempDirectory: TemporaryDirectory,
     private val uriContentProvider: URIContentProvider
@@ -125,7 +124,7 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, tempDirectory, config.externalSources, classPath.classPath)
+            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, tempDirectory, config.externalSources)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))

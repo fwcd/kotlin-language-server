@@ -28,8 +28,7 @@ fun goToDefinition(
     cursor: Int,
     jarClassContentProvider: JarClassContentProvider,
     tempDir: TemporaryDirectory,
-    config: ExternalSourcesConfiguration,
-    compilerClassPath: Set<ClassPathEntry>
+    config: ExternalSourcesConfiguration
 ): Location? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
 
@@ -45,9 +44,7 @@ fun goToDefinition(
         val rawClassURI = destination.uri
 
         if (isInsideJar(rawClassURI)) {
-            val sourceURI = getSourceURI(rawClassURI, compilerClassPath)
-            val actualClassURI = sourceURI ?: rawClassURI
-            parseURI(actualClassURI).toKlsURI()?.let { klsURI ->
+            parseURI(rawClassURI).toKlsURI()?.let { klsURI ->
                 val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {
@@ -88,15 +85,6 @@ fun goToDefinition(
     }
 
     return destination
-}
-
-private fun getSourceURI(rawClassURI: String, compilerClassPath: Set<ClassPathEntry>): String? {
-    val rawClassPath = parseURI(rawClassURI).path.toString()
-    val jarUri = rawClassPath.substring(0, rawClassPath.indexOf("!"))
-    val classPartUri = rawClassPath.substring(rawClassPath.indexOf("!"))
-    val sourceJar = compilerClassPath.find { it.compiledJar.toUri().path == jarUri }?.sourceJar
-
-    return if (sourceJar != null) sourceJar.toUri().toString() + classPartUri else null
 }
 
 private fun isInsideJar(uri: String) = uri.contains(".jar!")

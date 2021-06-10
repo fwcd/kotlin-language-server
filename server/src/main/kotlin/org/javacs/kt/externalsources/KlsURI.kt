@@ -8,6 +8,7 @@ import java.net.JarURLConnection
 import java.io.BufferedReader
 import java.nio.file.Path
 import java.nio.file.Files
+import java.nio.file.Paths
 
 fun URI.toKlsURI(): KlsURI? = when (scheme) {
     "kls" -> KlsURI(URI("kls:$schemeSpecificPart"))
@@ -41,6 +42,9 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
         }
     }
 
+    private val queryString: String
+        get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -> "$accum${next.key}=${next.value}" }
+
     val fileName: String
         get() = fileUri.toString().substringAfterLast("/")
     val fileExtension: String?
@@ -48,13 +52,21 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
             .split(".")
             .takeIf { it.size > 1 }
             ?.lastOrNull()
-    private val queryString get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -> "$accum${next.key}=${next.value}" }
-    private val uri: URI get() = URI(fileUri.toString() + queryString)
-    val source: Boolean get() = query[QueryParam.SOURCE] as? Boolean ?: false
+
+    val jarPath: Path
+        get() = Paths.get(fileUri.path.split("!")[0])
+    val innerPath: String?
+        get() = fileUri.path.split("!", limit = 2).get(1)
+
+    val source: Boolean
+        get() = query[QueryParam.SOURCE] as? Boolean ?: false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
     constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
+
+    fun withJarPath(newJarPath: Path): KlsURI =
+        KlsURI(URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")), query)
 
     fun withFileExtension(newExtension: String): KlsURI {
         val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
@@ -69,11 +81,9 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
         return KlsURI(fileUri, newQuery)
     }
 
-    fun withoutQuery(): KlsURI = KlsURI(fileUri, mapOf())
+    fun toURI(): URI = URI(fileUri.toString() + queryString)
 
-    fun toFileURI(): URI = URI(uri.schemeSpecificPart)
-
-    private fun toJarURL(): URL = URL("jar:${uri.schemeSpecificPart}")
+    private fun toJarURL(): URL = URL("jar:${toURI().schemeSpecificPart}")
 
     private fun openJarURLConnection() = toJarURL().openConnection() as JarURLConnection
 
@@ -105,7 +115,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
         tmpFile
     }
 
-    override fun toString(): String = uri.toString()
+    override fun toString(): String = toURI().toString()
 }
 
 private fun parseKlsURIFileURI(uri: URI): URI = URI(uri.toString().split("?")[0])
