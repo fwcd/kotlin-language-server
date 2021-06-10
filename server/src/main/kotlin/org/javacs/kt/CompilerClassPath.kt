@@ -15,10 +15,12 @@ import java.nio.file.Path
 class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val workspaceRoots = mutableSetOf<Path>()
     private val javaSourcePath = mutableSetOf<Path>()
-    val classPath = mutableSetOf<ClassPathEntry>()
     private val buildScriptClassPath = mutableSetOf<Path>()
+    val classPath = mutableSetOf<ClassPathEntry>()
+
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set
+
     private val async = AsyncExecutor()
 
     init {
@@ -39,7 +41,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             val newClassPath = resolver.classpathOrEmpty
             if (newClassPath != classPath) {
                 synchronized(classPath) {
-                    syncClassPathEntries(classPath, newClassPath, "class path")
+                    syncPaths(classPath, newClassPath, "class path") { it.compiledJar }
                 }
                 refreshCompiler = true
             }
@@ -47,7 +49,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             async.compute {
                 val newClassPathWithSources = resolver.classpathWithSources
                 synchronized(classPath) {
-                    syncClassPathEntries(classPath, newClassPathWithSources, "class path")
+                    syncPaths(classPath, newClassPathWithSources, "class path with sources") { it.compiledJar }
                 }
             }
         }
@@ -56,7 +58,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             LOG.info("Update build script path")
             val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
             if (newBuildScriptClassPath != buildScriptClassPath) {
-                syncPaths(buildScriptClassPath, newBuildScriptClassPath, "class path")
+                syncPaths(buildScriptClassPath, newBuildScriptClassPath, "build script class path") { it }
                 refreshCompiler = true
             }
         }
@@ -71,25 +73,13 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         return refreshCompiler
     }
 
-    /** Synchronizes the given two class path entry sets and logs the differences. */
-    private fun syncClassPathEntries(dest: MutableSet<ClassPathEntry>, new: Set<ClassPathEntry>, name: String) {
-        val added = new - dest
-        val removed = dest - new
-
-        logAdded(added.map { it.compiledJar }, name)
-        logRemoved(removed.map { it.compiledJar }, name)
-
-        dest.removeAll(removed)
-        dest.addAll(added)
-    }
-
     /** Synchronizes the given two path sets and logs the differences. */
-    private fun syncPaths(dest: MutableSet<Path>, new: Set<Path>, name: String) {
+    private fun <T> syncPaths(dest: MutableSet<T>, new: Set<T>, name: String, toPath: (T) -> Path) {
         val added = new - dest
         val removed = dest - new
 
-        logAdded(added, name)
-        logRemoved(removed, name)
+        logAdded(added.map(toPath), name)
+        logRemoved(removed.map(toPath), name)
 
         dest.removeAll(removed)
         dest.addAll(added)
