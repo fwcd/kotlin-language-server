@@ -48,7 +48,7 @@ fun goToDefinition(
             val sourceURI = getSourceURI(rawClassURI, compilerClassPath)
             val actualClassURI = sourceURI ?: rawClassURI
             parseURI(actualClassURI).toKlsURI()?.let { klsURI ->
-                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI, sourceURI != null)
+                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {
                     // Defer decompilation until a jarClassContents request is sent

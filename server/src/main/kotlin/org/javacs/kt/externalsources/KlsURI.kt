@@ -28,10 +28,7 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * which case the file will directly be used without invoking the decompiler.
  */
 data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
-
-    /**
-     * Possible KLS URI query parameters
-     */
+    /** Possible KLS URI query parameters. */
     enum class QueryParam(val parameterName: String) {
         SOURCE("source");
 
@@ -43,8 +40,6 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
             )
         }
     }
-
-    constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
 
     val fileName: String
         get() = fileUri.toString().substringAfterLast("/")
@@ -59,10 +54,12 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
+    constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
+
     fun withFileExtension(newExtension: String): KlsURI {
-        val (parentURI, fileName) = uri.toString().partitionAroundLast("/")
-        val newURI = "$parentURI${fileName.split(".").first()}.$newExtension"
-        return KlsURI(URI(newURI), query)
+        val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
+        val newUri = URI("$parentUri${fileName.split(".").first()}.$newExtension")
+        return KlsURI(newUri, query)
     }
 
     fun withSource(source: Boolean): KlsURI {
@@ -72,9 +69,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
         return KlsURI(fileUri, newQuery)
     }
 
-    fun withoutQuery(): KlsURI {
-        return KlsURI(fileUri, mapOf())
-    }
+    fun withoutQuery(): KlsURI = KlsURI(fileUri, mapOf())
 
     fun toFileURI(): URI = URI(uri.schemeSpecificPart)
 

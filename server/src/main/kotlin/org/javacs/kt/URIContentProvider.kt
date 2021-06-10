@@ -17,7 +17,7 @@ class URIContentProvider(
 ) {
     fun contentOf(uri: URI): String = when (uri.scheme) {
         "file" -> Paths.get(uri).toFile().readText()
-        "kls" -> uri.toKlsURI()?.let { jarClassContentProvider.contentOf(it, it.source).second }
+        "kls" -> uri.toKlsURI()?.let { jarClassContentProvider.contentOf(it).second }
             ?: throw KotlinLSException("Could not find ${uri}")
         else -> throw KotlinLSException("Unrecognized scheme ${uri.scheme}")
     }
