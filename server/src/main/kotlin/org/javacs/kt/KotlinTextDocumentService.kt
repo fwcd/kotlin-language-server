@@ -36,10 +36,10 @@ import java.util.concurrent.CompletableFuture
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
     private val sp: SourcePath,
+    private val classPath: CompilerClassPath,
     private val config: Configuration,
     private val tempDirectory: TemporaryDirectory,
-    private val uriContentProvider: URIContentProvider,
-    private val classPath: CompilerClassPath
+    private val uriContentProvider: URIContentProvider
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
