@@ -94,7 +94,7 @@ task fixFilePermissions(type: Exec) {
 }
 
 task debugRun(type: JavaExec) {
-    main = mainClassName
+    mainClass = mainClassName
     classpath sourceSets.main.runtimeClasspath
     standardInput = System.in
 
@@ -106,7 +106,7 @@ task debugRun(type: JavaExec) {
 
 task debugStartScripts(type: CreateStartScripts) {
     applicationName = startScripts.applicationName
-    mainClassName = startScripts.mainClassName
+    mainClass = startScripts.mainClass
     outputDir = installDist.destinationDir.toPath().resolve('bin').toFile()
     classpath = startScripts.classpath
     defaultJvmOpts = [debugArgs]
