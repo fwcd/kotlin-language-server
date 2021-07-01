@@ -137,6 +137,11 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         println(`object`.toString())
     }
 
+    // We don't implement this since we are waiting for the linter to complete anyway
+    // before performing the semantic tokens test (and for the other tests, semantic
+    // tokens aren't relevant, so we can save time by not performing this request)
+    override fun refreshSemanticTokens(): CompletableFuture<Void> = CompletableFuture.completedFuture(null)
+
     override fun logMessage(message: MessageParams?) = printMessage(message)
 
     override fun showMessage(message: MessageParams?) = printMessage(message)
