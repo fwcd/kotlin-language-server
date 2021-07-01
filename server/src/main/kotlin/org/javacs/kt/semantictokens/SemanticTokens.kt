@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
+import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
@@ -22,6 +23,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 
 private enum class SemanticTokenType(val typeName: String) {
+    KEYWORD(SemanticTokenTypes.Keyword),
     VARIABLE(SemanticTokenTypes.Variable),
     FUNCTION(SemanticTokenTypes.Function),
     PROPERTY(SemanticTokenTypes.Property),
@@ -117,7 +119,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             }
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
             val modifiers = mutableSetOf(SemanticTokenModifier.DECLARATION)
-            val isConstant = (element as? KtVariableDeclaration)?.let { !it.isVar() } ?: false
+            val isConstant = (element as? KtVariableDeclaration)?.let { !it.isVar() || it.hasModifier(KtTokens.CONST_KEYWORD) } ?: false
             if (isConstant) {
                 modifiers.add(SemanticTokenModifier.READONLY)
             }
