@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend
 import org.eclipse.lsp4j.Range
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.range
+import org.javacs.kt.position.offset
 import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassKind
@@ -51,8 +52,12 @@ val semanticTokensLegend = SemanticTokensLegend(
 
 private data class SemanticToken(val range: Range, val type: SemanticTokenType, val modifiers: Set<SemanticTokenModifier> = setOf())
 
-fun semanticTokens(file: CompiledFile): List<Int> =
-    encodeTokens(elementTokens(file.parse, file.compile))
+/**
+ * Computes semantic tokens for the given range in the document.
+ * No range means the entire document.
+ */
+fun semanticTokens(file: CompiledFile, range: Range? = null): List<Int> =
+    encodeTokens(elementTokens(file.parse, file.compile, range))
 
 private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     val encoded = mutableListOf<Int>()
@@ -84,9 +89,13 @@ private fun encodeModifiers(modifiers: Set<SemanticTokenModifier>): Int = modifi
     .map { 1 shl it.ordinal }
     .fold(0, Int::or)
 
-private fun elementTokens(element: PsiElement, bindingContext: BindingContext): Sequence<SemanticToken> = element
-    .preOrderTraversal()
-    .mapNotNull { elementToken(it, bindingContext) }
+private fun elementTokens(element: PsiElement, bindingContext: BindingContext, range: Range? = null): Sequence<SemanticToken> {
+    val file = element.containingFile
+    val offsets = range?.let { Pair(offset(file.text, it.start), offset(file.text, it.end)) }
+    return element
+        .preOrderTraversal { offsets?.let { element.textRange.containsRange(it.first, it.second) } ?: true }
+        .mapNotNull { elementToken(it, bindingContext) }
+}
 
 private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken? {
     val file = element.containingFile
