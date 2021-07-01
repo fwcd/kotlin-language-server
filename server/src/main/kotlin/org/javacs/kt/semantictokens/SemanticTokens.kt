@@ -35,7 +35,10 @@ private enum class SemanticTokenType(val typeName: String) {
 
 private enum class SemanticTokenModifier(val modifierName: String) {
     DECLARATION(SemanticTokenModifiers.Declaration),
-    DEFINITION(SemanticTokenModifiers.Definition)
+    DEFINITION(SemanticTokenModifiers.Definition),
+    ABSTRACT(SemanticTokenModifiers.Abstract),
+    STATIC(SemanticTokenModifiers.Static),
+    READONLY(SemanticTokenModifiers.Readonly)
 }
 
 val semanticTokensLegend = SemanticTokensLegend(
@@ -101,7 +104,9 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 }
                 else -> return null
             }
-            SemanticToken(elementRange, tokenType)
+            val isConstant = (target as? VariableDescriptor)?.let { !it.isVar() || it.isConst() } ?: false
+            val modifiers = if (isConstant) setOf(SemanticTokenModifier.READONLY) else setOf()
+            SemanticToken(elementRange, tokenType, modifiers)
         }
         is PsiNameIdentifierOwner -> {
             val tokenType = when (element) {
@@ -111,7 +116,11 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 else -> return null
             }
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
-            val modifiers = setOf(SemanticTokenModifier.DECLARATION)
+            val modifiers = mutableSetOf(SemanticTokenModifier.DECLARATION)
+            val isConstant = (element as? KtVariableDeclaration)?.let { !it.isVar() } ?: false
+            if (isConstant) {
+                modifiers.add(SemanticTokenModifier.READONLY)
+            }
             SemanticToken(identifierRange, tokenType, modifiers)
         }
         else -> null
