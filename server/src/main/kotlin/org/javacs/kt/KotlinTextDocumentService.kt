@@ -240,6 +240,20 @@ class KotlinTextDocumentService(
         }
     }
 
+    override fun semanticTokensRange(params: SemanticTokensRangeParams) = async.compute {
+        LOG.info("Ranged semantic tokens in {}", describeURI(params.textDocument.uri))
+
+        reportTime {
+            val uri = parseURI(params.textDocument.uri)
+            val file = sp.currentVersion(uri)
+
+            val tokens = semanticTokens(file, params.range)
+            LOG.info("Found {} tokens", tokens.size)
+
+            SemanticTokens(tokens)
+        }
+    }
+
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
     }
