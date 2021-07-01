@@ -115,7 +115,10 @@ private fun elementTokens(element: PsiElement, bindingContext: BindingContext, r
     val file = element.containingFile
     val textRange = range?.let { TextRange(offset(file.text, it.start), offset(file.text, it.end)) }
     return element
-        .preOrderTraversal { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
+        // TODO: Ideally we would like to cut-off subtrees outside our range, but this doesn't quite seem to work
+        // .preOrderTraversal { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
+        .preOrderTraversal()
+        .filter { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
         .mapNotNull { elementToken(it, bindingContext) }
 }
 

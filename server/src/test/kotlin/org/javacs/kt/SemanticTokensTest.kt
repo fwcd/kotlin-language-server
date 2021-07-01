@@ -15,38 +15,35 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
         val classLine = 4
         val funLine = 6
 
-        val expectedVar = encodeTokens(sequenceOf(
+        val expectedVar = sequenceOf(
             SemanticToken(range(varLine, 5, varLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION)), // variable
-        ))
-        val expectedConst = encodeTokens(sequenceOf(
+        )
+        val expectedConst = sequenceOf(
             SemanticToken(range(constLine, 5, constLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // constant
             SemanticToken(range(constLine, 15, constLine, 21), SemanticTokenType.CLASS), // String
             SemanticToken(range(constLine, 24, constLine, 40), SemanticTokenType.STRING), // "test $variable"
             SemanticToken(range(constLine, 30, constLine, 39), SemanticTokenType.INTERPOLATION_ENTRY), // $variable
             SemanticToken(range(constLine, 31, constLine, 39), SemanticTokenType.PROPERTY), // variable
-        ))
-        val expectedClass = encodeTokens(sequenceOf(
+        )
+        val expectedClass = sequenceOf(
             SemanticToken(range(classLine, 12, classLine, 16), SemanticTokenType.CLASS, setOf(SemanticTokenModifier.DECLARATION)), // Type
             SemanticToken(range(classLine, 21, classLine, 29), SemanticTokenType.PARAMETER, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // property
             SemanticToken(range(classLine, 31, classLine, 34), SemanticTokenType.CLASS), // Int
-        ))
-        val expectedFun = encodeTokens(sequenceOf(
+        )
+        val expectedFun = sequenceOf(
             SemanticToken(range(funLine, 5, funLine, 6), SemanticTokenType.FUNCTION, setOf(SemanticTokenModifier.DECLARATION)), // f
             SemanticToken(range(funLine, 7, funLine, 8), SemanticTokenType.PARAMETER, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // x
             SemanticToken(range(funLine, 10, funLine, 13), SemanticTokenType.CLASS), // Int?
             SemanticToken(range(funLine, 24, funLine, 27), SemanticTokenType.CLASS), // Int
             SemanticToken(range(funLine, 30, funLine, 31), SemanticTokenType.FUNCTION), // f
             SemanticToken(range(funLine, 32, funLine, 33), SemanticTokenType.VARIABLE, setOf(SemanticTokenModifier.READONLY)), // x
-        ))
+        )
 
-        val partialExpected = expectedConst + expectedClass
+        val partialExpected = encodeTokens(expectedConst + expectedClass)
         val partialResponse = languageServer.textDocumentService.semanticTokensRange(semanticTokensRangeParams(file, range(constLine, 0, classLine + 1, 0))).get()!!
-        // DEBUG
-        println(partialExpected)
-        println(partialResponse.data)
         assertThat(partialResponse.data, contains(*partialExpected.toTypedArray()))
 
-        val fullExpected = expectedVar + expectedConst + expectedClass + expectedFun
+        val fullExpected = encodeTokens(expectedVar + expectedConst + expectedClass + expectedFun)
         val fullResponse = languageServer.textDocumentService.semanticTokensFull(semanticTokensParams(file)).get()!!
         assertThat(fullResponse.data, contains(*fullExpected.toTypedArray()))
     }
