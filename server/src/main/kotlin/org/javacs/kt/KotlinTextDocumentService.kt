@@ -233,7 +233,10 @@ class KotlinTextDocumentService(
             val uri = parseURI(params.textDocument.uri)
             val parsed = sp.parsedFile(uri)
 
-            SemanticTokens(semanticTokens(parsed))
+            val tokens = semanticTokens(parsed)
+            LOG.info("Found {} tokens", tokens.size)
+
+            SemanticTokens(tokens)
         }
     }
 
