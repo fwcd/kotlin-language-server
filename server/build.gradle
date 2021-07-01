@@ -31,9 +31,6 @@ startScripts {
 repositories {
     maven { url uri("$projectDir/lib") }
     maven { url 'https://jitpack.io' }
-    // TODO: Update once https://github.com/JetBrains/Exposed/issues/1160 is resolved
-    //       since Bintray will be shutting down soon
-    maven { url 'https://cache-redirector.jetbrains.com/dl.bintray.com/kotlin/exposed' }
 }
 
 dependencies {
