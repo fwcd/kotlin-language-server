@@ -13,6 +13,8 @@ import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
@@ -39,7 +41,6 @@ private enum class SemanticTokenModifier(val modifierName: String) {
     DECLARATION(SemanticTokenModifiers.Declaration),
     DEFINITION(SemanticTokenModifiers.Definition),
     ABSTRACT(SemanticTokenModifiers.Abstract),
-    STATIC(SemanticTokenModifiers.Static),
     READONLY(SemanticTokenModifiers.Readonly)
 }
 
@@ -90,6 +91,7 @@ private fun elementTokens(element: PsiElement, bindingContext: BindingContext): 
 private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken? {
     val file = element.containingFile
     val elementRange = range(file.text, element.textRange)
+
     return when (element) {
         is KtNameReferenceExpression -> {
             val target = bindingContext[BindingContext.REFERENCE_TARGET, element]
@@ -108,6 +110,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             }
             val isConstant = (target as? VariableDescriptor)?.let { !it.isVar() || it.isConst() } ?: false
             val modifiers = if (isConstant) setOf(SemanticTokenModifier.READONLY) else setOf()
+
             SemanticToken(elementRange, tokenType, modifiers)
         }
         is PsiNameIdentifierOwner -> {
@@ -115,14 +118,24 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 is KtProperty -> SemanticTokenType.PROPERTY
                 is KtParameter -> SemanticTokenType.PARAMETER
                 is KtVariableDeclaration -> SemanticTokenType.VARIABLE
+                is KtClassOrObject -> SemanticTokenType.CLASS
                 else -> return null
             }
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
             val modifiers = mutableSetOf(SemanticTokenModifier.DECLARATION)
-            val isConstant = (element as? KtVariableDeclaration)?.let { !it.isVar() || it.hasModifier(KtTokens.CONST_KEYWORD) } ?: false
-            if (isConstant) {
-                modifiers.add(SemanticTokenModifier.READONLY)
+
+            if (element is KtVariableDeclaration) {
+                if (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) {
+                    modifiers.add(SemanticTokenModifier.READONLY)
+                }
             }
+
+            if (element is KtModifierListOwner) {
+                if (element.hasModifier(KtTokens.ABSTRACT_KEYWORD)) {
+                    modifiers.add(SemanticTokenModifier.ABSTRACT)
+                }
+            }
+
             SemanticToken(identifierRange, tokenType, modifiers)
         }
         else -> null
