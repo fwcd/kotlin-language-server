@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtSimpleNameStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtBlockStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
@@ -71,15 +72,15 @@ data class SemanticToken(val range: Range, val type: SemanticTokenType, val modi
  * Computes LSP-encoded semantic tokens for the given range in the
  * document. No range means the entire document.
  */
-fun encodedSemanticTokens(file: CompiledFile, range: Range? = null): List<Int> =
-    encodeTokens(semanticTokens(file, range))
+fun encodedSemanticTokens(parse: KtFile, bindingContext: BindingContext, range: Range? = null): List<Int> =
+    encodeTokens(semanticTokens(parse, bindingContext, range))
 
 /**
  * Computes semantic tokens for the given range in the document.
  * No range means the entire document.
  */
-fun semanticTokens(file: CompiledFile, range: Range? = null): Sequence<SemanticToken> =
-    elementTokens(file.parse, file.compile, range)
+fun semanticTokens(parse: KtFile, bindingContext: BindingContext, range: Range? = null): Sequence<SemanticToken> =
+    elementTokens(parse, bindingContext, range)
 
 fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     val encoded = mutableListOf<Int>()

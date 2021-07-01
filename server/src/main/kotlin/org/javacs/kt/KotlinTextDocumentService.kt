@@ -231,9 +231,10 @@ class KotlinTextDocumentService(
 
         reportTime {
             val uri = parseURI(params.textDocument.uri)
-            val file = sp.currentVersion(uri)
+            val parse = sp.parsedFile(uri)
+            val file = sp.latestCompiledVersion(uri)
 
-            val tokens = encodedSemanticTokens(file)
+            val tokens = encodedSemanticTokens(parse, file.compile)
             LOG.info("Found {} tokens", tokens.size)
 
             SemanticTokens(tokens)
@@ -245,9 +246,10 @@ class KotlinTextDocumentService(
 
         reportTime {
             val uri = parseURI(params.textDocument.uri)
-            val file = sp.currentVersion(uri)
+            val parse = sp.parsedFile(uri)
+            val file = sp.latestCompiledVersion(uri)
 
-            val tokens = encodedSemanticTokens(file, params.range)
+            val tokens = encodedSemanticTokens(parse, file.compile, params.range)
             LOG.info("Found {} tokens", tokens.size)
 
             SemanticTokens(tokens)
@@ -288,6 +290,7 @@ class KotlinTextDocumentService(
         val context = sp.compileFiles(files)
         if (!cancelCallback.invoke()) {
             reportDiagnostics(files, context.diagnostics)
+            client.refreshSemanticTokens()
         }
         lintCount++
     }
