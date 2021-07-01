@@ -80,7 +80,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
     val dependencies = findGradleCLIDependencies(command, projectDirectory)
         ?.also { LOG.debug("Classpath for task {}", it) }
         .orEmpty()
-        .filter { it.toString().toLowerCase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
+        .filter { it.toString().lowercase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
         .toSet()
 
     tmpScripts.forEach(Files::delete)
