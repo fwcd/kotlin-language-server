@@ -222,7 +222,7 @@ private fun extractPropertyName(d: DeclarationDescriptor): String {
     val match = Regex("(get|set)?((?:(?:is)|[A-Z])\\w*)").matchEntire(d.name.identifier)!!
     val upper = match.groups[2]!!.value
 
-    return upper[0].toLowerCase() + upper.substring(1)
+    return upper[0].lowercaseChar() + upper.substring(1)
 }
 
 private fun isGetter(d: DeclarationDescriptor): Boolean =

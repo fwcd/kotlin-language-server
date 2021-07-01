@@ -6,7 +6,6 @@ import org.eclipse.lsp4j.FormattingOptions
 
 fun formatKotlinCode(
     code: String,
-    isScript: Boolean = false,
     options: FormattingOptions = FormattingOptions(4, true)
 ): String = format(KtfmtOptions(
     style = KtfmtOptions.Style.GOOGLE,

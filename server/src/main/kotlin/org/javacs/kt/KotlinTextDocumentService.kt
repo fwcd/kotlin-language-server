@@ -135,11 +135,7 @@ class KotlinTextDocumentService(
         val code = extractRange(params.textDocument.content, params.range)
         listOf(TextEdit(
             params.range,
-            formatKotlinCode(
-                code,
-                isScript = params.textDocument.isKotlinScript,
-                options = params.options
-            )
+            formatKotlinCode(code, params.options)
         ))
     }
 
@@ -210,11 +206,7 @@ class KotlinTextDocumentService(
         LOG.info("Formatting {}", describeURI(params.textDocument.uri))
         listOf(TextEdit(
             Range(Position(0, 0), position(code, code.length)),
-            formatKotlinCode(
-                code,
-                isScript = params.textDocument.isKotlinScript,
-                options = params.options
-            )
+            formatKotlinCode(code, params.options)
         ))
     }
 

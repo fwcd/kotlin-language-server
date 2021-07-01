@@ -10,7 +10,7 @@ object JavaTypeConverter : PsiTypeVisitor<String>() {
 
     override fun visitPrimitiveType(primitiveType: PsiPrimitiveType): String = when (primitiveType.canonicalText) {
         "void" -> "Unit"
-        else -> primitiveType.canonicalText.capitalize()
+        else -> primitiveType.canonicalText.replaceFirstChar { it.uppercaseChar() }
     }
 
     override fun visitArrayType(arrayType: PsiArrayType): String = when (try {
