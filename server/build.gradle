@@ -124,6 +124,10 @@ run {
     standardInput = System.in
 }
 
+processTestResources {
+    dependsOn copyPropertiesToTestWorkspace, copyPropertiesToDSLTestWorkspace
+}
+
 test {
     dependsOn copyPropertiesToTestWorkspace, copyPropertiesToDSLTestWorkspace
 
