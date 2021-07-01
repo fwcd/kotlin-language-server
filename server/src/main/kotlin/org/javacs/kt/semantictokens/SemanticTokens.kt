@@ -26,7 +26,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.openapi.util.TextRange
 
-private enum class SemanticTokenType(val typeName: String) {
+enum class SemanticTokenType(val typeName: String) {
     KEYWORD(SemanticTokenTypes.Keyword),
     VARIABLE(SemanticTokenTypes.Variable),
     FUNCTION(SemanticTokenTypes.Function),
@@ -39,7 +39,7 @@ private enum class SemanticTokenType(val typeName: String) {
     TYPE(SemanticTokenTypes.Type)
 }
 
-private enum class SemanticTokenModifier(val modifierName: String) {
+enum class SemanticTokenModifier(val modifierName: String) {
     DECLARATION(SemanticTokenModifiers.Declaration),
     DEFINITION(SemanticTokenModifiers.Definition),
     ABSTRACT(SemanticTokenModifiers.Abstract),
@@ -51,14 +51,21 @@ val semanticTokensLegend = SemanticTokensLegend(
     SemanticTokenModifier.values().map { it.modifierName }
 )
 
-private data class SemanticToken(val range: Range, val type: SemanticTokenType, val modifiers: Set<SemanticTokenModifier> = setOf())
+data class SemanticToken(val range: Range, val type: SemanticTokenType, val modifiers: Set<SemanticTokenModifier> = setOf())
+
+/**
+ * Computes LSP-encoded semantic tokens for the given range in the
+ * document. No range means the entire document.
+ */
+fun encodedSemanticTokens(file: CompiledFile, range: Range? = null): List<Int> =
+    encodeTokens(semanticTokens(file, range))
 
 /**
  * Computes semantic tokens for the given range in the document.
  * No range means the entire document.
  */
-fun semanticTokens(file: CompiledFile, range: Range? = null): List<Int> =
-    encodeTokens(elementTokens(file.parse, file.compile, range))
+fun semanticTokens(file: CompiledFile, range: Range? = null): Sequence<SemanticToken> =
+    elementTokens(file.parse, file.compile, range)
 
 private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     val encoded = mutableListOf<Int>()

@@ -14,7 +14,7 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
-import org.javacs.kt.semantictokens.semanticTokens
+import org.javacs.kt.semantictokens.encodedSemanticTokens
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.noResult
@@ -233,7 +233,7 @@ class KotlinTextDocumentService(
             val uri = parseURI(params.textDocument.uri)
             val file = sp.currentVersion(uri)
 
-            val tokens = semanticTokens(file)
+            val tokens = encodedSemanticTokens(file)
             LOG.info("Found {} tokens", tokens.size)
 
             SemanticTokens(tokens)
@@ -247,7 +247,7 @@ class KotlinTextDocumentService(
             val uri = parseURI(params.textDocument.uri)
             val file = sp.currentVersion(uri)
 
-            val tokens = semanticTokens(file, params.range)
+            val tokens = encodedSemanticTokens(file, params.range)
             LOG.info("Found {} tokens", tokens.size)
 
             SemanticTokens(tokens)
