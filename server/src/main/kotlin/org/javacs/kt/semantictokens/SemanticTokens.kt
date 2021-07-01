@@ -24,6 +24,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.openapi.util.TextRange
 
 private enum class SemanticTokenType(val typeName: String) {
     KEYWORD(SemanticTokenTypes.Keyword),
@@ -91,9 +92,9 @@ private fun encodeModifiers(modifiers: Set<SemanticTokenModifier>): Int = modifi
 
 private fun elementTokens(element: PsiElement, bindingContext: BindingContext, range: Range? = null): Sequence<SemanticToken> {
     val file = element.containingFile
-    val offsets = range?.let { Pair(offset(file.text, it.start), offset(file.text, it.end)) }
+    val textRange = range?.let { TextRange(offset(file.text, it.start), offset(file.text, it.end)) }
     return element
-        .preOrderTraversal { offsets?.let { element.textRange.containsRange(it.first, it.second) } ?: true }
+        .preOrderTraversal { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
         .mapNotNull { elementToken(it, bindingContext) }
 }
 
