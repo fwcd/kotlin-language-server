@@ -4,17 +4,25 @@ import org.eclipse.lsp4j.SemanticTokenTypes
 import org.eclipse.lsp4j.SemanticTokenModifiers
 import org.eclipse.lsp4j.SemanticTokensLegend
 import org.eclipse.lsp4j.Range
+import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
+import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 
 private enum class SemanticTokenType(val typeName: String) {
     VARIABLE(SemanticTokenTypes.Variable),
+    FUNCTION(SemanticTokenTypes.Function),
     PROPERTY(SemanticTokenTypes.Property),
-    ENUM_MEMBER(SemanticTokenTypes.EnumMember)
+    ENUM_MEMBER(SemanticTokenTypes.EnumMember),
+    TYPE(SemanticTokenTypes.Type)
 }
 
 private enum class SemanticTokenModifier(val modifierName: String) {
@@ -29,7 +37,8 @@ val semanticTokensLegend = SemanticTokensLegend(
 
 private data class SemanticToken(val range: Range, val type: SemanticTokenType, val modifiers: Set<SemanticTokenModifier> = setOf())
 
-fun semanticTokens(element: PsiElement): List<Int> = encodeTokens(elementTokens(element))
+fun semanticTokens(file: CompiledFile): List<Int> =
+    encodeTokens(elementTokens(file.parse, file.compile))
 
 private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     val encoded = mutableListOf<Int>()
@@ -61,18 +70,25 @@ private fun encodeModifiers(modifiers: Set<SemanticTokenModifier>): Int = modifi
     .map { 1 shl it.ordinal }
     .fold(0, Int::or)
 
-private fun elementTokens(element: PsiElement): Sequence<SemanticToken> = element
+private fun elementTokens(element: PsiElement, bindingContext: BindingContext): Sequence<SemanticToken> = element
     .preOrderTraversal()
-    // .mapNotNull { (it as? KtNamedDeclaration)?.nameIdentifier }
-    .mapNotNull { elementToken(it) }
+    .mapNotNull { elementToken(it, bindingContext) }
 
-private fun elementToken(element: PsiElement): SemanticToken? {
+private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken? {
     val file = element.containingFile
     val elementRange = range(file.text, element.textRange)
     return when (element) {
-        is KtNameReferenceExpression -> SemanticToken(elementRange, SemanticTokenType.VARIABLE)
-        // is KtProperty -> SemanticToken(elementRange, SemanticTokenType.PROPERTY)
-        // is KtVariableDeclaration -> SemanticToken(elementRange, SemanticTokenType.VARIABLE)
+        is KtNameReferenceExpression -> {
+            val target = bindingContext[BindingContext.REFERENCE_TARGET, element]
+            val tokenType = when (target) {
+                is PropertyDescriptor -> SemanticTokenType.PROPERTY
+                is VariableDescriptor -> SemanticTokenType.VARIABLE
+                is FunctionDescriptor -> SemanticTokenType.FUNCTION
+                is ClassifierDescriptor -> SemanticTokenType.TYPE
+                else -> return null
+            }
+            SemanticToken(elementRange, tokenType)
+        }
         else -> null
     }
 }

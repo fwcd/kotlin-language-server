@@ -231,9 +231,9 @@ class KotlinTextDocumentService(
 
         reportTime {
             val uri = parseURI(params.textDocument.uri)
-            val parsed = sp.parsedFile(uri)
+            val file = sp.latestCompiledVersion(uri)
 
-            val tokens = semanticTokens(parsed)
+            val tokens = semanticTokens(file)
             LOG.info("Found {} tokens", tokens.size)
 
             SemanticTokens(tokens)
