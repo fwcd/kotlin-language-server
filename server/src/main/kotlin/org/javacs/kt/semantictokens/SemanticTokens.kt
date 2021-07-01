@@ -10,6 +10,7 @@ import org.javacs.kt.position.offset
 import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
@@ -115,6 +116,10 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             val tokenType = when (target) {
                 is PropertyDescriptor -> SemanticTokenType.PROPERTY
                 is VariableDescriptor -> SemanticTokenType.VARIABLE
+                is ConstructorDescriptor -> when (target.constructedClass.kind) {
+                    ClassKind.ANNOTATION_CLASS -> SemanticTokenType.TYPE // annotations look nicer this way
+                    else -> SemanticTokenType.FUNCTION
+                }
                 is FunctionDescriptor -> SemanticTokenType.FUNCTION
                 is ClassDescriptor -> when (target.kind) {
                     ClassKind.CLASS -> SemanticTokenType.CLASS
