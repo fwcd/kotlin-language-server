@@ -6,7 +6,7 @@ import org.eclipse.lsp4j.SemanticTokensLegend
 import org.eclipse.lsp4j.Range
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
-import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import com.intellij.psi.PsiElement
@@ -38,9 +38,9 @@ private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     for (token in tokens) {
         // Tokens must be on a single line
         if (token.range.start.line == token.range.end.line) {
-            val deltaLine = token.range.start.line - (last?.let { it.range.start.line } ?: 0)
-            val deltaStart = token.range.start.character - (last?.let { it.range.start.character } ?: 0)
             val length = token.range.end.character - token.range.start.character
+            val deltaLine = token.range.start.line - (last?.range?.start?.line ?: 0)
+            val deltaStart = token.range.start.character - (last?.takeIf { deltaLine == 0 }?.range?.start?.character ?: 0)
 
             encoded.add(deltaLine)
             encoded.add(deltaStart)
@@ -63,15 +63,16 @@ private fun encodeModifiers(modifiers: Set<SemanticTokenModifier>): Int = modifi
 
 private fun elementTokens(element: PsiElement): Sequence<SemanticToken> = element
     .preOrderTraversal()
-    .mapNotNull { (it as? KtNamedDeclaration)?.nameIdentifier }
+    // .mapNotNull { (it as? KtNamedDeclaration)?.nameIdentifier }
     .mapNotNull { elementToken(it) }
 
 private fun elementToken(element: PsiElement): SemanticToken? {
     val file = element.containingFile
     val elementRange = range(file.text, element.textRange)
     return when (element) {
-        is KtProperty -> SemanticToken(elementRange, SemanticTokenType.PROPERTY)
-        is KtVariableDeclaration -> SemanticToken(elementRange, SemanticTokenType.VARIABLE)
+        is KtNameReferenceExpression -> SemanticToken(elementRange, SemanticTokenType.VARIABLE)
+        // is KtProperty -> SemanticToken(elementRange, SemanticTokenType.PROPERTY)
+        // is KtVariableDeclaration -> SemanticToken(elementRange, SemanticTokenType.VARIABLE)
         else -> null
     }
 }
