@@ -13,7 +13,7 @@ import java.util.UUID
 
 class LanguageClientProgress(
     private val label: String,
-    private val token: Either<String, Number>,
+    private val token: Either<String, Int>,
     private val client: LanguageClient
 ) : Progress {
     init {
@@ -35,12 +35,12 @@ class LanguageClientProgress(
     }
 
     private fun reportProgress(notification: WorkDoneProgressNotification) {
-        client.notifyProgress(ProgressParams(token, notification))
+        client.notifyProgress(ProgressParams(token, Either.forLeft(notification)))
     }
 
     class Factory(private val client: LanguageClient) : Progress.Factory {
         override fun create(label: String): CompletableFuture<Progress> {
-            val token = Either.forLeft<String, Number>(UUID.randomUUID().toString())
+            val token = Either.forLeft<String, Int>(UUID.randomUUID().toString())
             return client
                 .createProgress(WorkDoneProgressCreateParams().also {
                     it.token = token
