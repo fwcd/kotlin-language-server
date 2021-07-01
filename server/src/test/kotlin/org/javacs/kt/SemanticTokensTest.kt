@@ -24,7 +24,7 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
             // SemanticToken(range(4, 21, 4, 29), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // property
             // SemanticToken(range(4, 31, 4, 34), SemanticTokenType.CLASS), // Int
 
-            // SemanticToken(range(6, 5, 6, 6), SemanticTokenType.FUNCTION, setOf(SemanticTokenModifier.DECLARATION)), // f
+            SemanticToken(range(6, 5, 6, 6), SemanticTokenType.FUNCTION, setOf(SemanticTokenModifier.DECLARATION)), // f
             SemanticToken(range(6, 7, 6, 8), SemanticTokenType.PARAMETER, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // x
             SemanticToken(range(6, 10, 6, 13), SemanticTokenType.CLASS), // Int?
             SemanticToken(range(6, 24, 6, 27), SemanticTokenType.CLASS), // Int

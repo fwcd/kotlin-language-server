@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClassOrObject
+import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
@@ -123,6 +124,8 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
     val elementRange = range(file.text, element.textRange)
 
     return when (element) {
+        // References (variables, types, functions, ...)
+
         is KtNameReferenceExpression -> {
             val target = bindingContext[BindingContext.REFERENCE_TARGET, element]
             val tokenType = when (target) {
@@ -147,12 +150,16 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
             SemanticToken(elementRange, tokenType, modifiers)
         }
+
+        // Declarations (variables, types, functions, ...)
+
         is PsiNameIdentifierOwner -> {
             val tokenType = when (element) {
                 is KtParameter -> SemanticTokenType.PARAMETER
                 is KtProperty -> SemanticTokenType.PROPERTY
                 is KtVariableDeclaration -> SemanticTokenType.VARIABLE
                 is KtClassOrObject -> SemanticTokenType.CLASS
+                is KtFunction -> SemanticTokenType.FUNCTION
                 else -> return null
             }
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
@@ -170,6 +177,9 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
             SemanticToken(identifierRange, tokenType, modifiers)
         }
+
+        // Literals and string interpolations
+
         is KtSimpleNameStringTemplateEntry, is KtBlockStringTemplateEntry ->
             SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
         is KtStringTemplateExpression -> SemanticToken(elementRange, SemanticTokenType.STRING)
