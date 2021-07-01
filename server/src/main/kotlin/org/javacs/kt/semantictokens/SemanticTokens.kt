@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
@@ -42,7 +43,10 @@ enum class SemanticTokenType(val typeName: String) {
     ENUM(SemanticTokenTypes.Enum),
     TYPE(SemanticTokenTypes.Type),
     STRING(SemanticTokenTypes.String),
-    NUMBER(SemanticTokenTypes.Number)
+    NUMBER(SemanticTokenTypes.Number),
+    // Since LSP does not provide a token type for string interpolation
+    // entries, we use Variable as a fallback here for now
+    INTERPOLATION_ENTRY(SemanticTokenTypes.Variable)
 }
 
 enum class SemanticTokenModifier(val modifierName: String) {
@@ -165,6 +169,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
             SemanticToken(identifierRange, tokenType, modifiers)
         }
+        is KtStringTemplateEntry -> SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
         is KtStringTemplateExpression -> SemanticToken(elementRange, SemanticTokenType.STRING)
         is PsiLiteralExpression -> {
             val tokenType = when (element.type) {
