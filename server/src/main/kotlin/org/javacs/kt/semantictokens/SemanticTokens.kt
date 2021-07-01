@@ -7,7 +7,8 @@ import org.eclipse.lsp4j.Range
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
-import org.jetbrains.kotlin.descriptors.ClassifierDescriptor
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.VariableDescriptor
@@ -22,6 +23,9 @@ private enum class SemanticTokenType(val typeName: String) {
     FUNCTION(SemanticTokenTypes.Function),
     PROPERTY(SemanticTokenTypes.Property),
     ENUM_MEMBER(SemanticTokenTypes.EnumMember),
+    CLASS(SemanticTokenTypes.Class),
+    INTERFACE(SemanticTokenTypes.Interface),
+    ENUM(SemanticTokenTypes.Enum),
     TYPE(SemanticTokenTypes.Type)
 }
 
@@ -84,7 +88,13 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 is PropertyDescriptor -> SemanticTokenType.PROPERTY
                 is VariableDescriptor -> SemanticTokenType.VARIABLE
                 is FunctionDescriptor -> SemanticTokenType.FUNCTION
-                is ClassifierDescriptor -> SemanticTokenType.TYPE
+                is ClassDescriptor -> when (target.kind) {
+                    ClassKind.CLASS -> SemanticTokenType.CLASS
+                    ClassKind.OBJECT -> SemanticTokenType.CLASS
+                    ClassKind.INTERFACE -> SemanticTokenType.INTERFACE
+                    ClassKind.ENUM_CLASS -> SemanticTokenType.ENUM
+                    else -> SemanticTokenType.TYPE
+                }
                 else -> return null
             }
             SemanticToken(elementRange, tokenType)
