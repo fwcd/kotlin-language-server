@@ -71,6 +71,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     fun semanticTokensParams(relativePath: String): SemanticTokensParams =
         textDocumentPosition(relativePath, 0, 0).run { SemanticTokensParams(textDocument) }
 
+    fun semanticTokensRangeParams(relativePath: String, range: Range): SemanticTokensRangeParams =
+        textDocumentPosition(relativePath, 0, 0).run { SemanticTokensRangeParams(textDocument, range) }
+
     fun signatureHelpParams(relativePath: String, line: Int, column: Int): SignatureHelpParams =
         textDocumentPosition(relativePath, line, column).run { SignatureHelpParams(textDocument, position) }
 
