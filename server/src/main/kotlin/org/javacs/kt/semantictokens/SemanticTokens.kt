@@ -170,6 +170,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             val tokenType = when (element.type) {
                 PsiType.INT, PsiType.LONG, PsiType.DOUBLE -> SemanticTokenType.NUMBER
                 PsiType.CHAR -> SemanticTokenType.STRING
+                PsiType.BOOLEAN, PsiType.NULL -> SemanticTokenType.KEYWORD
                 else -> return null
             }
             SemanticToken(elementRange, tokenType)
