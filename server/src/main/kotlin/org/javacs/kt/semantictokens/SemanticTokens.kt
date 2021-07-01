@@ -22,9 +22,12 @@ import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiLiteralExpression
+import com.intellij.psi.PsiType
 import com.intellij.openapi.util.TextRange
 
 enum class SemanticTokenType(val typeName: String) {
@@ -37,7 +40,9 @@ enum class SemanticTokenType(val typeName: String) {
     CLASS(SemanticTokenTypes.Class),
     INTERFACE(SemanticTokenTypes.Interface),
     ENUM(SemanticTokenTypes.Enum),
-    TYPE(SemanticTokenTypes.Type)
+    TYPE(SemanticTokenTypes.Type),
+    STRING(SemanticTokenTypes.String),
+    NUMBER(SemanticTokenTypes.Number)
 }
 
 enum class SemanticTokenModifier(val modifierName: String) {
@@ -159,6 +164,15 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             }
 
             SemanticToken(identifierRange, tokenType, modifiers)
+        }
+        is KtStringTemplateExpression -> SemanticToken(elementRange, SemanticTokenType.STRING)
+        is PsiLiteralExpression -> {
+            val tokenType = when (element.type) {
+                PsiType.INT, PsiType.LONG, PsiType.DOUBLE -> SemanticTokenType.NUMBER
+                PsiType.CHAR -> SemanticTokenType.STRING
+                else -> return null
+            }
+            SemanticToken(elementRange, tokenType)
         }
         else -> null
     }
