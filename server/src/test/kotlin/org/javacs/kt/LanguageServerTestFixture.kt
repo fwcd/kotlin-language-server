@@ -68,6 +68,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     fun hoverParams(relativePath: String, line: Int, column: Int): HoverParams =
         textDocumentPosition(relativePath, line, column).run { HoverParams(textDocument, position) }
 
+    fun semanticTokensParams(relativePath: String): SemanticTokensParams =
+        textDocumentPosition(relativePath, 0, 0).run { SemanticTokensParams(textDocument) }
+
     fun signatureHelpParams(relativePath: String, line: Int, column: Int): SignatureHelpParams =
         textDocumentPosition(relativePath, line, column).run { SignatureHelpParams(textDocument, position) }
 

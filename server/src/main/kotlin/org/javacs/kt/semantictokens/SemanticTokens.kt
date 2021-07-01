@@ -80,7 +80,7 @@ fun encodedSemanticTokens(file: CompiledFile, range: Range? = null): List<Int> =
 fun semanticTokens(file: CompiledFile, range: Range? = null): Sequence<SemanticToken> =
     elementTokens(file.parse, file.compile, range)
 
-private fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
+fun encodeTokens(tokens: Sequence<SemanticToken>): List<Int> {
     val encoded = mutableListOf<Int>()
     var last: SemanticToken? = null
 
@@ -149,8 +149,8 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
         }
         is PsiNameIdentifierOwner -> {
             val tokenType = when (element) {
-                is KtProperty -> SemanticTokenType.PROPERTY
                 is KtParameter -> SemanticTokenType.PARAMETER
+                is KtProperty -> SemanticTokenType.PROPERTY
                 is KtVariableDeclaration -> SemanticTokenType.VARIABLE
                 is KtClassOrObject -> SemanticTokenType.CLASS
                 else -> return null
@@ -158,10 +158,8 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
             val modifiers = mutableSetOf(SemanticTokenModifier.DECLARATION)
 
-            if (element is KtVariableDeclaration) {
-                if (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) {
-                    modifiers.add(SemanticTokenModifier.READONLY)
-                }
+            if (element is KtVariableDeclaration && (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter) {
+                modifiers.add(SemanticTokenModifier.READONLY)
             }
 
             if (element is KtModifierListOwner) {
