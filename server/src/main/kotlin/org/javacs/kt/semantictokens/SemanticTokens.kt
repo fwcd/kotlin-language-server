@@ -15,13 +15,17 @@ import org.jetbrains.kotlin.descriptors.VariableDescriptor
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
+import org.jetbrains.kotlin.psi.KtProperty
+import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiNameIdentifierOwner
 
 private enum class SemanticTokenType(val typeName: String) {
     VARIABLE(SemanticTokenTypes.Variable),
     FUNCTION(SemanticTokenTypes.Function),
     PROPERTY(SemanticTokenTypes.Property),
+    PARAMETER(SemanticTokenTypes.Parameter),
     ENUM_MEMBER(SemanticTokenTypes.EnumMember),
     CLASS(SemanticTokenTypes.Class),
     INTERFACE(SemanticTokenTypes.Interface),
@@ -98,6 +102,17 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 else -> return null
             }
             SemanticToken(elementRange, tokenType)
+        }
+        is PsiNameIdentifierOwner -> {
+            val tokenType = when (element) {
+                is KtProperty -> SemanticTokenType.PROPERTY
+                is KtParameter -> SemanticTokenType.PARAMETER
+                is KtVariableDeclaration -> SemanticTokenType.VARIABLE
+                else -> return null
+            }
+            val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
+            val modifiers = setOf(SemanticTokenModifier.DECLARATION)
+            SemanticToken(identifierRange, tokenType, modifiers)
         }
         else -> null
     }
