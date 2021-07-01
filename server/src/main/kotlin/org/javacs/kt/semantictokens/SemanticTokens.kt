@@ -24,6 +24,9 @@ import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
+import org.jetbrains.kotlin.psi.KtSimpleNameStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtBlockStringTemplateEntry
+import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
@@ -169,7 +172,8 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
             SemanticToken(identifierRange, tokenType, modifiers)
         }
-        is KtStringTemplateEntry -> SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
+        is KtSimpleNameStringTemplateEntry, is KtBlockStringTemplateEntry ->
+            SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
         is KtStringTemplateExpression -> SemanticToken(elementRange, SemanticTokenType.STRING)
         is PsiLiteralExpression -> {
             val tokenType = when (element.type) {
