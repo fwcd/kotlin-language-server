@@ -35,7 +35,7 @@ class JarClassContentProvider(
      * If the file is inside a source JAR, the source code is returned as is.
      */
     public fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
-        val resolvedUri = sourceJarProvider.fetchSourceJar(uri.jarPath)?.let(uri::withJarPath) ?: uri
+        val resolvedUri = sourceJarProvider.fetchSourceJar(uri.jarPath)?.let(uri.withSource(true)::withJarPath) ?: uri
         val key = resolvedUri.toString()
         val (contents, extension) = cachedContents[key] ?: run {
                 LOG.info("Finding contents of {}", describeURI(uri.fileUri))
@@ -56,15 +56,16 @@ class JarClassContentProvider(
     }
 
     private fun tryReadContentOf(uri: KlsURI): Pair<String, String>? = try {
-        when (uri.fileExtension) {
-            "class" -> Pair(uri.extractToTemporaryFile(tempDir)
+        val actualUri = KlsURI(uri.fileUri, mapOf())
+        when (actualUri.fileExtension) {
+            "class" -> Pair(actualUri.extractToTemporaryFile(tempDir)
                 .let(decompiler::decompileClass)
                 .let { Files.newInputStream(it) }
                 .bufferedReader()
                 .use(BufferedReader::readText)
                 .let(this::convertToKotlinIfNeeded), if (config.autoConvertToKotlin) "kt" else "java")
-            "java" -> if (uri.source) Pair(uri.readContents(), "java") else Pair(convertToKotlinIfNeeded(uri.readContents()), "kt")
-            else -> Pair(uri.readContents(), "kt") // e.g. for Kotlin source files
+            "java" -> if (uri.source) Pair(actualUri.readContents(), "java") else Pair(convertToKotlinIfNeeded(actualUri.readContents()), "kt")
+            else -> Pair(actualUri.readContents(), "kt") // e.g. for Kotlin source files
         }
     } catch (e: FileNotFoundException) { null }
 }

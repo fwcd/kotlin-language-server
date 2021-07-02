@@ -2,6 +2,7 @@ package org.javacs.kt.externalsources
 
 import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.parseURI
 import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
@@ -54,19 +55,20 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
             ?.lastOrNull()
 
     val jarPath: Path
-        get() = Paths.get(fileUri.schemeSpecificPart.split("!")[0])
+        get() = Paths.get(parseURI(fileUri.schemeSpecificPart.split("!")[0]))
     val innerPath: String?
         get() = fileUri.schemeSpecificPart.split("!", limit = 2).get(1)
 
     val source: Boolean
-        get() = query[QueryParam.SOURCE] as? Boolean ?: false
+        get() = query[QueryParam.SOURCE].toString().toBoolean()
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
     constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
 
-    fun withJarPath(newJarPath: Path): KlsURI =
-        KlsURI(URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")), query)
+    // If the newJarPath doesn't have the kls scheme, it is added in the returned KlsURI.
+    fun withJarPath(newJarPath: Path): KlsURI? =
+        URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")).toKlsURI()?.let { KlsURI(it.fileUri, query) }
 
     fun withFileExtension(newExtension: String): KlsURI {
         val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
