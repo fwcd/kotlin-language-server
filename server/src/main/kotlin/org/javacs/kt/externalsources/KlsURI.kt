@@ -54,7 +54,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
         get() = fileUri.schemeSpecificPart.split("!", limit = 2).get(1)
 
     val source: Boolean
-        get() = query[QueryParam.SOURCE].toBoolean()
+        get() = query[QueryParam.SOURCE]?.toBoolean() ?: false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
