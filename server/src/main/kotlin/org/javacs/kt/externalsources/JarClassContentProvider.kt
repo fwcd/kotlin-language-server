@@ -56,7 +56,7 @@ class JarClassContentProvider(
     }
 
     private fun tryReadContentOf(uri: KlsURI): Pair<String, String>? = try {
-        val actualUri = KlsURI(uri.fileUri, mapOf())
+        val actualUri = uri.withoutQuery()
         when (actualUri.fileExtension) {
             "class" -> Pair(actualUri.extractToTemporaryFile(tempDir)
                 .let(decompiler::decompileClass)

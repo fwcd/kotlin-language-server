@@ -83,6 +83,8 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
         return KlsURI(fileUri, newQuery)
     }
 
+    fun withoutQuery(): KlsURI = KlsURI(fileUri, mapOf())
+
     fun toURI(): URI = URI(fileUri.toString() + queryString)
 
     private fun toJarURL(): URL = URL("jar:${fileUri.schemeSpecificPart}")
