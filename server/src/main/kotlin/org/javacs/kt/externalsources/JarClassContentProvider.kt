@@ -56,16 +56,15 @@ class JarClassContentProvider(
     }
 
     private fun tryReadContentOf(uri: KlsURI): Pair<String, String>? = try {
-        val actualUri = uri.withoutQuery()
-        when (actualUri.fileExtension) {
-            "class" -> Pair(actualUri.extractToTemporaryFile(tempDir)
+        when (uri.fileExtension) {
+            "class" -> Pair(uri.extractToTemporaryFile(tempDir)
                 .let(decompiler::decompileClass)
                 .let { Files.newInputStream(it) }
                 .bufferedReader()
                 .use(BufferedReader::readText)
                 .let(this::convertToKotlinIfNeeded), if (config.autoConvertToKotlin) "kt" else "java")
-            "java" -> if (uri.source) Pair(actualUri.readContents(), "java") else Pair(convertToKotlinIfNeeded(actualUri.readContents()), "kt")
-            else -> Pair(actualUri.readContents(), "kt") // e.g. for Kotlin source files
+            "java" -> if (uri.source) Pair(uri.readContents(), "java") else Pair(convertToKotlinIfNeeded(uri.readContents()), "kt")
+            else -> Pair(uri.readContents(), "kt") // e.g. for Kotlin source files
         }
     } catch (e: FileNotFoundException) { null }
 }
