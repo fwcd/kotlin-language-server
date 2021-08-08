@@ -74,8 +74,8 @@ def main():
     if not git_working_dir_is_clean(PROJECT_DIR):
         print("Commit any pending changes first to make sure the working directory is in a clean state!")
         return
-    if git_branch(PROJECT_DIR) != "master":
-        print("Switch to the master branch first!")
+    if git_branch(PROJECT_DIR) != "main":
+        print("Switch to the main branch first!")
         return
 
     properties = PropertiesFile(str(PROJECT_DIR / "gradle.properties"))
