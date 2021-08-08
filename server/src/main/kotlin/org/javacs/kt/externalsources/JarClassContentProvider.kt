@@ -35,7 +35,7 @@ class JarClassContentProvider(
      * If the file is inside a source JAR, the source code is returned as is.
      */
     public fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
-        val resolvedUri = sourceJarProvider.fetchSourceJar(uri.jarPath)?.let(uri::withJarPath) ?: uri
+        val resolvedUri = sourceJarProvider.fetchSourceJar(uri.jarPath)?.let(uri.withSource(true)::withJarPath) ?: uri
         val key = resolvedUri.toString()
         val (contents, extension) = cachedContents[key] ?: run {
                 LOG.info("Finding contents of {}", describeURI(uri.fileUri))

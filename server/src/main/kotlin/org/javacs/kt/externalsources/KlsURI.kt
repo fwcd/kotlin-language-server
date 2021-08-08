@@ -2,6 +2,7 @@ package org.javacs.kt.externalsources
 
 import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.parseURI
 import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
@@ -28,18 +29,12 @@ fun URI.toKlsURI(): KlsURI? = when (scheme) {
  * Other file extensions for classes (such as .kt and .java) are supported too, in
  * which case the file will directly be used without invoking the decompiler.
  */
-data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
+data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
     /** Possible KLS URI query parameters. */
     enum class QueryParam(val parameterName: String) {
         SOURCE("source");
 
         override fun toString(): String = parameterName
-
-        companion object {
-            val VALUE_PARSERS: Map<QueryParam, (String) -> Any> = mapOf(
-                Pair(QueryParam.SOURCE) { it.toBoolean() }
-            )
-        }
     }
 
     private val queryString: String
@@ -54,19 +49,20 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
             ?.lastOrNull()
 
     val jarPath: Path
-        get() = Paths.get(fileUri.schemeSpecificPart.split("!")[0])
+        get() = Paths.get(parseURI(fileUri.schemeSpecificPart.split("!")[0]))
     val innerPath: String?
         get() = fileUri.schemeSpecificPart.split("!", limit = 2).get(1)
 
     val source: Boolean
-        get() = query[QueryParam.SOURCE] as? Boolean ?: false
+        get() = query[QueryParam.SOURCE]?.toBoolean() ?: false
     val isCompiled: Boolean
         get() = fileExtension == "class"
 
     constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
 
-    fun withJarPath(newJarPath: Path): KlsURI =
-        KlsURI(URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")), query)
+    // If the newJarPath doesn't have the kls scheme, it is added in the returned KlsURI.
+    fun withJarPath(newJarPath: Path): KlsURI? =
+        URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")).toKlsURI()?.let { KlsURI(it.fileUri, query) }
 
     fun withFileExtension(newExtension: String): KlsURI {
         val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
@@ -75,7 +71,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
     }
 
     fun withSource(source: Boolean): KlsURI {
-        val newQuery: MutableMap<QueryParam, Any> = mutableMapOf()
+        val newQuery: MutableMap<QueryParam, String> = mutableMapOf()
         newQuery.putAll(query)
         newQuery[QueryParam.SOURCE] = source.toString()
         return KlsURI(fileUri, newQuery)
@@ -120,21 +116,19 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, Any>) {
 
 private fun parseKlsURIFileURI(uri: URI): URI = URI(uri.toString().split("?")[0])
 
-private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParam, Any> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
+private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParam, String> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
 
-private fun parseQuery(query: String): Map<KlsURI.QueryParam, Any> =
+private fun parseQuery(query: String): Map<KlsURI.QueryParam, String> =
     query.split("&").mapNotNull {
         val parts = it.split("=")
         if (parts.size == 2) getQueryParameter(parts[0], parts[1]) else null
     }.toMap()
 
-private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParam, Any>? {
+private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParam, String>? {
     val queryParam: KlsURI.QueryParam? = KlsURI.QueryParam.values().find { it.parameterName == property }
 
     if (queryParam != null) {
-        val typeParser = KlsURI.QueryParam.VALUE_PARSERS[queryParam]
-        val queryParamValue = typeParser?.invoke(value)
-        return queryParamValue?.let { Pair(queryParam, it) }
+        return Pair(queryParam, value)
     }
 
     return null
