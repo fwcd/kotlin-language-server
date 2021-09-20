@@ -1,6 +1,6 @@
 # Kotlin Language Server
 [![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
-[![Build](https://github.com/fwcd/kotlin-language-server/workflows/Build/badge.svg)](https://github.com/fwcd/kotlin-language-server/actions)
+[![Build](https://github.com/fwcd/kotlin-language-server/actions/workflows/build.yml/badge.svg)](https://github.com/fwcd/kotlin-language-server/actions/workflows/build.yml)
 [![Downloads](https://img.shields.io/github/downloads/fwcd/kotlin-language-server/total)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da)](https://discord.gg/cNtppzN)
 
