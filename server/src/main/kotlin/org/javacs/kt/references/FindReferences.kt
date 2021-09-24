@@ -28,6 +28,7 @@ fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
             .map { location(it) }
             .filterNotNull()
             .toList()
+            .sortedWith(compareBy({ it.getUri() }, { it.getRange().getStart().getLine() }))
 }
 
 private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collection<KtElement> {
