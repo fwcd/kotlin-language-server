@@ -28,8 +28,8 @@
    "folding": {
         "offSide": true,
         "markers": {
-            "start": "^\\s*//\\s*#region",
-            "end": "^\\s*//\\s*#endregion"
+            "start": "^\\s*//\\s*#?region",
+            "end": "^\\s*//\\s*#?endregion"
         }
     }
 }
