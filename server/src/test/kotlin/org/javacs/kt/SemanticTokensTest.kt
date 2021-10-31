@@ -14,6 +14,7 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
         val constLine = 2
         val classLine = 4
         val funLine = 6
+        val enumLine = 8
 
         val expectedVar = sequenceOf(
             SemanticToken(range(varLine, 5, varLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION)), // variable
@@ -38,12 +39,16 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
             SemanticToken(range(funLine, 30, funLine, 31), SemanticTokenType.FUNCTION), // f
             SemanticToken(range(funLine, 32, funLine, 33), SemanticTokenType.VARIABLE, setOf(SemanticTokenModifier.READONLY)), // x
         )
+        val expectedEnum = sequenceOf(
+            SemanticToken(range(enumLine, 12, enumLine, 16), SemanticTokenType.CLASS, setOf(SemanticTokenModifier.DECLARATION)), // Enum
+            SemanticToken(range(enumLine, 19, enumLine, 27), SemanticTokenType.ENUM_MEMBER, setOf(SemanticTokenModifier.DECLARATION)) // Variant1
+        )
 
         val partialExpected = encodeTokens(expectedConst + expectedClass)
         val partialResponse = languageServer.textDocumentService.semanticTokensRange(semanticTokensRangeParams(file, range(constLine, 0, classLine + 1, 0))).get()!!
         assertThat(partialResponse.data, contains(*partialExpected.toTypedArray()))
 
-        val fullExpected = encodeTokens(expectedVar + expectedConst + expectedClass + expectedFun)
+        val fullExpected = encodeTokens(expectedVar + expectedConst + expectedClass + expectedFun + expectedEnum)
         val fullResponse = languageServer.textDocumentService.semanticTokensFull(semanticTokensParams(file)).get()!!
         assertThat(fullResponse.data, contains(*fullExpected.toTypedArray()))
     }
