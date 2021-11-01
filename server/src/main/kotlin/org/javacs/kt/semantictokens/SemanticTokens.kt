@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.psi.KtVariableDeclaration
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
+import org.jetbrains.kotlin.psi.KtEnumEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateEntry
 import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtSimpleNameStringTemplateEntry
@@ -135,11 +136,13 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 is PropertyDescriptor -> SemanticTokenType.PROPERTY
                 is VariableDescriptor -> SemanticTokenType.VARIABLE
                 is ConstructorDescriptor -> when (target.constructedClass.kind) {
+                    ClassKind.ENUM_ENTRY -> SemanticTokenType.ENUM_MEMBER
                     ClassKind.ANNOTATION_CLASS -> SemanticTokenType.TYPE // annotations look nicer this way
                     else -> SemanticTokenType.FUNCTION
                 }
                 is FunctionDescriptor -> SemanticTokenType.FUNCTION
                 is ClassDescriptor -> when (target.kind) {
+                    ClassKind.ENUM_ENTRY -> SemanticTokenType.ENUM_MEMBER
                     ClassKind.CLASS -> SemanticTokenType.CLASS
                     ClassKind.OBJECT -> SemanticTokenType.CLASS
                     ClassKind.INTERFACE -> SemanticTokenType.INTERFACE
@@ -160,6 +163,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             val tokenType = when (element) {
                 is KtParameter -> SemanticTokenType.PARAMETER
                 is KtProperty -> SemanticTokenType.PROPERTY
+                is KtEnumEntry -> SemanticTokenType.ENUM_MEMBER
                 is KtVariableDeclaration -> SemanticTokenType.VARIABLE
                 is KtClassOrObject -> SemanticTokenType.CLASS
                 is KtFunction -> SemanticTokenType.FUNCTION
