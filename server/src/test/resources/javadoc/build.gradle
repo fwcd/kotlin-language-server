@@ -1,0 +1,21 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version "$kotlinVersion"
+}
+
+group = 'org.javacs'
+version = '1.0-SNAPSHOT'
+
+description = 'test-project'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://cache-redirector.jetbrains.com/kotlin.bintray.com/kotlin-plugin' }
+}
+
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    testImplementation 'junit:junit:4.11'
+}

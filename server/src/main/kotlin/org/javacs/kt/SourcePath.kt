@@ -12,6 +12,7 @@ import com.intellij.lang.Language
 import com.intellij.psi.PsiFile
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.fileTypes.LanguageFileType
+import org.javacs.kt.documentation.DocumentationService
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.getService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -38,6 +39,9 @@ class SourcePath(
     val index = SymbolIndex()
 
     var beforeCompileCallback: () -> Unit = {}
+
+    val documentationService: DocumentationService
+        get() = cp.documentationService
 
     var progressFactory: Progress.Factory = Progress.Factory.None
         set(factory: Progress.Factory) {

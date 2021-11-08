@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.documentation.DocumentationService
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.nio.file.FileSystems
@@ -20,6 +21,12 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set
+
+    var documentationService: DocumentationService = DocumentationService(compiler, emptyList())
+        private set(value) {
+            field.close()
+            field = value
+        }
 
     private val async = AsyncExecutor()
 
@@ -67,6 +74,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
             LOG.info("Reinstantiating compiler")
             compiler.close()
             compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
+            documentationService = DocumentationService(compiler, classPath.toList())
             updateCompilerConfiguration()
         }
 
