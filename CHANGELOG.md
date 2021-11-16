@@ -3,6 +3,11 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.2.0]
+- Support for renaming
+- Improved semantic highlighting for enum members
+- Improved region code folding
+
 ## [1.1.2]
 - Support for semantic highlighting
 - Improved source jar lookup support
