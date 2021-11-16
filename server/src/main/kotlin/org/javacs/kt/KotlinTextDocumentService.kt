@@ -26,6 +26,7 @@ import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
 import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
+import org.javacs.kt.rename.renameSymbol
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -144,8 +145,9 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit> {
-        TODO("not implemented")
+    override fun rename(params: RenameParams) = async.compute {
+        val (file, cursor) = recover(params, Recompile.NEVER)
+        renameSymbol(file, cursor, sp, params.newName)
     }
 
     override fun completion(position: CompletionParams) = async.compute {

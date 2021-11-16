@@ -1,0 +1,4 @@
+package rename
+
+class SomeOtherClass {
+}

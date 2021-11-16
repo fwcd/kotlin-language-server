@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.Location
 import org.javacs.kt.LOG
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.location
+import org.javacs.kt.position.toURIString
 import org.javacs.kt.util.emptyResult
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.preOrderTraversal
@@ -31,9 +32,22 @@ fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
             .sortedWith(compareBy({ it.getUri() }, { it.getRange().getStart().getLine() }))
 }
 
+fun findReferences(declaration: KtNamedDeclaration, sp: SourcePath): List<Location> {
+    return doFindReferences(declaration, sp)
+        .map { location(it) }
+        .filterNotNull()
+        .toList()
+        .sortedWith(compareBy({ it.getUri() }, { it.getRange().getStart().getLine() }))
+}
+
 private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collection<KtElement> {
     val recover = sp.currentVersion(file.toUri())
     val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
+    return doFindReferences(element, sp)
+}
+
+private fun doFindReferences(element: KtNamedDeclaration, sp: SourcePath): Collection<KtElement> {
+    val recover = sp.currentVersion(element.containingFile.toPath().toUri())
     val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
     val maybes = possibleReferences(declaration, sp).map { it.toPath() }
     LOG.debug("Scanning {} files for references to {}", maybes.size, element.fqName)

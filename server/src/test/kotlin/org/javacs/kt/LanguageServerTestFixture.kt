@@ -54,6 +54,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         println("Memory after test: ${total - free} MB used / $total MB total")
     }
 
+    fun renameParams(relativePath: String, line: Int, column: Int, newName: String): RenameParams =
+        textDocumentPosition(relativePath, line, column).run { RenameParams(textDocument, position, newName) }
+
     fun completionParams(relativePath: String, line: Int, column: Int): CompletionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
