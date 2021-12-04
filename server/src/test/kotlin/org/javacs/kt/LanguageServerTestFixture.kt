@@ -68,6 +68,15 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams =
         textDocumentPosition(relativePath, position(line, column))
 
+    fun codeActionParams(relativePath: String, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int, diagnostics: List<Diagnostic>, only: List<String>): CodeActionParams {
+        val file = workspaceRoot.resolve(relativePath)
+        val fileId = TextDocumentIdentifier(file.toUri().toString())
+        val range = range(startLine, startColumn, endLine, endColumn)
+        val context = CodeActionContext(diagnostics, only)
+
+        return CodeActionParams(fileId, range, context)
+    }
+
     fun hoverParams(relativePath: String, line: Int, column: Int): HoverParams =
         textDocumentPosition(relativePath, line, column).run { HoverParams(textDocument, position) }
 
