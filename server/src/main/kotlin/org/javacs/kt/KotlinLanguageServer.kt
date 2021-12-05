@@ -96,6 +96,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
+        if (clientCapabilities?.textDocument?.rename?.prepareSupport ?: false) {
+            serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
+        }
+
         @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
             ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)
