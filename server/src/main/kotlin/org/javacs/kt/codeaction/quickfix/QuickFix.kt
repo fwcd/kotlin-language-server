@@ -1,4 +1,4 @@
-package org.javacs.kt.codeaction.quickfixes
+package org.javacs.kt.codeaction.quickfix
 
 import org.eclipse.lsp4j.CodeAction
 import org.eclipse.lsp4j.Command

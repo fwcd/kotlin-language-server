@@ -1,4 +1,4 @@
-package org.javacs.kt.codeaction.quickfixes
+package org.javacs.kt.codeaction.quickfix
 
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
