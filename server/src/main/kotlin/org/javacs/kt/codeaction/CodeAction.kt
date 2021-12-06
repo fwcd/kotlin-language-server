@@ -4,7 +4,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.codeaction.quickfix.ImplementAbstractFunctionsQuickFix
-import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
+import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.util.toPath
 
 val QUICK_FIXES = listOf(

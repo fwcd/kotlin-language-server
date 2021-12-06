@@ -26,7 +26,7 @@ import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
-import org.javacs.kt.commands.JAVA_TO_KOTLIN_COMMAND
+import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.rename.renameSymbol
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI

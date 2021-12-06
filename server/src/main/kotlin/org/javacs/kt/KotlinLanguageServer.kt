@@ -6,7 +6,7 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonDelegate
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
-import org.javacs.kt.commands.ALL_COMMANDS
+import org.javacs.kt.command.ALL_COMMANDS
 import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.externalsources.ClassPathSourceJarProvider
 import org.javacs.kt.util.AsyncExecutor
