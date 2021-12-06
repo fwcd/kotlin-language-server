@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 private const val DEFAULT_TAB_SIZE = 4
 
 class ImplementAbstractFunctionsQuickFix : QuickFix {
-
     override fun compute(file: CompiledFile, range: Range, diagnostics: List<Diagnostic>): Either<Command, CodeAction>? {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
 

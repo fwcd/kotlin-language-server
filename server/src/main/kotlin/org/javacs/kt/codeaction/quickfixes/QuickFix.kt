@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import org.jetbrains.kotlin.diagnostics.Diagnostic as KotlinDiagnostic
 
 interface QuickFix {
-
     // Computes the quickfix. Return null if the quickfix is not valid.
     fun compute(file: CompiledFile, range: Range, diagnostics: List<Diagnostic>): Either<Command, CodeAction>?
 }
