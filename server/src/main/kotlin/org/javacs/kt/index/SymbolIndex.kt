@@ -136,7 +136,7 @@ class SymbolIndex {
         }
     }
 
-    private fun Transaction.removeDeclarations(declarations: Sequence<DeclarationDescriptor>) =
+    private fun removeDeclarations(declarations: Sequence<DeclarationDescriptor>) =
         declarations.forEach { declaration ->
             val (descriptorFqn, extensionReceiverFqn) = getFqNames(declaration)
 
@@ -149,7 +149,7 @@ class SymbolIndex {
             }
         }
 
-    private fun Transaction.addDeclarations(declarations: Sequence<DeclarationDescriptor>) =
+    private fun addDeclarations(declarations: Sequence<DeclarationDescriptor>) =
         declarations.forEach { declaration ->
             val (descriptorFqn, extensionReceiverFqn) = getFqNames(declaration)
 
