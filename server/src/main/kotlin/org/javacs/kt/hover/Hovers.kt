@@ -25,16 +25,24 @@ import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowValueFactory
 import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.completion.DECL_RENDERER
+import org.javacs.kt.documentation.DocumentationRenderer
+import org.javacs.kt.documentation.DocumentationService
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
 import org.javacs.kt.signaturehelp.getDocString
+import org.jetbrains.kotlin.serialization.deserialization.descriptors.DeserializedSimpleFunctionDescriptor
 
-fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
+fun DocumentationService.hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
-    val javaDoc = getDocString(file, cursor)
+    val docs = when (target) {
+        is DeserializedSimpleFunctionDescriptor -> findFunction(target)
+            ?.let { DocumentationRenderer.render(it) }
+            ?: descriptorDocs(file, cursor, target)
+        else -> descriptorDocs(file, cursor, target)
+    }
+
+    val hover = MarkupContent("markdown", docs)
     val location = ref.textRange
-    val hoverText = DECL_RENDERER.render(target)
-    val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
     val range = Range(
             position(file.content, location.startOffset),
             position(file.content, location.endOffset))
@@ -43,11 +51,21 @@ fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
 
 private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
     val expression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
-    var javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
+    val javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
     val scope = file.scopeAtPoint(cursor) ?: return null
     val hoverText = renderTypeOf(expression, file.bindingContextOf(expression, scope)) ?: return null
     val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
     return Hover(hover)
+}
+
+private fun descriptorDocs(
+    file: CompiledFile,
+    cursor: Int,
+    target: DeclarationDescriptor,
+): String {
+    val javaDoc = getDocString(file, cursor)
+    val hoverText = DECL_RENDERER.render(target)
+    return listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n")
 }
 
 // Source: https://github.com/JetBrains/kotlin/blob/master/idea/src/org/jetbrains/kotlin/idea/codeInsight/KotlinExpressionTypeProvider.kt

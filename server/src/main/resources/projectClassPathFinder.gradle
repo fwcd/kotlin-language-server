@@ -1,3 +1,39 @@
+class Downloader {
+    private DependencyHandler dependencyHandler
+    private ConfigurationContainer configurationContainer
+
+    public Downloader(DependencyHandler dependencyHandler,
+                      ConfigurationContainer configurationContainer) {
+        this.dependencyHandler = dependencyHandler
+        this.configurationContainer = configurationContainer
+    }
+
+    List<File> download(
+        ModuleVersionIdentifier dependency,
+        String classifier
+    ) {
+        def sources = dependencyHandler.create(
+            [
+                "group"        : dependency.group,
+                "name"         : dependency.name,
+                "version"      : dependency.version,
+                "classifier"   : classifier,
+                "ext"          : "jar",
+                "configuration": null,
+            ]
+        )
+        def result = configurationContainer.detachedConfiguration(sources)
+
+        try {
+            if (result.files.size() > 0) {
+                return result.files.toList()
+            }
+        } catch (Exception e) {
+            return []
+        }
+    }
+}
+
 allprojects { project ->
     task kotlinLSPProjectDeps { task ->
         doLast {
@@ -51,6 +87,17 @@ allprojects { project ->
                     }
                 }
             } else if (project.hasProperty('sourceSets')) {
+                def downloader = new Downloader(project.dependencies, project.configurations)
+                configurations.runtimeClasspath
+                    .resolvedConfiguration
+                    .resolvedArtifacts
+                    .forEach { artifact ->
+                        def files = downloader.download(artifact.moduleVersion.id, "sources")
+                        files.forEach {
+                            System.out.println "kotlin-lsp-source $it"
+                        }
+                    }
+
                 // Print the list of all dependencies jar files.
                 sourceSets.forEach {
                     it.compileClasspath.forEach {

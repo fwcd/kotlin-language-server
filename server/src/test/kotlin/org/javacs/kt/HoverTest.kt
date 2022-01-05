@@ -1,7 +1,15 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.DocumentSymbol
+import org.eclipse.lsp4j.DocumentSymbolParams
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.Range
+import org.eclipse.lsp4j.SymbolKind
+import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.hamcrest.Matchers.*
+import org.junit.Assert
 import org.junit.Assert.assertThat
+import org.junit.Before
 import org.junit.Test
 
 class HoverLiteralsTest : SingleFileTestFixture("hover", "Literals.kt") {
@@ -85,3 +93,4 @@ class HoverAcrossFilesTest : LanguageServerTestFixture("hover") {
         assertThat(contents.value, containsString("fun target(): Unit"))
     }
 }
+
