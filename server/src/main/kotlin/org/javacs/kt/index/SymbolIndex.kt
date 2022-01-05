@@ -13,7 +13,6 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
-import java.util.concurrent.CompletableFuture
 import kotlin.sequences.Sequence
 
 private const val MAX_FQNAME_LENGTH = 255
@@ -82,9 +81,7 @@ class PositionEntity(id: EntityID<Int>) : IntEntity(id) {
 class SymbolIndex {
     private val db = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
 
-    var progressFactory: Progress.Factory = object: Progress.Factory {
-        override fun create(label: String): CompletableFuture<Progress> = CompletableFuture.supplyAsync { Progress.None }
-    }
+    var progressFactory: Progress.Factory = Progress.Factory.None
 
     init {
         transaction(db) {
