@@ -30,7 +30,6 @@ class SourcePath(
     private val parseDataWriteLock = ReentrantLock()
 
     private val indexAsync = AsyncExecutor()
-    private var indexInitialized: Boolean = false
     var indexEnabled: Boolean by indexingConfig::enabled
     val index = SymbolIndex()
 
@@ -105,7 +104,7 @@ class SourcePath(
                 compiledFile = parsed
             }
 
-            refreshIndexes(container, listOfNotNull(oldFile), listOfNotNull(this))
+            refreshWorkspaceIndexes(listOfNotNull(oldFile), listOfNotNull(this))
         }
 
         private fun doCompileIfChanged() {
@@ -163,7 +162,7 @@ class SourcePath(
         }
 
     fun delete(uri: URI) {
-        files[uri]?.let { refreshIndexes(files[uri]?.compiledContainer!!, listOf(it), listOf()) }
+        files[uri]?.let { refreshWorkspaceIndexes(listOf(it), listOf()) }
 
         files.remove(uri)
     }
@@ -231,7 +230,7 @@ class SourcePath(
 
             // Only index normal files, not build files
             if (kind == CompilationKind.DEFAULT) {
-                refreshIndexes(container, oldFiles, parse.keys.toList())
+                refreshWorkspaceIndexes(oldFiles, parse.keys.toList())
             }
 
             return context
@@ -247,24 +246,44 @@ class SourcePath(
         return CompositeBindingContext.create(combined)
     }
 
+    fun compileAllFiles() {
+        // TODO: Investigate the possibility of compiling all files at once, instead of iterating here
+        // At the moment, compiling all files at once sometimes leads to an internal error from the TopDownAnalyzer
+        files.keys.forEach {
+            compileFiles(listOf(it))
+        }
+    }
+
+    fun refreshDependencyIndexes() {
+        compileAllFiles()
+
+        val container = files.values.first { it.compiledContainer != null }.compiledContainer
+        if (container != null) {
+            refreshDependencyIndexes(container)
+        }
+    }
+
     /**
      * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
      */
-    private fun refreshIndexes(container: ComponentProvider, oldFiles: List<SourceFile>, newFiles: List<SourceFile>) = indexAsync.execute {
+    private fun refreshWorkspaceIndexes(oldFiles: List<SourceFile>, newFiles: List<SourceFile>) = indexAsync.execute {
         if (indexEnabled) {
-            val module = container.getService(ModuleDescriptor::class.java)
             val oldDeclarations = getDeclarationDescriptors(oldFiles)
             val newDeclarations = getDeclarationDescriptors(newFiles)
 
-            // Index all the declarations except any new declarations that were just compiled
-            // TODO: Move this logic to a different place when re-indexing is triggered on configuration changes
-            if (!indexInitialized) {
-                indexInitialized = true
-                index.refresh(module, newDeclarations)
-            }
-
             // Index the new declarations in the Kotlin source files that were just compiled, removing the old ones
             index.updateIndexes(oldDeclarations, newDeclarations)
+        }
+    }
+
+    /**
+     * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
+     */
+    private fun refreshDependencyIndexes(container: ComponentProvider) = indexAsync.execute {
+        if (indexEnabled) {
+            val module = container.getService(ModuleDescriptor::class.java)
+            val declarations = getDeclarationDescriptors(files.values)
+            index.refresh(module, declarations)
         }
     }
 

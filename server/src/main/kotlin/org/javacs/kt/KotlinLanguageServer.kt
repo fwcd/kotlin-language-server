@@ -121,6 +121,8 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             }
         }
 
+        textDocuments.lintAll()
+
         val serverInfo = ServerInfo("Kotlin Language Server", VERSION)
 
         InitializeResult(serverCapabilities, serverInfo)
