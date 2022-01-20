@@ -7,17 +7,14 @@ import org.javacs.kt.util.filePath
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.progress.Progress
-import org.javacs.kt.IndexingConfiguration
 import com.intellij.lang.Language
-import com.intellij.psi.PsiFile
-import com.intellij.openapi.fileTypes.FileType
-import com.intellij.openapi.fileTypes.LanguageFileType
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.getService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
+import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -33,7 +30,6 @@ class SourcePath(
     private val parseDataWriteLock = ReentrantLock()
 
     private val indexAsync = AsyncExecutor()
-    private var indexInitialized: Boolean = false
     var indexEnabled: Boolean by indexingConfig::enabled
     val index = SymbolIndex()
 
@@ -99,6 +95,8 @@ class SourcePath(
         private fun doCompile() {
             LOG.debug("Compiling {}", path?.fileName)
 
+            val oldFile = clone()
+
             val (context, container) = cp.compiler.compileKtFile(parsed!!, allIncludingThis(), kind)
             parseDataWriteLock.withLock {
                 compiledContext = context
@@ -106,7 +104,7 @@ class SourcePath(
                 compiledFile = parsed
             }
 
-            initializeIndexAsyncIfNeeded(container)
+            refreshWorkspaceIndexes(listOfNotNull(oldFile), listOfNotNull(this))
         }
 
         private fun doCompileIfChanged() {
@@ -125,6 +123,9 @@ class SourcePath(
             if (isTemporary) (all().asSequence() + sequenceOf(parsed!!)).toList()
             else all()
         }
+
+        // Creates a shallow copy
+        fun clone(): SourceFile = SourceFile(uri, content, path, parsed, compiledFile, compiledContext, compiledContainer, language, isTemporary)
     }
 
     private fun sourceFile(uri: URI): SourceFile {
@@ -161,6 +162,8 @@ class SourcePath(
         }
 
     fun delete(uri: URI) {
+        files[uri]?.let { refreshWorkspaceIndexes(listOf(it), listOf()) }
+
         files.remove(uri)
     }
 
@@ -195,7 +198,20 @@ class SourcePath(
         // Compile changed files
         fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): BindingContext? {
             if (changed.isEmpty()) return null
+
+            // Get clones of the old files, so we can remove the old declarations from the index
+            val oldFiles = changed.mapNotNull {
+                if (it.compiledFile?.text != it.content || it.parsed?.text != it.content) {
+                    it.clone()
+                } else {
+                    null
+                }
+            }
+
+            // Parse the files that have changed
             val parse = changed.associateWith { it.apply { parseIfChanged() }.parsed!! }
+
+            // Get all the files. This will parse them if they changed
             val allFiles = all()
             beforeCompileCallback.invoke()
             val (context, container) = cp.compiler.compileKtFiles(parse.values, allFiles, kind)
@@ -214,7 +230,7 @@ class SourcePath(
 
             // Only index normal files, not build files
             if (kind == CompilationKind.DEFAULT) {
-                initializeIndexAsyncIfNeeded(container)
+                refreshWorkspaceIndexes(oldFiles, parse.keys.toList())
             }
 
             return context
@@ -230,17 +246,61 @@ class SourcePath(
         return CompositeBindingContext.create(combined)
     }
 
-    /**
-     * Initialized the symbol index asynchronously, if not
-     * already done.
-     */
-    private fun initializeIndexAsyncIfNeeded(container: ComponentProvider) = indexAsync.execute {
-        if (indexEnabled && !indexInitialized) {
-            indexInitialized = true
-            val module = container.getService(ModuleDescriptor::class.java)
-            index.refresh(module)
+    fun compileAllFiles() {
+        // TODO: Investigate the possibility of compiling all files at once, instead of iterating here
+        // At the moment, compiling all files at once sometimes leads to an internal error from the TopDownAnalyzer
+        files.keys.forEach {
+            compileFiles(listOf(it))
         }
     }
+
+    fun refreshDependencyIndexes() {
+        compileAllFiles()
+
+        val container = files.values.first { it.compiledContainer != null }.compiledContainer
+        if (container != null) {
+            refreshDependencyIndexes(container)
+        }
+    }
+
+    /**
+     * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
+     */
+    private fun refreshWorkspaceIndexes(oldFiles: List<SourceFile>, newFiles: List<SourceFile>) = indexAsync.execute {
+        if (indexEnabled) {
+            val oldDeclarations = getDeclarationDescriptors(oldFiles)
+            val newDeclarations = getDeclarationDescriptors(newFiles)
+
+            // Index the new declarations in the Kotlin source files that were just compiled, removing the old ones
+            index.updateIndexes(oldDeclarations, newDeclarations)
+        }
+    }
+
+    /**
+     * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
+     */
+    private fun refreshDependencyIndexes(container: ComponentProvider) = indexAsync.execute {
+        if (indexEnabled) {
+            val module = container.getService(ModuleDescriptor::class.java)
+            val declarations = getDeclarationDescriptors(files.values)
+            index.refresh(module, declarations)
+        }
+    }
+
+    // Gets all the declaration descriptors for the collection of files
+    private fun getDeclarationDescriptors(files: Collection<SourceFile>) =
+        files.flatMap { file ->
+            val compiledFile = file.compiledFile ?: file.parsed
+            val compiledContainer = file.compiledContainer
+            if (compiledFile != null && compiledContainer != null) {
+                val module = compiledContainer.getService(ModuleDescriptor::class.java)
+                module.getPackage(compiledFile.packageFqName).memberScope.getContributedDescriptors(
+                    DescriptorKindFilter.ALL
+                ) { name -> compiledFile.declarations.map { it.name }.contains(name.toString()) }
+            } else {
+                listOf()
+            }
+        }.asSequence()
 
     /**
      * Recompiles all source files that are initialized.

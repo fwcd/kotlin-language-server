@@ -1,45 +1,78 @@
 package org.javacs.kt.index
 
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.replace
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
-import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.psi2ir.intermediate.extensionReceiverType
 import org.javacs.kt.LOG
 import org.javacs.kt.progress.Progress
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.*
+import kotlin.sequences.Sequence
 
-private val MAX_FQNAME_LENGTH = 255
-private val MAX_SHORT_NAME_LENGTH = 80
+private const val MAX_FQNAME_LENGTH = 255
+private const val MAX_SHORT_NAME_LENGTH = 80
+private const val MAX_URI_LENGTH = 511
 
-private object Symbols : Table() {
-    val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH) references FqNames.fqName
+private object Symbols : IntIdTable() {
+    val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH).index()
+    val shortName = varchar("shortname", length = MAX_SHORT_NAME_LENGTH)
     val kind = integer("kind")
     val visibility = integer("visibility")
     val extensionReceiverType = varchar("extensionreceivertype", length = MAX_FQNAME_LENGTH).nullable()
-
-    override val primaryKey = PrimaryKey(fqName)
+    val location = optReference("location", Locations)
 }
 
-private object FqNames : Table() {
-    val fqName = varchar("fqname", length = MAX_FQNAME_LENGTH)
-    val shortName = varchar("shortname", length = MAX_SHORT_NAME_LENGTH)
+private object Locations : IntIdTable() {
+    val uri = varchar("uri", length = MAX_URI_LENGTH)
+    val range = reference("range", Ranges)
+}
 
-    override val primaryKey = PrimaryKey(fqName)
+private object Ranges : IntIdTable() {
+    val start = reference("start", Positions)
+    val end = reference("end", Positions)
+}
+
+private object Positions : IntIdTable() {
+    val line = integer("line")
+    val character = integer("character")
+}
+
+class SymbolEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<SymbolEntity>(Symbols)
+
+    var fqName by Symbols.fqName
+    var shortName by Symbols.shortName
+    var kind by Symbols.kind
+    var visibility by Symbols.visibility
+    var extensionReceiverType by Symbols.extensionReceiverType
+    var location by LocationEntity optionalReferencedOn Symbols.location
+}
+
+class LocationEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<LocationEntity>(Locations)
+
+    var uri by Locations.uri
+    var range by RangeEntity referencedOn Locations.range
+}
+
+class RangeEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<RangeEntity>(Ranges)
+
+    var start by PositionEntity referencedOn Ranges.start
+    var end by PositionEntity referencedOn Ranges.end
+}
+
+class PositionEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<PositionEntity>(Positions)
+
+    var line by Positions.line
+    var character by Positions.character
 }
 
 /**
@@ -52,43 +85,43 @@ class SymbolIndex {
 
     init {
         transaction(db) {
-            SchemaUtils.create(Symbols, FqNames)
+            SchemaUtils.create(Symbols, Locations, Ranges, Positions)
         }
     }
 
     /** Rebuilds the entire index. May take a while. */
-    fun refresh(module: ModuleDescriptor) {
+    fun refresh(module: ModuleDescriptor, exclusions: Sequence<DeclarationDescriptor>) {
+        val started = System.currentTimeMillis()
+        LOG.info("Updating full symbol index...")
+
+        progressFactory.create("Indexing").thenApplyAsync { progress ->
+            try {
+                transaction(db) {
+                    addDeclarations(allDescriptors(module, exclusions))
+
+                    val finished = System.currentTimeMillis()
+                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                    LOG.info("Updated full symbol index in ${finished - started} ms! (${count} symbol(s))")
+                }
+            } catch (e: Exception) {
+                LOG.error("Error while updating symbol index")
+                LOG.printStackTrace(e)
+            }
+
+            progress.close()
+        }
+    }
+
+    // Removes a list of indexes and adds another list. Everything is done in the same transaction.
+    fun updateIndexes(remove: Sequence<DeclarationDescriptor>, add: Sequence<DeclarationDescriptor>) {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        progressFactory.create("Indexing").thenApply { progress ->
+        progressFactory.create("Indexing").thenApplyAsync { progress ->
             try {
-                // TODO: Incremental updates
                 transaction(db) {
-                    Symbols.deleteAll()
-
-                    for (descriptor in allDescriptors(module)) {
-                        val descriptorFqn = descriptor.fqNameSafe
-                        val extensionReceiverFqn = descriptor.accept(ExtractSymbolExtensionReceiverType, Unit)?.takeIf { !it.isRoot }
-
-                        if (canStoreFqName(descriptorFqn) && (extensionReceiverFqn?.let { canStoreFqName(it) } ?: true)) {
-                            for (fqn in listOf(descriptorFqn, extensionReceiverFqn).filterNotNull()) {
-                                FqNames.replace {
-                                    it[fqName] = fqn.toString()
-                                    it[shortName] = fqn.shortName().toString()
-                                }
-                            }
-
-                            Symbols.replace {
-                                it[fqName] = descriptorFqn.toString()
-                                it[kind] = descriptor.accept(ExtractSymbolKind, Unit).rawValue
-                                it[visibility] = descriptor.accept(ExtractSymbolVisibility, Unit).rawValue
-                                it[extensionReceiverType] = extensionReceiverFqn?.toString()
-                            }
-                        } else {
-                            LOG.warn("Excluding symbol {} from index since its name is too long", descriptorFqn.toString())
-                        }
-                    }
+                    removeDeclarations(remove)
+                    addDeclarations(add)
 
                     val finished = System.currentTimeMillis()
                     val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
@@ -103,29 +136,68 @@ class SymbolIndex {
         }
     }
 
-    private fun canStoreFqName(fqName: FqName) =
-           fqName.toString().length <= MAX_FQNAME_LENGTH
-        && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
+    private fun removeDeclarations(declarations: Sequence<DeclarationDescriptor>) =
+        declarations.forEach { declaration ->
+            val (descriptorFqn, extensionReceiverFqn) = getFqNames(declaration)
+
+            if (validFqName(descriptorFqn) && (extensionReceiverFqn?.let { validFqName(it) } != false)) {
+                Symbols.deleteWhere {
+                    (Symbols.fqName eq descriptorFqn.toString()) and (Symbols.extensionReceiverType eq extensionReceiverFqn?.toString())
+                }
+            } else {
+                LOG.warn("Excluding symbol {} from index since its name is too long", descriptorFqn.toString())
+            }
+        }
+
+    private fun addDeclarations(declarations: Sequence<DeclarationDescriptor>) =
+        declarations.forEach { declaration ->
+            val (descriptorFqn, extensionReceiverFqn) = getFqNames(declaration)
+
+            if (validFqName(descriptorFqn) && (extensionReceiverFqn?.let { validFqName(it) } != false)) {
+                SymbolEntity.new {
+                    fqName = descriptorFqn.toString()
+                    shortName = descriptorFqn.shortName().toString()
+                    kind = declaration.accept(ExtractSymbolKind, Unit).rawValue
+                    visibility = declaration.accept(ExtractSymbolVisibility, Unit).rawValue
+                    extensionReceiverType = extensionReceiverFqn?.toString()
+                }
+            } else {
+                LOG.warn("Excluding symbol {} from index since its name is too long", descriptorFqn.toString())
+            }
+        }
+
+    private fun getFqNames(declaration: DeclarationDescriptor): Pair<FqName, FqName?> {
+        val descriptorFqn = declaration.fqNameSafe
+        val extensionReceiverFqn = declaration.accept(ExtractSymbolExtensionReceiverType, Unit)?.takeIf { !it.isRoot }
+
+        return Pair(descriptorFqn, extensionReceiverFqn)
+    }
+
+    private fun validFqName(fqName: FqName) =
+        fqName.toString().length <= MAX_FQNAME_LENGTH
+            && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
     fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
         // TODO: Extension completion currently only works if the receiver matches exactly,
         //       ideally this should work with subtypes as well
-        (Symbols innerJoin FqNames)
-            .select { FqNames.shortName.like("$prefix%") and (Symbols.extensionReceiverType eq receiverType?.toString()) }
-            .limit(limit)
+        SymbolEntity.find {
+            (Symbols.shortName like "$prefix%") and (Symbols.extensionReceiverType eq receiverType?.toString())
+        }.limit(limit)
             .map { Symbol(
-                fqName = FqName(it[Symbols.fqName]),
-                kind = Symbol.Kind.fromRaw(it[Symbols.kind]),
-                visibility = Symbol.Visibility.fromRaw(it[Symbols.visibility]),
-                extensionReceiverType = it[Symbols.extensionReceiverType]?.let(::FqName)
+                fqName = FqName(it.fqName),
+                kind = Symbol.Kind.fromRaw(it.kind),
+                visibility = Symbol.Visibility.fromRaw(it.visibility),
+                extensionReceiverType = it.extensionReceiverType?.let(::FqName)
             ) }
     }
 
-    private fun allDescriptors(module: ModuleDescriptor): Sequence<DeclarationDescriptor> = allPackages(module)
+    private fun allDescriptors(module: ModuleDescriptor, exclusions: Sequence<DeclarationDescriptor>): Sequence<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
         .flatMap {
             try {
-                it.memberScope.getContributedDescriptors(DescriptorKindFilter.ALL, MemberScope.ALL_NAME_FILTER)
+                it.memberScope.getContributedDescriptors(
+                    DescriptorKindFilter.ALL
+                ) { name -> !exclusions.any { declaration -> declaration.name == name } }
             } catch (e: IllegalStateException) {
                 LOG.warn("Could not query descriptors in package $it")
                 emptyList()

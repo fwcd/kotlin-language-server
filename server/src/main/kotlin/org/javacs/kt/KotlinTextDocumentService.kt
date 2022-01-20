@@ -260,6 +260,13 @@ class KotlinTextDocumentService(
         debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     }
 
+    fun lintAll() {
+        debounceLint.submitImmediately {
+            sp.compileAllFiles()
+            sp.refreshDependencyIndexes()
+        }
+    }
+
     private fun clearLint(): List<URI> {
         val result = lintTodo.toList()
         lintTodo.clear()
