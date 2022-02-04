@@ -265,6 +265,15 @@ class EnumWithCompanionObjectTest : SingleFileTestFixture("completions", "Enum.k
     }
 }
 
+class WhenTest : SingleFileTestFixture("completions", "When.kt") {
+    @Test fun `nested classes completion with is`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 9, 24)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("Test"))
+    }
+}
+
 class TrailingLambdaTest : SingleFileTestFixture("completions", "TrailingLambda.kt") {
     @Test fun `complete function with single lambda parameter`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 6, 9)).get().right!!
