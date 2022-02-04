@@ -244,6 +244,7 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
             // package x.y.?
             ?: el.findParent<KtPackageDirective>()
             // :?
+            ?: el as? KtUserType
             ?: el.parent as? KtTypeElement
             // .?
             ?: el as? KtQualifiedExpression
