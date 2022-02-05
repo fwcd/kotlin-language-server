@@ -365,7 +365,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
             descriptors = members + extensions
 
-            if (!isCompanionOfEnum(receiverType)) {
+            if (!isCompanionOfEnum(receiverType) && !isCompanionOfSealed(receiverType)) {
                 return descriptors
             }
         }
@@ -391,6 +391,16 @@ private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {
         return false
     }
     return DescriptorUtils.isEnumClass(classDescriptor?.containingDeclaration)
+}
+
+private fun isCompanionOfSealed(kotlinType: KotlinType): Boolean {
+    val classDescriptor = TypeUtils.getClassDescriptor(kotlinType)
+    val isCompanion = DescriptorUtils.isCompanionObject(classDescriptor)
+    if (!isCompanion) {
+        return false
+    }
+
+    return DescriptorUtils.isSealedClass(classDescriptor?.containingDeclaration)
 }
 
 private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String {
