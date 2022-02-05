@@ -305,7 +305,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
                 val referenceTarget = file.referenceAtPoint(surroundingElement.qualifier!!.startOffset)?.second
                 if (referenceTarget is ClassDescriptor) {
                     LOG.info("Completing members of {}", referenceTarget.fqNameSafe)
-                    return referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+                    return referenceTarget.getDescriptors()
                 } else {
                     LOG.warn("No type reference in '{}'", surroundingElement.text)
                     return emptySequence()
@@ -374,14 +374,22 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {
-        LOG.debug("Completing static members of '{}'", referenceTarget.fqNameSafe)
-        val statics = referenceTarget.staticScope.getContributedDescriptors().asSequence()
-        val classes = referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
-        return descriptors + statics + classes
+        LOG.debug("Completing members of '{}'", referenceTarget.fqNameSafe)
+        return descriptors + referenceTarget.getDescriptors()
     }
 
     LOG.debug("Can't find member scope for {}", receiverExpr.text)
     return emptySequence()
+}
+
+private fun ClassDescriptor.getDescriptors(): Sequence<DeclarationDescriptor> {
+    val statics = staticScope.getContributedDescriptors().asSequence()
+    val classes = unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+    val types = unsubstitutedMemberScope.getContributedDescriptors().asSequence()
+    val companionDescriptors = if (hasCompanionObject && companionObjectDescriptor != null) companionObjectDescriptor!!.getDescriptors() else emptySequence()
+
+    return (statics + classes + types + companionDescriptors).toSet().asSequence()
+
 }
 
 private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {
