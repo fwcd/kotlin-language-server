@@ -36,9 +36,7 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.lexer.KtKeywordToken
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.DescriptorUtils
-import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
-import org.jetbrains.kotlin.resolve.descriptorUtil.isExtension
-import org.jetbrains.kotlin.resolve.descriptorUtil.parentsWithSelf
+import org.jetbrains.kotlin.resolve.descriptorUtil.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter.Companion
 import org.jetbrains.kotlin.resolve.scopes.HierarchicalScope
@@ -63,12 +61,17 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val partial = findPartialIdentifier(file, cursor)
     LOG.debug("Looking for completions that match '{}'", partial)
 
-    val (elementItems, isExhaustive, receiver) = elementCompletionItems(file, cursor, config, partial)
+    val (elementItems, element) = elementCompletionItems(file, cursor, config, partial)
     val elementItemList = elementItems.toList()
     val elementItemLabels = elementItemList.mapNotNull { it.label }.toSet()
+
+    val isExhaustive = element !is KtNameReferenceExpression
+                    && element !is KtTypeElement
+                    && element !is KtQualifiedExpression
+
     val items = (
         elementItemList.asSequence()
-        + (if (!isExhaustive) indexCompletionItems(file, cursor, receiver, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
+        + (if (!isExhaustive) indexCompletionItems(file, cursor, element, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
         + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
     )
     val itemList = items
@@ -80,8 +83,13 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     return CompletionList(isIncomplete, itemList)
 }
 
+private fun getQueryNameFromExpression(receiver: KtExpression?, cursor: Int, file: CompiledFile): FqName? {
+    val receiverType = receiver?.let { expr -> file.scopeAtPoint(cursor)?.let { file.typeOfExpression(expr, it) } }
+    return receiverType?.constructor?.declarationDescriptor?.fqNameSafe
+}
+
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
-private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtExpression?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtElement?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
     val parsedFile = file.parse
     val imports = parsedFile.importDirectives
     // TODO: Deal with alias imports
@@ -93,11 +101,23 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, receiver: KtEx
     val importedNames = imports
         .mapNotNull { it.importedFqName?.shortName() }
         .toSet()
-    val receiverType = receiver?.let { expr -> file.scopeAtPoint(cursor)?.let { file.typeOfExpression(expr, it) } }
-    val receiverTypeFqName = receiverType?.constructor?.declarationDescriptor?.fqNameSafe
+
+    val queryName = when (element) {
+        is KtQualifiedExpression -> getQueryNameFromExpression(element.receiverExpression, element.receiverExpression.startOffset, file)
+        is KtSimpleNameExpression -> {
+            val receiver = element.getReceiverExpression()
+            when {
+                receiver != null -> getQueryNameFromExpression(receiver, receiver.startOffset, file)
+                else -> null
+            }
+        }
+        is KtUserType -> file.referenceAtPoint(element.qualifier?.startOffset ?: cursor)?.second?.fqNameSafe
+        is KtTypeElement -> file.referenceAtPoint(element.startOffsetInParent)?.second?.fqNameOrNull()
+        else -> null
+    }
 
     return index
-        .query(partial, receiverTypeFqName, limit = MAX_COMPLETION_ITEMS)
+        .query(partial, queryName, limit = MAX_COMPLETION_ITEMS)
         .asSequence()
         .filter { it.kind != Symbol.Kind.MODULE } // Ignore global module/package name completions for now, since they cannot be 'imported'
         .filter { it.fqName.shortName() !in importedNames && it.fqName.parent() !in wildcardPackages }
@@ -157,11 +177,11 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
             kind = CompletionItemKind.Keyword
         } }
 
-data class ElementCompletionItems(val items: Sequence<CompletionItem>, val isExhaustive: Boolean, val receiver: KtExpression? = null)
+data class ElementCompletionItems(val items: Sequence<CompletionItem>, val element: KtElement? = null)
 
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
-    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence(), isExhaustive = true)
+    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence())
     val completions = elementCompletions(file, cursor, surroundingElement)
 
     val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
@@ -169,12 +189,7 @@ private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: Comp
         ?: matchesName.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
-    val isExhaustive = surroundingElement !is KtNameReferenceExpression
-                    && surroundingElement !is KtTypeElement
-                    && surroundingElement !is KtQualifiedExpression
-    val receiver = (surroundingElement as? KtQualifiedExpression)?.receiverExpression
-
-    return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, isExhaustive, receiver)
+    return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, surroundingElement)
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
@@ -244,6 +259,7 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
             // package x.y.?
             ?: el.findParent<KtPackageDirective>()
             // :?
+            ?: el as? KtUserType
             ?: el.parent as? KtTypeElement
             // .?
             ?: el as? KtQualifiedExpression
@@ -289,7 +305,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
                 val referenceTarget = file.referenceAtPoint(surroundingElement.qualifier!!.startOffset)?.second
                 if (referenceTarget is ClassDescriptor) {
                     LOG.info("Completing members of {}", referenceTarget.fqNameSafe)
-                    return referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+                    return referenceTarget.getDescriptors()
                 } else {
                     LOG.warn("No type reference in '{}'", surroundingElement.text)
                     return emptySequence()
@@ -349,7 +365,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
             descriptors = members + extensions
 
-            if (!isCompanionOfEnum(receiverType)) {
+            if (!isCompanionOfEnum(receiverType) && !isCompanionOfSealed(receiverType)) {
                 return descriptors
             }
         }
@@ -358,14 +374,22 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
     // JavaClass.?
     val referenceTarget = file.referenceAtPoint(receiverExpr.endOffset - 1)?.second
     if (referenceTarget is ClassDescriptor) {
-        LOG.debug("Completing static members of '{}'", referenceTarget.fqNameSafe)
-        val statics = referenceTarget.staticScope.getContributedDescriptors().asSequence()
-        val classes = referenceTarget.unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
-        return descriptors + statics + classes
+        LOG.debug("Completing members of '{}'", referenceTarget.fqNameSafe)
+        return descriptors + referenceTarget.getDescriptors()
     }
 
     LOG.debug("Can't find member scope for {}", receiverExpr.text)
     return emptySequence()
+}
+
+private fun ClassDescriptor.getDescriptors(): Sequence<DeclarationDescriptor> {
+    val statics = staticScope.getContributedDescriptors().asSequence()
+    val classes = unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
+    val types = unsubstitutedMemberScope.getContributedDescriptors().asSequence()
+    val companionDescriptors = if (hasCompanionObject && companionObjectDescriptor != null) companionObjectDescriptor!!.getDescriptors() else emptySequence()
+
+    return (statics + classes + types + companionDescriptors).toSet().asSequence()
+
 }
 
 private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {
@@ -375,6 +399,16 @@ private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {
         return false
     }
     return DescriptorUtils.isEnumClass(classDescriptor?.containingDeclaration)
+}
+
+private fun isCompanionOfSealed(kotlinType: KotlinType): Boolean {
+    val classDescriptor = TypeUtils.getClassDescriptor(kotlinType)
+    val isCompanion = DescriptorUtils.isCompanionObject(classDescriptor)
+    if (!isCompanion) {
+        return false
+    }
+
+    return DescriptorUtils.isSealedClass(classDescriptor?.containingDeclaration)
 }
 
 private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String {
