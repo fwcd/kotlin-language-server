@@ -4,6 +4,7 @@ plugins {
     id 'application'
     id 'com.github.jk1.tcdeps' version '1.2'
     id 'com.jaredsburrows.license' version '0.8.42'
+    id 'com.ncorti.ktfmt.gradle' version '0.7.0'
 }
 
 version = projectVersion
@@ -137,6 +138,13 @@ test {
 distZip {
     archiveFileName = "${project.name}.zip"
 }
+
+ktfmt {
+    // KotlinLang style - 4 space indentation - From kotlinlang.org/docs/coding-conventions.html
+    kotlinLangStyle()
+}
+
+build.dependsOn ktfmtCheck
 
 installDist.finalizedBy fixFilePermissions
 build.finalizedBy installDist
