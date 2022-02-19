@@ -12,6 +12,12 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Format code with ktfmt",
+            "type": "shell",
+            "command": "gradle ktfmtFormat",
+            "problemMatcher": []
         }
     ]
 }
