@@ -61,7 +61,7 @@ private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = f
 private fun getGradleCommand(workspace: Path): Path {
     val wrapperName = if (isOSWindows()) "gradlew.bat" else "gradlew"
     val wrapper = workspace.resolve(wrapperName).toAbsolutePath()
-    if (Files.exists(wrapper)) {
+    if (Files.isExecutable(wrapper)) {
         return wrapper
     } else {
         return workspace.parent?.let(::getGradleCommand)
