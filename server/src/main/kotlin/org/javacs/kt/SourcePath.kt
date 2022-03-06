@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import java.lang.Exception
 import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -50,7 +51,8 @@ class SourcePath(
         var compiledContext: BindingContext? = null,
         var compiledContainer: ComponentProvider? = null,
         val language: Language? = null,
-        val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
+        val isTemporary: Boolean = false, // A temporary source file will not be returned by .all()
+        var lastSavedFile: KtFile? = null,
     ) {
         val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
@@ -162,7 +164,10 @@ class SourcePath(
         }
 
     fun delete(uri: URI) {
-        files[uri]?.let { refreshWorkspaceIndexes(listOf(it), listOf()) }
+        files[uri]?.let {
+            refreshWorkspaceIndexes(listOf(it), listOf())
+            cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
+        }
 
         files.remove(uri)
     }
@@ -250,8 +255,32 @@ class SourcePath(
         // TODO: Investigate the possibility of compiling all files at once, instead of iterating here
         // At the moment, compiling all files at once sometimes leads to an internal error from the TopDownAnalyzer
         files.keys.forEach {
-            compileFiles(listOf(it))
+            // If one of the files fails to compile, we compile the others anyway
+            try {
+                compileFiles(listOf(it))
+            } catch (ex: Exception) {
+                LOG.printStackTrace(ex)
+            }
         }
+    }
+
+    /**
+     * Saves a file. This generates code for the file and deletes previously generated code for this file.
+     */
+    fun save(uri: URI) {
+        files[uri]?.let {
+            cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
+            it.compiledContainer?.let { container ->
+                it.compiledContext?.let { context ->
+                    cp.compiler.generateCode(container, context, listOfNotNull(it.compiledFile))
+                    it.lastSavedFile = it.compiledFile
+                }
+            }
+        }
+    }
+
+    fun saveAllFiles() {
+        files.keys.forEach { save(it) }
     }
 
     fun refreshDependencyIndexes() {

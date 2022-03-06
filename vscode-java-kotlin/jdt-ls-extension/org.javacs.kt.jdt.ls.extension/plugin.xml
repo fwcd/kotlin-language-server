@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+      <extension
+            id="importers"
+            point="org.eclipse.jdt.ls.core.importers">
+            <importer
+                  id = "kotlinProjectImporter"
+                  order = "150"
+                  class = "org.javacs.kt.jdt.ls.extension.KotlinMavenImporter"/>  	
+      </extension>
+</plugin>
+ 

@@ -1,0 +1,79 @@
+<project xmlns="https://maven.apache.org/POM/4.0.0" xmlns:xsi="https://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.javacs.kt</groupId>
+	<artifactId>jdt-ls-extension-parent</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0.0-SNAPSHOT</version>
+	<name>jdt-ls-extension-parent</name>
+
+	<modules>
+		<module>org.javacs.kt.jdt.ls.extension</module>
+	</modules>
+
+	<properties>
+		<java.version>11</java.version>
+		<tycho-version>1.7.0</tycho-version>
+	</properties>
+
+	<repositories>
+		<!-- composite update site contains http references, using exact https urls instead -->
+		<repository>
+			<id>eclipse</id>
+			<layout>p2</layout>
+			<url>https://download.eclipse.org/releases/2022-03</url>
+		</repository>
+
+		<repository>
+			<id>JDT.LS</id>
+			<layout>p2</layout>
+			<url>https://download.eclipse.org/jdtls/snapshots/repository/latest/</url>
+		</repository>
+		
+		<repository>
+			<id>jboss</id>
+			<layout>p2</layout>
+			<url>https://download.jboss.org/jbosstools/updates/m2e-extensions/m2e-apt/1.5.3-2019-11-08_11-04-22-H22/</url>
+		</repository>
+	</repositories>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-source-feature-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>source-feature</id>
+						<phase>package</phase>
+						<goals>
+							<goal>source-feature</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-source-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<executions>
+					<execution>
+						<id>plugin-source</id>
+						<goals>
+							<goal>plugin-source</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho-version}</version>
+				<extensions>true</extensions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

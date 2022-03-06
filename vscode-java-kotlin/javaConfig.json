@@ -1,0 +1,6 @@
+{
+    "projects": [
+        "./jdt-ls-extension/org.javacs.kt.jdt.ls.extension"
+    ],
+    "targetPlatform": "./jdt-ls-extension/target.target"
+  }

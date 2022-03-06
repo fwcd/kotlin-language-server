@@ -1,0 +1,46 @@
+{
+  "name": "vscode-java-kotlin",
+  "displayName": "Java Kotlin",
+  "description": "Language support for Java + Kotlin projects",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fwcd/kotlin-language-server.git"
+  },
+  "version": "0.0.1",
+  "publisher": "fwcd",
+  "license": "MIT",
+  "categories": [
+    "Programming Languages"
+  ],
+  "engines": {
+    "vscode": "^1.52.0"
+  },
+  "keywords": [
+    "java",
+    "kotlin"
+  ],
+  "activationEvents": [
+    "onLanguage:java"
+  ],
+  "contributes": {
+    "javaExtensions": [
+      "./jars/jdt-ls-extension.jar"
+    ]
+  },
+  "main": "./out/src/extension",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^12.8.1",
+    "@types/vscode": "^1.52.0",
+    "typescript": "^4.3.5",
+    "vsce": "^1.95.0"
+  },
+  "extensionDependencies": [
+    "redhat.java",
+    "fwcd.kotlin"
+  ]
+}

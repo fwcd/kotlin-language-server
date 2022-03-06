@@ -5,8 +5,10 @@ import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
+import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import java.nio.file.Paths
 
 /**
  * Manages the class path (compiled JARs, etc), the Java source path
@@ -17,6 +19,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val javaSourcePath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
     val classPath = mutableSetOf<ClassPathEntry>()
+    private var outputDirectory: File? = null
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set
@@ -66,7 +69,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         if (refreshCompiler) {
             LOG.info("Reinstantiating compiler")
             compiler.close()
-            compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
+            compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
             updateCompilerConfiguration()
         }
 
@@ -95,6 +98,10 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.add(root)
         javaSourcePath.addAll(findJavaSourceFiles(root))
 
+        val outputDir = Paths.get(root.toString(), "kls").toFile()
+        outputDirectory = outputDir
+        compiler.outputDirectory = outputDir
+
         return refresh()
     }
 
@@ -103,6 +110,8 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
         workspaceRoots.remove(root)
         javaSourcePath.removeAll(findJavaSourceFiles(root))
+        outputDirectory = null
+        compiler.outputDirectory = null
 
         return refresh()
     }

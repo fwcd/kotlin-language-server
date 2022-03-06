@@ -179,6 +179,9 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
         lintNow(uri)
+        debounceLint.schedule {
+            sp.save(uri)
+        }
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -263,6 +266,7 @@ class KotlinTextDocumentService(
     fun lintAll() {
         debounceLint.submitImmediately {
             sp.compileAllFiles()
+            sp.saveAllFiles()
             sp.refreshDependencyIndexes()
         }
     }
