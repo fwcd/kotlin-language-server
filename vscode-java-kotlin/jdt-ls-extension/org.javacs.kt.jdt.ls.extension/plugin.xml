@@ -5,9 +5,13 @@
             id="importers"
             point="org.eclipse.jdt.ls.core.importers">
             <importer
-                  id = "kotlinProjectImporter"
+                  id = "kotlinGradleImporter"
+                  order = "125"
+                  class = "org.javacs.kt.jdt.ls.extension.KotlinGradleImporter"/>
+            <importer
+                  id = "kotlinMavenImporter"
                   order = "150"
-                  class = "org.javacs.kt.jdt.ls.extension.KotlinMavenImporter"/>  	
+                  class = "org.javacs.kt.jdt.ls.extension.KotlinMavenImporter"/>
       </extension>
 </plugin>
  

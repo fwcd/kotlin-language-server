@@ -269,11 +269,18 @@ class SourcePath(
      */
     fun save(uri: URI) {
         files[uri]?.let {
-            cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
-            it.compiledContainer?.let { container ->
-                it.compiledContext?.let { context ->
-                    cp.compiler.generateCode(container, context, listOfNotNull(it.compiledFile))
-                    it.lastSavedFile = it.compiledFile
+            if (!it.isScript) {
+                // If the code generation fails for some reason, we generate code for the other files anyway
+                try {
+                    cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
+                    it.compiledContainer?.let { container ->
+                        it.compiledContext?.let { context ->
+                            cp.compiler.generateCode(container, context, listOfNotNull(it.compiledFile))
+                            it.lastSavedFile = it.compiledFile
+                        }
+                    }
+                } catch (ex: Exception) {
+                    LOG.printStackTrace(ex)
                 }
             }
         }
