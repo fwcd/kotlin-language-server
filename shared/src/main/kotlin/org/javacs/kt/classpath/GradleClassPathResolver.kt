@@ -117,7 +117,6 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
         .toSet()
 
     tmpScripts.forEach(Files::delete)
-
     return dependencies
 }
 
