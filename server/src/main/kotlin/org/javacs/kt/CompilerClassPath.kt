@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.storage.Storage
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.nio.file.FileSystems
@@ -17,6 +18,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val javaSourcePath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
     val classPath = mutableSetOf<ClassPathEntry>()
+    var storage: Storage? = null
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set
@@ -34,7 +36,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         updateJavaSourcePath: Boolean = true
     ): Boolean {
         // TODO: Fetch class path and build script class path concurrently (and asynchronously)
-        val resolver = defaultClassPathResolver(workspaceRoots)
+        val resolver = defaultClassPathResolver(workspaceRoots, storage)
         var refreshCompiler = updateJavaSourcePath
 
         if (updateClassPath) {

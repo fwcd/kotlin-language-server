@@ -7,19 +7,21 @@ import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.command.ALL_COMMANDS
-import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.config.ServerConfiguration
+import org.javacs.kt.config.parseServerConfiguration
 import org.javacs.kt.externalsources.ClassPathSourceJarProvider
+import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.progress.LanguageClientProgress
+import org.javacs.kt.progress.Progress
+import org.javacs.kt.semantictokens.semanticTokensLegend
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
-import org.javacs.kt.progress.Progress
-import org.javacs.kt.progress.LanguageClientProgress
-import org.javacs.kt.semantictokens.semanticTokensLegend
-import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
+
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val config = Configuration()
@@ -42,6 +44,8 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
             field = factory
             sourcePath.progressFactory = factory
         }
+
+    private var serverConfiguration: ServerConfiguration? = null
 
     companion object {
         val VERSION: String? = System.getProperty("kotlinLanguageServer.version")
@@ -88,6 +92,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
+
+        serverConfiguration = parseServerConfiguration(params)
+
+        classPath.storage = serverConfiguration?.storage?.getSlice("classpath")
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
