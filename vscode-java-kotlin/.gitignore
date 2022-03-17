@@ -1,9 +1,0 @@
-node_modules
-target
-*.vsix
-.idea
-*.iml
-.DS_Store
-**/.DS_Store
-jars
-.vscode/settings.json
