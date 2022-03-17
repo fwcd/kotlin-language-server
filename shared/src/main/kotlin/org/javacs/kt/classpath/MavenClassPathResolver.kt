@@ -130,10 +130,10 @@ private val mvnCommandFromPath: Path? by lazy {
     findCommandOnPath("mvn")
 }
 
-private fun mvnCommand(pom : Path) : Path {
-	return requireNotNull(mvnCommandFromPath ?: findProjectCommandWithName("mvnw", pom)?.also {
-		LOG.info("Using mvn wrapper (mvnw) in place of mvn command")
-	}) { "Unable to find the 'mvn' command or suitable wrapper" }
+private fun mvnCommand(pom: Path): Path {
+    return requireNotNull(mvnCommandFromPath ?: findProjectCommandWithName("mvnw", pom)?.also {
+        LOG.info("Using mvn wrapper (mvnw) in place of mvn command")
+    }) { "Unable to find the 'mvn' command or suitable wrapper" }
 }
 
 fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
