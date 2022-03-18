@@ -1,8 +1,6 @@
 package org.javacs.kt.classpath
 
-import kotlinx.serialization.Serializable
 import org.javacs.kt.LOG
-import org.javacs.kt.storage.Storage
 import org.javacs.kt.util.findCommandOnPath
 import org.javacs.kt.util.execAndReadStdoutAndStderr
 import java.nio.file.Path
@@ -10,16 +8,12 @@ import java.nio.file.Files
 import java.io.File
 
 /** Resolver for reading maven dependencies */
-internal class MavenClassPathResolver private constructor(private val pom: Path, private val storage: Storage?) : ClassPathResolver {
+internal class MavenClassPathResolver private constructor(private val pom: Path) : ClassPathResolver {
     private var artifacts: Set<Artifact>? = null
 
     override val resolverType: String = "Maven"
 
-    private var cachedClassPath: MavenClasspathCache? = storage?.getObject("mavenClasspath")
-
     override val classpath: Set<ClassPathEntry> get() {
-        cachedClassPath?.let { if (!dependenciesChanged()) return it.classpathEntries }
-
         val dependenciesOutput = generateMavenDependencyList(pom)
         val artifacts = readMavenDependencyList(dependenciesOutput)
 
@@ -33,16 +27,10 @@ internal class MavenClassPathResolver private constructor(private val pom: Path,
 
         this.artifacts = artifacts
 
-        val newClasspath = artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
-
-        updateClasspathCache(MavenClasspathCache(newClasspath, false))
-
-        return newClasspath
+        return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
     }
 
     override val classpathWithSources: Set<ClassPathEntry> get() {
-        cachedClassPath?.let { if (!dependenciesChanged() && it.includesSources) return it.classpathEntries }
-
         // Fetch artifacts if not yet present.
         var artifacts: Set<Artifact>
         if (this.artifacts != null) {
@@ -59,33 +47,19 @@ internal class MavenClassPathResolver private constructor(private val pom: Path,
         artifacts = readMavenDependencyListWithSources(artifacts, sourcesOutput)
 
         Files.deleteIfExists(sourcesOutput)
-        val newClasspath = artifacts.mapNotNull {
+        return artifacts.mapNotNull {
             findMavenArtifact(it, false)?.let {
                 it1 -> ClassPathEntry(it1, if (it.source) findMavenArtifact(it, it.source) else null)
             }
         }.toSet()
-
-        updateClasspathCache(MavenClasspathCache(newClasspath, true))
-
-        return newClasspath
     }
 
-    private fun updateClasspathCache(newClasspathCache: MavenClasspathCache) {
-        storage?.setObject("mavenClasspath", newClasspathCache)
-        storage?.setObject("mavenPomFileVersion", getCurrentPomFileVersion())
-        cachedClassPath = newClasspathCache
-    }
-
-    private fun dependenciesChanged(): Boolean {
-        return storage?.getObject<Long>("mavenPomFileVersion") ?: 0 < getCurrentPomFileVersion()
-    }
-
-    private fun getCurrentPomFileVersion(): Long = pom.toFile().lastModified()
+    override fun getCurrentBuildFileVersion(): Long = pom.toFile().lastModified()
 
     companion object {
         /** Create a maven resolver if a file is a pom. */
-        fun maybeCreate(file: Path, storage: Storage?): MavenClassPathResolver? =
-            file.takeIf { it.endsWith("pom.xml") }?.let { MavenClassPathResolver(it, storage) }
+        fun maybeCreate(file: Path): MavenClassPathResolver? =
+            file.takeIf { it.endsWith("pom.xml") }?.let { MavenClassPathResolver(it) }
     }
 }
 
@@ -231,9 +205,3 @@ data class Artifact(
 ) {
     override fun toString() = "$group:$artifact:$version"
 }
-
-@Serializable
-private data class MavenClasspathCache(
-    val classpathEntries: Set<ClassPathEntry>,
-    val includesSources: Boolean
-)

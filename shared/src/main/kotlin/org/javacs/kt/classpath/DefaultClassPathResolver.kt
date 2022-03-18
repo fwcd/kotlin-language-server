@@ -7,23 +7,26 @@ import java.nio.file.PathMatcher
 import java.nio.file.FileSystems
 
 fun defaultClassPathResolver(workspaceRoots: Collection<Path>, storage: Storage?): ClassPathResolver =
-    WithStdlibResolver(
-        ShellClassPathResolver.global(workspaceRoots.firstOrNull())
-            .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it, storage) }.joined)
-    ).or(BackupClassPathResolver)
+    CachedClassPathResolver(
+        WithStdlibResolver(
+            ShellClassPathResolver.global(workspaceRoots.firstOrNull())
+                .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it) }.joined)
+        ).or(BackupClassPathResolver),
+        storage
+    )
 
 /** Searches the workspace for all files that could provide classpath info. */
-private fun workspaceResolvers(workspaceRoot: Path, storage: Storage?): Sequence<ClassPathResolver> {
+private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
     val ignored: List<PathMatcher> = ignoredPathPatterns(workspaceRoot, workspaceRoot.resolve(".gitignore"))
-    return folderResolvers(workspaceRoot, ignored, storage).asSequence()
+    return folderResolvers(workspaceRoot, ignored).asSequence()
 }
 
 /** Searches the folder for all build-files. */
-private fun folderResolvers(root: Path, ignored: List<PathMatcher>, storage: Storage?): Collection<ClassPathResolver> =
+private fun folderResolvers(root: Path, ignored: List<PathMatcher>): Collection<ClassPathResolver> =
     root.toFile()
         .walk()
         .onEnter { file -> ignored.none { it.matches(file.toPath()) } }
-        .mapNotNull { asClassPathProvider(it.toPath(), storage) }
+        .mapNotNull { asClassPathProvider(it.toPath()) }
         .toList()
 
 /** Tries to read glob patterns from a gitignore. */
@@ -48,7 +51,7 @@ private fun ignoredPathPatterns(root: Path, gitignore: Path): List<PathMatcher> 
         ?: emptyList()
 
 /** Tries to create a classpath resolver from a file using as many sources as possible */
-private fun asClassPathProvider(path: Path, storage: Storage?): ClassPathResolver? =
-    MavenClassPathResolver.maybeCreate(path, storage)
-        ?: GradleClassPathResolver.maybeCreate(path, storage)
+private fun asClassPathProvider(path: Path): ClassPathResolver? =
+    MavenClassPathResolver.maybeCreate(path)
+        ?: GradleClassPathResolver.maybeCreate(path)
         ?: ShellClassPathResolver.maybeCreate(path)

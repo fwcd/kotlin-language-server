@@ -1,8 +1,6 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
-import org.javacs.kt.storage.SetOfPathsAsStringSerializer
-import org.javacs.kt.storage.Storage
 import org.javacs.kt.util.execAndReadStdoutAndStderr
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.isOSWindows
@@ -12,65 +10,37 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean, private val storage: Storage?): ClassPathResolver {
+internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
     private val projectDirectory: Path get() = path.parent
 
-    private var cachedClassPath: Set<ClassPathEntry>? = storage?.getObject("gradleClassPath")
-    private var cachedBuildScriptClassPath: Set<Path>? = storage?.getObject("gradleBuildScriptClassPath", SetOfPathsAsStringSerializer)
-
     override val classpath: Set<ClassPathEntry> get() {
-        cachedClassPath?.let { if (!dependenciesChanged()) return it }
-
         val scripts = listOf("projectClassPathFinder.gradle")
         val tasks = listOf("kotlinLSPProjectDeps")
 
-        val newClasspath = readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+        return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
             .map { ClassPathEntry(it, null) }.toSet()
-
-        updateClasspathCache(newClasspath)
-        return newClasspath
     }
     override val buildScriptClasspath: Set<Path> get() {
         return if (includeKotlinDSL) {
-            cachedBuildScriptClassPath?.let { if (!dependenciesChanged()) return it }
-
             val scripts = listOf("kotlinDSLClassPathFinder.gradle")
             val tasks = listOf("kotlinLSPKotlinDSLDeps")
 
-            val newBuildScriptClasspath = readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+            return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
                 .apply { if (isNotEmpty()) LOG.info("Successfully resolved build script dependencies for '${projectDirectory.fileName}' using Gradle") }
-
-            updateBuildScriptClasspathCache(newBuildScriptClasspath)
-            return newBuildScriptClasspath
         } else {
             emptySet()
         }
     }
 
-    private fun updateClasspathCache(newClasspath: Set<ClassPathEntry>) {
-        storage?.setObject("gradleClasspath", newClasspath)
-        storage?.setObject("buildScriptFileVersion", getCurrentBuildScriptFileVersion())
-        cachedClassPath = newClasspath
-    }
-
-    private fun updateBuildScriptClasspathCache(newClasspath: Set<Path>) {
-        storage?.setObject("gradleBuildScriptClasspath", newClasspath, SetOfPathsAsStringSerializer)
-        storage?.setObject("buildScriptFileVersion", getCurrentBuildScriptFileVersion())
-        cachedBuildScriptClassPath = newClasspath
-    }
-
-    private fun dependenciesChanged(): Boolean =
-        storage?.getObject<Long>("buildScriptFileVersion") ?: 0 < getCurrentBuildScriptFileVersion()
-
-    private fun getCurrentBuildScriptFileVersion(): Long = path.toFile().lastModified()
+    override fun getCurrentBuildFileVersion(): Long = path.toFile().lastModified()
 
     companion object {
         /** Create a Gradle resolver if a file is a pom. */
-        fun maybeCreate(file: Path, storage: Storage?): GradleClassPathResolver? =
+        fun maybeCreate(file: Path): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
-                ?.let { GradleClassPathResolver(it, includeKotlinDSL = file.toString().endsWith(".kts"), storage) }
+                ?.let { GradleClassPathResolver(it, includeKotlinDSL = file.toString().endsWith(".kts")) }
     }
 }
 

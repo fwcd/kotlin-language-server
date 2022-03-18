@@ -9,7 +9,8 @@ internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : Clas
     override val classpathOrEmpty: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathOrEmpty)
     override val buildScriptClasspath: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspath)
     override val buildScriptClasspathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspathOrEmpty)
-    override val classpathWithSources: Set<ClassPathEntry> = wrapWithStdlibEntries(wrapped.classpathWithSources)
+    override val classpathWithSources: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathWithSources)
+    override fun getCurrentBuildFileVersion(): Long = wrapped.getCurrentBuildFileVersion()
 }
 
 private fun wrapWithStdlibEntries(paths: Set<ClassPathEntry>): Set<ClassPathEntry> {

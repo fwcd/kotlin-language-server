@@ -2,6 +2,7 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import java.nio.file.Path
+import kotlin.math.max
 
 /** A source for creating class paths */
 interface ClassPathResolver {
@@ -27,6 +28,8 @@ interface ClassPathResolver {
         }
 
     val classpathWithSources: Set<ClassPathEntry> get() = classpath
+
+    fun getCurrentBuildFileVersion(): Long = 1L
 
     companion object {
         /** A default empty classpath implementation */
@@ -54,7 +57,8 @@ internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: Class
     override val classpathOrEmpty get() = lhs.classpathOrEmpty + rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath + rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty + rhs.buildScriptClasspathOrEmpty
-    override val classpathWithSources = lhs.classpathWithSources + rhs.classpathWithSources
+    override val classpathWithSources get() = lhs.classpathWithSources + rhs.classpathWithSources
+    override fun getCurrentBuildFileVersion(): Long = max(lhs.getCurrentBuildFileVersion(), rhs.getCurrentBuildFileVersion())
 }
 
 internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
@@ -63,5 +67,6 @@ internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rh
     override val classpathOrEmpty get() = lhs.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty
     override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty
-    override val classpathWithSources = lhs.classpathWithSources.takeIf { it.isNotEmpty() } ?: rhs.classpathWithSources
+    override val classpathWithSources get() = lhs.classpathWithSources.takeIf { it.isNotEmpty() } ?: rhs.classpathWithSources
+    override fun getCurrentBuildFileVersion(): Long = max(lhs.getCurrentBuildFileVersion(), rhs.getCurrentBuildFileVersion())
 }
