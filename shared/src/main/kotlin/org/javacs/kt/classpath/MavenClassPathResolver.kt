@@ -2,6 +2,7 @@ package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
 import org.javacs.kt.util.findCommandOnPath
+import org.javacs.kt.util.findProjectCommandWithName
 import org.javacs.kt.util.execAndReadStdoutAndStderr
 import java.nio.file.Path
 import java.nio.file.Files
@@ -103,14 +104,14 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
-    val command = "$mvnCommand dependency:list -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
+    val command = "${mvnCommand(pom)} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
     runCommand(pom, command)
     return mavenOutput
 }
 
 private fun generateMavenDependencySourcesList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("sources", ".txt")
-    val command = "$mvnCommand dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
+    val command = "${mvnCommand(pom)} dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
     runCommand(pom, command)
     return mavenOutput
 }
@@ -125,8 +126,14 @@ private fun runCommand(pom: Path, command: String) {
     }
 }
 
-private val mvnCommand: Path by lazy {
-    requireNotNull(findCommandOnPath("mvn")) { "Unable to find the 'mvn' command" }
+private val mvnCommandFromPath: Path? by lazy {
+    findCommandOnPath("mvn")
+}
+
+private fun mvnCommand(pom: Path): Path {
+    return requireNotNull(mvnCommandFromPath ?: findProjectCommandWithName("mvnw", pom)?.also {
+        LOG.info("Using mvn wrapper (mvnw) in place of mvn command")
+    }) { "Unable to find the 'mvn' command or suitable wrapper" }
 }
 
 fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {
