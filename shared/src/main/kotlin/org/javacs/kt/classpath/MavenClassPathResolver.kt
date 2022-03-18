@@ -26,7 +26,6 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         Files.deleteIfExists(dependenciesOutput)
 
         this.artifacts = artifacts
-
         return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
     }
 
