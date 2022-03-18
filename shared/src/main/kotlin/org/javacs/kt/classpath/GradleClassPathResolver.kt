@@ -89,9 +89,14 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
 
 private fun findGradleCLIDependencies(command: String, projectDirectory: Path): Set<Path>? {
     val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
-    LOG.debug(result)
     if ("FAILURE: Build failed" in errors) {
-        LOG.warn("Gradle task failed: {}", errors.lines().joinToString("\n"))
+        LOG.warn("Gradle task failed: {}", errors)
+    } else {
+        for (error in errors.lines()) {
+            if ("ERROR: " in error) {
+                LOG.warn("Gradle error: {}", error)
+            }
+        }
     }
     return parseGradleCLIDependencies(result)
 }
