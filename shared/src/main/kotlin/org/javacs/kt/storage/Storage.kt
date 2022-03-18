@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.javacs.kt.LOG
 import java.lang.Exception
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -18,9 +19,9 @@ class Storage(val path: Path) {
     fun getSlice(slicePath: String): Storage? {
         val fullSlicePath = Paths.get(path.toString(), slicePath)
 
-        if (!Files.exists(fullSlicePath)) {
-            Files.createDirectory(fullSlicePath)
-        } else if (!Files.isDirectory(fullSlicePath)) {
+        try {
+            Files.createDirectories(fullSlicePath)
+        } catch (ex: FileAlreadyExistsException) {
             return null
         }
 
