@@ -21,7 +21,6 @@ import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
 import org.javacs.kt.position.location
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.load.java.descriptors.JavaMethodDescriptor
@@ -45,7 +44,6 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
@@ -278,7 +276,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // import x.y.?
         is KtImportDirective -> {
             LOG.info("Completing import '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
+            val module = file.module
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
             val parent = parentDot.substring(0, parentDot.length - 1)
@@ -289,7 +287,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // package x.y.?
         is KtPackageDirective -> {
             LOG.info("Completing package '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
+            val module = file.module
             val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
                 ?: return doesntLookLikePackage(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."

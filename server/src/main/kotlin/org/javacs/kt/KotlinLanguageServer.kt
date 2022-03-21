@@ -7,15 +7,14 @@ import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.javacs.kt.command.ALL_COMMANDS
-import org.javacs.kt.externalsources.JarClassContentProvider
-import org.javacs.kt.externalsources.ClassPathSourceJarProvider
+import org.javacs.kt.externalsources.ClassContentProvider
+import org.javacs.kt.externalsources.ClassPathSourceArchiveProvider
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.progress.Progress
 import org.javacs.kt.progress.LanguageClientProgress
 import org.javacs.kt.semantictokens.semanticTokensLegend
-import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -26,7 +25,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val classPath = CompilerClassPath(config.compiler)
 
     private val tempDirectory = TemporaryDirectory()
-    private val uriContentProvider = URIContentProvider(JarClassContentProvider(config.externalSources, classPath, tempDirectory, ClassPathSourceJarProvider(classPath)))
+    private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, ClassPathSourceArchiveProvider(classPath)))
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing)
     val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
