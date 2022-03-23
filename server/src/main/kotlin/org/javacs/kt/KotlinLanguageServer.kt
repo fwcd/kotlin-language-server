@@ -133,7 +133,11 @@ class KotlinLanguageServer : LanguageServer, Closeable {
     }
 
     override fun initialized(params: InitializedParams?) {
-        client.buildOutputLocationSet(classPath.outputDirectory.absolutePath)
+        try {
+            client.buildOutputLocationSet(classPath.outputDirectory.absolutePath)
+        } catch (ex: UnsupportedOperationException) {
+            LOG.info("Client does not support notification kotlin/buildOutputLocationSet")
+        }
     }
 
     private fun connectLoggingBackend() {
