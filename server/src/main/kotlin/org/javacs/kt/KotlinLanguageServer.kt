@@ -21,7 +21,7 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
+class KotlinLanguageServer : LanguageServer, Closeable {
     val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
 
@@ -34,7 +34,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
 
-    private lateinit var client: LanguageClient
+    private lateinit var client: KotlinLanguageClient
 
     private val async = AsyncExecutor()
     private var progressFactory: Progress.Factory = Progress.Factory.None
@@ -51,7 +51,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         LOG.info("Kotlin Language Server: Version ${VERSION ?: "?"}")
     }
 
-    override fun connect(client: LanguageClient) {
+    fun connect(client: KotlinLanguageClient) {
         this.client = client
         connectLoggingBackend()
 
@@ -130,6 +130,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         val serverInfo = ServerInfo("Kotlin Language Server", VERSION)
 
         InitializeResult(serverCapabilities, serverInfo)
+    }
+
+    override fun initialized(params: InitializedParams?) {
+        client.buildOutputLocationSet(classPath.outputDirectory.absolutePath)
     }
 
     private fun connectLoggingBackend() {

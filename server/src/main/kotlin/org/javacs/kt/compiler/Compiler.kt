@@ -440,7 +440,7 @@ enum class CompilationKind {
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(), var outputDirectory: File? = null) : Closeable {
+class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(), private val outputDirectory: File) : Closeable {
     private var closed = false
     private val localFileSystem: VirtualFileSystem
 
@@ -551,15 +551,15 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
     fun removeGeneratedCode(files: Collection<KtFile>) {
         files.forEach { file ->
             file.declarations.forEach { declaration ->
-                outputDirectory?.resolve(
+                outputDirectory.resolve(
                     file.packageFqName.asString().replace(".", File.separator) + File.separator + declaration.name + ".class"
-                )?.delete()
+                ).delete()
             }
         }
     }
 
     fun generateCode(container: ComponentProvider, bindingContext: BindingContext, files: Collection<KtFile>) {
-        outputDirectory?.let {
+        outputDirectory.let {
             compileLock.withLock {
                 val compileEnv = compileEnvironmentFor(CompilationKind.DEFAULT)
                 val state = GenerationState.Builder(

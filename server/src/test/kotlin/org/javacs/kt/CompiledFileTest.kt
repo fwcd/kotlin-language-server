@@ -16,7 +16,7 @@ class CompiledFileTest {
         }
     }
 
-    fun compileFile(): CompiledFile = Compiler(setOf(), setOf()).use { compiler ->
+    fun compileFile(): CompiledFile = Compiler(setOf(), setOf(), outputDirectory = Files.createTempDirectory("klsBuildOutput").toFile()).use { compiler ->
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createKtFile(content, file)
