@@ -15,13 +15,12 @@ import org.javacs.kt.util.parseURI
 import org.javacs.kt.progress.Progress
 import org.javacs.kt.progress.LanguageClientProgress
 import org.javacs.kt.semantictokens.semanticTokensLegend
-import java.net.URI
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, Closeable {
+class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val config = Configuration()
     val classPath = CompilerClassPath(config.compiler)
 
@@ -32,9 +31,9 @@ class KotlinLanguageServer : LanguageServer, Closeable {
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
+    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath)
 
-    private lateinit var client: KotlinLanguageClient
+    private lateinit var client: LanguageClient
 
     private val async = AsyncExecutor()
     private var progressFactory: Progress.Factory = Progress.Factory.None
@@ -51,7 +50,7 @@ class KotlinLanguageServer : LanguageServer, Closeable {
         LOG.info("Kotlin Language Server: Version ${VERSION ?: "?"}")
     }
 
-    fun connect(client: KotlinLanguageClient) {
+    override fun connect(client: LanguageClient) {
         this.client = client
         connectLoggingBackend()
 
@@ -130,14 +129,6 @@ class KotlinLanguageServer : LanguageServer, Closeable {
         val serverInfo = ServerInfo("Kotlin Language Server", VERSION)
 
         InitializeResult(serverCapabilities, serverInfo)
-    }
-
-    override fun initialized(params: InitializedParams?) {
-        try {
-            client.buildOutputLocationSet(classPath.outputDirectory.absolutePath)
-        } catch (ex: UnsupportedOperationException) {
-            LOG.info("Client does not support notification kotlin/buildOutputLocationSet")
-        }
     }
 
     private fun connectLoggingBackend() {

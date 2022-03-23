@@ -1,13 +1,14 @@
 package org.javacs.kt
 
 import org.eclipse.lsp4j.*
+import org.eclipse.lsp4j.services.LanguageClient
 import org.junit.Before
 import org.junit.After
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : KotlinLanguageClient {
+abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
     val languageServer = createLanguageServer()
     val diagnostics = mutableListOf<Diagnostic>()
