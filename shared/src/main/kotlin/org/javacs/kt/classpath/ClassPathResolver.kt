@@ -36,7 +36,8 @@ interface ClassPathResolver {
      * We use 1, because this will prevent any attempt to cache non cacheable resolvers
      * (see [CachedClassPathResolver.dependenciesChanged]).
      */
-    fun getCurrentBuildFileVersion(): Long = 1L
+    val currentBuildFileVersion: Long
+        get() = 1L
 
     companion object {
         /** A default empty classpath implementation */
