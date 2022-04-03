@@ -14,14 +14,14 @@ interface QuickFix {
     fun compute(file: CompiledFile, range: Range, diagnostics: List<Diagnostic>): Either<Command, CodeAction>?
 }
 
-fun diagnosticMatch(diagnostic: Diagnostic, range: Range, diagnosticTypes: HashSet<String>): Boolean =
+fun diagnosticMatch(diagnostic: Diagnostic, range: Range, diagnosticTypes: Set<String>): Boolean =
     diagnostic.range.equals(range) && diagnosticTypes.contains(diagnostic.code.left)
 
-fun diagnosticMatch(diagnostic: KotlinDiagnostic, startCursor: Int, endCursor: Int, diagnosticTypes: HashSet<String>): Boolean =
+fun diagnosticMatch(diagnostic: KotlinDiagnostic, startCursor: Int, endCursor: Int, diagnosticTypes: Set<String>): Boolean =
     diagnostic.textRanges.any { it.startOffset == startCursor && it.endOffset == endCursor } && diagnosticTypes.contains(diagnostic.factory.name)
 
-fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range, diagnosticTypes: HashSet<String>) =
+fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range, diagnosticTypes: Set<String>) =
     diagnostics.find { diagnosticMatch(it, range, diagnosticTypes) }
 
-fun anyDiagnosticMatch(diagnostics: Diagnostics, startCursor: Int, endCursor: Int, diagnosticTypes: HashSet<String>) =
+fun anyDiagnosticMatch(diagnostics: Diagnostics, startCursor: Int, endCursor: Int, diagnosticTypes: Set<String>) =
     diagnostics.any { diagnosticMatch(it, startCursor, endCursor, diagnosticTypes) }
