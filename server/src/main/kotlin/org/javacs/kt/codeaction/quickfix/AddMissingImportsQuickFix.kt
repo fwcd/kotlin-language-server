@@ -25,7 +25,7 @@ class AddMissingImportsQuickFix: QuickFix {
 
             getImportAlternatives(symbolName, file.parse, index).map { (importStr, edit) ->
                 val codeAction = CodeAction()
-                codeAction.title = "import ${importStr}"
+                codeAction.title = "Import ${importStr}"
                 codeAction.kind = CodeActionKind.QuickFix
                 codeAction.diagnostics = listOf(diagnostic)
                 codeAction.edit = WorkspaceEdit(mapOf(uri to listOf(edit)))
@@ -42,15 +42,15 @@ class AddMissingImportsQuickFix: QuickFix {
 
     private fun getImportAlternatives(symbolName: String, file: KtFile, index: SymbolIndex): List<Pair<String, TextEdit>> {
         // wildcard matcher to empty string, because we only want to match exactly the symbol itself, not anything extra
-        val queryResult = index.query(symbolName, wildcardMatcher = "")
+        val queryResult = index.query(symbolName, suffix = "")
         
         return queryResult
-            .filter { it.kind != Symbol.Kind.MODULE }
             .filter {
+                it.kind != Symbol.Kind.MODULE &&
                 // TODO: Visibility checker should be less liberal
-                it.visibility == Symbol.Visibility.PUBLIC
-                || it.visibility == Symbol.Visibility.PROTECTED
-                || it.visibility == Symbol.Visibility.INTERNAL
+                (it.visibility == Symbol.Visibility.PUBLIC
+                 || it.visibility == Symbol.Visibility.PROTECTED
+                 || it.visibility == Symbol.Visibility.INTERNAL)
             }
             .map {
                 Pair(it.fqName.toString(), getImportTextEditEntry(file, it.fqName))
