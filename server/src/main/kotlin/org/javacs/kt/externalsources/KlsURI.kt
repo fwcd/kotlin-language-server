@@ -113,13 +113,14 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
         return result
     }
 
-    fun readContents(): String {
-        return if (archiveType == ArchiveType.ZIP) {
+    fun readContents(): String = when (archiveType) {
+        ArchiveType.ZIP -> {
             val zipFile = ZipFile(File("$archivePath"))
             zipFile.getInputStream(zipFile.getEntry(innerPath.trimStart('/')))
                 .bufferedReader()
                 .use(BufferedReader::readText)
-        } else {
+        }
+        ArchiveType.JAR, ArchiveType.JDK -> {
             withJarURLConnection {
                 it.jarFile
                     .getInputStream(it.jarEntry)
