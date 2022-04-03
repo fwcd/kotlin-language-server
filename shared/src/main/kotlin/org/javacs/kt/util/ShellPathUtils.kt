@@ -33,3 +33,17 @@ private fun findExecutableOnPath(fileName: String): Path? {
 
     return null
 }
+
+fun findProjectCommandWithName(name: String, projectFile: Path): Path? =
+    if (isOSWindows()) {
+        findFileRelativeToProjectFile("$name.cmd", projectFile)
+    } else {
+        findFileRelativeToProjectFile(name, projectFile)
+    }
+
+private fun findFileRelativeToProjectFile(name: String, projectFile: Path): Path? =
+    projectFile.resolveSibling(name).toFile().takeIf { file ->
+        file.isFile && file.canExecute()
+    }?.let { file ->
+        Paths.get(file.absolutePath)
+    }
