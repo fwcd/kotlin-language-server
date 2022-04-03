@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Range
 import java.nio.file.Path
 import org.javacs.kt.CompiledFile
+import org.javacs.kt.CompilerClassPath
 import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
 import org.javacs.kt.externalsources.ClassContentProvider
@@ -18,6 +19,8 @@ import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
+import java.io.File
+import java.nio.file.Paths
 
 private val cachedTempFiles = mutableMapOf<KlsURI, Path>()
 private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
@@ -27,7 +30,8 @@ fun goToDefinition(
     cursor: Int,
     classContentProvider: ClassContentProvider,
     tempDir: TemporaryDirectory,
-    config: ExternalSourcesConfiguration
+    config: ExternalSourcesConfiguration,
+    cp: CompilerClassPath
 ): Location? {
     val (_, target) = file.referenceExpressionAtPoint(cursor) ?: return null
 
@@ -42,7 +46,7 @@ fun goToDefinition(
     if (destination != null) {
         val rawClassURI = destination.uri
 
-        if (isInsideArchive(rawClassURI)) {
+        if (isInsideArchive(rawClassURI, cp)) {
             parseURI(rawClassURI).toKlsURI()?.let { klsURI ->
                 val (klsSourceURI, content) = classContentProvider.contentOf(klsURI)
 
@@ -86,4 +90,7 @@ fun goToDefinition(
     return destination
 }
 
-private fun isInsideArchive(uri: String) = uri.contains("!")
+private fun isInsideArchive(uri: String, cp: CompilerClassPath) =
+    uri.contains(".jar!") || uri.contains(".zip!") || cp.javaHome?.let {
+        Paths.get(parseURI(uri)).toString().startsWith(File(it).path)
+    } ?: false

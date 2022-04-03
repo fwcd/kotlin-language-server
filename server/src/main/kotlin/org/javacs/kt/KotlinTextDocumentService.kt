@@ -38,7 +38,8 @@ class KotlinTextDocumentService(
     private val sp: SourcePath,
     private val config: Configuration,
     private val tempDirectory: TemporaryDirectory,
-    private val uriContentProvider: URIContentProvider
+    private val uriContentProvider: URIContentProvider,
+    private val cp: CompilerClassPath
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
@@ -115,7 +116,7 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor, uriContentProvider.classContentProvider, tempDirectory, config.externalSources)
+            goToDefinition(file, cursor, uriContentProvider.classContentProvider, tempDirectory, config.externalSources, cp)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))
