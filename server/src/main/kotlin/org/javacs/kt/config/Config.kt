@@ -14,12 +14,12 @@ fun parseServerConfiguration(params: InitializeParams): ServerConfiguration? {
 
     var storage: Storage? = null
 
-    if (params.initializationOptions != null) {
-        val options = gson.fromJson(params.initializationOptions as JsonElement, InitializationOptions::class.java)
+    params.initializationOptions?.let { initializationOptions ->
+        val options = gson.fromJson(initializationOptions as JsonElement, InitializationOptions::class.java)
 
-        if (options.storagePath != null) {
-            if (Files.exists(options.storagePath) && Files.isDirectory(options.storagePath)) {
-                storage = Storage(options.storagePath)
+        options.storagePath?.let { storagePath ->
+            if (Files.isDirectory(storagePath)) {
+                storage = Storage(storagePath)
             }
         }
     }
