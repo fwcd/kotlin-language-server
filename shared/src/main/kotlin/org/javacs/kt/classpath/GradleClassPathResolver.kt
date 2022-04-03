@@ -34,7 +34,7 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
         }
     }
 
-    override fun getCurrentBuildFileVersion(): Long = path.toFile().lastModified()
+    override val currentBuildFileVersion: Long get() = path.toFile().lastModified()
 
     companion object {
         /** Create a Gradle resolver if a file is a pom. */

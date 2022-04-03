@@ -53,7 +53,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         }.toSet()
     }
 
-    override fun getCurrentBuildFileVersion(): Long = pom.toFile().lastModified()
+    override val currentBuildFileVersion: Long get() = pom.toFile().lastModified()
 
     companion object {
         /** Create a maven resolver if a file is a pom. */

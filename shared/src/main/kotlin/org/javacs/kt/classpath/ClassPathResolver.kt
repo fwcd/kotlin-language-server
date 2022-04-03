@@ -66,7 +66,7 @@ internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: Class
     override val buildScriptClasspath get() = lhs.buildScriptClasspath + rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty + rhs.buildScriptClasspathOrEmpty
     override val classpathWithSources get() = lhs.classpathWithSources + rhs.classpathWithSources
-    override fun getCurrentBuildFileVersion(): Long = max(lhs.getCurrentBuildFileVersion(), rhs.getCurrentBuildFileVersion())
+    override val currentBuildFileVersion: Long get() = max(lhs.currentBuildFileVersion, rhs.currentBuildFileVersion)
 }
 
 internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
@@ -76,5 +76,5 @@ internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rh
     override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty
     override val classpathWithSources get() = lhs.classpathWithSources.takeIf { it.isNotEmpty() } ?: rhs.classpathWithSources
-    override fun getCurrentBuildFileVersion(): Long = max(lhs.getCurrentBuildFileVersion(), rhs.getCurrentBuildFileVersion())
+    override val currentBuildFileVersion: Long get() = max(lhs.currentBuildFileVersion, rhs.currentBuildFileVersion)
 }

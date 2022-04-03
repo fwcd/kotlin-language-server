@@ -39,22 +39,22 @@ internal class CachedClassPathResolver(private val wrapped: ClassPathResolver, p
         return newClasspath
     }
 
-    override fun getCurrentBuildFileVersion(): Long = wrapped.getCurrentBuildFileVersion()
+    override val currentBuildFileVersion: Long get() = wrapped.currentBuildFileVersion
 
     private fun updateClasspathCache(newClasspathCache: ClasspathCache) {
         storage?.setObject("cachedClasspath", newClasspathCache)
-        storage?.setObject("cachedBuildFileVersion", getCurrentBuildFileVersion())
+        storage?.setObject("cachedBuildFileVersion", currentBuildFileVersion)
         cachedClassPath = newClasspathCache
     }
 
     private fun updateBuildScriptClasspathCache(newClasspath: Set<Path>) {
         storage?.setObject("cachedBuildScriptClassPath", newClasspath, SetOfPathsAsStringSerializer)
-        storage?.setObject("cachedBuildFileVersion", getCurrentBuildFileVersion())
+        storage?.setObject("cachedBuildFileVersion", currentBuildFileVersion)
         cachedBuildScriptClassPath = newClasspath
     }
 
     private fun dependenciesChanged(): Boolean {
-        return storage?.getObject<Long>("cachedBuildFileVersion") ?: 0 < wrapped.getCurrentBuildFileVersion()
+        return storage?.getObject<Long>("cachedBuildFileVersion") ?: 0 < wrapped.currentBuildFileVersion
     }
 }
 
