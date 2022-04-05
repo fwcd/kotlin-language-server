@@ -20,6 +20,7 @@ import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
 import org.javacs.kt.position.location
+import org.javacs.kt.imports.getImportTextEditEntry
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
@@ -142,30 +143,9 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
                 Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
             }
             detail = "(import from ${it.fqName.parent()})"
-            val pos = findImportInsertionPosition(parsedFile, it.fqName)
-            val prefix = if (importedNames.isEmpty()) "\n\n" else "\n"
-            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "${prefix}import ${it.fqName}")) // TODO: CRLF?
+            additionalTextEdits = listOf(getImportTextEditEntry(parsedFile, it.fqName)) // TODO: CRLF?
         } }
 }
-
-/** Finds a good insertion position for a new import of the given fully-qualified name. */
-private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
-    (closestImport(parsedFile.importDirectives, fqName) as? KtElement ?: parsedFile.packageDirective as? KtElement)
-        ?.let(::location)
-        ?.range
-        ?.end
-        ?: Position(0, 0)
-
-// TODO: Lexicographic insertion
-private fun closestImport(imports: List<KtImportDirective>, fqName: FqName): KtImportDirective? =
-    imports
-        .asReversed()
-        .maxByOrNull { it.importedFqName?.let { matchingPrefixLength(it, fqName) } ?: 0 }
-
-private fun matchingPrefixLength(left: FqName, right: FqName): Int =
-    left.pathSegments().asSequence().zip(right.pathSegments().asSequence())
-        .takeWhile { it.first == it.second }
-        .count()
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =

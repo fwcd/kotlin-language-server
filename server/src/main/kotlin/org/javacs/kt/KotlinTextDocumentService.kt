@@ -93,7 +93,7 @@ class KotlinTextDocumentService(
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
         val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.NEVER)
-        codeActions(file, params.range, params.context)
+        codeActions(file, sp.index, params.range, params.context)
     }
 
     override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {
