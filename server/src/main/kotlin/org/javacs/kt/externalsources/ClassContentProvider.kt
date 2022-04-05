@@ -14,13 +14,13 @@ import java.util.LinkedHashMap
 
 /**
  * Provides the source code for classes located inside
- * compiled or source JARs.
+ * compiled or source archives, such as JARs or ZIPs.
  */
-class JarClassContentProvider(
+class ClassContentProvider(
     private val config: ExternalSourcesConfiguration,
     private val cp: CompilerClassPath,
     private val tempDir: TemporaryDirectory,
-    private val sourceJarProvider: SourceJarProvider,
+    private val sourceArchiveProvider: SourceArchiveProvider,
     private val decompiler: Decompiler = FernflowerDecompiler()
 ) {
     /** Maps recently used (source-)KLS-URIs to their source contents (e.g. decompiled code) and the file extension. */
@@ -29,16 +29,16 @@ class JarClassContentProvider(
     }
 
     /**
-     * Fetches the contents of a compiled class/source file in a JAR
+     * Fetches the contents of a compiled class/source file in an archive
      * and another URI which can be used to refer to these extracted
      * contents.
-     * If the file is inside a source JAR, the source code is returned as is.
+     * If the file is inside a source archive, the source code is returned as is.
      */
-    public fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
-        val resolvedUri = sourceJarProvider.fetchSourceJar(uri.jarPath)?.let(uri.withSource(true)::withJarPath) ?: uri
+    fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
+        val resolvedUri = sourceArchiveProvider.fetchSourceArchive(uri.archivePath)?.let(uri.withSource(true)::withArchivePath) ?: uri
         val key = resolvedUri.toString()
         val (contents, extension) = cachedContents[key] ?: run {
-                LOG.info("Finding contents of {}", describeURI(uri.fileUri))
+                LOG.info("Finding contents of {}", describeURI(resolvedUri.fileUri))
                 tryReadContentOf(resolvedUri)
                     ?: tryReadContentOf(resolvedUri.withFileExtension("class"))
                     ?: tryReadContentOf(resolvedUri.withFileExtension("java"))

@@ -20,8 +20,8 @@ import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
 import org.javacs.kt.position.location
+import org.javacs.kt.imports.getImportTextEditEntry
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.container.get
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.load.java.descriptors.JavaMethodDescriptor
@@ -45,7 +45,6 @@ import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
 import org.jetbrains.kotlin.resolve.scopes.utils.parentsWithSelf
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.typeUtil.supertypes
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
 import java.util.concurrent.TimeUnit
@@ -142,30 +141,9 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
                 Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
             }
             detail = "(import from ${it.fqName.parent()})"
-            val pos = findImportInsertionPosition(parsedFile, it.fqName)
-            val prefix = if (importedNames.isEmpty()) "\n\n" else "\n"
-            additionalTextEdits = listOf(TextEdit(Range(pos, pos), "${prefix}import ${it.fqName}")) // TODO: CRLF?
+            additionalTextEdits = listOf(getImportTextEditEntry(parsedFile, it.fqName)) // TODO: CRLF?
         } }
 }
-
-/** Finds a good insertion position for a new import of the given fully-qualified name. */
-private fun findImportInsertionPosition(parsedFile: KtFile, fqName: FqName): Position =
-    (closestImport(parsedFile.importDirectives, fqName) as? KtElement ?: parsedFile.packageDirective as? KtElement)
-        ?.let(::location)
-        ?.range
-        ?.end
-        ?: Position(0, 0)
-
-// TODO: Lexicographic insertion
-private fun closestImport(imports: List<KtImportDirective>, fqName: FqName): KtImportDirective? =
-    imports
-        .asReversed()
-        .maxByOrNull { it.importedFqName?.let { matchingPrefixLength(it, fqName) } ?: 0 }
-
-private fun matchingPrefixLength(left: FqName, right: FqName): Int =
-    left.pathSegments().asSequence().zip(right.pathSegments().asSequence())
-        .takeWhile { it.first == it.second }
-        .count()
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
@@ -278,7 +256,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // import x.y.?
         is KtImportDirective -> {
             LOG.info("Completing import '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
+            val module = file.module
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
             val parent = parentDot.substring(0, parentDot.length - 1)
@@ -289,7 +267,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // package x.y.?
         is KtPackageDirective -> {
             LOG.info("Completing package '{}'", surroundingElement.text)
-            val module = file.container.get<ModuleDescriptor>()
+            val module = file.module
             val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
                 ?: return doesntLookLikePackage(surroundingElement)
             val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
