@@ -3,6 +3,7 @@ package org.javacs.kt.codeaction.quickfix
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
+import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
@@ -20,7 +21,7 @@ import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 private const val DEFAULT_TAB_SIZE = 4
 
 class ImplementAbstractFunctionsQuickFix : QuickFix {
-    override fun compute(file: CompiledFile, range: Range, diagnostics: List<Diagnostic>): Either<Command, CodeAction>? {
+    override fun compute(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
 
         val startCursor = offset(file.content, range.start)
@@ -52,10 +53,10 @@ class ImplementAbstractFunctionsQuickFix : QuickFix {
                 codeAction.kind = CodeActionKind.QuickFix
                 codeAction.title = "Implement abstract functions"
                 codeAction.diagnostics = listOf(diagnostic)
-                return Either.forRight(codeAction)
+                return listOf(Either.forRight(codeAction))
             }
         }
-        return null
+        return listOf()
     }
 }
 

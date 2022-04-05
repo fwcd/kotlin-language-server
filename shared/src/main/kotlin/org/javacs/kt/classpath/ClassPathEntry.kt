@@ -8,7 +8,6 @@ import java.nio.file.Path
 data class ClassPathEntry(
     @Serializable(with = PathAsStringSerializer::class)
     val compiledJar: Path,
-
     @Serializable(with = PathAsStringSerializer::class)
-    val sourceJar: Path?
+    val sourceJar: Path? = null
 )

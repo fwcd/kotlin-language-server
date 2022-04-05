@@ -4,19 +4,23 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.codeaction.quickfix.ImplementAbstractFunctionsQuickFix
+import org.javacs.kt.codeaction.quickfix.AddMissingImportsQuickFix
 import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.util.toPath
+import org.javacs.kt.index.SymbolIndex
 
 val QUICK_FIXES = listOf(
-    ImplementAbstractFunctionsQuickFix()
+    ImplementAbstractFunctionsQuickFix(),
+    AddMissingImportsQuickFix()
 )
 
-fun codeActions(file: CompiledFile, range: Range, context: CodeActionContext): List<Either<Command, CodeAction>> {
-    val requestedKinds = context.only ?: listOf(CodeActionKind.Refactor)
+fun codeActions(file: CompiledFile, index: SymbolIndex, range: Range, context: CodeActionContext): List<Either<Command, CodeAction>> {
+    // context.only does not work when client is emacs... 
+    val requestedKinds = context.only ?: listOf(CodeActionKind.Refactor, CodeActionKind.QuickFix)
     return requestedKinds.map {
         when (it) {
             CodeActionKind.Refactor -> getRefactors(file, range)
-            CodeActionKind.QuickFix -> getQuickFixes(file, range, context.diagnostics)
+            CodeActionKind.QuickFix -> getQuickFixes(file, index, range, context.diagnostics)
             else -> listOf()
         }
     }.flatten()
@@ -38,8 +42,8 @@ fun getRefactors(file: CompiledFile, range: Range): List<Either<Command, CodeAct
     }
 }
 
-fun getQuickFixes(file: CompiledFile, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
-    return QUICK_FIXES.mapNotNull {
-        it.compute(file, range, diagnostics)
+fun getQuickFixes(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
+    return QUICK_FIXES.flatMap {
+        it.compute(file, index, range, diagnostics)
     }
 }
