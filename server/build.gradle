@@ -46,7 +46,7 @@ dependencies {
     implementation "org.jetbrains.exposed:exposed-dao:$exposedVersion"
     implementation "org.jetbrains.exposed:exposed-jdbc:$exposedVersion"
     implementation 'com.h2database:h2:1.4.200'
-    implementation 'com.github.fwcd.ktfmt:ktfmt:8ef3ee752a'
+    implementation 'com.github.fwcd.ktfmt:ktfmt:b5d31d1'
     implementation 'com.beust:jcommander:1.78'
 
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
@@ -72,7 +72,7 @@ applicationDistribution.into('bin') {
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 }
 

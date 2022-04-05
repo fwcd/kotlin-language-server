@@ -2,15 +2,14 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import com.intellij.psi.PsiIdentifier
 import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
-import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
@@ -23,7 +22,7 @@ class CompiledFile(
     val content: String,
     val parse: KtFile,
     val compile: BindingContext,
-    val container: ComponentProvider,
+    val module: ModuleDescriptor,
     val sourcePath: Collection<KtFile>,
     val classPath: CompilerClassPath,
     val isScript: Boolean = false,
@@ -33,7 +32,7 @@ class CompiledFile(
      * Find the type of the expression at `cursor`
      */
     fun typeAtPoint(cursor: Int): KotlinType? {
-        var cursorExpr = parseAtPoint(cursor, asReference = true)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
+        val cursorExpr = parseAtPoint(cursor, asReference = true)?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")
         val surroundingExpr = expandForType(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         return typeOfExpression(surroundingExpr, scope)
@@ -53,14 +52,31 @@ class CompiledFile(
         else return surroundingExpr
     }
 
+    /**
+     * Looks for a reference expression at the given cursor.
+     * This is currently used by many features in the language server.
+     * Unfortunately, it fails to find declarations for JDK symbols.
+     * [referenceExpressionAtPoint] provides an alternative implementation that can find JDK symbols.
+     * It cannot, however, replace this method at the moment.
+     * TODO: Investigate why this method doesn't find JDK symbols.
+     */
     fun referenceAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
         val element = parseAtPoint(cursor, asReference = true)
-        var cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
+        val cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
         return referenceFromContext(cursor, context)
+    }
+
+    /**
+     * Looks for a reference expression at the given cursor.
+     * This method is similar to [referenceAtPoint], but the latter fails to find declarations for JDK symbols.
+     * This method should not be used for anything other than finding definitions (at least for now).
+     */
+    fun referenceExpressionAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
+        return referenceFromContext(cursor, compile)
     }
 
     private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
@@ -202,10 +218,4 @@ class CompiledFile(
 
         return "$file ${start.line}:${start.character + 1}-${end.line + 1}:${end.character + 1}"
     }
-}
-
-private fun fileName(file: KtFile): String {
-    val parts = file.name.split('/')
-
-    return parts.last()
 }

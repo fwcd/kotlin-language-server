@@ -177,11 +177,11 @@ class SymbolIndex {
         fqName.toString().length <= MAX_FQNAME_LENGTH
             && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
-    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
+    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> = transaction(db) {
         // TODO: Extension completion currently only works if the receiver matches exactly,
         //       ideally this should work with subtypes as well
         SymbolEntity.find {
-            (Symbols.shortName like "$prefix%") and (Symbols.extensionReceiverType eq receiverType?.toString())
+            (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
         }.limit(limit)
             .map { Symbol(
                 fqName = FqName(it.fqName),

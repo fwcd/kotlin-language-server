@@ -8,7 +8,6 @@ import org.javacs.kt.codeaction.codeActions
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
-import org.javacs.kt.externalsources.JarClassContentProvider
 import org.javacs.kt.formatting.formatKotlinCode
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
@@ -26,13 +25,11 @@ import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
-import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.rename.renameSymbol
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 
@@ -41,7 +38,8 @@ class KotlinTextDocumentService(
     private val sp: SourcePath,
     private val config: Configuration,
     private val tempDirectory: TemporaryDirectory,
-    private val uriContentProvider: URIContentProvider
+    private val uriContentProvider: URIContentProvider,
+    private val cp: CompilerClassPath
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
@@ -93,7 +91,7 @@ class KotlinTextDocumentService(
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
         val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.NEVER)
-        codeActions(file, params.range, params.context)
+        codeActions(file, sp.index, params.range, params.context)
     }
 
     override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {
@@ -118,7 +116,7 @@ class KotlinTextDocumentService(
             LOG.info("Go-to-definition at {}", describePosition(position))
 
             val (file, cursor) = recover(position, Recompile.NEVER)
-            goToDefinition(file, cursor, uriContentProvider.jarClassContentProvider, tempDirectory, config.externalSources)
+            goToDefinition(file, cursor, uriContentProvider.classContentProvider, tempDirectory, config.externalSources, cp)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))
