@@ -21,7 +21,7 @@ class ClassPathTest {
 
         assertTrue(Files.exists(buildFile))
 
-        val resolvers = defaultClassPathResolver(listOf(workspaceRoot), null)
+        val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
         print(resolvers)
         val classPath = resolvers.classpathOrEmpty.map { it.toString() }
 
