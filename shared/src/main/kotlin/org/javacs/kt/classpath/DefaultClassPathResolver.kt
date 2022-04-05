@@ -6,7 +6,7 @@ import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.nio.file.FileSystems
 
-fun defaultClassPathResolver(workspaceRoots: Collection<Path>, storage: Storage?): ClassPathResolver =
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>, storage: Storage? = null): ClassPathResolver =
     CachedClassPathResolver(
         WithStdlibResolver(
             ShellClassPathResolver.global(workspaceRoots.firstOrNull())
