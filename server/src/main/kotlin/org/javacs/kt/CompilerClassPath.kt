@@ -17,6 +17,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val javaSourcePath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
     val classPath = mutableSetOf<ClassPathEntry>()
+    val javaHome: String? = System.getProperty("java.home", null)
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
         private set

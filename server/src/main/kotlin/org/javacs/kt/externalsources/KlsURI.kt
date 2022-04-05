@@ -7,18 +7,20 @@ import java.net.URI
 import java.net.URL
 import java.net.JarURLConnection
 import java.io.BufferedReader
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.zip.ZipFile
 
 fun URI.toKlsURI(): KlsURI? = when (scheme) {
-    "kls" -> KlsURI(URI("kls:$schemeSpecificPart"))
+    "kls" -> KlsURI(URI("kls:${schemeSpecificPart.replace(" ", "%20")}"))
     "file" -> KlsURI(URI("kls:$this"))
     else -> null
 }
 
 /**
- * Identifies a class or source file inside a JAR archive using a Uniform
+ * Identifies a class or source file inside an archive using a Uniform
  * Resource Identifier (URI) with a "kls" (Kotlin language server) scheme.
  * The URI should be structured as follows:
  *
@@ -37,6 +39,12 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
         override fun toString(): String = parameterName
     }
 
+    enum class ArchiveType(val delimiter: String) {
+        JAR("!"),
+        ZIP("!"),
+        JDK("!/modules")
+    }
+
     private val queryString: String
         get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -> "$accum${next.key}=${next.value}" }
 
@@ -48,21 +56,33 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
             .takeIf { it.size > 1 }
             ?.lastOrNull()
 
-    val jarPath: Path
-        get() = Paths.get(parseURI(fileUri.schemeSpecificPart.split("!")[0]))
-    val innerPath: String?
-        get() = fileUri.schemeSpecificPart.split("!", limit = 2).get(1)
+    private val archiveType: ArchiveType
+        get() = when {
+            fileUri.schemeSpecificPart.contains("!/modules") -> {
+                ArchiveType.JDK
+            }
+            fileUri.schemeSpecificPart.contains(".zip!") -> {
+                ArchiveType.ZIP
+            }
+            else -> {
+                ArchiveType.JAR
+            }
+        }
+
+    val archivePath: Path
+        get() = Paths.get(parseURI(fileUri.schemeSpecificPart.split(archiveType.delimiter)[0]))
+
+    private val innerPath: String
+        get() = fileUri.schemeSpecificPart.split(archiveType.delimiter, limit = 2)[1]
 
     val source: Boolean
         get() = query[QueryParam.SOURCE]?.toBoolean() ?: false
-    val isCompiled: Boolean
-        get() = fileExtension == "class"
 
     constructor(uri: URI) : this(parseKlsURIFileURI(uri), parseKlsURIQuery(uri))
 
-    // If the newJarPath doesn't have the kls scheme, it is added in the returned KlsURI.
-    fun withJarPath(newJarPath: Path): KlsURI? =
-        URI(newJarPath.toUri().toString() + (innerPath?.let { "!$it" } ?: "")).toKlsURI()?.let { KlsURI(it.fileUri, query) }
+    // If the newArchivePath doesn't have the kls scheme, it is added in the returned KlsURI.
+    fun withArchivePath(newArchivePath: Path): KlsURI? =
+        URI(newArchivePath.toUri().toString() + (innerPath.let { "!$it" } )).toKlsURI()?.let { KlsURI(it.fileUri, query) }
 
     fun withFileExtension(newExtension: String): KlsURI {
         val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
@@ -77,7 +97,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
         return KlsURI(fileUri, newQuery)
     }
 
-    fun toURI(): URI = URI(fileUri.toString() + queryString)
+    private fun toURI(): URI = URI(fileUri.toString() + queryString)
 
     private fun toJarURL(): URL = URL("jar:${fileUri.schemeSpecificPart}")
 
@@ -93,11 +113,21 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
         return result
     }
 
-    fun readContents(): String = withJarURLConnection {
-        it.jarFile
-            .getInputStream(it.jarEntry)
-            .bufferedReader()
-            .use(BufferedReader::readText)
+    fun readContents(): String = when (archiveType) {
+        ArchiveType.ZIP -> {
+            val zipFile = ZipFile(File("$archivePath"))
+            zipFile.getInputStream(zipFile.getEntry(innerPath.trimStart('/')))
+                .bufferedReader()
+                .use(BufferedReader::readText)
+        }
+        ArchiveType.JAR, ArchiveType.JDK -> {
+            withJarURLConnection {
+                it.jarFile
+                    .getInputStream(it.jarEntry)
+                    .bufferedReader()
+                    .use(BufferedReader::readText)
+            }
+        }
     }
 
     fun extractToTemporaryFile(dir: TemporaryDirectory): Path = withJarURLConnection {
