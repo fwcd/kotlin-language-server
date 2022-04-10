@@ -59,5 +59,18 @@ class JvmNameAnnotationMainResolve : SingleFileTestFixture("resolvemain", "JvmNa
     }
 }
 
+class CompanionObjectMainResolve : SingleFileTestFixture("resolvemain", "CompanionObject.kt") {
+    @Test
+    fun `Should resolve correct main class of main function inside companion object`() {
+        val root = testResourcesRoot().resolve(workspaceRoot)
+        val executeCommandParams = ExecuteCommandParams(RESOLVE_MAIN, listOf(Gson().toJsonTree(root.resolve(file).toUri().toString())))
+        
+        val commandResult = languageServer.workspaceService.executeCommand(executeCommandParams).get()
 
-// TODO: should we support inner companion object mains?
+        assertNotNull(commandResult)
+        val mainInfo = commandResult as Map<String, Any>
+        assertEquals("test.my.companion.SweetPotato", mainInfo["mainClass"])
+        assertEquals(Range(Position(9, 8), Position(11, 9)), mainInfo["range"])
+        assertEquals(root.toString(), mainInfo["projectRoot"])
+    }
+}
