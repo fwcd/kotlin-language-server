@@ -70,7 +70,7 @@ class CompanionObjectMainResolve : SingleFileTestFixture("resolvemain", "Compani
         assertNotNull(commandResult)
         val mainInfo = commandResult as Map<String, Any>
         assertEquals("test.my.companion.SweetPotato", mainInfo["mainClass"])
-        assertEquals(Range(Position(9, 8), Position(11, 9)), mainInfo["range"])
+        assertEquals(Range(Position(8, 8), Position(11, 9)), mainInfo["range"])
         assertEquals(root.toString(), mainInfo["projectRoot"])
     }
 }
