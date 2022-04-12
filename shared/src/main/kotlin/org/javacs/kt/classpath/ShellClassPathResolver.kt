@@ -17,7 +17,7 @@ internal class ShellClassPathResolver(
         val workingDirectory = workingDir?.toFile() ?: script.toAbsolutePath().parent.toFile()
         val cmd = script.toString()
         LOG.info("Run {} in {}", cmd, workingDirectory)
-        val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
+        val process = ProcessBuilder(cmd).directory(workingDirectory).start()
 
         return process.inputStream.bufferedReader().readText()
             .split(File.pathSeparator)
