@@ -29,9 +29,12 @@ internal class ShellClassPathResolver(
     }
 
     companion object {
+        private val scriptExtensions = listOf("sh", "bat", "cmd")
+
         /** Create a shell resolver if a file is a pom. */
         fun maybeCreate(file: Path): ShellClassPathResolver? =
-            file.takeIf { it.endsWith("kotlinLspClasspath.sh") }?.let { ShellClassPathResolver(it) }
+            file.takeIf { scriptExtensions.any { file.endsWith("kotlinLspClasspath.$it") } }
+                ?.let { ShellClassPathResolver(it) }
 
         /** The root directory for config files. */
         private val globalConfigRoot: Path =
@@ -39,10 +42,11 @@ internal class ShellClassPathResolver(
 
         /** Returns the ShellClassPathResolver for the global home directory shell script. */
         fun global(workingDir: Path?): ClassPathResolver =
-            globalConfigRoot.resolve("KotlinLanguageServer")?.let {
-                    it.resolve("classpath.sh").takeIf { Files.exists(it) } ?:
-                    it.resolve("classpath.bat").takeIf { Files.exists(it) } ?:
-                    it.resolve("classpath.cmd").takeIf { Files.exists(it) }
+            globalConfigRoot.resolve("KotlinLanguageServer")
+                ?.let { root ->
+                    scriptExtensions
+                        .map { root.resolve("classpath.$it") }
+                        .first { Files.exists(it) }
                 }
                 ?.let { ShellClassPathResolver(it, workingDir) }
                 ?: ClassPathResolver.empty
