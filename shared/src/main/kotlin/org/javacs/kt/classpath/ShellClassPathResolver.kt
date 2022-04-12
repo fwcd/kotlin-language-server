@@ -46,7 +46,7 @@ internal class ShellClassPathResolver(
                 ?.let { root ->
                     scriptExtensions
                         .map { root.resolve("classpath.$it") }
-                        .first { Files.exists(it) }
+                        .firstOrNull { Files.exists(it) }
                 }
                 ?.let { ShellClassPathResolver(it, workingDir) }
                 ?: ClassPathResolver.empty
