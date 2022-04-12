@@ -6,14 +6,14 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-fun execAndReadStdout(shellCommand: String, directory: Path): String {
-    val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
+fun execAndReadStdout(shellCommand: List<String>, directory: Path): String {
+    val process = ProcessBuilder(shellCommand).directory(directory.toFile()).start()
     val stdout = process.inputStream
     return stdout.bufferedReader().use { it.readText() }
 }
 
-fun execAndReadStdoutAndStderr(shellCommand: String, directory: Path): Pair<String, String> {
-    val process = Runtime.getRuntime().exec(shellCommand, null, directory.toFile())
+fun execAndReadStdoutAndStderr(shellCommand: List<String>, directory: Path): Pair<String, String> {
+    val process = ProcessBuilder(shellCommand).directory(directory.toFile()).start()
     val stdout = process.inputStream
     val stderr = process.errorStream
     var output = ""

@@ -104,19 +104,19 @@ private fun mavenJarName(a: Artifact, source: Boolean) =
 
 private fun generateMavenDependencyList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("deps", ".txt")
-    val command = "${mvnCommand(pom)} dependency:list -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
+    val command = listOf(mvnCommand(pom).toString(), "dependency:list", "-DincludeScope=test", "-DoutputFile=$mavenOutput", "-Dstyle.color=never")
     runCommand(pom, command)
     return mavenOutput
 }
 
 private fun generateMavenDependencySourcesList(pom: Path): Path {
     val mavenOutput = Files.createTempFile("sources", ".txt")
-    val command = "${mvnCommand(pom)} dependency:sources -DincludeScope=test -DoutputFile=$mavenOutput -Dstyle.color=never"
+    val command = listOf(mvnCommand(pom).toString(), "dependency:sources", "-DincludeScope=test", "-DoutputFile=$mavenOutput", "-Dstyle.color=never")
     runCommand(pom, command)
     return mavenOutput
 }
 
-private fun runCommand(pom: Path, command: String) {
+private fun runCommand(pom: Path, command: List<String>) {
     val workingDirectory = pom.toAbsolutePath().parent
     LOG.info("Run {} in {}", command, workingDirectory)
     val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory)
