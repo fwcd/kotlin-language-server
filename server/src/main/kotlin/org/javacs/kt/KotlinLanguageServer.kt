@@ -108,7 +108,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         folders.forEachIndexed { i, folder ->
             LOG.info("Adding workspace folder {}", folder.name)
-            val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name}"
+            val progressPrefix = "[${i + 1}/${folders.size}] ${folder.name ?: ""}"
             val progressPercent = (100 * i) / folders.size
 
             progress?.update("$progressPrefix: Updating source path", progressPercent)
@@ -122,6 +122,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
                 sourcePath.refresh()
             }
         }
+		progress?.close()
 
         textDocuments.lintAll()
 
