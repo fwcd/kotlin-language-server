@@ -122,7 +122,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
                 sourcePath.refresh()
             }
         }
-		progress?.close()
+        progress?.close()
 
         textDocuments.lintAll()
 
