@@ -13,7 +13,6 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
-import java.lang.Exception
 import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths

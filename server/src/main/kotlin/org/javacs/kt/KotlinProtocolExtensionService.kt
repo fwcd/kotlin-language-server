@@ -15,7 +15,7 @@ class KotlinProtocolExtensionService(
         uriContentProvider.contentOf(parseURI(textDocument.uri))
     }
 
-    override fun getBuildOutputLocation(): CompletableFuture<String?> = async.compute {
+    override fun buildOutputLocation(): CompletableFuture<String?> = async.compute {
         cp.outputDirectory.absolutePath
     }
 }

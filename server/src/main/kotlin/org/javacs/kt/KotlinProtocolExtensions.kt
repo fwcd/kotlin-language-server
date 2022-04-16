@@ -11,5 +11,5 @@ interface KotlinProtocolExtensions {
     fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?>
 
     @JsonRequest
-    fun getBuildOutputLocation(): CompletableFuture<String?>
+    fun buildOutputLocation(): CompletableFuture<String?>
 }
