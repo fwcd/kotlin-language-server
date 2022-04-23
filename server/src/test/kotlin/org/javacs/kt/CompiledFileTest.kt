@@ -2,21 +2,30 @@ package org.javacs.kt
 
 import org.hamcrest.Matchers.equalTo
 import org.javacs.kt.compiler.Compiler
+import org.junit.AfterClass
 import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.BeforeClass
+import java.io.File
 import java.nio.file.Files
 
 class CompiledFileTest {
     val compiledFile = compileFile()
 
     companion object {
-        @JvmStatic @BeforeClass fun setupLogger() {
+        lateinit var outputDirectory: File
+
+        @JvmStatic @BeforeClass fun setup() {
             LOG.connectStdioBackend()
+            outputDirectory = Files.createTempDirectory("klsBuildOutput").toFile()
+        }
+
+        @JvmStatic @AfterClass fun tearDown() {
+            outputDirectory.delete()
         }
     }
 
-    fun compileFile(): CompiledFile = Compiler(setOf(), setOf()).use { compiler ->
+    fun compileFile(): CompiledFile = Compiler(setOf(), setOf(), outputDirectory = outputDirectory).use { compiler ->
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createKtFile(content, file)

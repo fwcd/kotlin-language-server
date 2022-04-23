@@ -5,7 +5,9 @@ import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
+import java.io.File
 import java.nio.file.FileSystems
+import java.nio.file.Files
 import java.nio.file.Path
 
 /**
@@ -17,9 +19,10 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val javaSourcePath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
     val classPath = mutableSetOf<ClassPathEntry>()
+    val outputDirectory: File = Files.createTempDirectory("klsBuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
 
-    var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
+    var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
         private set
 
     private val async = AsyncExecutor()
@@ -67,7 +70,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         if (refreshCompiler) {
             LOG.info("Reinstantiating compiler")
             compiler.close()
-            compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath)
+            compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
             updateCompilerConfiguration()
         }
 
@@ -138,6 +141,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
     override fun close() {
         compiler.close()
+        outputDirectory.delete()
     }
 }
 

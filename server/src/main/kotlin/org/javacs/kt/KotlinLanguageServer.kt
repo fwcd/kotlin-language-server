@@ -30,7 +30,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider)
+    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath)
 
     private lateinit var client: LanguageClient
 

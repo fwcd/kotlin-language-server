@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.container.ComponentProvider
 import org.jetbrains.kotlin.container.get
@@ -22,6 +23,8 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.BindingTraceContext
 import org.jetbrains.kotlin.resolve.LazyTopDownAnalyzer
 import org.jetbrains.kotlin.resolve.TopDownAnalysisMode
+import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
+import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.lazy.declarations.FileBasedDeclarationProviderFactory
 import org.jetbrains.kotlin.scripting.compiler.plugin.ScriptingCompilerConfigurationComponentRegistrar
 import org.jetbrains.kotlin.scripting.compiler.plugin.definitions.CliScriptDefinitionProvider
@@ -32,6 +35,9 @@ import org.jetbrains.kotlin.scripting.definitions.KotlinScriptDefinition // Lega
 import org.jetbrains.kotlin.scripting.definitions.findScriptDefinition
 import org.jetbrains.kotlin.scripting.definitions.getEnvironment
 import org.jetbrains.kotlin.scripting.resolve.KotlinScriptDefinitionFromAnnotatedTemplate
+import org.jetbrains.kotlin.types.TypeUtils
+import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
+import org.jetbrains.kotlin.util.KotlinFrontEndException
 import java.io.Closeable
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -51,19 +57,19 @@ import org.javacs.kt.LOG
 import org.javacs.kt.CompilerConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
+import org.jetbrains.kotlin.cli.common.output.writeAllTo
+import org.jetbrains.kotlin.codegen.ClassBuilderFactories
+import org.jetbrains.kotlin.codegen.KotlinCodegenFacade
+import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.container.getService
+import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.config.*
-import org.jetbrains.kotlin.container.getService
-import org.jetbrains.kotlin.descriptors.ModuleDescriptor
-import org.jetbrains.kotlin.resolve.calls.components.InferenceSession
-import org.jetbrains.kotlin.resolve.calls.smartcasts.DataFlowInfo
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
-import org.jetbrains.kotlin.types.TypeUtils
-import org.jetbrains.kotlin.types.expressions.ExpressionTypingServices
-import org.jetbrains.kotlin.util.KotlinFrontEndException
+import java.io.File
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
 
@@ -429,7 +435,7 @@ enum class CompilationKind {
  * Incrementally compiles files and expressions.
  * The basic strategy for compiling one file at-a-time is outlined in OneFilePerformance.
  */
-class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet()) : Closeable {
+class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClassPath: Set<Path> = emptySet(), private val outputDirectory: File) : Closeable {
     private var closed = false
     private val localFileSystem: VirtualFileSystem
 
@@ -536,6 +542,34 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
             }
         } catch (e: KotlinFrontEndException) {
             throw KotlinLSException("Error while analyzing: ${describeExpression(expression.text)}", e)
+        }
+    }
+
+    fun removeGeneratedCode(files: Collection<KtFile>) {
+        files.forEach { file ->
+            file.declarations.forEach { declaration ->
+                outputDirectory.resolve(
+                    file.packageFqName.asString().replace(".", File.separator) + File.separator + declaration.name + ".class"
+                ).delete()
+            }
+        }
+    }
+
+    fun generateCode(module: ModuleDescriptor, bindingContext: BindingContext, files: Collection<KtFile>) {
+        outputDirectory.let {
+            compileLock.withLock {
+                val compileEnv = compileEnvironmentFor(CompilationKind.DEFAULT)
+                val state = GenerationState.Builder(
+                    project = compileEnv.environment.project,
+                    builderFactory = ClassBuilderFactories.BINARIES,
+                    module = module,
+                    bindingContext = bindingContext,
+                    files = files.toList(),
+                    configuration = compileEnv.environment.configuration
+                ).build()
+                KotlinCodegenFacade.compileCorrectFiles(state)
+                state.factory.writeAllTo(it)
+            }
         }
     }
 

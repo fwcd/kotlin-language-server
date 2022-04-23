@@ -10,11 +10,12 @@ import org.javacs.kt.compiler.Compiler
 import org.junit.Assert.assertThat
 import org.junit.Test
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.BeforeClass
+import java.io.File
 import java.nio.file.Files
 
 class CompilerTest {
-    val compiler = Compiler(setOf(), setOf())
     val myTestResources = testResourcesRoot().resolve("compiler")
     val file = myTestResources.resolve("FileToEdit.kt")
     val editedText = """
@@ -23,8 +24,18 @@ private class FileToEdit {
 }"""
 
     companion object {
-        @JvmStatic @BeforeClass fun setupLogger() {
+        lateinit var outputDirectory: File
+        lateinit var compiler: Compiler
+
+        @JvmStatic @BeforeClass fun setup() {
             LOG.connectStdioBackend()
+            outputDirectory = Files.createTempDirectory("klsBuildOutput").toFile()
+            compiler = Compiler(setOf(), setOf(), outputDirectory = outputDirectory)
+        }
+
+        @JvmStatic @AfterClass
+        fun tearDown() {
+            outputDirectory.delete()
         }
     }
 
