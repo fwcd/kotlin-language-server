@@ -4,8 +4,6 @@ import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import java.util.concurrent.Executors
 import org.eclipse.lsp4j.launch.LSPLauncher
-import org.eclipse.lsp4j.ConfigurationParams
-import org.eclipse.lsp4j.ConfigurationItem
 import org.javacs.kt.util.ExitingInputStream
 import org.javacs.kt.util.tcpStartServer
 import org.javacs.kt.util.tcpConnectToClient
@@ -43,7 +41,7 @@ fun main(argv: Array<String>) {
 
     val server = KotlinLanguageServer()
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }
-    val launcher = LSPLauncher.createServerLauncher(server, ExitingInputStream(inStream), outStream, threads, { it })
+    val launcher = LSPLauncher.createServerLauncher(server, ExitingInputStream(inStream), outStream, threads) { it }
 
     server.connect(launcher.remoteProxy)
     launcher.startListening()

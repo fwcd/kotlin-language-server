@@ -117,22 +117,18 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        progressFactory.create("Indexing").thenApplyAsync { progress ->
-            try {
-                transaction(db) {
-                    removeDeclarations(remove)
-                    addDeclarations(add)
+        try {
+            transaction(db) {
+                removeDeclarations(remove)
+                addDeclarations(add)
 
-                    val finished = System.currentTimeMillis()
-                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
-                    LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
-                }
-            } catch (e: Exception) {
-                LOG.error("Error while updating symbol index")
-                LOG.printStackTrace(e)
+                val finished = System.currentTimeMillis()
+                val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
             }
-
-            progress.close()
+        } catch (e: Exception) {
+            LOG.error("Error while updating symbol index")
+            LOG.printStackTrace(e)
         }
     }
 

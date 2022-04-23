@@ -1,4 +1,5 @@
 # Kotlin Language Server
+
 [![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Build](https://github.com/fwcd/kotlin-language-server/actions/workflows/build.yml/badge.svg)](https://github.com/fwcd/kotlin-language-server/actions/workflows/build.yml)
 [![Downloads](https://img.shields.io/github/downloads/fwcd/kotlin-language-server/total)](https://github.com/fwcd/kotlin-language-server/releases)
@@ -11,6 +12,7 @@ A [language server](https://microsoft.github.io/language-server-protocol/) that 
 Any editor conforming to LSP is supported, including [VSCode](https://github.com/fwcd/vscode-kotlin) and [Atom](https://github.com/fwcd/atom-ide-kotlin).
 
 ## Getting Started
+
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](EDITORS.md) for editor-specific instructions
 * See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
@@ -19,6 +21,7 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
 ## This repository needs your help!
+
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
 
 There are two hard parts of implementing a language server:
@@ -27,7 +30,23 @@ There are two hard parts of implementing a language server:
 
 The project uses the internal APIs of the [Kotlin compiler](https://github.com/JetBrains/kotlin/tree/master/compiler).
 
-Dependencies are determined by the [findClassPath](server/src/main/kotlin/org/javacs/kt/classpath/findClassPath.kt) function, which invokes Maven or Gradle and tells it to output a list of dependencies. Currently, both Maven and Gradle projects are supported.
+### Figuring out the dependencies
+
+Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven or Gradle to get a list of classpath JARs. Alternatively, projects can also 'manually' provide a list of dependencies through a shell script, located either at `[project root]/kotlinLspClasspath.{sh,bat,cmd}` or `[config root]/KotlinLanguageServer/classpath.{sh,bat,cmd}`, which outputs a list of JARs.
+
+* Example of the `~/.config/KotlinLanguageServer/classpath.sh` on Linux:
+```bash
+#!/bin/bash
+echo /my/path/kotlin-compiler-1.4.10/lib/kotlin-stdlib.jar:/my/path/my-lib.jar
+```
+
+* Example of the `%HOMEPATH%\.config\KotlinLanguageServer\classpath.bat` on Windows:
+```cmd
+@echo off
+echo C:\my\path\kotlin-compiler-1.4.10\lib\kotlin-stdlib.jar;C:\my\path\my-lib.jar
+```
+
+### Incrementally re-compiling as the user types
 
 I get incremental compilation at the file-level by keeping the same `KotlinCoreEnvironment` alive between compilations in [Compiler.kt](server/src/main/kotlin/org/javacs/kt/compiler/Compiler.kt). There is a performance benchmark in [OneFilePerformance.kt](server/src/test/kotlin/org/javacs/kt/OneFilePerformance.kt) that verifies this works.
 

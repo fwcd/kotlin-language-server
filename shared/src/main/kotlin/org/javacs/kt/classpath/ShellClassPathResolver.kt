@@ -1,5 +1,6 @@
 package org.javacs.kt.classpath
 
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -16,10 +17,10 @@ internal class ShellClassPathResolver(
         val workingDirectory = workingDir?.toFile() ?: script.toAbsolutePath().parent.toFile()
         val cmd = script.toString()
         LOG.info("Run {} in {}", cmd, workingDirectory)
-        val process = Runtime.getRuntime().exec(cmd, null, workingDirectory)
+        val process = ProcessBuilder(cmd).directory(workingDirectory).start()
 
         return process.inputStream.bufferedReader().readText()
-            .split(':')
+            .split(File.pathSeparator)
             .asSequence()
             .map { it.trim() }
             .filter { it.isNotEmpty() }
@@ -28,9 +29,12 @@ internal class ShellClassPathResolver(
     }
 
     companion object {
+        private val scriptExtensions = listOf("sh", "bat", "cmd")
+
         /** Create a shell resolver if a file is a pom. */
         fun maybeCreate(file: Path): ShellClassPathResolver? =
-            file.takeIf { it.endsWith("kotlinLspClasspath.sh") }?.let { ShellClassPathResolver(it) }
+            file.takeIf { scriptExtensions.any { file.endsWith("kotlinLspClasspath.$it") } }
+                ?.let { ShellClassPathResolver(it) }
 
         /** The root directory for config files. */
         private val globalConfigRoot: Path =
@@ -38,8 +42,12 @@ internal class ShellClassPathResolver(
 
         /** Returns the ShellClassPathResolver for the global home directory shell script. */
         fun global(workingDir: Path?): ClassPathResolver =
-            globalConfigRoot.resolve("KotlinLanguageServer").resolve("classpath.sh")
-                .takeIf { Files.exists(it) }
+            globalConfigRoot.resolve("KotlinLanguageServer")
+                ?.let { root ->
+                    scriptExtensions
+                        .map { root.resolve("classpath.$it") }
+                        .firstOrNull { Files.exists(it) }
+                }
                 ?.let { ShellClassPathResolver(it, workingDir) }
                 ?: ClassPathResolver.empty
     }
