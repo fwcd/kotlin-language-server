@@ -8,8 +8,6 @@ import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.progress.Progress
 import com.intellij.lang.Language
-import org.jetbrains.kotlin.container.ComponentProvider
-import org.jetbrains.kotlin.container.getService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -48,9 +46,10 @@ class SourcePath(
         var parsed: KtFile? = null,
         var compiledFile: KtFile? = null,
         var compiledContext: BindingContext? = null,
-        var compiledContainer: ComponentProvider? = null,
+        var module: ModuleDescriptor? = null,
         val language: Language? = null,
-        val isTemporary: Boolean = false // A temporary source file will not be returned by .all()
+        val isTemporary: Boolean = false, // A temporary source file will not be returned by .all()
+        var lastSavedFile: KtFile? = null,
     ) {
         val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
@@ -66,7 +65,7 @@ class SourcePath(
             parsed = null
             compiledFile = null
             compiledContext = null
-            compiledContainer = null
+            module = null
         }
 
         fun parse() {
@@ -97,10 +96,10 @@ class SourcePath(
 
             val oldFile = clone()
 
-            val (context, container) = cp.compiler.compileKtFile(parsed!!, allIncludingThis(), kind)
+            val (context, module) = cp.compiler.compileKtFile(parsed!!, allIncludingThis(), kind)
             parseDataWriteLock.withLock {
                 compiledContext = context
-                compiledContainer = container
+                this.module = module
                 compiledFile = parsed
             }
 
@@ -117,7 +116,7 @@ class SourcePath(
                 parseIfChanged().apply { compileIfNull() }.let { doPrepareCompiledFile() }
 
         private fun doPrepareCompiledFile(): CompiledFile =
-                CompiledFile(content, compiledFile!!, compiledContext!!, compiledContainer!!, allIncludingThis(), cp, isScript, kind)
+                CompiledFile(content, compiledFile!!, compiledContext!!, module!!, allIncludingThis(), cp, isScript, kind)
 
         private fun allIncludingThis(): Collection<KtFile> = parseIfChanged().let {
             if (isTemporary) (all().asSequence() + sequenceOf(parsed!!)).toList()
@@ -125,7 +124,7 @@ class SourcePath(
         }
 
         // Creates a shallow copy
-        fun clone(): SourceFile = SourceFile(uri, content, path, parsed, compiledFile, compiledContext, compiledContainer, language, isTemporary)
+        fun clone(): SourceFile = SourceFile(uri, content, path, parsed, compiledFile, compiledContext, module, language, isTemporary)
     }
 
     private fun sourceFile(uri: URI): SourceFile {
@@ -162,7 +161,10 @@ class SourcePath(
         }
 
     fun delete(uri: URI) {
-        files[uri]?.let { refreshWorkspaceIndexes(listOf(it), listOf()) }
+        files[uri]?.let {
+            refreshWorkspaceIndexes(listOf(it), listOf())
+            cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
+        }
 
         files.remove(uri)
     }
@@ -214,7 +216,7 @@ class SourcePath(
             // Get all the files. This will parse them if they changed
             val allFiles = all()
             beforeCompileCallback.invoke()
-            val (context, container) = cp.compiler.compileKtFiles(parse.values, allFiles, kind)
+            val (context, module) = cp.compiler.compileKtFiles(parse.values, allFiles, kind)
 
             // Update cache
             for ((f, parsed) in parse) {
@@ -223,7 +225,7 @@ class SourcePath(
                         //only updated if the parsed file didn't change:
                         f.compiledFile = parsed
                         f.compiledContext = context
-                        f.compiledContainer = container
+                        f.module = module
                     }
                 }
             }
@@ -250,16 +252,47 @@ class SourcePath(
         // TODO: Investigate the possibility of compiling all files at once, instead of iterating here
         // At the moment, compiling all files at once sometimes leads to an internal error from the TopDownAnalyzer
         files.keys.forEach {
-            compileFiles(listOf(it))
+            // If one of the files fails to compile, we compile the others anyway
+            try {
+                compileFiles(listOf(it))
+            } catch (ex: Exception) {
+                LOG.printStackTrace(ex)
+            }
         }
+    }
+
+    /**
+     * Saves a file. This generates code for the file and deletes previously generated code for this file.
+     */
+    fun save(uri: URI) {
+        files[uri]?.let {
+            if (!it.isScript) {
+                // If the code generation fails for some reason, we generate code for the other files anyway
+                try {
+                    cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
+                    it.module?.let { module ->
+                        it.compiledContext?.let { context ->
+                            cp.compiler.generateCode(module, context, listOfNotNull(it.compiledFile))
+                            it.lastSavedFile = it.compiledFile
+                        }
+                    }
+                } catch (ex: Exception) {
+                    LOG.printStackTrace(ex)
+                }
+            }
+        }
+    }
+
+    fun saveAllFiles() {
+        files.keys.forEach { save(it) }
     }
 
     fun refreshDependencyIndexes() {
         compileAllFiles()
 
-        val container = files.values.first { it.compiledContainer != null }.compiledContainer
-        if (container != null) {
-            refreshDependencyIndexes(container)
+        val module = files.values.first { it.module != null }.module
+        if (module != null) {
+            refreshDependencyIndexes(module)
         }
     }
 
@@ -279,9 +312,8 @@ class SourcePath(
     /**
      * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
      */
-    private fun refreshDependencyIndexes(container: ComponentProvider) = indexAsync.execute {
+    private fun refreshDependencyIndexes(module: ModuleDescriptor) = indexAsync.execute {
         if (indexEnabled) {
-            val module = container.getService(ModuleDescriptor::class.java)
             val declarations = getDeclarationDescriptors(files.values)
             index.refresh(module, declarations)
         }
@@ -291,9 +323,8 @@ class SourcePath(
     private fun getDeclarationDescriptors(files: Collection<SourceFile>) =
         files.flatMap { file ->
             val compiledFile = file.compiledFile ?: file.parsed
-            val compiledContainer = file.compiledContainer
-            if (compiledFile != null && compiledContainer != null) {
-                val module = compiledContainer.getService(ModuleDescriptor::class.java)
+            val module = file.module
+            if (compiledFile != null && module != null) {
                 module.getPackage(compiledFile.packageFqName).memberScope.getContributedDescriptors(
                     DescriptorKindFilter.ALL
                 ) { name -> compiledFile.declarations.map { it.name }.contains(name.toString()) }

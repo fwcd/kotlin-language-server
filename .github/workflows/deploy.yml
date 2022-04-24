@@ -7,13 +7,15 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: github.repository == 'fwcd/kotlin-language-server'
     steps:
       - uses: actions/checkout@v3
       - name: Setup JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
+      - uses: gradle/gradle-build-action@v2
       - name: Build distribution
         run: ./gradlew :server:distZip :grammars:distZip
       - name: Create release

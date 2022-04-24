@@ -117,22 +117,18 @@ class SymbolIndex {
         val started = System.currentTimeMillis()
         LOG.info("Updating symbol index...")
 
-        progressFactory.create("Indexing").thenApplyAsync { progress ->
-            try {
-                transaction(db) {
-                    removeDeclarations(remove)
-                    addDeclarations(add)
+        try {
+            transaction(db) {
+                removeDeclarations(remove)
+                addDeclarations(add)
 
-                    val finished = System.currentTimeMillis()
-                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
-                    LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
-                }
-            } catch (e: Exception) {
-                LOG.error("Error while updating symbol index")
-                LOG.printStackTrace(e)
+                val finished = System.currentTimeMillis()
+                val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
             }
-
-            progress.close()
+        } catch (e: Exception) {
+            LOG.error("Error while updating symbol index")
+            LOG.printStackTrace(e)
         }
     }
 
@@ -177,11 +173,11 @@ class SymbolIndex {
         fqName.toString().length <= MAX_FQNAME_LENGTH
             && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
-    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20): List<Symbol> = transaction(db) {
+    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> = transaction(db) {
         // TODO: Extension completion currently only works if the receiver matches exactly,
         //       ideally this should work with subtypes as well
         SymbolEntity.find {
-            (Symbols.shortName like "$prefix%") and (Symbols.extensionReceiverType eq receiverType?.toString())
+            (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
         }.limit(limit)
             .map { Symbol(
                 fqName = FqName(it.fqName),

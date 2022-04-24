@@ -9,4 +9,7 @@ import java.util.concurrent.CompletableFuture
 interface KotlinProtocolExtensions {
     @JsonRequest
     fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?>
+
+    @JsonRequest
+    fun buildOutputLocation(): CompletableFuture<String?>
 }

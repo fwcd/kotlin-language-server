@@ -4,10 +4,10 @@ import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.Range
 import java.nio.file.Path
 import org.javacs.kt.CompiledFile
+import org.javacs.kt.CompilerClassPath
 import org.javacs.kt.LOG
 import org.javacs.kt.ExternalSourcesConfiguration
-import org.javacs.kt.classpath.ClassPathEntry
-import org.javacs.kt.externalsources.JarClassContentProvider
+import org.javacs.kt.externalsources.ClassContentProvider
 import org.javacs.kt.externalsources.toKlsURI
 import org.javacs.kt.externalsources.KlsURI
 import org.javacs.kt.position.location
@@ -19,6 +19,8 @@ import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
+import java.io.File
+import java.nio.file.Paths
 
 private val cachedTempFiles = mutableMapOf<KlsURI, Path>()
 private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)")
@@ -26,11 +28,12 @@ private val definitionPattern = Regex("(?:class|interface|object|fun)\\s+(\\w+)"
 fun goToDefinition(
     file: CompiledFile,
     cursor: Int,
-    jarClassContentProvider: JarClassContentProvider,
+    classContentProvider: ClassContentProvider,
     tempDir: TemporaryDirectory,
-    config: ExternalSourcesConfiguration
+    config: ExternalSourcesConfiguration,
+    cp: CompilerClassPath
 ): Location? {
-    val (_, target) = file.referenceAtPoint(cursor) ?: return null
+    val (_, target) = file.referenceExpressionAtPoint(cursor) ?: return null
 
     LOG.info("Found declaration descriptor {}", target)
     var destination = location(target)
@@ -43,9 +46,9 @@ fun goToDefinition(
     if (destination != null) {
         val rawClassURI = destination.uri
 
-        if (isInsideJar(rawClassURI)) {
+        if (isInsideArchive(rawClassURI, cp)) {
             parseURI(rawClassURI).toKlsURI()?.let { klsURI ->
-                val (klsSourceURI, content) = jarClassContentProvider.contentOf(klsURI)
+                val (klsSourceURI, content) = classContentProvider.contentOf(klsURI)
 
                 if (config.useKlsScheme) {
                     // Defer decompilation until a jarClassContents request is sent
@@ -87,4 +90,7 @@ fun goToDefinition(
     return destination
 }
 
-private fun isInsideJar(uri: String) = uri.contains(".jar!")
+private fun isInsideArchive(uri: String, cp: CompilerClassPath) =
+    uri.contains(".jar!") || uri.contains(".zip!") || cp.javaHome?.let {
+        Paths.get(parseURI(uri)).toString().startsWith(File(it).path)
+    } ?: false
