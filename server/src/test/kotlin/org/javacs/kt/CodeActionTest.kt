@@ -7,8 +7,7 @@ import org.junit.Assert.assertThat
 import org.junit.Assert.fail
 import org.hamcrest.Matchers.*
 
-// TODO: naming
-class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("codeactions", "samefile.kt") {
+class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("codeactions", "implementabstract_samefile.kt") {
 
     @Test
     fun `should find no code actions`() {
@@ -69,10 +68,54 @@ class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("code
         assertThat(secondFunctionToImplementEdit?.range, equalTo(range(15, 49, 15, 49)))
         assertThat(secondFunctionToImplementEdit?.newText, equalTo("\n\n    override fun test(input: String, otherInput: Int) { }"))
     }
+
+    @Test
+    fun `should find only one abstract method when the other one is already implemented`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 17, 1, 17, 26, diagnostics, only)
+    
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(1))
+        
+        val functionToImplementEdit = textEdit[key]?.get(0)
+        assertThat(functionToImplementEdit?.range, equalTo(range(18, 57, 18, 57)))
+        assertThat(functionToImplementEdit?.newText, equalTo("\n\n    override fun print() { }"))
+    }
+
+    @Test
+    fun `should respect nullability of parameter and return value in abstract method`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 25, 1, 25, 16, diagnostics, only)
+    
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(1))
+
+        val functionToImplementEdit = textEdit[key]?.get(0)
+        assertThat(functionToImplementEdit?.range, equalTo(range(25, 48, 25, 48)))
+        assertThat(functionToImplementEdit?.newText, equalTo("\n\n    override fun myMethod(myStr: String?): String? { }"))
+    }
 }
 
-
-// TODO: naming
 class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixture("codeactions", "implementabstract_standardlib.kt") {
     @Test
     fun `should find one abstract method from Runnable to implement`() {
@@ -120,5 +163,3 @@ class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixtur
         assertThat(functionToImplementEdit?.newText, equalTo("\n\n    override fun compare(p0: String, p1: String): Int { }"))
     }
 }
-
-// TODO: should we have tests for one method already being in place? and then trying to implement the rest?

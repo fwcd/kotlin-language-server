@@ -13,3 +13,13 @@ abstract class CanPrint {
 }
 
 class PrintableClass : CanPrint(), MyInterface {}
+
+class OtherPrintableClass : CanPrint(), MyInterface {
+    override fun test(input: String, otherInput: Int) {}
+}
+
+interface NullMethodAndReturn<T> {
+	fun myMethod(myStr: T?): T?
+}
+
+class NullClass : NullMethodAndReturn<String> {}

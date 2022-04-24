@@ -6,8 +6,11 @@ import org.javacs.kt.CompiledFile
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
+import org.javacs.kt.LOG
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
 import org.jetbrains.kotlin.descriptors.Modality
@@ -16,8 +19,10 @@ import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtSimpleNameExpression
 import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
 import org.jetbrains.kotlin.psi.KtTypeArgumentList
+import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.isAbstract
@@ -36,6 +41,8 @@ class ImplementAbstractFunctionsQuickFix : QuickFix {
         val endCursor = offset(file.content, range.end)
         val kotlinDiagnostics = file.compile.diagnostics
 
+        //LOG.info("start: {}, end: {}, range {}, diagnostics {}", startCursor, endCursor, range, diagnostics)
+        
         // If the client side and the server side diagnostics contain a valid diagnostic for this range.
         if (diagnostic != null && anyDiagnosticMatch(kotlinDiagnostics, startCursor, endCursor)) {
             // Get the class with the missing functions
@@ -80,24 +87,15 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
         // Find the definition of this super type
         val referenceAtPoint = file.referenceExpressionAtPoint(it.startOffset)
         val descriptor = referenceAtPoint?.second
-        val superClass = descriptor?.findPsi()
 
-        val classDescriptor = descriptor as? ClassDescriptor
-        val superClassTypeArguments = getSuperClassTypeArguments(file, it)        
+        val classDescriptor = getClassDescriptor(descriptor)
+        val superClassTypeArguments = getSuperClassTypeArguments(file, it)
         
         // If the super class is abstract or an interface
-        if (superClass is KtClass && (superClass.isAbstract() || superClass.isInterface())) {
-            // Get the abstract functions of this super type that are currently not implemented by this class
-            val abstractFunctions = superClass.declarations.filter {
-                declaration -> isAbstractFunction(declaration) && !overridesDeclaration(kotlinClass, declaration)
-            }
-            // Get stubs for each function
-            abstractFunctions.map { function -> getFunctionStub(function as KtNamedFunction) }
-        } else if(null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
-            // TODO: refactor and prettify
+        if(null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
-                classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)
-            }.map { function ->        
+               classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)
+            }.map { function ->
                 createFunctionStub(function as FunctionDescriptor)
             }
         } else {
@@ -106,6 +104,16 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
     }.flatten()
 
 // TODO: better name?
+// interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor    
+private fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? = if(descriptor is ClassDescriptor) {
+    descriptor
+} else if(descriptor is ClassConstructorDescriptor) {
+    descriptor.containingDeclaration
+} else {
+    null
+}
+    
+// TODO: better name?
 private fun getSuperClassTypeArguments(file: CompiledFile, superType: KtSuperTypeListEntry): List<TypeProjection> = superType.typeReference?.typeElement?.children?.filter {
     it is KtTypeArgumentList
 }?.flatMap {
@@ -113,25 +121,8 @@ private fun getSuperClassTypeArguments(file: CompiledFile, superType: KtSuperTyp
 }?.mapNotNull {
     (file.referenceExpressionAtPoint(it?.startOffset ?: 0)?.second as? ClassDescriptor)?.defaultType?.asTypeProjection()
 } ?: emptyList()
-    
-private fun isAbstractFunction(declaration: KtDeclaration): Boolean =
-    declaration is KtNamedFunction && !declaration.hasBody()
-        && (declaration.containingClass()?.isInterface() ?: false || declaration.hasModifier(KtTokens.ABSTRACT_KEYWORD))
 
 // Checks if the class overrides the given declaration
-private fun overridesDeclaration(kotlinClass: KtClass, declaration: KtDeclaration): Boolean =
-    kotlinClass.declarations.any {
-        if (it.name == declaration.name && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)) {
-            if (it is KtNamedFunction && declaration is KtNamedFunction) {
-                parametersMatch(it, declaration)
-            } else {
-                true
-            }
-        } else {
-            false
-        }
-    }
-
 private fun overridesDeclaration(kotlinClass: KtClass, descriptor: FunctionDescriptor): Boolean =
     kotlinClass.declarations.any {
         if (it.name == descriptor.name.asString() && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)) {
@@ -146,37 +137,13 @@ private fun overridesDeclaration(kotlinClass: KtClass, descriptor: FunctionDescr
     }
 
 // Checks if two functions have matching parameters
-private fun parametersMatch(function: KtNamedFunction, functionDeclaration: KtNamedFunction): Boolean {
-    if (function.valueParameters.size == functionDeclaration.valueParameters.size) {
-        for (index in 0 until function.valueParameters.size) {
-            if (function.valueParameters[index].name != functionDeclaration.valueParameters[index].name) {
-                return false
-            } else if (function.valueParameters[index].typeReference?.name != functionDeclaration.valueParameters[index].typeReference?.name) {
-                return false
-            }
-        }
-
-        if (function.typeParameters.size == functionDeclaration.typeParameters.size) {
-            for (index in 0 until function.typeParameters.size) {
-                if (function.typeParameters[index].variance != functionDeclaration.typeParameters[index].variance) {
-                    return false
-                }
-            }
-        }
-
-        return true
-    }
-
-    return false
-}
-
 private fun parametersMatch(function: KtNamedFunction, functionDescriptor: FunctionDescriptor): Boolean {
     if (function.valueParameters.size == functionDescriptor.valueParameters.size) {
         for (index in 0 until function.valueParameters.size) {
             if (function.valueParameters[index].name != functionDescriptor.valueParameters[index].name.asString()) {
                 return false
-            } else if (function.valueParameters[index].typeReference?.name != functionDescriptor.valueParameters[index].type.toString()) {
-                // TODO: here we have exactly the old issue of type as above
+            } else if (getTypeNameFromTypeReference(function.valueParameters[index].typeReference) != functionDescriptor.valueParameters[index].type.toString()) {
+                // TODO: here we have exactly the old issue of type as above. Maybe a common method that can be called to get the correct one? or do we maybe have to check both null and not null types here?
                 return false
             }
         }
@@ -195,20 +162,25 @@ private fun parametersMatch(function: KtNamedFunction, functionDescriptor: Funct
     return false
 }
 
-private fun getFunctionStub(function: KtNamedFunction): String =
-    "override fun" + function.text.substringAfter("fun") + " { }"
+// typeReference.name is often null. This fetches the name directly from the KtSimpleNameExpression instead
+private fun getTypeNameFromTypeReference(typeReference: KtTypeReference?): String? = typeReference?.typeElement?.children?.filter {
+    it is KtSimpleNameExpression
+}?.map {
+    (it as KtSimpleNameExpression).getReferencedName()
+}?.get(0)
 
 private fun createFunctionStub(function: FunctionDescriptor): String {
     // TODO: clean
     val name = function.name
     val arguments = function.valueParameters.map { argument ->
         val argumentName = argument.name
-        // TODO: how to check if we actually should unwrap and make non-nullable?
-        val argumentType = argument.type.unwrap().makeNullableAsSpecified(false)
+        // about argument.type: regular Kotlin types are marked T or T?, but types from Java are (T..T?) because nullability cannot be decided.
+        // Therefore we have to unpack in case we have the Java type. Fortunately, the Java types are not marked nullable, so we default to non nullable types. Let the user decide if they want nullable types instead. With this implementation Kotlin types also keeps their nullability
+        val argumentType = argument.type.unwrap().makeNullableAsSpecified(argument.type.isMarkedNullable)
                     
         "$argumentName: $argumentType"
     }.joinToString(", ")
-    val returnType = function.returnType?.toString()
+    val returnType = function.returnType?.unwrap()?.makeNullableAsSpecified(function.returnType?.isMarkedNullable ?: false)?.toString()
     
     return "override fun $name($arguments)${returnType?.takeIf { "Unit" != it }?.let { ": $it" } ?: ""} { }"
 }
