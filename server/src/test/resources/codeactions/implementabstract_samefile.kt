@@ -19,7 +19,7 @@ class OtherPrintableClass : CanPrint(), MyInterface {
 }
 
 interface NullMethodAndReturn<T> {
-	fun myMethod(myStr: T?): T?
+    fun myMethod(myStr: T?): T?
 }
 
 class NullClass : NullMethodAndReturn<String> {}

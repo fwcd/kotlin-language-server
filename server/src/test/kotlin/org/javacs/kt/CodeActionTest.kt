@@ -4,8 +4,8 @@ import org.eclipse.lsp4j.*
 import org.javacs.kt.SingleFileTestFixture
 import org.junit.Test
 import org.junit.Assert.assertThat
-import org.junit.Assert.fail
-import org.hamcrest.Matchers.*
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasSize
 
 class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("codeactions", "implementabstract_samefile.kt") {
 
@@ -53,7 +53,6 @@ class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("code
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
         assertThat(codeAction.title, equalTo("Implement abstract functions"))
-        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -80,7 +79,6 @@ class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("code
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
         assertThat(codeAction.title, equalTo("Implement abstract functions"))
-        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -103,7 +101,6 @@ class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("code
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
         assertThat(codeAction.title, equalTo("Implement abstract functions"))
-        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -128,7 +125,6 @@ class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixtur
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
         assertThat(codeAction.title, equalTo("Implement abstract functions"))
-        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -151,7 +147,6 @@ class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixtur
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
         assertThat(codeAction.title, equalTo("Implement abstract functions"))
-        //assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()

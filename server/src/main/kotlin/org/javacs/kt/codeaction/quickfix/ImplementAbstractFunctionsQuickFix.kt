@@ -6,7 +6,6 @@ import org.javacs.kt.CompiledFile
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
-import org.javacs.kt.LOG
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
@@ -28,6 +27,7 @@ import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.isAbstract
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
+import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
 import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
@@ -40,8 +40,6 @@ class ImplementAbstractFunctionsQuickFix : QuickFix {
         val startCursor = offset(file.content, range.start)
         val endCursor = offset(file.content, range.end)
         val kotlinDiagnostics = file.compile.diagnostics
-
-        //LOG.info("start: {}, end: {}, range {}, diagnostics {}", startCursor, endCursor, range, diagnostics)
         
         // If the client side and the server side diagnostics contain a valid diagnostic for this range.
         if (diagnostic != null && anyDiagnosticMatch(kotlinDiagnostics, startCursor, endCursor)) {
@@ -89,10 +87,10 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
         val descriptor = referenceAtPoint?.second
 
         val classDescriptor = getClassDescriptor(descriptor)
-        val superClassTypeArguments = getSuperClassTypeArguments(file, it)
         
         // If the super class is abstract or an interface
-        if(null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
+        if (null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
+            val superClassTypeArguments = getSuperClassTypeProjections(file, it)
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
                classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)
             }.map { function ->
@@ -103,18 +101,16 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
         }
     }.flatten()
 
-// TODO: better name?
 // interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor    
-private fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? = if(descriptor is ClassDescriptor) {
+private fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? = if (descriptor is ClassDescriptor) {
     descriptor
-} else if(descriptor is ClassConstructorDescriptor) {
+} else if (descriptor is ClassConstructorDescriptor) {
     descriptor.containingDeclaration
 } else {
     null
 }
-    
-// TODO: better name?
-private fun getSuperClassTypeArguments(file: CompiledFile, superType: KtSuperTypeListEntry): List<TypeProjection> = superType.typeReference?.typeElement?.children?.filter {
+
+private fun getSuperClassTypeProjections(file: CompiledFile, superType: KtSuperTypeListEntry): List<TypeProjection> = superType.typeReference?.typeElement?.children?.filter {
     it is KtTypeArgumentList
 }?.flatMap {
     (it as KtTypeArgumentList).arguments
@@ -142,8 +138,9 @@ private fun parametersMatch(function: KtNamedFunction, functionDescriptor: Funct
         for (index in 0 until function.valueParameters.size) {
             if (function.valueParameters[index].name != functionDescriptor.valueParameters[index].name.asString()) {
                 return false
-            } else if (getTypeNameFromTypeReference(function.valueParameters[index].typeReference) != functionDescriptor.valueParameters[index].type.toString()) {
-                // TODO: here we have exactly the old issue of type as above. Maybe a common method that can be called to get the correct one? or do we maybe have to check both null and not null types here?
+            } else if (function.valueParameters[index].typeReference?.typeName() != functionDescriptor.valueParameters[index].type.unwrappedType().toString()) {
+                // Note: Since we treat Java overrides as non nullable by default, the above test will fail when the user has made the type nullable.
+                // TODO: look into this
                 return false
             }
         }
@@ -162,28 +159,28 @@ private fun parametersMatch(function: KtNamedFunction, functionDescriptor: Funct
     return false
 }
 
-// typeReference.name is often null. This fetches the name directly from the KtSimpleNameExpression instead
-private fun getTypeNameFromTypeReference(typeReference: KtTypeReference?): String? = typeReference?.typeElement?.children?.filter {
+private fun KtTypeReference.typeName(): String? = this.name ?: this.typeElement?.children?.filter {
     it is KtSimpleNameExpression
 }?.map {
     (it as KtSimpleNameExpression).getReferencedName()
-}?.get(0)
+}?.firstOrNull()
 
 private fun createFunctionStub(function: FunctionDescriptor): String {
-    // TODO: clean
     val name = function.name
     val arguments = function.valueParameters.map { argument ->
         val argumentName = argument.name
-        // about argument.type: regular Kotlin types are marked T or T?, but types from Java are (T..T?) because nullability cannot be decided.
-        // Therefore we have to unpack in case we have the Java type. Fortunately, the Java types are not marked nullable, so we default to non nullable types. Let the user decide if they want nullable types instead. With this implementation Kotlin types also keeps their nullability
-        val argumentType = argument.type.unwrap().makeNullableAsSpecified(argument.type.isMarkedNullable)
+        val argumentType = argument.type.unwrappedType()
                     
         "$argumentName: $argumentType"
     }.joinToString(", ")
-    val returnType = function.returnType?.unwrap()?.makeNullableAsSpecified(function.returnType?.isMarkedNullable ?: false)?.toString()
+    val returnType = function.returnType?.unwrappedType()?.toString()?.takeIf { "Unit" != it }
     
-    return "override fun $name($arguments)${returnType?.takeIf { "Unit" != it }?.let { ": $it" } ?: ""} { }"
+    return "override fun $name($arguments)${returnType?.let { ": $it" } ?: ""} { }"
 }
+
+// about types: regular Kotlin types are marked T or T?, but types from Java are (T..T?) because nullability cannot be decided.
+// Therefore we have to unpack in case we have the Java type. Fortunately, the Java types are not marked nullable, so we default to non nullable types. Let the user decide if they want nullable types instead. With this implementation Kotlin types also keeps their nullability
+private fun KotlinType.unwrappedType(): KotlinType = this.unwrap().makeNullableAsSpecified(this.isMarkedNullable)
 
 private fun getDeclarationPadding(file: CompiledFile, kotlinClass: KtClass): String {
     // If the class is not empty, the amount of padding is the same as the one in the last declaration of the class
