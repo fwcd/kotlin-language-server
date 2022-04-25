@@ -8,13 +8,11 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.symbols.workspaceSymbols
 import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
-import org.javacs.kt.command.RESOLVE_MAIN
 import org.javacs.kt.j2k.convertJavaToKotlin
 import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.parseURI
-import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.resolve.resolveMain
 import java.net.URI
 import java.nio.file.Paths
@@ -32,9 +30,7 @@ class KotlinWorkspaceService(
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
-
-    private val async = AsyncExecutor()
-    
+ 
     override fun connect(client: LanguageClient): Unit {
         languageClient = client
     }
@@ -57,26 +53,6 @@ class KotlinWorkspaceService(
                         listOf(TextEdit(range, kotlinCode))
                     )
                 )))))
-            }
-
-            RESOLVE_MAIN -> {
-                val fileUri = parseURI(gson.fromJson(args[0] as JsonElement, String::class.java))
-                val filePath = Paths.get(fileUri)
-
-                // we find the longest one in case both the root and submodule are included
-                val workspacePath = cp.workspaceRoots.filter {
-                    filePath.startsWith(it)
-                }.map {
-                    it.toString()
-                }.maxByOrNull(String::length) ?: ""
-                
-                val compiledFile = sp.currentVersion(fileUri)
-
-                return async.compute {
-                    resolveMain(compiledFile) + mapOf(
-                        "projectRoot" to workspacePath
-                    )
-                }
             }
         }
 
