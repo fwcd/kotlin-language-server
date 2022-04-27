@@ -141,6 +141,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
     override fun close() {
         compiler.close()
+        async.shutdown(true)
         outputDirectory.delete()
     }
 }
