@@ -7,16 +7,29 @@ import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
+import org.jetbrains.kotlin.descriptors.ClassDescriptor
+import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.descriptors.isInterface
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtDeclaration
 import org.jetbrains.kotlin.psi.KtNamedFunction
+import org.jetbrains.kotlin.psi.KtSimpleNameExpression
+import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
+import org.jetbrains.kotlin.psi.KtTypeArgumentList
+import org.jetbrains.kotlin.psi.KtTypeReference
 import org.jetbrains.kotlin.psi.psiUtil.containingClass
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.isAbstract
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
+import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.types.TypeProjection
+import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
 private const val DEFAULT_TAB_SIZE = 4
 
@@ -27,7 +40,7 @@ class ImplementAbstractFunctionsQuickFix : QuickFix {
         val startCursor = offset(file.content, range.start)
         val endCursor = offset(file.content, range.end)
         val kotlinDiagnostics = file.compile.diagnostics
-
+        
         // If the client side and the server side diagnostics contain a valid diagnostic for this range.
         if (diagnostic != null && anyDiagnosticMatch(kotlinDiagnostics, startCursor, endCursor)) {
             // Get the class with the missing functions
@@ -70,31 +83,47 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
     // For each of the super types used by this class
     kotlinClass.superTypeListEntries.mapNotNull {
         // Find the definition of this super type
-        val descriptor = file.referenceAtPoint(it.startOffset)?.second
-        val superClass = descriptor?.findPsi()
+        val referenceAtPoint = file.referenceExpressionAtPoint(it.startOffset)
+        val descriptor = referenceAtPoint?.second
+
+        val classDescriptor = getClassDescriptor(descriptor)
+        
         // If the super class is abstract or an interface
-        if (superClass is KtClass && (superClass.isAbstract() || superClass.isInterface())) {
-            // Get the abstract functions of this super type that are currently not implemented by this class
-            val abstractFunctions = superClass.declarations.filter {
-                declaration -> isAbstractFunction(declaration) && !overridesDeclaration(kotlinClass, declaration)
+        if (null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
+            val superClassTypeArguments = getSuperClassTypeProjections(file, it)
+            classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
+               classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)
+            }.map { function ->
+                createFunctionStub(function as FunctionDescriptor)
             }
-            // Get stubs for each function
-            abstractFunctions.map { function -> getFunctionStub(function as KtNamedFunction) }
         } else {
             null
         }
     }.flatten()
 
-private fun isAbstractFunction(declaration: KtDeclaration): Boolean =
-    declaration is KtNamedFunction && !declaration.hasBody()
-        && (declaration.containingClass()?.isInterface() ?: false || declaration.hasModifier(KtTokens.ABSTRACT_KEYWORD))
+// interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor    
+private fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? = if (descriptor is ClassDescriptor) {
+    descriptor
+} else if (descriptor is ClassConstructorDescriptor) {
+    descriptor.containingDeclaration
+} else {
+    null
+}
+
+private fun getSuperClassTypeProjections(file: CompiledFile, superType: KtSuperTypeListEntry): List<TypeProjection> = superType.typeReference?.typeElement?.children?.filter {
+    it is KtTypeArgumentList
+}?.flatMap {
+    (it as KtTypeArgumentList).arguments
+}?.mapNotNull {
+    (file.referenceExpressionAtPoint(it?.startOffset ?: 0)?.second as? ClassDescriptor)?.defaultType?.asTypeProjection()
+} ?: emptyList()
 
 // Checks if the class overrides the given declaration
-private fun overridesDeclaration(kotlinClass: KtClass, declaration: KtDeclaration): Boolean =
+private fun overridesDeclaration(kotlinClass: KtClass, descriptor: FunctionDescriptor): Boolean =
     kotlinClass.declarations.any {
-        if (it.name == declaration.name && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)) {
-            if (it is KtNamedFunction && declaration is KtNamedFunction) {
-                parametersMatch(it, declaration)
+        if (it.name == descriptor.name.asString() && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)) {
+            if (it is KtNamedFunction) {
+                parametersMatch(it, descriptor)
             } else {
                 true
             }
@@ -104,19 +133,21 @@ private fun overridesDeclaration(kotlinClass: KtClass, declaration: KtDeclaratio
     }
 
 // Checks if two functions have matching parameters
-private fun parametersMatch(function: KtNamedFunction, functionDeclaration: KtNamedFunction): Boolean {
-    if (function.valueParameters.size == functionDeclaration.valueParameters.size) {
+private fun parametersMatch(function: KtNamedFunction, functionDescriptor: FunctionDescriptor): Boolean {
+    if (function.valueParameters.size == functionDescriptor.valueParameters.size) {
         for (index in 0 until function.valueParameters.size) {
-            if (function.valueParameters[index].name != functionDeclaration.valueParameters[index].name) {
+            if (function.valueParameters[index].name != functionDescriptor.valueParameters[index].name.asString()) {
                 return false
-            } else if (function.valueParameters[index].typeReference?.name != functionDeclaration.valueParameters[index].typeReference?.name) {
+            } else if (function.valueParameters[index].typeReference?.typeName() != functionDescriptor.valueParameters[index].type.unwrappedType().toString()) {
+                // Note: Since we treat Java overrides as non nullable by default, the above test will fail when the user has made the type nullable.
+                // TODO: look into this
                 return false
             }
         }
 
-        if (function.typeParameters.size == functionDeclaration.typeParameters.size) {
+        if (function.typeParameters.size == functionDescriptor.typeParameters.size) {
             for (index in 0 until function.typeParameters.size) {
-                if (function.typeParameters[index].variance != functionDeclaration.typeParameters[index].variance) {
+                if (function.typeParameters[index].variance != functionDescriptor.typeParameters[index].variance) {
                     return false
                 }
             }
@@ -128,8 +159,28 @@ private fun parametersMatch(function: KtNamedFunction, functionDeclaration: KtNa
     return false
 }
 
-private fun getFunctionStub(function: KtNamedFunction): String =
-    "override fun" + function.text.substringAfter("fun") + " { }"
+private fun KtTypeReference.typeName(): String? = this.name ?: this.typeElement?.children?.filter {
+    it is KtSimpleNameExpression
+}?.map {
+    (it as KtSimpleNameExpression).getReferencedName()
+}?.firstOrNull()
+
+private fun createFunctionStub(function: FunctionDescriptor): String {
+    val name = function.name
+    val arguments = function.valueParameters.map { argument ->
+        val argumentName = argument.name
+        val argumentType = argument.type.unwrappedType()
+                    
+        "$argumentName: $argumentType"
+    }.joinToString(", ")
+    val returnType = function.returnType?.unwrappedType()?.toString()?.takeIf { "Unit" != it }
+    
+    return "override fun $name($arguments)${returnType?.let { ": $it" } ?: ""} { }"
+}
+
+// about types: regular Kotlin types are marked T or T?, but types from Java are (T..T?) because nullability cannot be decided.
+// Therefore we have to unpack in case we have the Java type. Fortunately, the Java types are not marked nullable, so we default to non nullable types. Let the user decide if they want nullable types instead. With this implementation Kotlin types also keeps their nullability
+private fun KotlinType.unwrappedType(): KotlinType = this.unwrap().makeNullableAsSpecified(this.isMarkedNullable)
 
 private fun getDeclarationPadding(file: CompiledFile, kotlinClass: KtClass): String {
     // If the class is not empty, the amount of padding is the same as the one in the last declaration of the class
