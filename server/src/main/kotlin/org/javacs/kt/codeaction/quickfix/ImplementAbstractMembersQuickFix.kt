@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
+import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
@@ -33,7 +34,7 @@ import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
 private const val DEFAULT_TAB_SIZE = 4
 
-class ImplementAbstractFunctionsQuickFix : QuickFix {
+class ImplementAbstractMembersQuickFix : QuickFix {
     override fun compute(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
 
@@ -64,7 +65,7 @@ class ImplementAbstractFunctionsQuickFix : QuickFix {
                 val codeAction = CodeAction()
                 codeAction.edit = WorkspaceEdit(mapOf(uri to textEdits))
                 codeAction.kind = CodeActionKind.QuickFix
-                codeAction.title = "Implement abstract functions"
+                codeAction.title = "Implement abstract members"
                 codeAction.diagnostics = listOf(diagnostic)
                 return listOf(Either.forRight(codeAction))
             }
@@ -92,9 +93,15 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
         if (null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
             val superClassTypeArguments = getSuperClassTypeProjections(file, it)
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
-               classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)
-            }.map { function ->
-                createFunctionStub(function as FunctionDescriptor)
+               (classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)) || (classMember is PropertyDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember))
+            }.mapNotNull { member ->
+                if(member is FunctionDescriptor) {
+                    createFunctionStub(member)
+                } else if(member is PropertyDescriptor) {
+                    createVariableStub(member)
+                } else {
+                    null
+                }
             }
         } else {
             null
@@ -130,6 +137,11 @@ private fun overridesDeclaration(kotlinClass: KtClass, descriptor: FunctionDescr
         } else {
             false
         }
+    }
+
+private fun overridesDeclaration(kotlinClass: KtClass, descriptor: PropertyDescriptor): Boolean =
+    kotlinClass.declarations.any {
+        it.name == descriptor.name.asString() && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)
     }
 
 // Checks if two functions have matching parameters
@@ -176,6 +188,11 @@ private fun createFunctionStub(function: FunctionDescriptor): String {
     val returnType = function.returnType?.unwrappedType()?.toString()?.takeIf { "Unit" != it }
     
     return "override fun $name($arguments)${returnType?.let { ": $it" } ?: ""} { }"
+}
+
+private fun createVariableStub(variable: PropertyDescriptor): String {
+    val variableType = variable.returnType?.unwrappedType()?.toString()?.takeIf { "Unit" != it }
+    return "override val ${variable.name}${variableType?.let { ": $it" } ?: ""} = TODO(\"SET VALUE\")"
 }
 
 // about types: regular Kotlin types are marked T or T?, but types from Java are (T..T?) because nullability cannot be decided.
