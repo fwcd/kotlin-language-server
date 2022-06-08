@@ -12,4 +12,7 @@ interface KotlinProtocolExtensions {
 
     @JsonRequest
     fun buildOutputLocation(): CompletableFuture<String?>
+
+    @JsonRequest
+    fun mainClass(textDocument: TextDocumentIdentifier): CompletableFuture<Map<String, Any?>>
 }

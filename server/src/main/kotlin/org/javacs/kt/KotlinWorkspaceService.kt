@@ -13,6 +13,7 @@ import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.parseURI
+import org.javacs.kt.resolve.resolveMain
 import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -29,7 +30,7 @@ class KotlinWorkspaceService(
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
-
+ 
     override fun connect(client: LanguageClient): Unit {
         languageClient = client
     }
