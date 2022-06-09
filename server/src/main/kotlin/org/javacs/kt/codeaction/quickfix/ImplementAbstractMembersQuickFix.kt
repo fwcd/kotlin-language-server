@@ -95,12 +95,10 @@ private fun getAbstractFunctionStubs(file: CompiledFile, kotlinClass: KtClass) =
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
                (classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)) || (classMember is PropertyDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember))
             }.mapNotNull { member ->
-                if(member is FunctionDescriptor) {
-                    createFunctionStub(member)
-                } else if(member is PropertyDescriptor) {
-                    createVariableStub(member)
-                } else {
-                    null
+                when (member) {
+                    is FunctionDescriptor -> createFunctionStub(member)
+                    is PropertyDescriptor -> createVariableStub(member)
+                    else -> null
                 }
             }
         } else {
