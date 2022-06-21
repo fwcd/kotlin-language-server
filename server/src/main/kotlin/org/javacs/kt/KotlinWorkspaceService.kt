@@ -30,7 +30,7 @@ class KotlinWorkspaceService(
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
- 
+
     override fun connect(client: LanguageClient): Unit {
         languageClient = client
     }
@@ -137,6 +137,10 @@ class KotlinWorkspaceService(
                 val externalSources = config.externalSources
                 get("useKlsScheme")?.asBoolean?.let { externalSources.useKlsScheme = it }
                 get("autoConvertToKotlin")?.asBoolean?.let { externalSources.autoConvertToKotlin = it }
+            }
+
+            get("gradle")?.asJsonObject?.apply {
+                get("home")?.asString?.let { config.gradle.home.clear().append(it) }
             }
         }
 

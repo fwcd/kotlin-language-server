@@ -12,8 +12,10 @@ fun execAndReadStdout(shellCommand: List<String>, directory: Path): String {
     return stdout.bufferedReader().use { it.readText() }
 }
 
-fun execAndReadStdoutAndStderr(shellCommand: List<String>, directory: Path): Pair<String, String> {
-    val process = ProcessBuilder(shellCommand).directory(directory.toFile()).start()
+fun execAndReadStdoutAndStderr(shellCommand: List<String>, directory: Path, gradleHome: String?): Pair<String, String> {
+    val process = ProcessBuilder(shellCommand).directory(directory.toFile()).apply {
+        environment()["JAVA_HOME"] = gradleHome?.takeIf { it != "default" } ?: return@apply
+    }.start()
     val stdout = process.inputStream
     val stderr = process.errorStream
     var output = ""

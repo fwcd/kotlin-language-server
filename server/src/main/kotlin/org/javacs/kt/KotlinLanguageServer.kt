@@ -1,5 +1,6 @@
 package org.javacs.kt
 
+import com.google.gson.JsonObject
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.jsonrpc.services.JsonDelegate
@@ -21,7 +22,7 @@ import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val config = Configuration()
-    val classPath = CompilerClassPath(config.compiler)
+    val classPath = CompilerClassPath(config.compiler, config.gradle.home)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
@@ -89,6 +90,16 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
+
+        (params.initializationOptions as? JsonObject)?.get("kotlin")
+            ?.asJsonObject
+            ?.get("gradle")
+            ?.asJsonObject
+            ?.get("home")
+            ?.asString
+            ?.let {
+                config.gradle.home.clear().append(it)
+            }
 
         if (clientCapabilities?.window?.workDoneProgress ?: false) {
             progressFactory = LanguageClientProgress.Factory(client)
