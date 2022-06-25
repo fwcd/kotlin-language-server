@@ -8,7 +8,7 @@ import org.hamcrest.Matchers.hasSize
 import org.junit.Assert.assertThat
 import org.junit.Test
 
-class ImplementAbstractFunctionsQuickFixTest : SingleFileTestFixture("quickfixes", "SomeSubclass.kt") {
+class ImplementAbstractMembersQuickFixTest : SingleFileTestFixture("quickfixes", "SomeSubclass.kt") {
     @Test
     fun `gets workspace edit for all abstract methods when none are implemented`() {
         val diagnostic = Diagnostic(range(3, 1, 3, 19), "")
@@ -90,7 +90,7 @@ class ImplementAbstractFunctionsQuickFixTest : SingleFileTestFixture("quickfixes
     }
 }
 
-class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("quickfixes", "samefile.kt") {
+class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("quickfixes", "samefile.kt") {
     @Test
     fun `should find no code actions`() {
         val only = listOf(CodeActionKind.QuickFix)
@@ -111,7 +111,7 @@ class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("qu
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
         assertThat(codeAction.diagnostics, equalTo(listOf(diagnostics[0])))
 
         val textEdit = codeAction.edit.changes
@@ -134,7 +134,7 @@ class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("qu
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -160,7 +160,7 @@ class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("qu
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -182,7 +182,7 @@ class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("qu
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -193,9 +193,57 @@ class ImplementAbstractFunctionsQuickFixSameFileTest : SingleFileTestFixture("qu
         assertThat(functionToImplementEdit?.range, equalTo(range(25, 48, 25, 48)))
         assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun myMethod(myStr: String?): String? { }"))
     }
+
+    @Test
+    fun `should find abstract variable and function`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 35, 1, 35, 18, diagnostics, only)
+
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(2))
+
+        val firstMemberToImplementEdit = textEdit[key]?.get(0)
+        assertThat(firstMemberToImplementEdit?.range, equalTo(range(35, 35, 35, 35)))
+        assertThat(firstMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override val name: String = TODO(\"SET VALUE\")"))
+
+        val secondMemberToImplementEdit = textEdit[key]?.get(1)
+        assertThat(secondMemberToImplementEdit?.range, equalTo(range(35, 35, 35, 35)))
+        assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun myFun() { }"))
+    }
+
+    @Test
+    fun `should find abstract function when variable is already implemented`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 37, 1, 37, 17, diagnostics, only)
+
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(1))
+
+        val memberToImplementEdit = textEdit[key]?.get(0)
+        assertThat(memberToImplementEdit?.range, equalTo(range(38, 31, 38, 31)))
+        assertThat(memberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun myFun() { }"))
+    }
 }
 
-class ImplementAbstractFunctionsQuickFixExternalLibraryTest : SingleFileTestFixture("quickfixes", "standardlib.kt") {
+class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixture("quickfixes", "standardlib.kt") {
     @Test
     fun `should find one abstract method from Runnable to implement`() {
         val only = listOf(CodeActionKind.QuickFix)
@@ -206,7 +254,7 @@ class ImplementAbstractFunctionsQuickFixExternalLibraryTest : SingleFileTestFixt
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -228,7 +276,7 @@ class ImplementAbstractFunctionsQuickFixExternalLibraryTest : SingleFileTestFixt
         assertThat(codeActionResult, hasSize(1))
         val codeAction = codeActionResult[0].right
         assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
-        assertThat(codeAction.title, equalTo("Implement abstract functions"))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
 
         val textEdit = codeAction.edit.changes
         val key = workspaceRoot.resolve(file).toUri().toString()
@@ -238,5 +286,31 @@ class ImplementAbstractFunctionsQuickFixExternalLibraryTest : SingleFileTestFixt
         val functionToImplementEdit = textEdit[key]?.get(0)
         assertThat(functionToImplementEdit?.range, equalTo(range(7, 42, 7, 42)))
         assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun compare(p0: String, p1: String): Int { }"))
+    }
+
+    @Test
+    fun `should find abstract members for AbstractList`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 9, 1, 9, 13, diagnostics, only)
+
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(2))
+
+        val firstMemberToImplementEdit = textEdit[key]?.get(0)
+        assertThat(firstMemberToImplementEdit?.range, equalTo(range(9, 40, 9, 40)))
+        assertThat(firstMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override val size: Int = TODO(\"SET VALUE\")"))
+
+        val secondMemberToImplementEdit = textEdit[key]?.get(1)
+        assertThat(secondMemberToImplementEdit?.range, equalTo(range(9, 40, 9, 40)))
+        assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun get(index: Int): String { }"))
     }
 }
