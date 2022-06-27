@@ -241,6 +241,36 @@ class ImplementAbstractMembersQuickFixSameFileTest : SingleFileTestFixture("quic
         assertThat(memberToImplementEdit?.range, equalTo(range(38, 31, 38, 31)))
         assertThat(memberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun myFun() { }"))
     }
+
+    @Test
+    fun `should find abstract members when class has no body (square brackets)`() {
+        val only = listOf(CodeActionKind.QuickFix)
+        val codeActionParams = codeActionParams(file, 47, 1, 47, 12, diagnostics, only)
+
+        val codeActionResult = languageServer.textDocumentService.codeAction(codeActionParams).get()
+
+        assertThat(codeActionResult, hasSize(1))
+        val codeAction = codeActionResult[0].right
+        assertThat(codeAction.kind, equalTo(CodeActionKind.QuickFix))
+        assertThat(codeAction.title, equalTo("Implement abstract members"))
+
+        val textEdit = codeAction.edit.changes
+        val key = workspaceRoot.resolve(file).toUri().toString()
+        assertThat(textEdit.containsKey(key), equalTo(true))
+        assertThat(textEdit[key], hasSize(3))
+
+        val firstMemberToImplementEdit = textEdit[key]?.get(0)
+        assertThat(firstMemberToImplementEdit?.range, equalTo(range(47, 23, 47, 23)))
+        assertThat(firstMemberToImplementEdit?.newText, equalTo("{"))
+
+        val secondMemberToImplementEdit = textEdit[key]?.get(1)
+        assertThat(secondMemberToImplementEdit?.range, equalTo(range(47, 23, 47, 23)))
+        assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + "    override fun behaviour() { }"))
+
+        val thirdMemberToImplementEdit = textEdit[key]?.get(2)
+        assertThat(thirdMemberToImplementEdit?.range, equalTo(range(47, 23, 47, 23)))
+        assertThat(thirdMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + "}"))
+    }
 }
 
 class ImplementAbstractMembersQuickFixExternalLibraryTest : SingleFileTestFixture("quickfixes", "standardlib.kt") {

@@ -53,14 +53,17 @@ class ImplementAbstractMembersQuickFix : QuickFix {
                 val uri = file.parse.toPath().toUri().toString()
                 // Get the padding to be introduced before the function declarations
                 val padding = getDeclarationPadding(file, kotlinClass)
+
                 // Get the location where the new code will be placed
                 val newFunctionStartPosition = getNewFunctionStartPosition(file, kotlinClass)
+                val bodyAppendBeginning = listOf(TextEdit(Range(newFunctionStartPosition, newFunctionStartPosition), "{")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
+                val bodyAppendEnd = listOf(TextEdit(Range(newFunctionStartPosition, newFunctionStartPosition), System.lineSeparator() + "}")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
 
-                val textEdits = functionsToImplement.map {
+                val textEdits = bodyAppendBeginning + functionsToImplement.map {
                     // We leave two new lines before the function is inserted
                     val newText = System.lineSeparator() + System.lineSeparator() + padding + it
                     TextEdit(Range(newFunctionStartPosition, newFunctionStartPosition), newText)
-                }
+                } + bodyAppendEnd
 
                 val codeAction = CodeAction()
                 codeAction.edit = WorkspaceEdit(mapOf(uri to textEdits))
@@ -221,6 +224,11 @@ private fun getNewFunctionStartPosition(file: CompiledFile, kotlinClass: KtClass
         if (body != null) {
             position(file.content, body.startOffset + 1)
         } else {
-            null
+            // function has no body. We have to create one. New position is right after entire kotlin class text (with space)
+            val newPosCorrectLine = position(file.content, kotlinClass.startOffset + 1)
+            newPosCorrectLine.character = (kotlinClass.text.length + 2)
+            newPosCorrectLine
         }
     }
+
+private fun KtClass.hasNoBody() = null == this.body
