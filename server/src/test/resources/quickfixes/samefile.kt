@@ -37,3 +37,11 @@ class MyImplClass : MyAbstract() {}
 class My2ndClass : MyAbstract() {
     override val name = "Nils"
 }
+
+
+// defect GH-366, part of the solution
+interface IThing {
+    fun behaviour
+}
+
+class Thing : IThing
