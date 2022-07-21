@@ -9,8 +9,9 @@ import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
-import org.jetbrains.kotlin.types.ErrorUtils
-import org.jetbrains.kotlin.types.UnresolvedType
+import org.jetbrains.kotlin.types.error.ErrorTypeKind
+import org.jetbrains.kotlin.types.error.ErrorUtils
+import org.jetbrains.kotlin.types.typeUtil.isUnresolvedType
 
 val DECL_RENDERER = DescriptorRenderer.withOptions {
     withDefinedIn = false
@@ -18,8 +19,8 @@ val DECL_RENDERER = DescriptorRenderer.withOptions {
     classifierNamePolicy = ClassifierNamePolicy.SHORT
     parameterNameRenderingPolicy = ParameterNameRenderingPolicy.ONLY_NON_SYNTHESIZED
     typeNormalizer = {
-        when (it) {
-            is UnresolvedType ->  ErrorUtils.createErrorTypeWithCustomDebugName(it.presentableName)
+        when {
+            isUnresolvedType(it) -> ErrorUtils.createErrorType(ErrorTypeKind.UNRESOLVED_TYPE, it.debugMessage)
             else -> it
         }
     }
