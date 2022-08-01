@@ -62,15 +62,13 @@ allprojects { project ->
 
             // handle kotlin multiplatform style dependencies if any
             def kotlinExtension = project.extensions.findByName("kotlin")
-            if(kotlinExtension) {
+            if(kotlinExtension && kotlinExtension.hasProperty("targets")) {
                 def kotlinSourceSets = kotlinExtension.sourceSets
 
                 // Print the list of all dependencies jar files.
-                kotlinSourceSets.forEach {
-                    // fetch the jar files from the current source set config (identified by their displayname, e.g, backendMain)
-                    def dependencyLocations = configurations["${it.displayName}ImplementationDependenciesMetadata"].files
-
-                    dependencyLocations.each {
+                kotlinExtension.targets.names.each {
+                    def classpath = configurations["${it}CompileClasspath"]
+                    classpath.files.each {
                         System.out.println "kotlin-lsp-gradle $it"
                     }
                 }
