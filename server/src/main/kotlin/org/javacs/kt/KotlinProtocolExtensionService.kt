@@ -4,6 +4,8 @@ import org.eclipse.lsp4j.*
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.resolve.resolveMain
+import org.javacs.kt.position.offset
+import org.javacs.kt.listOverridableMembers
 import java.util.concurrent.CompletableFuture
 import java.nio.file.Paths
 
@@ -38,5 +40,13 @@ class KotlinProtocolExtensionService(
         resolveMain(compiledFile) + mapOf(
             "projectRoot" to workspacePath
         )
+    }
+
+    override fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>> = async.compute {
+        val fileUri = parseURI(position.textDocument.uri)
+        val compiledFile = sp.currentVersion(fileUri)
+        val cursorOffset = offset(compiledFile.content, position.position)
+
+        listOverridableMembers(compiledFile, cursorOffset)
     }
 }

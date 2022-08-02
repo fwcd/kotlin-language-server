@@ -15,4 +15,9 @@ interface KotlinProtocolExtensions {
 
     @JsonRequest
     fun mainClass(textDocument: TextDocumentIdentifier): CompletableFuture<Map<String, Any?>>
+
+    // TODO: what is the best return value in this case? CodeAction?
+    // TODO: should the naming be something like listOverrideableMembers? or something similar instead?
+    @JsonRequest
+    fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>>
 }
