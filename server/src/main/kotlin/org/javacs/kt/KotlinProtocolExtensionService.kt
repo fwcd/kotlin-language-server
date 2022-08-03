@@ -5,7 +5,7 @@ import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.resolve.resolveMain
 import org.javacs.kt.position.offset
-import org.javacs.kt.listOverridableMembers
+import org.javacs.kt.overridemembers.listOverridableMembers
 import java.util.concurrent.CompletableFuture
 import java.nio.file.Paths
 
