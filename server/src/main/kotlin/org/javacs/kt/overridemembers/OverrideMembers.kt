@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.psi.KtSimpleNameExpression
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
@@ -56,30 +57,12 @@ private fun createOverrideAlternatives(file: CompiledFile, kotlinClass: KtClass)
 
     // Get the location where the new code will be placed
     val newMembersStartPosition = getNewMembersStartPosition(file, kotlinClass)
-    // TODO: if both used here and in the abstract member stuff.... should we put it in a method both can use?
-    // TODO: how should this be implemented? 
-    // val bodyAppendBeginning =
-    //     listOf(TextEdit(Range(newMembersStartPosition, newMembersStartPosition), "{")).takeIf {
-    //                kotlinClass.hasNoBody()
-    //            }
-    //            ?: emptyList()
-    // val bodyAppendEnd =
-    //     listOf(
-    //         TextEdit(
-    //             Range(newMembersStartPosition, newMembersStartPosition),
-    //             System.lineSeparator() + "}")
-    //     )
-    //     .takeIf { kotlinClass.hasNoBody() }
-    // ?: emptyList()
-
-    LOG.info("Members: {}", membersToImplement)
     
     // loop through the memberstoimplement and create code actions
     return membersToImplement.map { member ->
         val newText = System.lineSeparator() + System.lineSeparator() + padding + member
         val textEdit = TextEdit(Range(newMembersStartPosition, newMembersStartPosition), newText)
 
-        // TODO: how should we get the name of the property? if needed?
         val codeAction = CodeAction()
         codeAction.edit = WorkspaceEdit(mapOf(uri to listOf(textEdit)))
         codeAction.title = member
@@ -131,9 +114,9 @@ private fun ClassDescriptor.canBeExtended() = this.kind.isInterface ||
     this.modality == Modality.ABSTRACT ||
     this.modality == Modality.OPEN
 
-private fun FunctionDescriptor.canBeOverriden() = Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality
+private fun FunctionDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
 
-private fun PropertyDescriptor.canBeOverriden() = Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality       
+private fun PropertyDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
             
 // interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor
 fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? =
@@ -189,10 +172,6 @@ private fun parametersMatch(
 ): Boolean {
     if (function.valueParameters.size == functionDescriptor.valueParameters.size) {
         for (index in 0 until function.valueParameters.size) {
-            LOG.info("Method: {} {} - {} {}", function.valueParameters[index].name, functionDescriptor.valueParameters[index].name.asString(),  function.valueParameters[index].typeReference?.typeElement?.unwrapNullability()?.name, functionDescriptor.valueParameters[index]
-                                    .type
-                                    .unwrappedType()
-                                    .toString())
             if (function.valueParameters[index].name !=
                     functionDescriptor.valueParameters[index].name.asString()
             ) {

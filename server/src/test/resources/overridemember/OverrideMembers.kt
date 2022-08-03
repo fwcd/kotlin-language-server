@@ -35,3 +35,5 @@ open class MyOpen {
 }
 
 class Closed: MyOpen() {}
+
+class MyThread: Thread {}
