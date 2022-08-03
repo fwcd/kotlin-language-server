@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.isAbstract
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
+import org.jetbrains.kotlin.psi.psiUtil.unwrapNullability
 import org.jetbrains.kotlin.types.TypeProjection
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.lexer.KtTokens
@@ -188,24 +189,26 @@ private fun parametersMatch(
 ): Boolean {
     if (function.valueParameters.size == functionDescriptor.valueParameters.size) {
         for (index in 0 until function.valueParameters.size) {
-            LOG.info("Method: {} {} - {} {}", function.valueParameters[index].name, functionDescriptor.valueParameters[index].name.asString(),  function.valueParameters[index].typeReference?.typeName(), functionDescriptor.valueParameters[index]
+            LOG.info("Method: {} {} - {} {}", function.valueParameters[index].name, functionDescriptor.valueParameters[index].name.asString(),  function.valueParameters[index].typeReference?.typeElement?.unwrapNullability()?.name, functionDescriptor.valueParameters[index]
                                     .type
                                     .unwrappedType()
                                     .toString())
             if (function.valueParameters[index].name !=
-                            functionDescriptor.valueParameters[index].name.asString()
+                    functionDescriptor.valueParameters[index].name.asString()
             ) {
                 return false
             } else if (function.valueParameters[index].typeReference?.typeName() !=
                             functionDescriptor.valueParameters[index]
                                     .type
                                     .unwrappedType()
-                                    .toString()
+                                    .toString() && function.valueParameters[index].typeReference?.typeName() != null
             ) {
+                // Any and Any? seems to be null for Kt* psi objects for some reason? At least for equals
+                // TODO: look further into this
+                
                 // Note: Since we treat Java overrides as non nullable by default, the above test
                 // will fail when the user has made the type nullable.
                 // TODO: look into this
-                // TODO: look into the weird issue with equals...
                 return false
             }
         }
@@ -213,7 +216,7 @@ private fun parametersMatch(
         if (function.typeParameters.size == functionDescriptor.typeParameters.size) {
             for (index in 0 until function.typeParameters.size) {
                 if (function.typeParameters[index].variance !=
-                                functionDescriptor.typeParameters[index].variance
+                        functionDescriptor.typeParameters[index].variance
                 ) {
                     return false
                 }
