@@ -13,9 +13,6 @@ import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
 import org.junit.Assert.assertThat
 
-// TODO: what should the title be? just the signature? or the name of the member? should we separate between methods and variables?
-// easiest is probably just to show the signatures?
-
 class OverrideMemberTest : SingleFileTestFixture("overridemember", "OverrideMembers.kt") {
 
     val root = testResourcesRoot().resolve(workspaceRoot)
