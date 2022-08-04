@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import com.intellij.openapi.project.Project
 import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.WorkspaceService
 import org.eclipse.lsp4j.services.LanguageClient
@@ -9,12 +8,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.symbols.workspaceSymbols
 import org.javacs.kt.command.JAVA_TO_KOTLIN_COMMAND
 import org.javacs.kt.j2k.convertJavaToKotlin
-import org.javacs.kt.KotlinTextDocumentService
 import org.javacs.kt.position.extractRange
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.parseURI
-import org.javacs.kt.resolve.resolveMain
-import java.net.URI
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import com.google.gson.JsonElement
@@ -30,7 +26,7 @@ class KotlinWorkspaceService(
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
- 
+
     override fun connect(client: LanguageClient): Unit {
         languageClient = client
     }
@@ -143,10 +139,11 @@ class KotlinWorkspaceService(
         LOG.info("Updated configuration: {}", settings)
     }
 
-    override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<List<SymbolInformation>> {
+    @Suppress("DEPRECATION")
+    override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<Either<List<SymbolInformation>, List<WorkspaceSymbol>>> {
         val result = workspaceSymbols(params.query, sp)
 
-        return CompletableFuture.completedFuture(result)
+        return CompletableFuture.completedFuture(Either.forRight(result))
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
