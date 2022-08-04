@@ -7,7 +7,6 @@ import org.eclipse.lsp4j.TextEdit
 import org.eclipse.lsp4j.WorkspaceEdit
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.util.toPath
-import org.javacs.kt.LOG
 import org.javacs.kt.position.position
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtTypeArgumentList
@@ -73,42 +72,42 @@ private fun createOverrideAlternatives(file: CompiledFile, kotlinClass: KtClass)
 
 // TODO: any way can repeat less code between this and the getAbstractMembersStubs in the ImplementAbstractMembersQuickfix?
 private fun getUnimplementedMembersStubs(file: CompiledFile, kotlinClass: KtClass): List<String> =
-        // For each of the super types used by this class
-        kotlinClass
-                .superTypeListEntries
-                .mapNotNull {
-                    // Find the definition of this super type
-                    val referenceAtPoint = file.referenceExpressionAtPoint(it.startOffset)
-                    val descriptor = referenceAtPoint?.second
-                    val classDescriptor = getClassDescriptor(descriptor)
+    // For each of the super types used by this class
+    // TODO: does not seem to handle the implicit Any and Object super types that well. Need to find out if that is easily solvable. Finds the methods from them if any super class or interface is present
+    kotlinClass
+        .superTypeListEntries
+        .mapNotNull {
+            // Find the definition of this super type
+            val referenceAtPoint = file.referenceExpressionAtPoint(it.startOffset)
+            val descriptor = referenceAtPoint?.second
+            val classDescriptor = getClassDescriptor(descriptor)
 
-                    // If the super class is abstract, interface or just plain open
-                    if (null != classDescriptor && classDescriptor.canBeExtended()
-                    ) {
-                        val superClassTypeArguments = getSuperClassTypeProjections(file, it)
-                        classDescriptor
-                                .getMemberScope(superClassTypeArguments)
-                                .getContributedDescriptors()
-                                .filter { classMember ->
-                                    (classMember is FunctionDescriptor &&
-                                            classMember.canBeOverriden() &&
-                                            !overridesDeclaration(kotlinClass, classMember)) ||
-                                        (classMember is PropertyDescriptor &&
-                                            classMember.canBeOverriden() &&
-                                            !overridesDeclaration(kotlinClass, classMember))
-                                }
-                                .mapNotNull { member ->
-                                    when (member) {
-                                        is FunctionDescriptor -> createFunctionStub(member)
-                                        is PropertyDescriptor -> createVariableStub(member)
-                                        else -> null
-                                    }
-                                }
-                    } else {
-                        null
+            // If the super class is abstract, interface or just plain open
+            if (null != classDescriptor && classDescriptor.canBeExtended()) {
+                val superClassTypeArguments = getSuperClassTypeProjections(file, it)
+                classDescriptor
+                    .getMemberScope(superClassTypeArguments)
+                    .getContributedDescriptors()
+                    .filter { classMember ->
+                        (classMember is FunctionDescriptor &&
+                         classMember.canBeOverriden() &&
+                         !overridesDeclaration(kotlinClass, classMember)) ||
+                        (classMember is PropertyDescriptor &&
+                         classMember.canBeOverriden() &&
+                         !overridesDeclaration(kotlinClass, classMember))
                     }
-                }
-                .flatten()
+                    .mapNotNull { member ->
+                        when (member) {
+                            is FunctionDescriptor -> createFunctionStub(member)
+                            is PropertyDescriptor -> createVariableStub(member)
+                            else -> null
+                        }
+                    }
+            } else {
+                null
+            }
+        }
+        .flatten()
 
 private fun ClassDescriptor.canBeExtended() = this.kind.isInterface ||
     this.modality == Modality.ABSTRACT ||
