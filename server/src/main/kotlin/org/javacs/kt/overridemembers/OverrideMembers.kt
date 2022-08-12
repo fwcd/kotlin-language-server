@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
+import org.jetbrains.kotlin.descriptors.MemberDescriptor
 import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.psiUtil.endOffset
 import org.jetbrains.kotlin.psi.psiUtil.isAbstract
@@ -112,11 +113,9 @@ private fun getUnimplementedMembersStubs(file: CompiledFile, kotlinClass: KtClas
 private fun ClassDescriptor.canBeExtended() = this.kind.isInterface ||
     this.modality == Modality.ABSTRACT ||
     this.modality == Modality.OPEN
-
-private fun FunctionDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
-
-private fun PropertyDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
             
+private fun MemberDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
+
 // interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor
 fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? =
         if (descriptor is ClassDescriptor) {
@@ -145,24 +144,18 @@ fun getSuperClassTypeProjections(
                 ?: emptyList()
 
 // Checks if the class overrides the given declaration
-fun overridesDeclaration(kotlinClass: KtClass, descriptor: FunctionDescriptor): Boolean =
-        kotlinClass.declarations.any {
-            if (it.name == descriptor.name.asString() && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)
-            ) {
-                if (it is KtNamedFunction) {
-                    parametersMatch(it, descriptor)
-                } else {
-                    true
-                }
-            } else {
-                false
-            }
+fun overridesDeclaration(kotlinClass: KtClass, descriptor: MemberDescriptor): Boolean =
+    when (descriptor) {
+        is FunctionDescriptor -> kotlinClass.declarations.any {
+            it.name == descriptor.name.asString()
+            && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)
+            && ((it as? KtNamedFunction)?.let { parametersMatch(it, descriptor) } ?: true)
         }
-
-fun overridesDeclaration(kotlinClass: KtClass, descriptor: PropertyDescriptor): Boolean =
-        kotlinClass.declarations.any {
+        is PropertyDescriptor -> kotlinClass.declarations.any {
             it.name == descriptor.name.asString() && it.hasModifier(KtTokens.OVERRIDE_KEYWORD)
         }
+        else -> false
+    }
 
 // Checks if two functions have matching parameters
 private fun parametersMatch(
