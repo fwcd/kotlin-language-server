@@ -40,8 +40,6 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeProjection
 import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
-private const val DEFAULT_TAB_SIZE = 4
-
 class ImplementAbstractMembersQuickFix : QuickFix {
     override fun compute(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
