@@ -53,8 +53,16 @@ private fun findKotlinCliCompilerLibrary(name: String): Path? =
     findCommandOnPath("kotlinc")
         ?.toRealPath()
         ?.parent // bin
-        ?.parent // libexec
-        ?.resolve("lib")
+        ?.parent // libexec or "top-level" dir
+        ?.let {
+            // either in libexec or a top-level directory (that may contain libexec, or just a lib-directory directly)
+            val possibleLibDir = it.resolve("lib")
+            if (Files.exists(possibleLibDir)) {
+                possibleLibDir
+            } else {
+                it.resolve("libexec").resolve("lib")
+            }
+        }
         ?.takeIf { Files.exists(it) }
         ?.let(Files::list)
         ?.filter { it.fileName.toString() == "$name.jar" }
