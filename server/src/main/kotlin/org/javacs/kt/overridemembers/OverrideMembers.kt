@@ -90,12 +90,9 @@ private fun getUnimplementedMembersStubs(file: CompiledFile, kotlinClass: KtClas
                     .getMemberScope(superClassTypeArguments)
                     .getContributedDescriptors()
                     .filter { classMember ->
-                        (classMember is FunctionDescriptor &&
+                        classMember is MemberDescriptor &&
                          classMember.canBeOverriden() &&
-                         !overridesDeclaration(kotlinClass, classMember)) ||
-                        (classMember is PropertyDescriptor &&
-                         classMember.canBeOverriden() &&
-                         !overridesDeclaration(kotlinClass, classMember))
+                         !overridesDeclaration(kotlinClass, classMember)
                     }
                     .mapNotNull { member ->
                         when (member) {
