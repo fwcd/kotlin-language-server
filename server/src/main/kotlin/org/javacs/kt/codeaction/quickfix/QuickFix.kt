@@ -16,10 +16,18 @@ interface QuickFix {
 }
 
 fun diagnosticMatch(diagnostic: Diagnostic, range: Range, diagnosticTypes: Set<String>): Boolean =
-    diagnostic.range.equals(range) && diagnosticTypes.contains(diagnostic.code.left)
+    isDiagnosticInRange(diagnostic, range) && diagnosticTypes.contains(diagnostic.code.left)
+
+// for a diagnostic to be in range the lines should be the same, and
+//  the input character range should be within the bounds of the diagnostics range.
+private fun isDiagnosticInRange(diagnostic: Diagnostic, range: Range): Boolean {
+    val diagnosticRange = diagnostic.range
+    return diagnosticRange.start.line == range.start.line && diagnosticRange.end.line == range.end.line &&
+        diagnosticRange.start.character <= range.start.character && diagnosticRange.end.character >= range.end.character
+}
 
 fun diagnosticMatch(diagnostic: KotlinDiagnostic, startCursor: Int, endCursor: Int, diagnosticTypes: Set<String>): Boolean =
-    diagnostic.textRanges.any { it.startOffset == startCursor && it.endOffset == endCursor } && diagnosticTypes.contains(diagnostic.factory.name)
+    diagnostic.textRanges.any { it.startOffset <= startCursor && it.endOffset >= endCursor } && diagnosticTypes.contains(diagnostic.factory.name)
 
 fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range, diagnosticTypes: Set<String>) =
     diagnostics.find { diagnosticMatch(it, range, diagnosticTypes) }
