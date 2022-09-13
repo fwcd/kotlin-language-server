@@ -15,4 +15,7 @@ interface KotlinProtocolExtensions {
 
     @JsonRequest
     fun mainClass(textDocument: TextDocumentIdentifier): CompletableFuture<Map<String, Any?>>
+
+    @JsonRequest
+    fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>>
 }
