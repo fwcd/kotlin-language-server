@@ -18,6 +18,7 @@ object BackupClassPathResolver : ClassPathResolver {
 fun findKotlinStdlib(): Path? =
     findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
     ?: findKotlinCliCompilerLibrary("kotlin-stdlib")
+    ?: findAlternativeLibraryLocation("kotlin-stdlib")
 
 private fun findLocalArtifact(group: String, artifact: String) =
     tryResolving("$artifact using Maven") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingMaven(group, artifact)) }
@@ -69,6 +70,11 @@ private fun findKotlinCliCompilerLibrary(name: String): Path? =
         ?.findFirst()
         ?.orElse(null)
 
+
+// alternative library locations like for snap
+// (can probably just use elvis operator and multiple similar expressions for other install directories)
+private fun findAlternativeLibraryLocation(name: String): Path? =
+    Paths.get("/snap/kotlin/current/lib/${name}.jar").existsOrNull()
 
 private fun Path.existsOrNull() =
     if (Files.exists(this)) this else null
