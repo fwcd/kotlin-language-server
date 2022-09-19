@@ -28,7 +28,7 @@ fun renameSymbol(file: CompiledFile, cursor: Int, sp: SourcePath, newName: Strin
     }
 }
 
-private fun findDeclaration(file: CompiledFile, cursor: Int): Pair<KtNamedDeclaration, Location>? {
+fun findDeclaration(file: CompiledFile, cursor: Int): Pair<KtNamedDeclaration, Location>? {
     val (_, target) = file.referenceAtPoint(cursor) ?: return null
     val psi = target.findPsi()
 
