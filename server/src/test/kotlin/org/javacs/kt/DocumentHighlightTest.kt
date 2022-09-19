@@ -92,11 +92,27 @@ class DocumentHighlightTest : SingleFileTestFixture("highlight", "DocumentHighli
 
         assertThat(result, hasSize(2))
         val firstHighlight = result[0]
-        assertThat(firstHighlight.range, equalTo(range(13, 14, 13, 23)))
+        assertThat(firstHighlight.range, equalTo(range(13, 15, 13, 24)))
         assertThat(firstHighlight.kind, equalTo(DocumentHighlightKind.Text))
 
         val secondHighlight = result[1]
         assertThat(secondHighlight.range, equalTo(range(14, 13, 14, 22)))
+        assertThat(secondHighlight.kind, equalTo(DocumentHighlightKind.Text))
+    }
+
+    @Test
+    fun `should highlight function reference correctly`() {
+        val fileUri = workspaceRoot.resolve(file).toUri().toString()
+        val input = DocumentHighlightParams(TextDocumentIdentifier(fileUri), Position(2, 6))
+        val result = languageServer.textDocumentService.documentHighlight(input).get()
+
+        assertThat(result, hasSize(2))
+        val firstHighlight = result[0]
+        assertThat(firstHighlight.range, equalTo(range(3, 5, 3, 13)))
+        assertThat(firstHighlight.kind, equalTo(DocumentHighlightKind.Text))
+
+        val secondHighlight = result[1]
+        assertThat(secondHighlight.range, equalTo(range(15, 5, 15, 13)))
         assertThat(secondHighlight.kind, equalTo(DocumentHighlightKind.Text))
     }
 }

@@ -37,7 +37,7 @@ private fun findDeclarationCursorSite(
         // important
         Pair(it,
              Location("",
-                      range(file.content, it.nameIdentifier?.textRangeInParent ?: return null)))
+                      range(file.content, it.nameIdentifier?.textRange ?: return null)))
     }
 }
 

@@ -10,6 +10,7 @@ fun somefunc(input: String) {
 }
 
 // test shadowing of the global variable
-fun somefunc(globalval: String) {
+fun somefunc2(globalval: String) {
     println(globalval)
+    somefunc("")
 }
