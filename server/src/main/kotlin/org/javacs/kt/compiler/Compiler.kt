@@ -140,6 +140,15 @@ private class CompilationEnvironment(
                             scriptClassLoader.loadClass(it).kotlin,
                             scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
                         ) {
+                            override fun isScript(fileName: String): Boolean {
+                                // The pattern for KotlinSettingsScript doesn't seem to work well, so kinda "forcing it" for settings.gradle.kts files
+                                if (this.template.simpleName == "KotlinSettingsScript" && fileName.endsWith("settings.gradle.kts")) {
+                                    return true
+                                }
+
+                                return super.isScript(fileName)
+                            }
+
                             override val dependencyResolver: DependenciesResolver = object : DependenciesResolver {
                                 override fun resolve(scriptContents: ScriptContents, environment: Environment) = ResolveResult.Success(ScriptDependencies(
                                     imports = listOf(
