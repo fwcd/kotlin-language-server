@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name": "Kotlin",
     "scopeName": "source.kotlin",
     "patterns": [
@@ -475,10 +476,14 @@
             "end": "(\\})",
             "name": "meta.template.expression.kotlin",
             "beginCaptures": {
-                "1": "punctuation.definition.template-expression.begin"
+                "1": {
+                    "name": "punctuation.definition.template-expression.begin"
+                }
             },
             "endCaptures": {
-                "1": "punctuation.definition.template-expression.begin"
+                "1": {
+                    "name": "punctuation.definition.template-expression.end"
+                }
             },
             "patterns": [
                 {

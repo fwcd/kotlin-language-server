@@ -20,6 +20,10 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 * See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for debugging support on JVM
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
+## Packaging
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/kotlin-language-server.svg)](https://repology.org/project/kotlin-language-server/versions)
+
 ## This repository needs your help!
 
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.

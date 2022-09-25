@@ -15,7 +15,8 @@ import java.nio.file.Path
  * and the compiler. Note that Kotlin sources are stored in SourcePath.
  */
 class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
-    private val workspaceRoots = mutableSetOf<Path>()
+    val workspaceRoots = mutableSetOf<Path>()
+
     private val javaSourcePath = mutableSetOf<Path>()
     private val buildScriptClassPath = mutableSetOf<Path>()
     val classPath = mutableSetOf<ClassPathEntry>()

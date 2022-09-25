@@ -6,6 +6,7 @@ import org.eclipse.lsp4j.jsonrpc.services.JsonDelegate
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
+import org.eclipse.lsp4j.services.NotebookDocumentService
 import org.javacs.kt.command.ALL_COMMANDS
 import org.javacs.kt.externalsources.*
 import org.javacs.kt.util.AsyncExecutor
@@ -30,7 +31,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
-    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath)
+    private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath, sourcePath)
 
     private lateinit var client: LanguageClient
 
@@ -163,4 +164,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     }
 
     override fun exit() {}
+
+    // Fixed in https://github.com/eclipse/lsp4j/commit/04b0c6112f0a94140e22b8b15bb5a90d5a0ed851
+    // Causes issue in lsp 0.15
+    override fun getNotebookDocumentService(): NotebookDocumentService? {
+		return null;
+	}
 }

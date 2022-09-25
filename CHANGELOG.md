@@ -3,6 +3,12 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.1]
+- Add support for run/debug code lenses
+- Add definition lookup support for JDT symbols
+- Add quick fix for implementing abstract functions
+- Add experimental JDT.LS integration
+
 ## [1.3.0]
 - Bump to Kotlin 1.6
 - Support JDK 17
