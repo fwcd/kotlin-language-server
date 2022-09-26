@@ -6,14 +6,13 @@ import org.eclipse.lsp4j.Location
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.position.range
 import org.javacs.kt.references.findReferencesToDeclarationInFile
-import org.javacs.kt.rename.findDeclaration
 import org.javacs.kt.util.findParent
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 fun documentHighlightsAt(file: CompiledFile, cursor: Int): List<DocumentHighlight> {
-    val (declaration, declarationLocation) = findDeclaration(file, cursor)
-        ?: findDeclarationCursorSite(file, cursor)
+    val (declaration, declarationLocation) = file.findDeclaration(cursor)
+        ?: file.findDeclarationCursorSite(cursor)
         ?: return emptyList()
     val references = findReferencesToDeclarationInFile(declaration, file)
 
@@ -24,20 +23,17 @@ fun documentHighlightsAt(file: CompiledFile, cursor: Int): List<DocumentHighligh
     } + references.map { DocumentHighlight(it, DocumentHighlightKind.Text) }
 }
 
-private fun findDeclarationCursorSite(
-        file: CompiledFile,
-        cursor: Int
-): Pair<KtNamedDeclaration, Location>? {
+private fun CompiledFile.findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
     // current symbol might be a declaration. This function is used as a fallback when
     // findDeclaration fails
-    val declaration = file.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
+    val declaration = elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
 
     return declaration?.let {
         // in this scenario we know that the declaration will be at the cursor site, so uri is not
         // important
         Pair(it,
              Location("",
-                      range(file.content, it.nameIdentifier?.textRange ?: return null)))
+                      range(content, it.nameIdentifier?.textRange ?: return null)))
     }
 }
 
