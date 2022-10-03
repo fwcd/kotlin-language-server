@@ -69,6 +69,8 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.samWithReceiver.CliSamWithReceiverComponentContributor
+import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import java.io.File
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
@@ -376,6 +378,12 @@ private class CompilationEnvironment(
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
+        // hacky way to support SamWithReceiverAnnotations for scripts
+        val scriptDefinitions: List<ScriptDefinition> = environment.configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS)
+        scriptDefinitions.takeIf { it.isNotEmpty() }?.let {
+            val annotations = scriptDefinitions.flatMap { it.asLegacyOrNull<KotlinScriptDefinition>()?.annotationsForSamWithReceivers ?: emptyList() }
+            StorageComponentContainerContributor.registerExtension(environment.project, CliSamWithReceiverComponentContributor(annotations))
+        }
         val project = environment.project
         parser = KtPsiFactory(project)
         scripts = ScriptDefinitionProvider.getInstance(project)!! as CliScriptDefinitionProvider

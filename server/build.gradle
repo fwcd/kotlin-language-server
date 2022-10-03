@@ -40,6 +40,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-compiler:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded:$kotlinVersion"
+    implementation "org.jetbrains.kotlin:kotlin-sam-with-receiver-compiler-plugin:$kotlinVersion"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion"
     implementation 'org.jetbrains:fernflower:1.0'
     implementation "org.jetbrains.exposed:exposed-core:$exposedVersion"
