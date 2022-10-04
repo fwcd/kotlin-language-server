@@ -43,3 +43,43 @@ class RenameDefinitionTest : SingleFileTestFixture("rename", "SomeOtherClass.kt"
         assertThat(changes[0].left.edits[0].range.end, equalTo(Position(2, 20)))
     }
 }
+
+class RenameDeclarationSiteTest : SingleFileTestFixture("rename", "DeclSite.kt") {
+
+    @Test
+    fun `should rename variable from usage site`() {
+        val usageFile = workspaceRoot.resolve("UsageSite.kt").toString()
+        val edits = languageServer.textDocumentService.rename(renameParams(usageFile, 4, 13, "newvarname")).get()!!
+        val changes = edits.documentChanges
+
+        assertThat(changes.size, equalTo(2))
+
+        val firstChange = changes[0].left
+        assertThat(firstChange.textDocument.uri, containsString("DeclSite.kt"))
+        assertThat(firstChange.edits[0].newText, equalTo("newvarname"))
+        assertThat(firstChange.edits[0].range, equalTo(range(3, 5, 3, 10)))
+
+        val secondChange = changes[1].left
+        assertThat(secondChange.textDocument.uri, containsString("UsageSite.kt"))
+        assertThat(secondChange.edits[0].newText, equalTo("newvarname"))
+        assertThat(secondChange.edits[0].range, equalTo(range(4, 13, 4, 18)))
+    }
+
+    @Test
+    fun `should rename variable from declaration site`() {
+        val edits = languageServer.textDocumentService.rename(renameParams(file, 3, 6, "newvarname")).get()!!
+        val changes = edits.documentChanges
+
+        assertThat(changes.size, equalTo(2))
+
+        val firstChange = changes[0].left
+        assertThat(firstChange.textDocument.uri, containsString("DeclSite.kt"))
+        assertThat(firstChange.edits[0].newText, equalTo("newvarname"))
+        assertThat(firstChange.edits[0].range, equalTo(range(3, 5, 3, 10)))
+
+        val secondChange = changes[1].left
+        assertThat(secondChange.textDocument.uri, containsString("UsageSite.kt"))
+        assertThat(secondChange.edits[0].newText, equalTo("newvarname"))
+        assertThat(secondChange.edits[0].range, equalTo(range(4, 13, 4, 18)))
+    }
+}

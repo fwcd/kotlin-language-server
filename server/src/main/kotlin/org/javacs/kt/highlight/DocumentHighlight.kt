@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 fun documentHighlightsAt(file: CompiledFile, cursor: Int): List<DocumentHighlight> {
     val (declaration, declarationLocation) = file.findDeclaration(cursor)
-        ?: file.findDeclarationCursorSite(cursor)
         ?: return emptyList()
     val references = findReferencesToDeclarationInFile(declaration, file)
 
@@ -21,20 +20,6 @@ fun documentHighlightsAt(file: CompiledFile, cursor: Int): List<DocumentHighligh
     } else {
         emptyList()
     } + references.map { DocumentHighlight(it, DocumentHighlightKind.Text) }
-}
-
-private fun CompiledFile.findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
-    // current symbol might be a declaration. This function is used as a fallback when
-    // findDeclaration fails
-    val declaration = elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
-
-    return declaration?.let {
-        // in this scenario we know that the declaration will be at the cursor site, so uri is not
-        // important
-        Pair(it,
-             Location("",
-                      range(content, it.nameIdentifier?.textRange ?: return null)))
-    }
 }
 
 private fun KtNamedDeclaration.isInFile(file: KtFile) = this.containingFile == file
