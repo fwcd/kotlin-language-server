@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 
 fun documentHighlightsAt(file: CompiledFile, cursor: Int): List<DocumentHighlight> {
     val (declaration, declarationLocation) = file.findDeclaration(cursor)
-        ?: file.findDeclarationCursorSite(cursor)
         ?: return emptyList()
     val references = findReferencesToDeclarationInFile(declaration, file)
 

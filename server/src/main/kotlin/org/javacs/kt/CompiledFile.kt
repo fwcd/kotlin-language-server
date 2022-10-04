@@ -177,9 +177,14 @@ class CompiledFile(
 
 
     /**
+     * Find the declaration of the element at the cursor.
+     */
+    fun findDeclaration(cursor: Int): Pair<KtNamedDeclaration, Location>? = findDeclarationReference(cursor) ?: findDeclarationCursorSite(cursor)
+
+    /**
      * Find the declaration of the element at the cursor. Only works if the element at the cursor is a reference.
      */
-    fun findDeclaration(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+    private fun findDeclarationReference(cursor: Int): Pair<KtNamedDeclaration, Location>? {
         val (_, target) = referenceAtPoint(cursor) ?: return null
         val psi = target.findPsi()
 
@@ -198,7 +203,7 @@ class CompiledFile(
      * Find the declaration of the element at the cursor.
      * Works even in cases where the element at the cursor might not be a reference, so works for declaration sites.
      */
-    fun findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+    private fun findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
         // current symbol might be a declaration. This function is used as a fallback when
         // findDeclaration fails
         val declaration = elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
