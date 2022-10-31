@@ -147,17 +147,6 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
-        for (change in params.event.added) {
-            LOG.info("Adding workspace {} to source path", change.uri)
-
-            val root = Paths.get(parseURI(change.uri))
-
-            sf.addWorkspaceRoot(root)
-            val refreshed = cp.addWorkspaceRoot(root)
-            if (refreshed) {
-                sp.refresh()
-            }
-        }
         for (change in params.event.removed) {
             LOG.info("Dropping workspace {} from source path", change.uri)
 
@@ -165,6 +154,17 @@ class KotlinWorkspaceService(
 
             sf.removeWorkspaceRoot(root)
             val refreshed = cp.removeWorkspaceRoot(root)
+            if (refreshed) {
+                sp.refresh()
+            }
+        }
+        for (change in params.event.added) {
+            LOG.info("Adding workspace {} to source path", change.uri)
+
+            val root = Paths.get(parseURI(change.uri))
+
+            sf.addWorkspaceRoot(root)
+            val refreshed = cp.addWorkspaceRoot(root)
             if (refreshed) {
                 sp.refresh()
             }
