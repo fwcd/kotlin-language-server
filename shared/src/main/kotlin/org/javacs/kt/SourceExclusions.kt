@@ -10,7 +10,7 @@ import java.nio.file.Paths
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them
 class SourceExclusions(private val workspaceRoots: Collection<Path>) {
-	private val excludedPatterns = listOf(".*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }
+	private val excludedPatterns = listOf(".*", "bazel-*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
     constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
 
