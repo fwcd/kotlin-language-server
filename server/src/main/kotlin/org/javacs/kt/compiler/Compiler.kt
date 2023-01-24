@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalCompilerApi::class)
+@file:Suppress("DEPRECATION")
+
 package org.javacs.kt.compiler
 
 import com.intellij.lang.Language
@@ -67,6 +70,8 @@ import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
+import org.jetbrains.kotlin.cli.jvm.config.configureJdkClasspathRoots
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.samWithReceiver.CliSamWithReceiverComponentContributor
@@ -110,6 +115,9 @@ private class CompilationEnvironment(
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
+
+                // configure jvm runtime classpaths
+                configureJdkClasspathRoots()
 
                 addJvmClasspathRoots(classPath.map { it.toFile() })
                 addJavaSourceRoots(javaSourcePath.map { it.toFile() })
