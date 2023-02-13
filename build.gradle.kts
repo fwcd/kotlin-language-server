@@ -2,7 +2,7 @@
 // We could use a buildSrc script for this.
 // See: https://github.com/gradle/kotlin-dsl-samples/issues/802
 plugins {
-    kotlin("jvm") version "1.6.10"
+    kotlin("jvm") version "1.8.10"
     `maven-publish`
 }
 
