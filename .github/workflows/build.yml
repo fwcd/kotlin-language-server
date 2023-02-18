@@ -23,3 +23,6 @@ jobs:
       - uses: gradle/gradle-build-action@v2
       - name: Build
         run: ./gradlew :server:build :shared:build -PjavaVersion=${{ matrix.java }}
+      - uses: gradle/gradle-build-action@v2
+      - name: Detekt
+        run: ./gradlew detekt
