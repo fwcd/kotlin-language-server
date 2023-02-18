@@ -9,7 +9,27 @@ See [atom-ide-kotlin](https://github.com/fwcd/atom-ide-kotlin).
 ## Emacs
 _using [`lsp-mode`](https://github.com/emacs-lsp/lsp-mode)_
 
-Add the language server executable to your `PATH`.
+There are two ways of setting up the language server with `lsp-mode`:
+- Add the language server executable to your `PATH`. This is useful for development and for always using the latest version from the `main`-branch.
+- Let `lsp-mode` download the server for you (`kotlin-ls`). This will use [the latest release](https://github.com/fwcd/kotlin-language-server/releases/latest).
+
+
+### Run/debug code lenses
+If you use [dap-mode](https://github.com/emacs-lsp/dap-mode), you can set `(setq lsp-kotlin-debug-adapter-enabled t)` to enable the debug adapter. You will need to have [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) on your system. A simple configuration of `dap-mode` for Kotlin may look like:
+```emacs-lisp
+(require 'dap-kotlin)
+(setq lsp-kotlin-debug-adapter-enabled t)
+;; replace the path below to the path to your Kotlin Debug Adapter
+(setq lsp-kotlin-debug-adapter-path "/path/to/kotlin-debug-adapter")
+```
+
+Then you can activate `lsp-kotlin-lens-mode` to see the Run/Debug code lenses at your main-functions.
+
+
+### Override members (e.g, toString and equals)
+The language server provides a custom protocol extension for finding overridable members of a class (variables and methods). `lsp-mode` provides a function that uses this called `lsp-kotlin-implement-member`. You can run it while hovering a class name, and you will get a menu with all available overridable members. (protip: Bind this function to a key!). If you have [Helm](https://github.com/emacs-helm/helm) or [Ivy](https://github.com/abo-abo/swiper) installed, one of them will be utilized. 
+
+
 
 ## Vim
 _using [`LanguageClient-neovim`](https://github.com/autozimu/LanguageClient-neovim)_
