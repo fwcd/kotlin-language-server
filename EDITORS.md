@@ -42,6 +42,25 @@ Add the following to your coc-settings.json file:
 Note that you may need to substitute `kotlin-language-server` with `kotlin-language-server.bat` on Windows.\
 You should also note, that you need a syntax highlighter like [udalov/kotlin-vim](https://github.com/udalov/kotlin-vim) or [sheerun/vim-polyglot](https://github.com/sheerun/vim-polyglot) to work well with coc.
 
+## Neovim
+
+Using Neovim's [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig), register
+the language server using the following.
+
+```lua
+require'lspconfig'.kotlin_language_server.setup{}
+```
+
+If desired, you can also pass in your own defined options to the setup function.
+
+```lua
+require'lspconfig'.kotlin_language_server.setup{
+    on_attach = on_attach,
+    flags = lsp_flags,
+    capabilities = capabilities,
+}
+```
+
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
 
