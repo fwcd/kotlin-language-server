@@ -1,11 +1,8 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
-// TODO: change the hardcoded 1.6.10 to kotlinVeresion that lives in project props
-// We could use a buildSrc script for this.
-// See: https://github.com/gradle/kotlin-dsl-samples/issues/802
 plugins {
-    kotlin("jvm") version "1.8.10"
+    kotlin("jvm")
     `maven-publish`
     id("io.gitlab.arturbosch.detekt") version "1.22.0"
 }
