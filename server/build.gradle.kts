@@ -20,7 +20,7 @@ val serverMainClassName = "org.javacs.kt.MainKt"
 val applicationName = "kotlin-language-server"
 
 application {
-    mainClassName = serverMainClassName
+    mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$projectVersion")
     applicationDistribution.into("bin") {
