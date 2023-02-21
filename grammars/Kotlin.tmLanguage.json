@@ -233,7 +233,7 @@
             ]
         },
         "prefix-modifiers": {
-            "match": "\\b(abstract|final|enum|open|annotation|sealed|data|override|final|lateinit|private|protected|public|internal|inner|companion|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend)\\b",
+            "match": "\\b(abstract|final|enum|open|annotation|sealed|data|override|final|lateinit|private|protected|public|internal|inner|companion|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend|value)\\b",
             "name": "storage.modifier.other.kotlin"
         },
         "postfix-modifiers": {
