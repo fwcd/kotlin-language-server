@@ -15,7 +15,12 @@ fun resolveMain(file: CompiledFile): Map<String,Any> {
 
     findTopLevelMainFunction(parsedFile)?.let { mainFunction ->
         // the KtFiles name is weird. Full path. This causes the class to have full path in name as well. Correcting to top level only
-        parsedFile.name = parsedFile.name.partitionAroundLast("/").second.substring(1)
+        parsedFile.name = if (parsedFile.name.contains("/")) {
+            parsedFile.name.partitionAroundLast("/").second.substring(1)
+        } else {
+            // assuming we are on windows
+            parsedFile.name.partitionAroundLast("\\").second.substring(1)
+        }
 
         return mapOf(
             "mainClass" to JvmFileClassUtil.getFileClassInfoNoResolve(parsedFile).facadeClassFqName.asString(),
