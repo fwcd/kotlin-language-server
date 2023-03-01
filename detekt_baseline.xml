@@ -1,0 +1,661 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:SemanticTokens.kt$element is KtVariableDeclaration &amp;&amp; (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter</ID>
+    <ID>CyclomaticComplexMethod:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>CyclomaticComplexMethod:Completions.kt$private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtElement?, index: SymbolIndex, partial: String): Sequence&lt;CompletionItem&gt;</ID>
+    <ID>CyclomaticComplexMethod:GoToDefinition.kt$fun goToDefinition( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath ): Location?</ID>
+    <ID>CyclomaticComplexMethod:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeConfiguration(params: DidChangeConfigurationParams)</ID>
+    <ID>CyclomaticComplexMethod:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
+    <ID>CyclomaticComplexMethod:StringUtils.kt$fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: Int = 4): Int</ID>
+    <ID>EmptyCatchBlock:LintTest.kt$LintTest${}</ID>
+    <ID>EmptyClassBlock:BigFile.kt$BigFile.Maze${}</ID>
+    <ID>EmptyClassBlock:BigFile.kt$BigFile.MyClass${}</ID>
+    <ID>EmptyClassBlock:Constructor.kt$SomeConstructor${ }</ID>
+    <ID>EmptyClassBlock:Enum.kt$TokenType.Companion${ }</ID>
+    <ID>EmptyClassBlock:OuterDotInner.kt$MyOuterClass.InnerClass${ }</ID>
+    <ID>EmptyClassBlock:OverrideMembers.kt$Closed${}</ID>
+    <ID>EmptyClassBlock:OverrideMembers.kt$MyPrintable${}</ID>
+    <ID>EmptyClassBlock:OverrideMembers.kt$MyThread${}</ID>
+    <ID>EmptyClassBlock:SomeOtherClass.kt$SomeOtherClass${ }</ID>
+    <ID>EmptyClassBlock:SomeSubclass.kt$SomeSubclass${ }</ID>
+    <ID>EmptyClassBlock:Types.kt$Types.SomeInnerObject${ }</ID>
+    <ID>EmptyClassBlock:When.kt$SealedClass.Test${}</ID>
+    <ID>EmptyClassBlock:samefile.kt$MyClass${ }</ID>
+    <ID>EmptyClassBlock:samefile.kt$MyImplClass${}</ID>
+    <ID>EmptyClassBlock:samefile.kt$NullClass${}</ID>
+    <ID>EmptyClassBlock:samefile.kt$PrintableClass${}</ID>
+    <ID>EmptyClassBlock:standardlib.kt$MyComperable${}</ID>
+    <ID>EmptyClassBlock:standardlib.kt$MyList${}</ID>
+    <ID>EmptyClassBlock:standardlib.kt$MyThread${}</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.A$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.B$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Body$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Delegate$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.H1$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.HTML$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Head$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.LI$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.MyClass$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.P$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Title$()</ID>
+    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.UL$()</ID>
+    <ID>EmptyDefaultConstructor:Types.kt$Types.SomeInnerClass$()</ID>
+    <ID>EmptyForBlock:ReferenceCollectionish.kt${ }</ID>
+    <ID>EmptyFunctionBlock:BackquotedFunction.kt${ }</ID>
+    <ID>EmptyFunctionBlock:DocumentSymbols.kt$DocumentSymbols${ }</ID>
+    <ID>EmptyFunctionBlock:FillEmptyBody.kt$Caller${ }</ID>
+    <ID>EmptyFunctionBlock:GoFrom.kt$GoFrom${ }</ID>
+    <ID>EmptyFunctionBlock:GoTo.kt$GoTo${ }</ID>
+    <ID>EmptyFunctionBlock:JvmNameAnnotation.kt${ }</ID>
+    <ID>EmptyFunctionBlock:KotlinLanguageServer.kt$KotlinLanguageServer${}</ID>
+    <ID>EmptyFunctionBlock:Logger.kt$JULRedirector${}</ID>
+    <ID>EmptyFunctionBlock:LoggingMessageCollector.kt$LoggingMessageCollector${}</ID>
+    <ID>EmptyFunctionBlock:ObjectReference.kt$AnObject${ }</ID>
+    <ID>EmptyFunctionBlock:ReferenceGetterSetter.kt$ReferenceGetterSetter${ }</ID>
+    <ID>EmptyFunctionBlock:ReferenceTo.kt$ReferenceTo${ }</ID>
+    <ID>EmptyFunctionBlock:ResolveToFile.kt$ResolveToFile${ }</ID>
+    <ID>EmptyFunctionBlock:SignatureHelp.kt$Target${ }</ID>
+    <ID>EmptyFunctionBlock:SomeSubclass.kt$YetAnotherSubclass${ }</ID>
+    <ID>EmptyFunctionBlock:Statics.kt$MyClass.Companion${ }</ID>
+    <ID>EmptyFunctionBlock:Statics.kt$MyObject${ }</ID>
+    <ID>EmptyFunctionBlock:TrailingLambda.kt${}</ID>
+    <ID>EmptyFunctionBlock:Visibility.kt$Visibility${ }</ID>
+    <ID>EmptyFunctionBlock:Visibility.kt$Visibility.Companion${ }</ID>
+    <ID>EmptyFunctionBlock:Visibility.kt$VisibilitySuper${ }</ID>
+    <ID>EmptyFunctionBlock:Visibility.kt$VisibilitySuper.Companion${ }</ID>
+    <ID>EmptyFunctionBlock:Visibility.kt${ }</ID>
+    <ID>EmptyFunctionBlock:samefile.kt$OtherPrintableClass${}</ID>
+    <ID>EmptySecondaryConstructor:DocumentSymbols.kt$DocumentSymbols${ }</ID>
+    <ID>EmptySecondaryConstructor:KotlinLSException.kt$KotlinLSException${}</ID>
+    <ID>EmptySecondaryConstructor:OtherFileSymbols.kt$OtherFileSymbols${ }</ID>
+    <ID>EmptySecondaryConstructor:ReferenceConstructor.kt$ReferenceConstructor${ }</ID>
+    <ID>EmptySecondaryConstructor:SourceExclusions.kt$SourceExclusions${}</ID>
+    <ID>EqualsAlwaysReturnsTrueOrFalse:OverrideMembers.kt$CompletePrintable$override fun equals(other: Any?): Boolean</ID>
+    <ID>EqualsWithHashCodeExist:ReferenceOperator.kt$ReferenceEquals</ID>
+    <ID>EqualsWithHashCodeExist:ReferenceOperator.kt$ReferenceOperator</ID>
+    <ID>EqualsWithHashCodeExist:ReferenceOperatorUsingName.kt$ReferenceOperatorUsingName</ID>
+    <ID>ExplicitItLambdaParameter:Hovers.kt${ i, it -&gt; val ret: String if (i == 0) ret = it.substring(it.indexOf("/**") + 3) // get rid of the start comment characters else if (i == split.size - 1) ret = it.substring(it.indexOf("*/") + 2) // get rid of the end comment characters else ret = it.substring(it.indexOf('*') + 1) // get rid of any leading * ret }</ID>
+    <ID>ExplicitItLambdaParameter:RenderCompletionItem.kt${ it -&gt; it }</ID>
+    <ID>ForbiddenComment:AddMissingImportsQuickFix.kt$AddMissingImportsQuickFix$// TODO: Visibility checker should be less liberal</ID>
+    <ID>ForbiddenComment:BackupClassPathResolver.kt$// TODO: Resolve the gradleCaches dynamically instead of hardcoding this path</ID>
+    <ID>ForbiddenComment:CompiledFile.kt$CompiledFile$* Looks for a reference expression at the given cursor. * This is currently used by many features in the language server. * Unfortunately, it fails to find declarations for JDK symbols. * [referenceExpressionAtPoint] provides an alternative implementation that can find JDK symbols. * It cannot, however, replace this method at the moment. * TODO: Investigate why this method doesn't find JDK symbols.</ID>
+    <ID>ForbiddenComment:Compiler.kt$CompilationEnvironment$// TODO: KotlinScriptDefinition will soon be deprecated, use</ID>
+    <ID>ForbiddenComment:Compiler.kt$CompilationEnvironment$// TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible</ID>
+    <ID>ForbiddenComment:Compiler.kt$Compiler$// TODO: Lock at file-level</ID>
+    <ID>ForbiddenComment:CompilerClassPath.kt$CompilerClassPath$// TODO: Fetch class path and build script class path concurrently (and asynchronously)</ID>
+    <ID>ForbiddenComment:Completions.kt$// TODO: CRLF?</ID>
+    <ID>ForbiddenComment:Completions.kt$// TODO: Deal with alias imports</ID>
+    <ID>ForbiddenComment:Completions.kt$// TODO: Visibility checker should be less liberal</ID>
+    <ID>ForbiddenComment:Home.kt$// TODO: try and figure out if mavenHome is in non-default position (requires finding and parsing settings.xml)</ID>
+    <ID>ForbiddenComment:Imports.kt$// TODO: Lexicographic insertion</ID>
+    <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Break labels</ID>
+    <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Nullability</ID>
+    <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Type parameters, annotations, modifiers, ...</ID>
+    <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Varargs, ...</ID>
+    <ID>ForbiddenComment:JavaToKotlinTest.kt$JavaToKotlinTest$// TODO: Seems to throw the same exception as</ID>
+    <ID>ForbiddenComment:JdkSourceArchiveProvider.kt$JdkSourceArchiveProvider$* Checks if the given path is inside the JDK. If it is, we return the corresponding source zip. * Note that this method currently doesn't take into the account the JDK version, which means JDK source code * is only available for JDK 9+ builds. * TODO: improve this resolution logic to work for older JDK versions as well.</ID>
+    <ID>ForbiddenComment:KotlinTextDocumentService.kt$KotlinTextDocumentService$// TODO: Investigate when to recompile</ID>
+    <ID>ForbiddenComment:OverrideMembers.kt$// TODO: any way can repeat less code between this and the getAbstractMembersStubs in the ImplementAbstractMembersQuickfix?</ID>
+    <ID>ForbiddenComment:OverrideMembers.kt$// TODO: does not seem to handle the implicit Any and Object super types that well. Need to find out if that is easily solvable. Finds the methods from them if any super class or interface is present</ID>
+    <ID>ForbiddenComment:OverrideMembers.kt$// TODO: look further into this</ID>
+    <ID>ForbiddenComment:OverrideMembers.kt$// TODO: look into this</ID>
+    <ID>ForbiddenComment:OverrideMembers.kt$// TODO: see where this should ideally be placed</ID>
+    <ID>ForbiddenComment:SemanticTokens.kt$// TODO: Ideally we would like to cut-off subtrees outside our range, but this doesn't quite seem to work</ID>
+    <ID>ForbiddenComment:SimpleScriptTest.kt$SimpleScriptTest$// TODO:</ID>
+    <ID>ForbiddenComment:SimpleScriptTest.kt$SimpleScriptTest$// TODO: Test a script using the language server instead</ID>
+    <ID>ForbiddenComment:SourceExclusions.kt$SourceExclusions$// TODO: Read exclusions from gitignore/settings.json/... instead of</ID>
+    <ID>ForbiddenComment:SourcePath.kt$SourcePath$// TODO: Investigate the possibility of compiling all files at once, instead of iterating here</ID>
+    <ID>ForbiddenComment:SourcePath.kt$SourcePath.SourceFile$// TODO: Create PsiFile using the stored language instead</ID>
+    <ID>ForbiddenComment:SourcePath.kt$SourcePath.SourceFile$// TODO: Use language?.associatedFileType?.defaultExtension again</ID>
+    <ID>ForbiddenComment:Symbol.kt$Symbol$// TODO: Store location (e.g. using a URI)</ID>
+    <ID>ForbiddenComment:SymbolIndex.kt$SymbolIndex$// TODO: Extension completion currently only works if the receiver matches exactly,</ID>
+    <ID>ForbiddenComment:build.gradle.kts$// TODO: Currently not possible, see https://github.com/gradle/gradle/issues/9830</ID>
+    <ID>ForbiddenComment:build.gradle.kts$// TODO: change the hardcoded 1.6.10 to kotlinVeresion that lives in project props</ID>
+    <ID>FunctionOnlyReturningConstant:Example.kt$fun example()</ID>
+    <ID>FunctionOnlyReturningConstant:FunctionScope.kt$FunctionScope$private fun aClassFun()</ID>
+    <ID>FunctionOnlyReturningConstant:FunctionScope.kt$FunctionScope.Companion$private fun aCompanionFun()</ID>
+    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$fun instanceFee()</ID>
+    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$fun instanceFoo()</ID>
+    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$private fun privateInstanceFoo()</ID>
+    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$private fun SomeClass.extensionFoo()</ID>
+    <ID>FunctionOnlyReturningConstant:LintErrors.kt$LintErrors$fun foo()</ID>
+    <ID>FunctionOnlyReturningConstant:Recover.kt$private fun intFunction()</ID>
+    <ID>FunctionOnlyReturningConstant:Recover.kt$private fun singleExpressionFunction()</ID>
+    <ID>InvalidPackageDeclaration:CompanionObject.kt$package test.my.companion</ID>
+    <ID>InvalidPackageDeclaration:DeclSite.kt$package declsite</ID>
+    <ID>InvalidPackageDeclaration:JvmNameAnnotation.kt$package com.mypackage.name</ID>
+    <ID>InvalidPackageDeclaration:NoMain.kt$package no.main.found.hopefully</ID>
+    <ID>InvalidPackageDeclaration:Simple.kt$package test</ID>
+    <ID>InvalidPackageDeclaration:Simple.kt$package test.mypackage</ID>
+    <ID>InvalidPackageDeclaration:UsageSite.kt$package declsite</ID>
+    <ID>InvalidPackageDeclaration:samefile.kt$package test.kotlin.lsp</ID>
+    <ID>InvalidPackageDeclaration:standardlib.kt$package test.kotlin.lsp</ID>
+    <ID>LongMethod:Compiler.kt$CompilationEnvironment.&lt;no name provided&gt;.&lt;no name provided&gt;$override fun resolve(scriptContents: ScriptContents, environment: Environment)</ID>
+    <ID>LongMethod:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>LongMethod:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
+    <ID>LongParameterList:CompiledFile.kt$CompiledFile$( val content: String, val parse: KtFile, val compile: BindingContext, val module: ModuleDescriptor, val sourcePath: Collection&lt;KtFile&gt;, val classPath: CompilerClassPath, val isScript: Boolean = false, val kind: CompilationKind = CompilationKind.DEFAULT )</ID>
+    <ID>LongParameterList:GoToDefinition.kt$( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath )</ID>
+    <ID>LongParameterList:LanguageServerTestFixture.kt$LanguageServerTestFixture$(relativePath: String, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int, diagnostics: List&lt;Diagnostic&gt;, only: List&lt;String&gt;)</ID>
+    <ID>LongParameterList:SourcePath.kt$SourcePath.SourceFile$( val uri: URI, var content: String, val path: Path? = uri.filePath, var parsed: KtFile? = null, var compiledFile: KtFile? = null, var compiledContext: BindingContext? = null, var module: ModuleDescriptor? = null, val language: Language? = null, val isTemporary: Boolean = false, // A temporary source file will not be returned by .all() var lastSavedFile: KtFile? = null, )</ID>
+    <ID>LoopWithTooManyJumpStatements:StringUtils.kt$for (i in 0 until maxOffset) { when { (iCandidate + i) &lt; candidateLength -&gt; { if (candidate[iCandidate + i] == pattern[iPattern]) { iCandidate += i localCommonSubstring++ break@searchWindow } } (iPattern + i) &lt; patternLength -&gt; { if (candidate[iCandidate] == pattern[iPattern + i]) { iPattern += i localCommonSubstring++ break@searchWindow } } else -&gt; break@searchWindow } }</ID>
+    <ID>MagicNumber:BackupClassPathResolver.kt$3</ID>
+    <ID>MagicNumber:ClassContentProvider.kt$ClassContentProvider.&lt;no name provided&gt;$5</ID>
+    <ID>MagicNumber:Compiler.kt$3</ID>
+    <ID>MagicNumber:Compiler.kt$5</ID>
+    <ID>MagicNumber:CompilerClassPath.kt$5</ID>
+    <ID>MagicNumber:Formatter.kt$4</ID>
+    <ID>MagicNumber:Hovers.kt$3</ID>
+    <ID>MagicNumber:KotlinLanguageServer.kt$KotlinLanguageServer$100</ID>
+    <ID>MagicNumber:Logger.kt$LogLevel.ALL$100</ID>
+    <ID>MagicNumber:Logger.kt$LogLevel.DEEP_TRACE$3</ID>
+    <ID>MagicNumber:Logger.kt$LogLevel.NONE$100</ID>
+    <ID>MagicNumber:Logger.kt$LogLevel.TRACE$2</ID>
+    <ID>MagicNumber:Logger.kt$Logger$10</ID>
+    <ID>MagicNumber:MavenClassPathResolver.kt$3</ID>
+    <ID>MagicNumber:MavenClassPathResolver.kt$4</ID>
+    <ID>MagicNumber:MavenClassPathResolver.kt$5</ID>
+    <ID>MagicNumber:MavenClassPathResolver.kt$6</ID>
+    <ID>MagicNumber:MavenClassPathResolver.kt$MavenClassPathResolver$5</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.CONSTRUCTOR$7</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.ENUM$5</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.ENUM_MEMBER$6</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.FIELD$8</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.MODULE$4</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.UNKNOWN$9</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Kind.VARIABLE$3</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Visibility.PROTECTED$3</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Visibility.PUBLIC$4</ID>
+    <ID>MagicNumber:Symbol.kt$Symbol.Visibility.UNKNOWN$5</ID>
+    <ID>MagicNumber:URIs.kt$5</ID>
+    <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$3</ID>
+    <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$4</ID>
+    <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$5</ID>
+    <ID>MatchingDeclarationName:Enum.kt$TokenType</ID>
+    <ID>MatchingDeclarationName:ImportsTest.kt$ImportTextEditTest : SingleFileTestFixture</ID>
+    <ID>MatchingDeclarationName:Main.kt$Args</ID>
+    <ID>MatchingDeclarationName:Spaces.kt$Test</ID>
+    <ID>MatchingDeclarationName:When.kt$SealedClass</ID>
+    <ID>MaxLineLength:AddMissingImportsQuickFix.kt$AddMissingImportsQuickFix$override</ID>
+    <ID>MaxLineLength:AddMissingImportsQuickFix.kt$AddMissingImportsQuickFix$private</ID>
+    <ID>MaxLineLength:AdditionalWorkspaceTest.kt$AdditionalWorkspaceTest$val hoverAgain = languageServer.textDocumentService.hover(hoverParams(file, 5, 14)).get() ?: return fail("No hover")</ID>
+    <ID>MaxLineLength:BackupClassPathResolver.kt$?:</ID>
+    <ID>MaxLineLength:BackupClassPathResolver.kt$BackupClassPathResolver$override val classpath: Set&lt;ClassPathEntry&gt; get() = findKotlinStdlib()?.let { setOf(it) }.orEmpty().map { ClassPathEntry(it, null) }.toSet()</ID>
+    <ID>MaxLineLength:BackupClassPathResolver.kt$private</ID>
+    <ID>MaxLineLength:BackupClassPathResolver.kt$private fun Path.resolveStartingWith(prefix: String)</ID>
+    <ID>MaxLineLength:BackupClassPathResolver.kt$tryResolving("$artifact using Maven") { tryFindingLocalArtifactUsing(group, artifact, findLocalArtifactDirUsingMaven(group, artifact)) }</ID>
+    <ID>MaxLineLength:BigFile.kt$BigFile$println("You have passed '${args[0]}' as a number of bottles, " + "but it is not a valid integer number")</ID>
+    <ID>MaxLineLength:ClassContentProvider.kt$ClassContentProvider$"java" -&gt; if (uri.source) Pair(uri.readContents(), "java") else Pair(convertToKotlinIfNeeded(uri.readContents()), "kt")</ID>
+    <ID>MaxLineLength:ClassContentProvider.kt$ClassContentProvider$val resolvedUri = sourceArchiveProvider.fetchSourceArchive(uri.archivePath)?.let(uri.withSource(true)::withArchivePath) ?: uri</ID>
+    <ID>MaxLineLength:ClassPathResolver.kt$FirstNonEmptyClassPathResolver$internal</ID>
+    <ID>MaxLineLength:ClassPathResolver.kt$FirstNonEmptyClassPathResolver$override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath</ID>
+    <ID>MaxLineLength:ClassPathResolver.kt$FirstNonEmptyClassPathResolver$override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty</ID>
+    <ID>MaxLineLength:ClassPathResolver.kt$infix</ID>
+    <ID>MaxLineLength:CodeAction.kt$fun</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$// Otherwise the compiler/analyzer would throw an exception due to a missing TopLevelDescriptorProvider</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$fun</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$private</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$val cursorExpr = element?.findParent&lt;KtExpression&gt;() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$val cursorExpr = parseAtPoint(cursor, asReference = true)?.findParent&lt;KtExpression&gt;() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)}")</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$val psi = parse.findElementAt(oldCursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")</ID>
+    <ID>MaxLineLength:CompiledFile.kt$CompiledFile$val recompile = classPath.compiler.createKtFile(padOffset + surroundingContent, Paths.get("dummy.virtual" + if (isScript) ".kts" else ".kt"), kind)</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$// scriptDefinitions = scriptTemplates.map { ScriptDefinition.FromLegacyTemplate(scriptHostConfig, scriptClassLoader.loadClass(it).kotlin) }</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$LOG.info("Adding script definitions ${scriptDefinitions.map { it.asLegacyOrNull&lt;KotlinScriptDefinition&gt;()?.template?.simpleName }}")</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$StorageComponentContainerContributor.registerExtension(environment.project, CliSamWithReceiverComponentContributor(annotations))</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$scriptDefinitions</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$val annotations = scriptDefinitions.flatMap { it.asLegacyOrNull&lt;KotlinScriptDefinition&gt;()?.annotationsForSamWithReceivers ?: emptyList() }</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$val scriptDefinitions: List&lt;ScriptDefinition&gt; = environment.configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS)</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment$val scriptDefinitions: MutableList&lt;ScriptDefinition&gt; = mutableListOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment.&lt;no name provided&gt;$// The pattern for KotlinSettingsScript doesn't seem to work well, so kinda "forcing it" for settings.gradle.kts files</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment.&lt;no name provided&gt;$if</ID>
+    <ID>MaxLineLength:Compiler.kt$CompilationEnvironment.&lt;no name provided&gt;.&lt;no name provided&gt;$override</ID>
+    <ID>MaxLineLength:Compiler.kt$Compiler$class</ID>
+    <ID>MaxLineLength:Compiler.kt$Compiler$file.packageFqName.asString().replace(".", File.separator) + File.separator + declaration.name + ".class"</ID>
+    <ID>MaxLineLength:Compiler.kt$Compiler$files.forEach { LOG.debug { "$it -&gt; ScriptDefinition: ${it.findScriptDefinition()?.asLegacyOrNull&lt;KotlinScriptDefinition&gt;()?.template?.simpleName}" } }</ID>
+    <ID>MaxLineLength:Compiler.kt$Compiler$fun</ID>
+    <ID>MaxLineLength:Compiler.kt$Compiler$private val buildScriptCompileEnvironment = buildScriptClassPath.takeIf { it.isNotEmpty() }?.let { CompilationEnvironment(emptySet(), it) }</ID>
+    <ID>MaxLineLength:CompilerClassPath.kt$CompilerClassPath$compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)</ID>
+    <ID>MaxLineLength:CompilerClassPath.kt$CompilerClassPath$private fun isBuildScript(file: Path): Boolean</ID>
+    <ID>MaxLineLength:CompilerClassPath.kt$CompilerClassPath$return refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)</ID>
+    <ID>MaxLineLength:CompilerClassPath.kt$CompilerClassPath$var</ID>
+    <ID>MaxLineLength:CompilerTest.kt$CompilerTest$val intFunctionRef = recompile.findElementAt(41)!!.parentsWithSelf.filterIsInstance&lt;KtReferenceExpression&gt;().first()</ID>
+    <ID>MaxLineLength:Completions.kt$+</ID>
+    <ID>MaxLineLength:Completions.kt$.</ID>
+    <ID>MaxLineLength:Completions.kt$LOG.info("{} {} didn't look like a type, a member, or an identifier", surroundingElement::class.simpleName, surroundingElement.text)</ID>
+    <ID>MaxLineLength:Completions.kt$completeMembers(file, cursor, surroundingElement.receiverExpression, surroundingElement is KtSafeQualifiedExpression)</ID>
+    <ID>MaxLineLength:Completions.kt$is KtQualifiedExpression -&gt; getQueryNameFromExpression(element.receiverExpression, element.receiverExpression.startOffset, file)</ID>
+    <ID>MaxLineLength:Completions.kt$private</ID>
+    <ID>MaxLineLength:Completions.kt$private val TYPES_FILTER = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)</ID>
+    <ID>MaxLineLength:Completions.kt$private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build&lt;Pair&lt;Name, Name&gt;, Unit&gt;()</ID>
+    <ID>MaxLineLength:Completions.kt$return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, surroundingElement)</ID>
+    <ID>MaxLineLength:Completions.kt$val</ID>
+    <ID>MaxLineLength:Completions.kt$val companionDescriptors = if (hasCompanionObject &amp;&amp; companionObjectDescriptor != null) companionObjectDescriptor!!.getDescriptors() else emptySequence()</ID>
+    <ID>MaxLineLength:Completions.kt$val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)</ID>
+    <ID>MaxLineLength:Completions.kt$val receiverType = extensionFunction.extensionReceiverParameter?.type?.replaceArgumentsWithStarProjections() ?: return false</ID>
+    <ID>MaxLineLength:Completions.kt$val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$EditCallTest$assertThat(completions.items.find { it.label.startsWith("println") }, hasProperty("insertText", equalTo("println")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$FunctionScopeTest$assertThat("Reports aClassFun only once", completions.items.filter { it.label.startsWith("aClassFun") }, hasSize(1))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$FunctionScopeTest$assertThat("Reports aCompanionFun only once", completions.items.filter { it.label.startsWith("aCompanionFun") }, hasSize(1))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$FunctionScopeTest$assertThat("Reports aCompanionVal only once", completions.items.filter { it.label == "aCompanionVal" }, hasSize(1))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$InstanceMemberTest$assertThat("Reports extensionFoo only once", completions.items.filter { it.label.startsWith("extensionFoo") }, hasSize(1))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$InstanceMemberTest$assertThat("Reports instanceFoo only once", completions.items.filter { it.label.startsWith("instanceFoo") }, hasSize(1))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$InstanceMemberTest$assertThat(completions.items.filter { it.label.startsWith("instanceFoo") }.firstOrNull(), hasProperty("insertText", equalTo("instanceFoo")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$TrailingLambdaTest$assertThat(completions.items.find { it.label.startsWith("lambdaParameter") }, hasProperty("insertText", equalTo("lambdaParameter { \${1:x} }")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$TrailingLambdaTest$assertThat(completions.items.find { it.label.startsWith("mixedParameters") }, hasProperty("insertText", equalTo("mixedParameters(\${1:a}) { \${2:b} }")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$VisibilityTest$assertThat(labels, hasItems(startsWith("privateThisFun"), startsWith("protectedThisFun"), startsWith("publicThisFun"), startsWith("privateThisCompanionFun"), startsWith("protectedThisCompanionFun"), startsWith("publicThisCompanionFun"), startsWith("privateTopLevelFun")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$VisibilityTest$assertThat(labels, hasItems(startsWith("protectedSuperFun"), startsWith("publicSuperFun"), startsWith("protectedSuperCompanionFun"), startsWith("publicSuperCompanionFun")))</ID>
+    <ID>MaxLineLength:CompletionsTest.kt$VisibilityTest$assertThat(labels, not(hasItems(startsWith("privateSuperFun"), startsWith("privateSuperCompanionFun"), startsWith("publicExtensionFun"))))</ID>
+    <ID>MaxLineLength:Debouncer.kt$Debouncer$val currentTask = executor.schedule({ task { currentTaskRef.get()?.isCancelled() ?: false } }, delayMs, TimeUnit.MILLISECONDS)</ID>
+    <ID>MaxLineLength:DocumentSymbolsTest.kt$DocumentSymbolsTest$DocumentSymbol("DocumentSymbols", SymbolKind.Constructor, Range(Position(0, 29), Position(0, 31)), Range(Position(0, 29), Position(0, 31)), null, listOf())</ID>
+    <ID>MaxLineLength:DocumentSymbolsTest.kt$DocumentSymbolsTest$DocumentSymbol("DocumentSymbols", SymbolKind.Constructor, Range(Position(6, 4), Position(7, 5)), Range(Position(6, 4), Position(7, 5)), null, listOf())</ID>
+    <ID>MaxLineLength:DocumentSymbolsTest.kt$DocumentSymbolsTest$DocumentSymbol("aFunction", SymbolKind.Function, Range(Position(3, 4), Position(4, 5)), Range(Position(3, 8), Position(3, 17)), null, listOf())</ID>
+    <ID>MaxLineLength:DocumentSymbolsTest.kt$DocumentSymbolsTest$DocumentSymbol("aProperty", SymbolKind.Property, Range(Position(1, 4), Position(1, 21)), Range(Position(1, 8), Position(1, 17)), null, listOf())</ID>
+    <ID>MaxLineLength:DocumentSymbolsTest.kt$DocumentSymbolsTest$val</ID>
+    <ID>MaxLineLength:ExtractSymbolExtensionReceiverType.kt$ExtractSymbolExtensionReceiverType$override fun visitFunctionDescriptor(desc: FunctionDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolExtensionReceiverType.kt$ExtractSymbolExtensionReceiverType$override fun visitVariableDescriptor(desc: VariableDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolExtensionReceiverType.kt$ExtractSymbolExtensionReceiverType$private fun convert(desc: ReceiverParameterDescriptor): FqName?</ID>
+    <ID>MaxLineLength:ExtractSymbolKind.kt$ExtractSymbolKind$override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolVisibility.kt$ExtractSymbolVisibility$override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolVisibility.kt$ExtractSymbolVisibility$override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolVisibility.kt$ExtractSymbolVisibility$override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolVisibility.kt$ExtractSymbolVisibility$override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:ExtractSymbolVisibility.kt$ExtractSymbolVisibility$override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?)</ID>
+    <ID>MaxLineLength:FernflowerDecompiler.kt$FernflowerDecompiler$throw KotlinLSException("Could not decompile ${compiledClassOrJar.fileName}: Fernflower did not generate sources at ${srcOutPath.fileName}")</ID>
+    <ID>MaxLineLength:FindReferences.kt$if</ID>
+    <ID>MaxLineLength:FindReferences.kt$isComponent(descriptor) -&gt; findComponentReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)</ID>
+    <ID>MaxLineLength:FindReferences.kt$isIterator(descriptor) -&gt; findIteratorReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)</ID>
+    <ID>MaxLineLength:FindReferences.kt$isPropertyDelegate(declaration) -&gt; findDelegateReferences(element, recompile) + findNameReferences(element, recompile)</ID>
+    <ID>MaxLineLength:FindReferences.kt$isPropertyDelegate(descriptor) -&gt; findDelegateReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)</ID>
+    <ID>MaxLineLength:FindReferences.kt$private</ID>
+    <ID>MaxLineLength:FindReferences.kt$val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")</ID>
+    <ID>MaxLineLength:FindReferences.kt$val descriptor = file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, declaration] ?: return emptyResult("Declaration ${declaration.fqName} has no descriptor")</ID>
+    <ID>MaxLineLength:FindReferences.kt$val element = recover.elementAtPoint(cursor)?.findParent&lt;KtNamedDeclaration&gt;() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$.</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$GradleClassPathResolver$.</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$GradleClassPathResolver$internal</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$private</ID>
+    <ID>MaxLineLength:GradleClassPathResolver.kt$val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")</ID>
+    <ID>MaxLineLength:GradleDSLScriptTest.kt$GradleDSLScriptTest$assertThat(contents.value, containsString("fun PluginDependenciesSpec.kotlin(module: String): PluginDependencySpec"))</ID>
+    <ID>MaxLineLength:Hovers.kt$val expressionType = bindingContext[BindingContext.EXPRESSION_TYPE_INFO, element]?.type ?: element.getType(bindingContext)</ID>
+    <ID>MaxLineLength:Hovers.kt$val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))</ID>
+    <ID>MaxLineLength:Hovers.kt$val javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$(classMember is FunctionDescriptor &amp;&amp; classMember.modality == Modality.ABSTRACT &amp;&amp; !overridesDeclaration(kotlinClass, classMember)) || (classMember is PropertyDescriptor &amp;&amp; classMember.modality == Modality.ABSTRACT &amp;&amp; !overridesDeclaration(kotlinClass, classMember))</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$ImplementAbstractMembersQuickFix$override</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$ImplementAbstractMembersQuickFix$val bodyAppendBeginning = listOf(TextEdit(Range(newMembersStartPosition, newMembersStartPosition), "{")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$ImplementAbstractMembersQuickFix$val bodyAppendEnd = listOf(TextEdit(Range(newMembersStartPosition, newMembersStartPosition), System.lineSeparator() + "}")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$diagnostics.any { diagnosticMatch(it, startCursor, endCursor, hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")) }</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$diagnostics.find { diagnosticMatch(it, range, hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")) }</ID>
+    <ID>MaxLineLength:ImplementAbstractMembersQuickFix.kt$if</ID>
+    <ID>MaxLineLength:JavaElementConverter.kt$JavaElementConverter$private fun List&lt;String&gt;.buildCodeBlock(indentDelta: Int = 1, separatorNewlines: Int = 1): String</ID>
+    <ID>MaxLineLength:JavaElementConverter.kt$JavaElementConverter$translatedKotlinCode = "${expression.lExpression.translate()} ${expression.operationSign.text} ${expression.rExpression.translate()}"</ID>
+    <ID>MaxLineLength:JavaElementConverter.kt$JavaElementConverter$translatedKotlinCode = "${expression.lOperand.translate()} ${expression.operationSign.text} ${expression.rOperand.translate()}"</ID>
+    <ID>MaxLineLength:JavaElementConverter.kt$JavaElementConverter$translatedKotlinCode = "${statement.initialization.translate()}\n${indent}while (${statement.condition.translate()}) $translatedBody"</ID>
+    <ID>MaxLineLength:KlsURI.kt$KlsURI$URI(newArchivePath.toUri().toString() + (innerPath.let { "!$it" } )).toKlsURI()?.let { KlsURI(it.fileUri, query) }</ID>
+    <ID>MaxLineLength:KlsURI.kt$KlsURI$get() = if (query.isEmpty()) "" else query.entries.fold("?") { accum, next -&gt; "$accum${next.key}=${next.value}" }</ID>
+    <ID>MaxLineLength:KlsURI.kt$private fun parseKlsURIQuery(uri: URI): Map&lt;KlsURI.QueryParam, String&gt;</ID>
+    <ID>MaxLineLength:KotlinLanguageServer.kt$KotlinLanguageServer$config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false</ID>
+    <ID>MaxLineLength:KotlinLanguageServer.kt$KotlinLanguageServer$private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)</ID>
+    <ID>MaxLineLength:KotlinLanguageServer.kt$KotlinLanguageServer$private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))</ID>
+    <ID>MaxLineLength:KotlinLanguageServer.kt$KotlinLanguageServer$serverCapabilities.semanticTokensProvider = SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)</ID>
+    <ID>MaxLineLength:KotlinProtocolExtensionService.kt$KotlinProtocolExtensionService$override</ID>
+    <ID>MaxLineLength:KotlinTextDocumentService.kt$KotlinTextDocumentService$fetchSignatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)</ID>
+    <ID>MaxLineLength:KotlinTextDocumentService.kt$KotlinTextDocumentService$goToDefinition(file, cursor, uriContentProvider.classContentProvider, tempDirectory, config.externalSources, cp)</ID>
+    <ID>MaxLineLength:KotlinTextDocumentService.kt$KotlinTextDocumentService$override</ID>
+    <ID>MaxLineLength:KotlinTextDocumentService.kt$KotlinTextDocumentService$return "${describeURI(position.textDocument.uri)} ${position.position.line + 1}:${position.position.character + 1}"</ID>
+    <ID>MaxLineLength:KotlinWorkspaceService.kt$KotlinWorkspaceService$languageClient</ID>
+    <ID>MaxLineLength:KotlinWorkspaceService.kt$KotlinWorkspaceService$override</ID>
+    <ID>MaxLineLength:LanguageServerTestFixture.kt$LanguageServerTestFixture$fun</ID>
+    <ID>MaxLineLength:LanguageServerTestFixture.kt$SingleFileTestFixture$open</ID>
+    <ID>MaxLineLength:LintTest.kt$LintTest$languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(TextDocumentIdentifier(uri(file).toString()))).get()</ID>
+    <ID>MaxLineLength:Logger.kt$Logger$fun deepTrace(msg: String, vararg placeholders: Any?)</ID>
+    <ID>MaxLineLength:Main.kt$Args$/* * The language server can currently be launched in three modes: * - Stdio, in which case no argument should be specified (used by default) * - TCP Server, in which case the client has to connect to the specified tcpServerPort (used by the Docker image) * - TCP Client, in whcih case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode) */</ID>
+    <ID>MaxLineLength:MavenArtifactParsingTest.kt$MavenArtifactParsingTest$assertThat</ID>
+    <ID>MaxLineLength:MavenClassPathResolver.kt$val command = listOf(mvnCommand(pom).toString(), "dependency:list", "-DincludeScope=test", "-DoutputFile=$mavenOutput", "-Dstyle.color=never")</ID>
+    <ID>MaxLineLength:MavenClassPathResolver.kt$val command = listOf(mvnCommand(pom).toString(), "dependency:sources", "-DincludeScope=test", "-DoutputFile=$mavenOutput", "-Dstyle.color=never")</ID>
+    <ID>MaxLineLength:MavenClassPathResolver.kt$version = version ?: parts[4].split(" ")[0]</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$"override fun getStackTrace(): (Array&lt;(StackTraceElement..StackTraceElement?)&gt;..Array&lt;out (StackTraceElement..StackTraceElement?)&gt;) { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$"override fun getUncaughtExceptionHandler(): UncaughtExceptionHandler { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$"override fun setUncaughtExceptionHandler(eh: UncaughtExceptionHandler) { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$padding + "override fun getStackTrace(): (Array&lt;(StackTraceElement..StackTraceElement?)&gt;..Array&lt;out (StackTraceElement..StackTraceElement?)&gt;) { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$padding + "override fun getUncaughtExceptionHandler(): UncaughtExceptionHandler { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$padding + "override fun setUncaughtExceptionHandler(eh: UncaughtExceptionHandler) { }"</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$val result = languageServer.getProtocolExtensionService().overrideMember(TextDocumentPositionParams(TextDocumentIdentifier(fileUri), position(11, 8))).get()</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$val result = languageServer.getProtocolExtensionService().overrideMember(TextDocumentPositionParams(TextDocumentIdentifier(fileUri), position(15, 8))).get()</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$val result = languageServer.getProtocolExtensionService().overrideMember(TextDocumentPositionParams(TextDocumentIdentifier(fileUri), position(37, 8))).get()</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$val result = languageServer.getProtocolExtensionService().overrideMember(TextDocumentPositionParams(TextDocumentIdentifier(fileUri), position(39, 9))).get()</ID>
+    <ID>MaxLineLength:OverrideMemberTest.kt$OverrideMemberTest$val result = languageServer.getProtocolExtensionService().overrideMember(TextDocumentPositionParams(TextDocumentIdentifier(fileUri), position(9, 8))).get()</ID>
+    <ID>MaxLineLength:OverrideMembers.kt$// TODO: any way can repeat less code between this and the getAbstractMembersStubs in the ImplementAbstractMembersQuickfix?</ID>
+    <ID>MaxLineLength:OverrideMembers.kt$// TODO: does not seem to handle the implicit Any and Object super types that well. Need to find out if that is easily solvable. Finds the methods from them if any super class or interface is present</ID>
+    <ID>MaxLineLength:OverrideMembers.kt$// interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor</ID>
+    <ID>MaxLineLength:OverrideMembers.kt$private fun MemberDescriptor.canBeOverriden()</ID>
+    <ID>MaxLineLength:Progress.kt$Progress.Factory.None$override fun create(label: String): CompletableFuture&lt;Progress&gt;</ID>
+    <ID>MaxLineLength:QuickFix.kt$QuickFix$fun</ID>
+    <ID>MaxLineLength:QuickFix.kt$diagnostic.textRanges.any { it.startOffset &lt;= startCursor &amp;&amp; it.endOffset &gt;= endCursor } &amp;&amp; diagnosticTypes.contains(diagnostic.factory.name)</ID>
+    <ID>MaxLineLength:QuickFix.kt$fun</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixExternalLibraryTest$assertThat(firstMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override val size: Int = TODO(\"SET VALUE\")"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixExternalLibraryTest$assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun compare(p0: String, p1: String): Int { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixExternalLibraryTest$assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun run() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixExternalLibraryTest$assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun get(index: Int): String { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(firstFunctionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun print() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(firstMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override val name: String = TODO(\"SET VALUE\")"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun myMethod(myStr: String?): String? { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun print() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(functionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun test(input: String, otherInput: Int) { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(memberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun myFun() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(secondFunctionToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun test(input: String, otherInput: Int) { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun behaviour() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixSameFileTest$assertThat(secondMemberToImplementEdit?.newText, equalTo(System.lineSeparator() + System.lineSeparator() + " override fun myFun() { }"))</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixTest$equalTo(System.lineSeparator() + System.lineSeparator() + " override fun someSuperMethod(someParameter: String): Int { }")</ID>
+    <ID>MaxLineLength:QuickFixesTest.kt$ImplementAbstractMembersQuickFixTest$val codeActionParams = codeActionParams(file, 10, 1, 10, 25, listOf(diagnostic), listOf(CodeActionKind.QuickFix))</ID>
+    <ID>MaxLineLength:ReferencesTest.kt$ReferenceConstructorTest$assertThat("Finds reference to a secondary constructor", referenceStrs, hasItem(containsString("ReferenceConstructor.kt")))</ID>
+    <ID>MaxLineLength:ReferencesTest.kt$ReferenceConstructorTest$assertThat("Finds reference to the main constructor", referenceStrs, hasItem(containsString("ReferenceConstructor.kt")))</ID>
+    <ID>MaxLineLength:RenderCompletionItem.kt$RenderCompletionItem$val parenthesizedParams = parameters.dropLast(1).ifEmpty { null }?.let { "(${valueParametersSnippet(it)})" } ?: ""</ID>
+    <ID>MaxLineLength:ResolveMain.kt$// a little ugly, but because of success of the above, we know that "it" has 4 layers of parent objects (child of companion object body, companion object body, companion object, outer class)</ID>
+    <ID>MaxLineLength:ResolveMain.kt$// the KtFiles name is weird. Full path. This causes the class to have full path in name as well. Correcting to top level only</ID>
+    <ID>MaxLineLength:SemanticTokens.kt$SemanticToken</ID>
+    <ID>MaxLineLength:SemanticTokens.kt$if</ID>
+    <ID>MaxLineLength:SemanticTokens.kt$private</ID>
+    <ID>MaxLineLength:SemanticTokens.kt$val deltaStart = token.range.start.character - (last?.takeIf { deltaLine == 0 }?.range?.start?.character ?: 0)</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(classLine, 12, classLine, 16), SemanticTokenType.CLASS, setOf(SemanticTokenModifier.DECLARATION))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(classLine, 21, classLine, 29), SemanticTokenType.PARAMETER, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(constLine, 5, constLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(enumLine, 12, enumLine, 16), SemanticTokenType.CLASS, setOf(SemanticTokenModifier.DECLARATION))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(enumLine, 19, enumLine, 27), SemanticTokenType.ENUM_MEMBER, setOf(SemanticTokenModifier.DECLARATION))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(funLine, 32, funLine, 33), SemanticTokenType.VARIABLE, setOf(SemanticTokenModifier.READONLY))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(funLine, 5, funLine, 6), SemanticTokenType.FUNCTION, setOf(SemanticTokenModifier.DECLARATION))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(funLine, 7, funLine, 8), SemanticTokenType.PARAMETER, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$SemanticToken(range(varLine, 5, varLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION))</ID>
+    <ID>MaxLineLength:SemanticTokensTest.kt$SemanticTokensTest$val partialResponse = languageServer.textDocumentService.semanticTokensRange(semanticTokensRangeParams(file, range(constLine, 0, classLine + 1, 0))).get()!!</ID>
+    <ID>MaxLineLength:SignatureHelp.kt$*</ID>
+    <ID>MaxLineLength:SignatureHelp.kt$val (signatures, activeDeclaration, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures.flatMap { it.parameters.map { it.documentation.left }}, hasItems("String param", "Int param"))</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures.map { it.documentation.left }, hasItems("Call foo with a String", "Call foo with an Int"))</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures.map { it.documentation.left }, hasItems("Construct with a String", "Construct with an Int"))</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures.map { it.label }, hasItems("constructor Constructor(bar: String)", "constructor Constructor(bar: Int)"))</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures[help.activeSignature].label, equalTo("fun multiParam(first: String, second: String): Unit"))</ID>
+    <ID>MaxLineLength:SignatureHelpTest.kt$SignatureHelpTest$assertThat(help.signatures[help.activeSignature].label, equalTo("fun oneOrTwoArgs(first: String, second: String): Unit"))</ID>
+    <ID>MaxLineLength:SourceArchiveProvider.kt$CompositeSourceArchiveProvider$class</ID>
+    <ID>MaxLineLength:SourceExclusions.kt$SourceExclusions$private val excludedPatterns = listOf(".*", "bazel-*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }</ID>
+    <ID>MaxLineLength:SourcePath.kt$SourcePath$LOG.warn("Requested source file {} is not on source path, this is most likely a bug. Adding it now temporarily...", describeURI(uri))</ID>
+    <ID>MaxLineLength:SourcePath.kt$SourcePath.SourceFile$CompiledFile(content, compiledFile!!, compiledContext!!, module!!, allIncludingThis(), cp, isScript, kind)</ID>
+    <ID>MaxLineLength:SourcePath.kt$SourcePath.SourceFile$fun</ID>
+    <ID>MaxLineLength:SourcePath.kt$SourcePath.SourceFile$val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again</ID>
+    <ID>MaxLineLength:Symbol.kt$Symbol.Visibility.Companion$fun fromRaw(rawValue: Int)</ID>
+    <ID>MaxLineLength:SymbolIndex.kt$SymbolIndex$(Symbols.fqName eq descriptorFqn.toString()) and (Symbols.extensionReceiverType eq extensionReceiverFqn?.toString())</ID>
+    <ID>MaxLineLength:SymbolIndex.kt$SymbolIndex$fun</ID>
+    <ID>MaxLineLength:SymbolIndex.kt$SymbolIndex$private</ID>
+    <ID>MaxLineLength:Symbols.kt$val symbol = DocumentSymbol(currentDecl.name ?: "&lt;anonymous&gt;", symbolKind(currentDecl), span, nameSpan, null, children)</ID>
+    <ID>MaxLineLength:TemporaryDirectory.kt$TemporaryDirectory$fun createTempFile(prefix: String = "tmp", suffix: String = ""): Path</ID>
+    <ID>MaxLineLength:URIs.kt$URI.create(runCatching { URLDecoder.decode(uri, StandardCharsets.UTF_8.toString()).replace(" ", "%20") }.getOrDefault(uri))</ID>
+    <ID>MaxLineLength:Utils.kt$fun &lt;T&gt; noFuture(message: String, contents: T): CompletableFuture&lt;T&gt;</ID>
+    <ID>MaxLineLength:WithStdlibResolver.kt$// For each "kotlin-stdlib-blah", use the newest. This may not be correct behavior if the project has lots of</ID>
+    <ID>MaxLineLength:WithStdlibResolver.kt$// conflicting dependencies, but in general should get enough of the stdlib loaded that we can display errors</ID>
+    <ID>MaxLineLength:WithStdlibResolver.kt$return wrapWithStdlib(paths.map { it.compiledJar }.toSet()).map { ClassPathEntry(it, paths.find { it1 -&gt; it1.compiledJar == it }?.sourceJar) }.toSet()</ID>
+    <ID>MayBeConst:CompanionObject.kt$val SOME_GLOBAL_CONSTANT = 42</ID>
+    <ID>MayBeConst:DeclSite.kt$val myvar = 2</ID>
+    <ID>MayBeConst:DocumentHighlight.kt$val globalval = 23</ID>
+    <ID>MayBeConst:FunctionScope.kt$FunctionScope.Companion$private val aCompanionVal = 1</ID>
+    <ID>MayBeConst:JvmNameAnnotation.kt$val MY_CONSTANT = 1</ID>
+    <ID>MayBeConst:OtherFile.kt$val somevalinotherfile = 42</ID>
+    <ID>MayBeConst:Simple.kt$val something = 1</ID>
+    <ID>MemberNameEqualsClassName:ReferenceGetSetValue.kt$Main$private fun main()</ID>
+    <ID>NestedBlockDepth:Completions.kt$private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>NestedBlockDepth:GoToDefinition.kt$fun goToDefinition( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath ): Location?</ID>
+    <ID>NestedBlockDepth:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeConfiguration(params: DidChangeConfigurationParams)</ID>
+    <ID>NestedBlockDepth:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams)</ID>
+    <ID>NestedBlockDepth:LanguageServerTestFixture.kt$LanguageServerTestFixture$private fun createLanguageServer(): KotlinLanguageServer</ID>
+    <ID>NestedBlockDepth:OverrideMembers.kt$private fun parametersMatch( function: KtNamedFunction, functionDescriptor: FunctionDescriptor ): Boolean</ID>
+    <ID>NestedBlockDepth:SourcePath.kt$SourcePath$fun save(uri: URI)</ID>
+    <ID>NestedBlockDepth:StringUtils.kt$fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: Int = 4): Int</ID>
+    <ID>NewLineAtEndOfFile:BackquotedFunction.kt$.BackquotedFunction.kt</ID>
+    <ID>NewLineAtEndOfFile:BigFile.kt$.BigFile.kt</ID>
+    <ID>NewLineAtEndOfFile:CompiledFileExample.kt$.CompiledFileExample.kt</ID>
+    <ID>NewLineAtEndOfFile:Constructor.kt$.Constructor.kt</ID>
+    <ID>NewLineAtEndOfFile:DocumentSymbols.kt$.DocumentSymbols.kt</ID>
+    <ID>NewLineAtEndOfFile:DoubleDot.kt$.DoubleDot.kt</ID>
+    <ID>NewLineAtEndOfFile:EditCall.kt$.EditCall.kt</ID>
+    <ID>NewLineAtEndOfFile:Example.kt$.Example.kt</ID>
+    <ID>NewLineAtEndOfFile:ExampleScript.kts$.ExampleScript.kts</ID>
+    <ID>NewLineAtEndOfFile:FileToEdit.kt$.FileToEdit.kt</ID>
+    <ID>NewLineAtEndOfFile:FillEmptyBody.kt$.FillEmptyBody.kt</ID>
+    <ID>NewLineAtEndOfFile:FindDoc.kt$org.javacs.kt.docs.FindDoc.kt</ID>
+    <ID>NewLineAtEndOfFile:FunctionReference.kt$.FunctionReference.kt</ID>
+    <ID>NewLineAtEndOfFile:FunctionScope.kt$.FunctionScope.kt</ID>
+    <ID>NewLineAtEndOfFile:GoFrom.kt$.GoFrom.kt</ID>
+    <ID>NewLineAtEndOfFile:GoTo.kt$.GoTo.kt</ID>
+    <ID>NewLineAtEndOfFile:InstanceMembersJava.kt$.InstanceMembersJava.kt</ID>
+    <ID>NewLineAtEndOfFile:LintErrors.kt$.LintErrors.kt</ID>
+    <ID>NewLineAtEndOfFile:Literals.kt$.Literals.kt</ID>
+    <ID>NewLineAtEndOfFile:MiddleOfFunction.kt$.MiddleOfFunction.kt</ID>
+    <ID>NewLineAtEndOfFile:ObjectReference.kt$.ObjectReference.kt</ID>
+    <ID>NewLineAtEndOfFile:OtherFileSymbols.kt$.OtherFileSymbols.kt</ID>
+    <ID>NewLineAtEndOfFile:OuterDotInner.kt$.OuterDotInner.kt</ID>
+    <ID>NewLineAtEndOfFile:QuestionDot.kt$.QuestionDot.kt</ID>
+    <ID>NewLineAtEndOfFile:Recover.kt$.Recover.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceCollectionish.kt$.ReferenceCollectionish.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceComponents.kt$.ReferenceComponents.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceFrom.kt$.ReferenceFrom.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceGetSetValue.kt$.ReferenceGetSetValue.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceGetterSetter.kt$.ReferenceGetterSetter.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceInvoke.kt$.ReferenceInvoke.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceOperator.kt$.ReferenceOperator.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceOperatorUsingName.kt$.ReferenceOperatorUsingName.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferenceTo.kt$.ReferenceTo.kt</ID>
+    <ID>NewLineAtEndOfFile:ReferencesBigFile.kt$.ReferencesBigFile.kt</ID>
+    <ID>NewLineAtEndOfFile:ResolveFromFile.kt$.ResolveFromFile.kt</ID>
+    <ID>NewLineAtEndOfFile:ResolveToFile.kt$.ResolveToFile.kt</ID>
+    <ID>NewLineAtEndOfFile:SemanticTokens.kt$.SemanticTokens.kt</ID>
+    <ID>NewLineAtEndOfFile:SignatureHelp.kt$.SignatureHelp.kt</ID>
+    <ID>NewLineAtEndOfFile:Statics.kt$.Statics.kt</ID>
+    <ID>NewLineAtEndOfFile:Types.kt$.Types.kt</ID>
+    <ID>PackageNaming:JavaJSONConverter.kt$package j2k</ID>
+    <ID>ReturnCount:BigFile.kt$BigFile$fun Maze.addIfFree(i: Int, j: Int, result: MutableList&lt;Point&gt;)</ID>
+    <ID>ReturnCount:CompiledFile.kt$CompiledFile$fun referenceAtPoint(cursor: Int): Pair&lt;KtExpression, DeclarationDescriptor&gt;?</ID>
+    <ID>ReturnCount:CompiledFile.kt$CompiledFile$fun typeAtPoint(cursor: Int): KotlinType?</ID>
+    <ID>ReturnCount:Completions.kt$private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>ReturnCount:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>ReturnCount:Completions.kt$private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String</ID>
+    <ID>ReturnCount:Completions.kt$private fun implicitMembers(scope: HierarchicalScope): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>ReturnCount:Completions.kt$private fun isNotStaticJavaMethod( descriptor: DeclarationDescriptor ): Boolean</ID>
+    <ID>ReturnCount:Completions.kt$private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean</ID>
+    <ID>ReturnCount:Completions.kt$private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) -&gt; Boolean</ID>
+    <ID>ReturnCount:Completions.kt$private fun subclassParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean</ID>
+    <ID>ReturnCount:FindDoc.kt$fun findDoc(declaration: DeclarationDescriptorWithSource): KDocTag?</ID>
+    <ID>ReturnCount:FindReferences.kt$private fun possibleReferences(declaration: DeclarationDescriptor, sp: SourcePath): Set&lt;KtFile&gt;</ID>
+    <ID>ReturnCount:Hovers.kt$@OptIn(IDEAPluginsCompatibilityAPI::class) private fun renderTypeOf(element: KtExpression, bindingContext: BindingContext): String?</ID>
+    <ID>ReturnCount:Hovers.kt$private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover?</ID>
+    <ID>ReturnCount:OverrideMembers.kt$private fun parametersMatch( function: KtNamedFunction, functionDescriptor: FunctionDescriptor ): Boolean</ID>
+    <ID>ReturnCount:Position.kt$fun location(declaration: DeclarationDescriptor): Location?</ID>
+    <ID>ReturnCount:ResolveMain.kt$fun resolveMain(file: CompiledFile): Map&lt;String,Any&gt;</ID>
+    <ID>ReturnCount:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
+    <ID>ReturnCount:SignatureHelp.kt$private fun activeParameter(call: KtCallExpression, cursor: Int): Int</ID>
+    <ID>ReturnCount:SignatureHelp.kt$private fun candidates(call: KtCallExpression, file: CompiledFile): List&lt;CallableDescriptor&gt;</ID>
+    <ID>ReturnCount:SignatureHelp.kt$private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescriptor): Boolean</ID>
+    <ID>SpreadOperator:Main.kt$(*argv)</ID>
+    <ID>SwallowedException:AsyncExecutor.kt$AsyncExecutor$e: Exception</ID>
+    <ID>SwallowedException:ClassContentProvider.kt$ClassContentProvider$e: FileNotFoundException</ID>
+    <ID>SwallowedException:LintTest.kt$LintTest$ex: CancellationException</ID>
+    <ID>SwallowedException:Position.kt$e: NullPointerException</ID>
+    <ID>SwallowedException:SourceFiles.kt$SourceFiles$e: FileNotFoundException</ID>
+    <ID>SwallowedException:SourceFiles.kt$SourceFiles$e: IOException</ID>
+    <ID>SwallowedException:SymbolIndex.kt$SymbolIndex$e: IllegalStateException</ID>
+    <ID>TooGenericExceptionCaught:AsyncExecutor.kt$AsyncExecutor$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ClassPathResolver.kt$ClassPathResolver$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Compiler.kt$CompilationEnvironment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Completions.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:DefaultClassPathResolver.kt$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Position.kt$e: NullPointerException</ID>
+    <ID>TooGenericExceptionCaught:SourcePath.kt$SourcePath$ex: Exception</ID>
+    <ID>TooGenericExceptionCaught:SymbolIndex.kt$SymbolIndex$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:Utils.kt$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:OneFilePerformance.kt$OneFilePerformance$throw RuntimeException("Expected BigFile.max but found " + call)</ID>
+    <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching char $char")</ID>
+    <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching line $line")</ID>
+    <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching offset $offset")</ID>
+    <ID>TooManyFunctions:BackupClassPathResolver.kt$org.javacs.kt.classpath.BackupClassPathResolver.kt</ID>
+    <ID>TooManyFunctions:CompiledFile.kt$CompiledFile</ID>
+    <ID>TooManyFunctions:Compiler.kt$Compiler : Closeable</ID>
+    <ID>TooManyFunctions:CompilerClassPath.kt$CompilerClassPath : Closeable</ID>
+    <ID>TooManyFunctions:Completions.kt$org.javacs.kt.completion.Completions.kt</ID>
+    <ID>TooManyFunctions:DelegatePrintStream.kt$DelegatePrintStream : PrintStream</ID>
+    <ID>TooManyFunctions:ExtractSymbolKind.kt$ExtractSymbolKind : DeclarationDescriptorVisitor</ID>
+    <ID>TooManyFunctions:ExtractSymbolVisibility.kt$ExtractSymbolVisibility : DeclarationDescriptorVisitor</ID>
+    <ID>TooManyFunctions:FindReferences.kt$org.javacs.kt.references.FindReferences.kt</ID>
+    <ID>TooManyFunctions:JavaElementConverter.kt$JavaElementConverter : JavaElementVisitor</ID>
+    <ID>TooManyFunctions:JavaTypeConverter.kt$JavaTypeConverter : PsiTypeVisitor</ID>
+    <ID>TooManyFunctions:KotlinLanguageServer.kt$KotlinLanguageServer : LanguageServerLanguageClientAwareCloseable</ID>
+    <ID>TooManyFunctions:KotlinTextDocumentService.kt$KotlinTextDocumentService : TextDocumentServiceCloseable</ID>
+    <ID>TooManyFunctions:Logger.kt$Logger</ID>
+    <ID>TooManyFunctions:OverrideMembers.kt$org.javacs.kt.overridemembers.OverrideMembers.kt</ID>
+    <ID>TooManyFunctions:RenderCompletionItem.kt$RenderCompletionItem : DeclarationDescriptorVisitor</ID>
+    <ID>TooManyFunctions:SignatureHelp.kt$org.javacs.kt.signaturehelp.SignatureHelp.kt</ID>
+    <ID>TooManyFunctions:SourceFiles.kt$SourceFiles</ID>
+    <ID>TooManyFunctions:SourcePath.kt$SourcePath</ID>
+    <ID>TooManyFunctions:SourcePath.kt$SourcePath$SourceFile</ID>
+    <ID>TooManyFunctions:Utils.kt$org.javacs.kt.util.Utils.kt</ID>
+    <ID>TopLevelPropertyNaming:GoToProperties.kt$const val globalNumber: Int = 2</ID>
+    <ID>UnnecessaryAbstractClass:SimpleScriptTest.kt$SimpleScript$SimpleScript</ID>
+    <ID>UnnecessaryAbstractClass:SomeSuperClass.kt$SomeSuperClass$SomeSuperClass</ID>
+    <ID>UnnecessaryAbstractClass:samefile.kt$CanPrint$CanPrint</ID>
+    <ID>UnusedPrivateClass:CompiledFileExample.kt$CompiledFileExample</ID>
+    <ID>UnusedPrivateClass:Constructor.kt$SomeConstructor</ID>
+    <ID>UnusedPrivateClass:DocumentSymbols.kt$DocumentSymbols</ID>
+    <ID>UnusedPrivateClass:FileToEdit.kt$FileToEdit</ID>
+    <ID>UnusedPrivateClass:FunctionScope.kt$FunctionScope</ID>
+    <ID>UnusedPrivateClass:LintErrors.kt$LintErrors</ID>
+    <ID>UnusedPrivateClass:MainWorkspaceFile.kt$MainWorkspaceFile</ID>
+    <ID>UnusedPrivateClass:MiddleOfFunction.kt$MiddleOfFunction</ID>
+    <ID>UnusedPrivateClass:ReferenceGetSetValue.kt$Main</ID>
+    <ID>UnusedPrivateClass:Types.kt$Types</ID>
+    <ID>UnusedPrivateClass:Visibility.kt$Visibility : VisibilitySuper</ID>
+    <ID>UnusedPrivateMember:BackquotedFunction.kt$private fun `fun that needs backquotes`()</ID>
+    <ID>UnusedPrivateMember:BackquotedFunction.kt$private fun completeBackquotedFunction()</ID>
+    <ID>UnusedPrivateMember:BigFile.kt$BigFile$args: Array&lt;String&gt;</ID>
+    <ID>UnusedPrivateMember:Completions.kt$private fun completeTypeMembers(type: KotlinType): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>UnusedPrivateMember:Completions.kt$private fun empty(message: String): CompletionList</ID>
+    <ID>UnusedPrivateMember:Constructor.kt$SomeConstructor$x: Int</ID>
+    <ID>UnusedPrivateMember:Constructor.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:DebouncerTest.kt$DebouncerTest$i</ID>
+    <ID>UnusedPrivateMember:DocumentSymbols.kt$DocumentSymbols$aConstructorArg: Int</ID>
+    <ID>UnusedPrivateMember:DocumentSymbols.kt$DocumentSymbols$aFunctionArg: Int</ID>
+    <ID>UnusedPrivateMember:DoubleDot.kt$private fun doubleDot(p: String)</ID>
+    <ID>UnusedPrivateMember:EditCall.kt$private fun test()</ID>
+    <ID>UnusedPrivateMember:FunctionReference.kt$private fun foo(): List&lt;String&gt;</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$anArgument: Int</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$private fun aClassFun()</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$private val aClassVal = 1</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$val aLocal = 1</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope.Companion$private fun aCompanionFun()</ID>
+    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope.Companion$private val aCompanionVal = 1</ID>
+    <ID>UnusedPrivateMember:FunctionScript.kts$val first = 1</ID>
+    <ID>UnusedPrivateMember:FunctionScript.kts$val second = 2</ID>
+    <ID>UnusedPrivateMember:GradleClassPathResolver.kt$private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".toRegex() }</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$SomeClass$private fun privateInstanceFoo()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun SomeClass.extensionFoo()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun completeIdentifierInsideCall()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findCompletionsForLettersInFullMethod()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findFunctionReference()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findListExtensionFunctions()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findUnqualifiedFunctionReference()</ID>
+    <ID>UnusedPrivateMember:InstanceMember.kt$private fun foo()</ID>
+    <ID>UnusedPrivateMember:InstanceMembersJava.kt$private fun findJavaInstanceMembers(p: Path)</ID>
+    <ID>UnusedPrivateMember:JavaElementConverter.kt$JavaElementConverter$private fun PsiCallExpression.translateTypeArguments(): String</ID>
+    <ID>UnusedPrivateMember:KotlinTextDocumentService.kt$KotlinTextDocumentService$private val TextDocumentIdentifier.isKotlinScript: Boolean get() = uri.endsWith(".kts")</ID>
+    <ID>UnusedPrivateMember:LintTest.kt$LintTest$i</ID>
+    <ID>UnusedPrivateMember:Literals.kt$private fun foo()</ID>
+    <ID>UnusedPrivateMember:Logger.kt$Logger$private val newline = System.lineSeparator()</ID>
+    <ID>UnusedPrivateMember:ObjectReference.kt$private fun bar()</ID>
+    <ID>UnusedPrivateMember:ObjectReference.kt$private fun dang()</ID>
+    <ID>UnusedPrivateMember:ObjectReference.kt$private fun foo()</ID>
+    <ID>UnusedPrivateMember:OtherFileSymbols.kt$OtherFileSymbols$aConstructorArg: Int</ID>
+    <ID>UnusedPrivateMember:OtherFileSymbols.kt$OtherFileSymbols$val otherFileLocalVariable = 1</ID>
+    <ID>UnusedPrivateMember:OuterDotInner.kt$private fun staticDot()</ID>
+    <ID>UnusedPrivateMember:OuterDotInner.kt$private fun test(p: Any)</ID>
+    <ID>UnusedPrivateMember:QuestionDot.kt$private fun completeQuestionDot(s: String?)</ID>
+    <ID>UnusedPrivateMember:Recover.kt$private fun blockFunction()</ID>
+    <ID>UnusedPrivateMember:Recover.kt$private fun intFunction()</ID>
+    <ID>UnusedPrivateMember:Recover.kt$private fun singleExpressionFunction()</ID>
+    <ID>UnusedPrivateMember:ReferenceCollectionish.kt$i</ID>
+    <ID>UnusedPrivateMember:ReferenceCollectionish.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceComponents.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceComponents.kt$val c = ReferenceComponents().component1()</ID>
+    <ID>UnusedPrivateMember:ReferenceConstructor.kt$ReferenceConstructor$mainConstructor: String</ID>
+    <ID>UnusedPrivateMember:ReferenceConstructor.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceGetSetValue.kt$Main$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceGetterSetter.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceInvoke.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceOperator.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:ReferenceOperatorUsingName.kt$private fun main()</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$SignatureHelp$param: String</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$bar: Int</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$bar: String</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$first: Int</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$first: String</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$second: Int</ID>
+    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$second: String</ID>
+    <ID>UnusedPrivateMember:SimpleScriptTest.kt$SimpleScriptTest$val resultValue = (result as ResultWithDiagnostics.Success).value.returnValue as ResultValue.Value</ID>
+    <ID>UnusedPrivateMember:SourceFiles.kt$i</ID>
+    <ID>UnusedPrivateMember:Statics.kt$private fun completeStatics()</ID>
+    <ID>UnusedPrivateMember:TrailingLambda.kt$a: Int</ID>
+    <ID>UnusedPrivateMember:TrailingLambda.kt$b: (Int) -&gt; Unit</ID>
+    <ID>UnusedPrivateMember:TrailingLambda.kt$x: () -&gt; Unit</ID>
+    <ID>UnusedPrivateMember:Visibility.kt$Visibility$private fun privateThisFun()</ID>
+    <ID>UnusedPrivateMember:Visibility.kt$Visibility.Companion$private fun privateThisCompanionFun()</ID>
+    <ID>UnusedPrivateMember:Visibility.kt$VisibilitySuper$private fun privateSuperFun()</ID>
+    <ID>UnusedPrivateMember:Visibility.kt$VisibilitySuper.Companion$private fun privateSuperCompanionFun()</ID>
+    <ID>UnusedPrivateMember:Visibility.kt$private fun privateTopLevelFun()</ID>
+    <ID>UtilityClassWithPublicConstructor:CompanionObject.kt$SweetPotato</ID>
+    <ID>UtilityClassWithPublicConstructor:Statics.kt$MyClass</ID>
+    <ID>WildcardImport:AddMissingImportsQuickFix.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:AdditionalWorkspaceTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:ClassPathTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:ClassPathTest.kt$import org.javacs.kt.classpath.*</ID>
+    <ID>WildcardImport:CodeAction.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:CompiledFile.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:Compiler.kt$import org.jetbrains.kotlin.config.*</ID>
+    <ID>WildcardImport:Compiler.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.descriptors.*</ID>
+    <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.psi.psiUtil.*</ID>
+    <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.resolve.descriptorUtil.*</ID>
+    <ID>WildcardImport:CompletionsTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:ExtractSymbolExtensionReceiverType.kt$import org.jetbrains.kotlin.descriptors.*</ID>
+    <ID>WildcardImport:ExtractSymbolKind.kt$import org.jetbrains.kotlin.descriptors.*</ID>
+    <ID>WildcardImport:ExtractSymbolVisibility.kt$import org.jetbrains.kotlin.descriptors.*</ID>
+    <ID>WildcardImport:FindReferences.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:GradleDSLScriptTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:HoverTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:Hovers.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:ImplementAbstractMembersQuickFix.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:Imports.kt$import org.jetbrains.kotlin.psi.*</ID>
+    <ID>WildcardImport:ImportsTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:JavaElementConverter.kt$import com.intellij.psi.*</ID>
+    <ID>WildcardImport:JavaElementConverter.kt$import com.intellij.psi.javadoc.*</ID>
+    <ID>WildcardImport:JavaTypeConverter.kt$import com.intellij.psi.*</ID>
+    <ID>WildcardImport:KotlinLanguageServer.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:KotlinLanguageServer.kt$import org.javacs.kt.externalsources.*</ID>
+    <ID>WildcardImport:KotlinProtocolExtensionService.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:KotlinProtocolExtensions.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:KotlinTextDocumentService.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:KotlinTextDocumentService.kt$import org.javacs.kt.completion.*</ID>
+    <ID>WildcardImport:KotlinWorkspaceService.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:LanguageServerTestFixture.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:LintTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:MavenArtifactParsingTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:OneFilePerformance.kt$import org.openjdk.jmh.annotations.*</ID>
+    <ID>WildcardImport:ReferencesTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:Rename.kt$import org.eclipse.lsp4j.*</ID>
+    <ID>WildcardImport:RenderCompletionItem.kt$import org.jetbrains.kotlin.descriptors.*</ID>
+    <ID>WildcardImport:SemanticTokensTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:SignatureHelpTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:SimpleScriptTest.kt$import kotlin.script.experimental.api.*</ID>
+    <ID>WildcardImport:SimpleScriptTest.kt$import org.hamcrest.Matchers.*</ID>
+    <ID>WildcardImport:SimpleScriptTest.kt$import org.junit.*</ID>
+    <ID>WildcardImport:SimpleScriptTest.kt$import org.junit.Assert.*</ID>
+    <ID>WildcardImport:SymbolIndex.kt$import org.jetbrains.exposed.sql.*</ID>
+    <ID>WildcardImport:Symbols.kt$import org.jetbrains.kotlin.psi.*</ID>
+  </CurrentIssues>
+</SmellBaseline>
