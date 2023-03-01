@@ -72,14 +72,11 @@ tasks.register<DetektCreateBaselineTask>("createDetektBaseline") {
 }
 
 tasks.withType<Detekt>().configureEach {
+    jvmTarget = JavaVersion.VERSION_11.toString()
     reports {
         html.required.set(true)
         md.required.set(true)
     }
-}
-
-tasks.withType<Detekt>().configureEach {
-    jvmTarget = "11"
 }
 
 tasks.check.get().dependsOn(tasks.detekt)
