@@ -6,6 +6,7 @@ plugins {
     id("application")
     id("com.github.jk1.tcdeps")
     id("com.jaredsburrows.license")
+    id("configure-publishing")
 }
 
 val projectVersion = "1.3.2"
