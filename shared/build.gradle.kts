@@ -9,7 +9,6 @@ repositories {
     mavenCentral()
 }
 
-version = project.version
 val javaVersion = try {
     project.property("javaVersion").toString()
 } catch (_: MissingPropertyException) {

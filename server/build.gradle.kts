@@ -8,7 +8,6 @@ plugins {
     id("com.jaredsburrows.license")
 }
 
-val projectVersion = "1.3.2"
 val debugPort = 8000
 val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
 val javaVersion = try {
@@ -17,15 +16,13 @@ val javaVersion = try {
     "11"
 }
 
-version = projectVersion
-
 val serverMainClassName = "org.javacs.kt.MainKt"
 val applicationName = "kotlin-language-server"
 
 application {
     mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
-    applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$projectVersion")
+    applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
     applicationDistribution.into("bin") {
         fileMode = 755
     }
@@ -127,6 +124,9 @@ tasks.withType<Test>() {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 }
+
+// override the distribution name from server-<version>.zip to server.zip
+tasks.distZip.get().archiveFileName.set("${project.name}.zip")
 
 tasks.installDist {
     finalizedBy("fixFilePermissions")

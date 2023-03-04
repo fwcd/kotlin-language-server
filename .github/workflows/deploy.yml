@@ -1,13 +1,13 @@
 name: Deploy
 on:
-  push:
-    tags:
-      - '*'
+  workflow_run:
+    workflows: [Tag]
+    types:
+      - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.repository == 'fwcd/kotlin-language-server'
     steps:
       - uses: actions/checkout@v3
       - name: Setup JDK
@@ -15,6 +15,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
+      - name: Get latest tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
       - name: Build distribution
@@ -25,8 +28,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Version ${{ github.ref }}
+          tag_name: ${{ steps.get-latest-tag.outputs.tag }}
+          release_name: Version ${{ steps.get-latest-tag.outputs.tag }}
           draft: false
           prerelease: false
       - name: Upload server asset

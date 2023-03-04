@@ -1,3 +1,4 @@
+import com.palantir.gradle.gitversion.VersionDetails
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
@@ -5,6 +6,7 @@ plugins {
     kotlin("jvm")
     `maven-publish`
     id("io.gitlab.arturbosch.detekt") version "1.22.0"
+    id("com.palantir.git-version")
 }
 
 repositories {
@@ -33,6 +35,15 @@ configure(subprojects.filter { it.name != "grammars" }) {
             }
         }
     }
+}
+
+// follows instructions from: https://github.com/palantir/gradle-git-version
+// to get the latest git tag so that we can use it for versioning
+val versionDetails: groovy.lang.Closure<VersionDetails> by extra
+val details = versionDetails()
+
+allprojects {
+    version = details.lastTag
 }
 
 detekt {
