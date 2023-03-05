@@ -43,6 +43,7 @@ tasks.register<DetektCreateBaselineTask>("createDetektBaseline") {
     include("**/*.kts")
     exclude("shared/build/**/*.*")
     exclude("server/build/**/*.*")
+    exclude("gradle/plugins/build/**/*.*")
 }
 
 tasks.withType<Detekt>().configureEach {
