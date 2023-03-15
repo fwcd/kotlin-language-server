@@ -19,15 +19,18 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
 
         return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
-            .map { ClassPathEntry(it, null) }.toSet()
     }
-    override val buildScriptClasspath: Set<Path> get() {
+    override val buildScriptClasspath: Set<Path>
+        get() {
         return if (includeKotlinDSL) {
             val scripts = listOf("kotlinDSLClassPathFinder.gradle")
             val tasks = listOf("kotlinLSPKotlinDSLDeps")
 
             return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
                 .apply { if (isNotEmpty()) LOG.info("Successfully resolved build script dependencies for '${projectDirectory.fileName}' using Gradle") }
+                .map {
+                    it.compiledJar
+                }.toSet()
         } else {
             emptySet()
         }
@@ -70,7 +73,7 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<Path> {
+private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<ClassPathEntry> {
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
 
     val tmpScripts = gradleScripts.map { gradleScriptToTempFile(it, deleteOnExit = false).toPath().toAbsolutePath() }
@@ -78,16 +81,12 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
 
     val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")
     val dependencies = findGradleCLIDependencies(command, projectDirectory)
-        ?.also { LOG.debug("Classpath for task {}", it) }
-        .orEmpty()
-        .filter { it.toString().lowercase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
-        .toSet()
 
     tmpScripts.forEach(Files::delete)
     return dependencies
 }
 
-private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<Path>? {
+private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<ClassPathEntry> {
     val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
     if ("FAILURE: Build failed" in errors) {
         LOG.warn("Gradle task failed: {}", errors)
@@ -101,13 +100,22 @@ private fun findGradleCLIDependencies(command: List<String>, projectDirectory: P
     return parseGradleCLIDependencies(result)
 }
 
-private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(?:\r?\n)".toRegex() }
+private val artifactPattern by lazy { "kotlin-lsp-gradle path:(.+) source:(.+)".toRegex() }
 private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".toRegex() }
 
-private fun parseGradleCLIDependencies(output: String): Set<Path>? {
+private fun parseGradleCLIDependencies(output: String): Set<ClassPathEntry> {
     LOG.debug(output)
     val artifacts = artifactPattern.findAll(output)
-        .mapNotNull { Paths.get(it.groups[1]?.value) }
-        .filterNotNull()
+        .map {
+            val path = it.groups[1]?.value
+            val source = it.groups[2]?.value
+            val jarPath = if (path == "null" || path == null) null else Path.of(path)
+            val sourceJarPath = if (source == "null" || source == null) null else Path.of(source)
+            if (jarPath != null && (path!!.lowercase().endsWith(".jar") || Files.isDirectory(jarPath))) {
+                LOG.debug { "Adding path:$jarPath source: $sourceJarPath to classpath" }
+                return@map ClassPathEntry(jarPath, sourceJarPath)
+            } else return@map null
+        }.filterNotNull()
+
     return artifacts.toSet()
 }
