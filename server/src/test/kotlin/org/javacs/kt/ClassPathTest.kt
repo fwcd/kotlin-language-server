@@ -28,6 +28,19 @@ class ClassPathTest {
         assertThat(classPath, hasItem(containsString("junit")))
     }
 
+    @Test fun `find maven classpath`() {
+        val workspaceRoot = testResourcesRoot().resolve("mavenWorkspace")
+        val buildFile = workspaceRoot.resolve("pom.xml")
+
+        assertTrue(Files.exists(buildFile))
+
+        val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
+        print(resolvers)
+        val classPath = resolvers.classpathOrEmpty.map { it.toString() }
+
+        assertThat(classPath, hasItem(containsString("junit")))
+    }
+
     @Test fun `find kotlin stdlib`() {
         assertThat(findKotlinStdlib(), notNullValue())
     }

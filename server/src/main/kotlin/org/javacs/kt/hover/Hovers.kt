@@ -20,6 +20,7 @@ import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.position
 import org.javacs.kt.util.findParent
 import org.javacs.kt.signaturehelp.getDocString
+import org.jetbrains.kotlin.utils.IDEAPluginsCompatibilityAPI
 
 fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val (ref, target) = file.referenceAtPoint(cursor) ?: return typeHoverAt(file, cursor)
@@ -67,6 +68,7 @@ private fun renderJavaDoc(text: String): String {
     }.joinToString("\n")
 }
 
+@OptIn(IDEAPluginsCompatibilityAPI::class)
 private fun renderTypeOf(element: KtExpression, bindingContext: BindingContext): String? {
     if (element is KtCallableDeclaration) {
         val descriptor = bindingContext[BindingContext.DECLARATION_TO_DESCRIPTOR, element]

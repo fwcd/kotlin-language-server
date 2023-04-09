@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
     "name": "Kotlin",
     "scopeName": "source.kotlin",
     "patterns": [
@@ -232,7 +233,7 @@
             ]
         },
         "prefix-modifiers": {
-            "match": "\\b(abstract|final|enum|open|annotation|sealed|data|override|final|lateinit|private|protected|public|internal|inner|companion|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend)\\b",
+            "match": "\\b(abstract|final|enum|open|annotation|sealed|data|override|final|lateinit|private|protected|public|internal|inner|companion|noinline|crossinline|vararg|reified|tailrec|operator|infix|inline|external|const|suspend|value)\\b",
             "name": "storage.modifier.other.kotlin"
         },
         "postfix-modifiers": {
@@ -383,7 +384,7 @@
             ]
         },
         "type-annotation": {
-            "match": "(?<![:?]):\\s*(\\w|\\?|\\s|->|(?<GROUP>[<(]([^<>()]|\\g<GROUP>)+[)>]))+",
+            "match": "(?<![:?]):\\s*(\\w|\\?|\\s|->|(?<GROUP>[<(]([^<>()\"']|\\g<GROUP>)+[)>]))+",
             "captures": {
                 "0": {
                     "patterns": [
@@ -475,10 +476,14 @@
             "end": "(\\})",
             "name": "meta.template.expression.kotlin",
             "beginCaptures": {
-                "1": "punctuation.definition.template-expression.begin"
+                "1": {
+                    "name": "punctuation.definition.template-expression.begin"
+                }
             },
             "endCaptures": {
-                "1": "punctuation.definition.template-expression.begin"
+                "1": {
+                    "name": "punctuation.definition.template-expression.end"
+                }
             },
             "patterns": [
                 {

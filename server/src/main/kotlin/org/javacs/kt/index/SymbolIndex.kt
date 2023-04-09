@@ -26,6 +26,8 @@ private object Symbols : IntIdTable() {
     val visibility = integer("visibility")
     val extensionReceiverType = varchar("extensionreceivertype", length = MAX_FQNAME_LENGTH).nullable()
     val location = optReference("location", Locations)
+
+    val byShortName = index("symbol_shortname_index", false, shortName)
 }
 
 private object Locations : IntIdTable() {

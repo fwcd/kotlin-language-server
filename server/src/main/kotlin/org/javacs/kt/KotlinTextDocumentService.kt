@@ -26,6 +26,7 @@ import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
 import org.javacs.kt.rename.renameSymbol
+import org.javacs.kt.highlight.documentHighlightsAt
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -103,8 +104,9 @@ class KotlinTextDocumentService(
         }
     }
 
-    override fun documentHighlight(position: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>> {
-        TODO("not implemented")
+    override fun documentHighlight(position: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>> = async.compute {
+        val (file, cursor) = recover(position.textDocument.uri, position.position, Recompile.NEVER)
+        documentHighlightsAt(file, cursor)
     }
 
     override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -156,6 +158,7 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
+    @Suppress("DEPRECATION")
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> = async.compute {
         LOG.info("Find symbols in {}", describeURI(params.textDocument.uri))
 

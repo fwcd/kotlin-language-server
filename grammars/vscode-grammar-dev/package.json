@@ -1,0 +1,25 @@
+{
+    "name": "kotlin-grammar-dev",
+    "displayName": "Kotlin Grammar Development",
+    "description": "Grammar development extension for Kotlin",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.67.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "kotlin",
+            "aliases": ["Kotlin", "kotlin"],
+            "extensions": [".kt",".kts"],
+            "configuration": "../kotlin.configuration.json"
+        }],
+        "grammars": [{
+            "language": "kotlin",
+            "scopeName": "source.kotlin",
+            "path": "../Kotlin.tmLanguage.json"
+        }]
+    }
+}

@@ -1,6 +1,7 @@
 package org.javacs.kt.references
 
 import org.eclipse.lsp4j.Location
+import org.eclipse.lsp4j.Range
 import org.javacs.kt.LOG
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.location
@@ -9,6 +10,7 @@ import org.javacs.kt.util.emptyResult
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.preOrderTraversal
 import org.javacs.kt.util.toPath
+import org.javacs.kt.CompiledFile
 import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.ConstructorDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -59,6 +61,28 @@ private fun doFindReferences(element: KtNamedDeclaration, sp: SourcePath): Colle
         isPropertyDelegate(declaration) -> findDelegateReferences(element, recompile) + findNameReferences(element, recompile)
         else -> findNameReferences(element, recompile)
     }
+}
+
+/**
+ * Finds references to the named declaration in the given file. The declaration may or may not reside in another file.
+ *
+ * @returns ranges of references in the file. Empty list if none are found
+ */
+fun findReferencesToDeclarationInFile(declaration: KtNamedDeclaration, file: CompiledFile): List<Range> {
+    val descriptor = file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, declaration] ?: return emptyResult("Declaration ${declaration.fqName} has no descriptor")
+    val bindingContext = file.compile
+
+    val references = when {
+        isComponent(descriptor) -> findComponentReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
+        isIterator(descriptor) -> findIteratorReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
+        isPropertyDelegate(descriptor) -> findDelegateReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
+        else -> findNameReferences(declaration, bindingContext)
+    }
+
+    return references.map {
+        location(it)?.range
+    }.filterNotNull()
+     .sortedWith(compareBy({ it.start.line }))
 }
 
 private fun findNameReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtReferenceExpression> {

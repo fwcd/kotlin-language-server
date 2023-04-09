@@ -1,3 +1,6 @@
+@file:OptIn(ExperimentalCompilerApi::class)
+@file:Suppress("DEPRECATION")
+
 package org.javacs.kt.compiler
 
 import com.intellij.lang.Language
@@ -67,8 +70,12 @@ import org.jetbrains.kotlin.cli.jvm.compiler.CliBindingTrace
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.TopDownAnalyzerFacadeForJVM
+import org.jetbrains.kotlin.cli.jvm.config.configureJdkClasspathRoots
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
+import org.jetbrains.kotlin.samWithReceiver.CliSamWithReceiverComponentContributor
+import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import java.io.File
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
@@ -109,6 +116,9 @@ private class CompilationEnvironment(
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
 
+                // configure jvm runtime classpaths
+                configureJdkClasspathRoots()
+
                 addJvmClasspathRoots(classPath.map { it.toFile() })
                 addJavaSourceRoots(javaSourcePath.map { it.toFile() })
 
@@ -140,6 +150,15 @@ private class CompilationEnvironment(
                             scriptClassLoader.loadClass(it).kotlin,
                             scriptHostConfig[ScriptingHostConfiguration.getEnvironment]?.invoke()
                         ) {
+                            override fun isScript(fileName: String): Boolean {
+                                // The pattern for KotlinSettingsScript doesn't seem to work well, so kinda "forcing it" for settings.gradle.kts files
+                                if (this.template.simpleName == "KotlinSettingsScript" && fileName.endsWith("settings.gradle.kts")) {
+                                    return true
+                                }
+
+                                return super.isScript(fileName)
+                            }
+
                             override val dependencyResolver: DependenciesResolver = object : DependenciesResolver {
                                 override fun resolve(scriptContents: ScriptContents, environment: Environment) = ResolveResult.Success(ScriptDependencies(
                                     imports = listOf(
@@ -376,29 +395,20 @@ private class CompilationEnvironment(
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
 
+        // hacky way to support SamWithReceiverAnnotations for scripts
+        val scriptDefinitions: List<ScriptDefinition> = environment.configuration.getList(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS)
+        scriptDefinitions.takeIf { it.isNotEmpty() }?.let {
+            val annotations = scriptDefinitions.flatMap { it.asLegacyOrNull<KotlinScriptDefinition>()?.annotationsForSamWithReceivers ?: emptyList() }
+            StorageComponentContainerContributor.registerExtension(environment.project, CliSamWithReceiverComponentContributor(annotations))
+        }
         val project = environment.project
         parser = KtPsiFactory(project)
         scripts = ScriptDefinitionProvider.getInstance(project)!! as CliScriptDefinitionProvider
     }
 
     fun updateConfiguration(config: CompilerConfiguration) {
-        jvmTargetFrom(config.jvm.target)
+        JvmTarget.fromString(config.jvm.target)
             ?.let { environment.configuration.put(JVMConfigurationKeys.JVM_TARGET, it) }
-    }
-
-    private fun jvmTargetFrom(target: String): JvmTarget? = when (target) {
-        // See https://github.com/JetBrains/kotlin/blob/master/compiler/config.jvm/src/org/jetbrains/kotlin/config/JvmTarget.kt
-        "default" -> JvmTarget.DEFAULT
-        "1.6" -> JvmTarget.JVM_1_6
-        "1.8" -> JvmTarget.JVM_1_8
-        "9" -> JvmTarget.JVM_9
-        "10" -> JvmTarget.JVM_10
-        "11" -> JvmTarget.JVM_11
-        "12" -> JvmTarget.JVM_12
-        "13" -> JvmTarget.JVM_13
-        "14" -> JvmTarget.JVM_14
-        "15" -> JvmTarget.JVM_15
-        else -> null
     }
 
     fun createContainer(sourcePath: Collection<KtFile>): Pair<ComponentProvider, BindingTraceContext> {

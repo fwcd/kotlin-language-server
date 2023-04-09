@@ -30,6 +30,15 @@
             "request": "attach",
             "hostName": "localhost",
             "port": 5005
+        },
+        {
+            "type": "extensionHost",
+            "name": "Run Grammar Dev Extension",
+            "request": "launch",
+            "args": [
+                "--disable-extension=fwcd.kotlin",
+                "--extensionDevelopmentPath=${workspaceFolder}/grammars/vscode-grammar-dev"
+            ]
         }
     ]
 }

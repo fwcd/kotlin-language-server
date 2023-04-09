@@ -4,18 +4,22 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.position.changedRegion
+import org.javacs.kt.position.location
 import org.javacs.kt.position.position
+import org.javacs.kt.position.range
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
+import org.eclipse.lsp4j.Location
 import java.nio.file.Paths
 
 class CompiledFile(
@@ -169,6 +173,46 @@ class CompiledFile(
         val oldCursor = oldOffset(cursor)
         val psi = parse.findElementAt(oldCursor) ?: return nullResult("Couldn't find anything at ${describePosition(cursor)}")
         return psi.findParent<KtElement>()
+    }
+
+
+    /**
+     * Find the declaration of the element at the cursor.
+     */
+    fun findDeclaration(cursor: Int): Pair<KtNamedDeclaration, Location>? = findDeclarationReference(cursor) ?: findDeclarationCursorSite(cursor)
+
+    /**
+     * Find the declaration of the element at the cursor. Only works if the element at the cursor is a reference.
+     */
+    private fun findDeclarationReference(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+        val (_, target) = referenceAtPoint(cursor) ?: return null
+        val psi = target.findPsi()
+
+        return if (psi is KtNamedDeclaration) {
+            psi.nameIdentifier?.let {
+                location(it)?.let { location ->
+                    Pair(psi, location)
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Find the declaration of the element at the cursor.
+     * Works even in cases where the element at the cursor might not be a reference, so works for declaration sites.
+     */
+    private fun findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+        // current symbol might be a declaration. This function is used as a fallback when
+        // findDeclaration fails
+        val declaration = elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
+
+        return declaration?.let {
+            Pair(it,
+                 Location(it.containingFile.name,
+                          range(content, it.nameIdentifier?.textRange ?: return null)))
+        }
     }
 
     /**

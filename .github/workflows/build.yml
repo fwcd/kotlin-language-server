@@ -1,11 +1,18 @@
 name: Build
-on: [ push, pull_request ]
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         java: [ '11', '17' ]
     steps:
       - uses: actions/checkout@v3
@@ -14,6 +21,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-      - uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Build
-        run: ./gradlew :server:build :shared:build
+        run: ./gradlew :server:build :shared:build -PjavaVersion=${{ matrix.java }}
+      - name: Detekt
+        run: ./gradlew detekt
