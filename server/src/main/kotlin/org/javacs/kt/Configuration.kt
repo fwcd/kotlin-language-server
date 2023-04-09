@@ -2,7 +2,7 @@ package org.javacs.kt
 
 import com.google.gson.*
 import org.eclipse.lsp4j.InitializeParams
-import org.javacs.kt.storage.Storage
+import org.jetbrains.exposed.sql.Database
 import java.lang.reflect.Type
 import java.nio.file.Files
 import java.nio.file.Path
@@ -44,27 +44,25 @@ public data class ExternalSourcesConfiguration(
 )
 
 
-fun parseServerConfiguration(params: InitializeParams): ServerConfiguration? {
-    val gson = GsonBuilder().registerTypeHierarchyAdapter(Path::class.java, GsonPathConverter()).create()
-
-    var storage: Storage? = null
+fun setupServerDatabase(params: InitializeParams): Database {
+    var db: Database? = null
+    val dbName = "kls_database"
 
     params.initializationOptions?.let { initializationOptions ->
+        val gson = GsonBuilder().registerTypeHierarchyAdapter(Path::class.java, GsonPathConverter()).create()
         val options = gson.fromJson(initializationOptions as JsonElement, InitializationOptions::class.java)
 
         options.storagePath?.let { storagePath ->
             if (Files.isDirectory(storagePath)) {
-                storage = Storage(storagePath)
+                db = Database.connect("jdbc:sqlite:$storagePath$dbName.db")
             }
         }
     }
 
-    return ServerConfiguration(storage)
+    return db ?: Database.connect("jdbc:h2:mem:$dbName;DB_CLOSE_DELAY=-1", "org.h2.Driver")
 }
 
 data class InitializationOptions(val storagePath: Path?)
-
-data class ServerConfiguration(val storage: Storage?)
 
 class GsonPathConverter : JsonDeserializer<Path?> {
 
@@ -84,6 +82,5 @@ public data class Configuration(
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val linting: LintingConfiguration = LintingConfiguration(),
     var indexing: IndexingConfiguration = IndexingConfiguration(),
-    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
-    var server: ServerConfiguration? = null
+    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration()
 )

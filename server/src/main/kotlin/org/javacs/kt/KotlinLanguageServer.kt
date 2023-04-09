@@ -14,6 +14,7 @@ import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.externalsources.*
+import org.javacs.kt.index.SymbolIndex
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -87,9 +88,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
 
-        config.server = parseServerConfiguration(params)
+        val db = setupServerDatabase(params)
 
-        classPath.storage = config.server?.storage?.getSlice("classpath")
+        sourcePath.index = SymbolIndex(db)
+        classPath.db = db
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false

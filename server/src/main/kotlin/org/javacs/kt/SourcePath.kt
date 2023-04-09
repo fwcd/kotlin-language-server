@@ -29,7 +29,7 @@ class SourcePath(
 
     private val indexAsync = AsyncExecutor()
     var indexEnabled: Boolean by indexingConfig::enabled
-    val index = SymbolIndex()
+    lateinit var index: SymbolIndex
 
     var beforeCompileCallback: () -> Unit = {}
 
