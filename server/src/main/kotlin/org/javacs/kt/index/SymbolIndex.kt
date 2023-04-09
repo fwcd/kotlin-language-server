@@ -80,7 +80,9 @@ class PositionEntity(id: EntityID<Int>) : IntEntity(id) {
 /**
  * A global view of all available symbols across all packages.
  */
-class SymbolIndex(private val db: Database = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")) {
+class SymbolIndex(
+    private val db: Database = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
+) {
     var progressFactory: Progress.Factory = Progress.Factory.None
 
     init {

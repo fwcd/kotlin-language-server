@@ -1,10 +1,15 @@
 package org.javacs.kt
 
-import com.google.gson.*
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
 import org.eclipse.lsp4j.InitializeParams
 import org.jetbrains.exposed.sql.Database
 import java.lang.reflect.Type
 import java.nio.file.Files
+import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -69,7 +74,7 @@ class GsonPathConverter : JsonDeserializer<Path?> {
     override fun deserialize(json: JsonElement, type: Type?, context: JsonDeserializationContext?): Path? {
         return try {
             Paths.get(json.asString)
-        } catch (ex: Exception) {
+        } catch (ex: InvalidPathException) {
             LOG.printStackTrace(ex)
             null
         }

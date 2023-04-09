@@ -5,7 +5,9 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -47,7 +49,10 @@ class BuildScriptClassPathCacheEntryEntity(id: EntityID<Int>) : IntEntity(id) {
 }
 
 /** A classpath resolver that caches another resolver */
-internal class CachedClassPathResolver(private val wrapped: ClassPathResolver, private val db: Database) : ClassPathResolver {
+internal class CachedClassPathResolver(
+    private val wrapped: ClassPathResolver,
+    private val db: Database
+) : ClassPathResolver {
     override val resolverType: String get() = "Cached + ${wrapped.resolverType}"
 
     private var cachedClassPathEntries: Set<ClassPathEntry>
@@ -96,7 +101,9 @@ internal class CachedClassPathResolver(private val wrapped: ClassPathResolver, p
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry)
+            SchemaUtils.createMissingTablesAndColumns(
+                ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry
+            )
         }
     }
 
@@ -152,7 +159,9 @@ internal class CachedClassPathResolver(private val wrapped: ClassPathResolver, p
     private fun updateBuildScriptClasspathCache(newClasspath: Set<Path>) {
         transaction(db) {
             cachedBuildScriptClassPathEntries = newClasspath
-            cachedClassPathMetadata = cachedClassPathMetadata?.copy(buildFileVersion = currentBuildFileVersion) ?: ClasspathMetadata()
+            cachedClassPathMetadata = cachedClassPathMetadata?.copy(
+                buildFileVersion = currentBuildFileVersion
+            ) ?: ClasspathMetadata()
         }
     }
 
