@@ -54,7 +54,7 @@ fun setupServerDatabase(params: InitializeParams): Database {
 
         options.storagePath?.let { storagePath ->
             if (Files.isDirectory(storagePath)) {
-                db = Database.connect("jdbc:sqlite:$storagePath$dbName.db")
+                db = Database.connect("jdbc:sqlite:${Path.of(storagePath.toString(), dbName)}.db")
             }
         }
     }
