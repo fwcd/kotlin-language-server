@@ -92,7 +92,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
 
         val db = setupServerDatabase(params)
 
-        sourcePath.index = SymbolIndex(db)
+        sourcePath.index = if (db != null) SymbolIndex(db) else SymbolIndex()
         classPath.db = db
 
         val clientCapabilities = params.capabilities

@@ -6,14 +6,14 @@ import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.nio.file.FileSystems
 
-fun defaultClassPathResolver(workspaceRoots: Collection<Path>, db: Database): ClassPathResolver =
-    CachedClassPathResolver(
-        WithStdlibResolver(
-            ShellClassPathResolver.global(workspaceRoots.firstOrNull())
-                .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it) }.joined)
-        ).or(BackupClassPathResolver),
-        db
-    )
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>, db: Database? = null): ClassPathResolver {
+    val childResolver = WithStdlibResolver(
+        ShellClassPathResolver.global(workspaceRoots.firstOrNull())
+            .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it) }.joined)
+    ).or(BackupClassPathResolver)
+
+    return if (db != null) CachedClassPathResolver(childResolver, db) else childResolver
+}
 
 /** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {

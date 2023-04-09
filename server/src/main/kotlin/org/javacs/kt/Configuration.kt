@@ -44,8 +44,7 @@ public data class ExternalSourcesConfiguration(
 )
 
 
-fun setupServerDatabase(params: InitializeParams): Database {
-    var db: Database? = null
+fun setupServerDatabase(params: InitializeParams): Database? {
     val dbName = "kls_database"
 
     params.initializationOptions?.let { initializationOptions ->
@@ -54,12 +53,12 @@ fun setupServerDatabase(params: InitializeParams): Database {
 
         options.storagePath?.let { storagePath ->
             if (Files.isDirectory(storagePath)) {
-                db = Database.connect("jdbc:sqlite:${Path.of(storagePath.toString(), dbName)}.db")
+                return Database.connect("jdbc:sqlite:${Path.of(storagePath.toString(), dbName)}.db")
             }
         }
     }
 
-    return db ?: Database.connect("jdbc:h2:mem:$dbName;DB_CLOSE_DELAY=-1", "org.h2.Driver")
+    return null
 }
 
 data class InitializationOptions(val storagePath: Path?)
