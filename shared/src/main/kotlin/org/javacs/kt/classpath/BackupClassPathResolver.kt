@@ -80,7 +80,7 @@ private fun Path.existsOrNull() =
     if (Files.exists(this)) this else null
 
 private fun findLocalArtifactDirUsingMaven(group: String, artifact: String) =
-    LocalArtifactDirectoryResolution(mavenHome.resolve("repository")
+    LocalArtifactDirectoryResolution(mavenRepository
         ?.resolve(group.replace('.', File.separatorChar))
         ?.resolve(artifact)
         ?.existsOrNull(), "Maven")
@@ -118,4 +118,3 @@ private fun compareVersions(left: Path, right: Path): Int {
 private fun extractVersion(artifactVersionDir: Path): List<String> {
     return artifactVersionDir.toString().split(".")
 }
-
