@@ -84,7 +84,7 @@ private fun readMavenDependencyListWithSources(artifacts: Set<Artifact>, sources
 }
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
-    val result = mavenHome.resolve("repository")
+    val result = mavenRepository
         .resolve(a.group.replace('.', File.separatorChar))
         .resolve(a.artifact)
         .resolve(a.version)
