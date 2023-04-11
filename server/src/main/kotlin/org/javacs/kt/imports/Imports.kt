@@ -40,8 +40,7 @@ private fun matchingPrefixLength(left: FqName, right: FqName): Int =
         .count()
 
 private fun backtickBultins(fqName: FqName): String {
-    val builtInKeywords = (KtTokens.SOFT_KEYWORDS.getTypes() + KtTokens.KEYWORDS.getTypes())
-        .asSequence()
+    val builtInKeywords = KtTokens.KEYWORDS.getTypes()
         .mapNotNull { (it as? KtKeywordToken)?.value }
     var result = fqName.asString()
     for (builtin in builtInKeywords) {
