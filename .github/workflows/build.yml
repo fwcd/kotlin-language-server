@@ -26,4 +26,4 @@ jobs:
       - name: Build
         run: ./gradlew :server:build :shared:build -PjavaVersion=${{ matrix.java }}
       - name: Detekt
-        run: ./gradlew detekt
+        run: ./gradlew detekt -PjavaVersion=${{ matrix.java }}
