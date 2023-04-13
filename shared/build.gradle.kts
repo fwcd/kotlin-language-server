@@ -1,5 +1,3 @@
-import groovy.lang.MissingPropertyException
-
 plugins {
     id("maven-publish")
     kotlin("jvm")
