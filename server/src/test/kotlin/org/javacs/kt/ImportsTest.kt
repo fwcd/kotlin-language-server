@@ -47,4 +47,17 @@ class ImportTextEditTest : SingleFileTestFixture("imports", "Simple.kt") {
         assertThat(result.range, equalTo(range(1, 23, 1, 23)))
         assertThat(result.newText, equalTo("\n\nimport `fun`.`class`.someother.`package`.method.`var`.`val`"))
     }
+
+    @Test
+    fun `should NOT wrap soft keywords or modifiers in backticks`() {
+        // tests for a selection of soft keywords and modifiers
+        // according to https://kotlinlang.org/docs/keyword-reference.html
+        //  both can be used as identifiers. (only hard keywords can not)
+        val ktFile = languageServer.sourcePath.parsedFile(workspaceRoot.resolve(file).toUri())
+        val importName = FqName("as.annotation.import.by.inner.file.field")
+        val result = getImportTextEditEntry(ktFile, importName)
+
+        assertThat(result.range, equalTo(range(1, 23, 1, 23)))
+        assertThat(result.newText, equalTo("\n\nimport `as`.annotation.import.by.inner.file.field"))
+    }
 }
