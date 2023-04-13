@@ -3,6 +3,17 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.2]
+- Update to Kotlin 1.8.10 and Gradle 8
+- Backtick soft keywords in imports (#416, #455)
+- Improve syntax highlighting w.r.t strings in type annotations (#405)
+- Add support for variable renaming from declaration sites (#399)
+- Add support for SAM with receiver annotations (#394)
+- Implement document highlight (#393)
+- Add override/implement (#359)
+
+Special thanks to @themkat, @RenFraser and all other contributors for the great work!
+
 ## [1.3.1]
 - Add support for run/debug code lenses
 - Add definition lookup support for JDT symbols
