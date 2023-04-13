@@ -49,4 +49,5 @@ jobs:
       - name: Deploy Maven artifacts to GitHub Packages
         run: ./gradlew :shared:publish :server:publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPR_USERNAME: ${{ github.actor }}
+          GPR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
