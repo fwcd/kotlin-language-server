@@ -17,36 +17,27 @@ jobs:
           java-version: '11'
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
+      - name: Get tag name
+        id: tag
+        run: |
+          tag=$(basename "${{ github.ref }}")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
       - name: Build distribution
         run: ./gradlew :server:distZip :grammars:distZip
       - name: Create release
-        uses: actions/create-release@v1
-        id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Version ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Upload server asset
-        uses: actions/upload-release-asset@v1
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          gh release create "$tag" --title "Version $tag"
+      - name: Upload assets
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./server/build/distributions/server.zip
-          asset_name: server.zip
-          asset_content_type: application/zip
-      - name: Upload grammar asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./grammars/build/distributions/grammars.zip
-          asset_name: grammars.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          gh release upload "$tag" {server,grammars}/build/distributions/*
       - name: Deploy Docker image to GitHub Packages
         uses: docker/build-push-action@v1
         with:
