@@ -1,7 +1,18 @@
-tasks.register<Zip>("distZip") {
-    from(projectDir) {
-        include("*.json")
+plugins {
+    distribution
+}
+
+distributions {
+    main {
+        distributionClassifier.set("classifier")
+        contents {
+            from(projectDir) {
+                include("*.json")
+            }
+        }
     }
+}
+
+tasks.getByName<Zip>("distZip") {
     archiveFileName.set("${project.name}.zip")
-    destinationDirectory.set(file("$buildDir/distributions"))
 }
