@@ -3,5 +3,3 @@ dependencyResolutionManagement {
         gradlePluginPortal()
     }
 }
-
-include("kotlin-plugins")
