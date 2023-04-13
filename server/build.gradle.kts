@@ -6,19 +6,12 @@ plugins {
     id("application")
     id("com.github.jk1.tcdeps")
     id("com.jaredsburrows.license")
-    id("kotlin-language-server.configure-publishing")
+    id("kotlin-language-server.publishing-conventions")
+    id("kotlin-language-server.kotlin-conventions")
 }
 
-val projectVersion = "1.3.2"
 val debugPort = 8000
 val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
-val javaVersion = try {
-    project.property("javaVersion").toString()
-} catch (_: MissingPropertyException) {
-    "11"
-}
-
-version = projectVersion
 
 val serverMainClassName = "org.javacs.kt.MainKt"
 val applicationName = "kotlin-language-server"
@@ -26,7 +19,7 @@ val applicationName = "kotlin-language-server"
 application {
     mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
-    applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$projectVersion")
+    applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
     applicationDistribution.into("bin") {
         fileMode = 755
     }
@@ -82,12 +75,6 @@ configurations.forEach { config ->
 
 tasks.startScripts {
     applicationName = "kotlin-language-server"
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-    kotlinOptions {
-        jvmTarget = javaVersion
-    }
 }
 
 tasks.register<Exec>("fixFilePermissions") {

@@ -1,5 +1,1 @@
-dependencyResolutionManagement {
-    repositories {
-        gradlePluginPortal()
-    }
-}
+rootProject.name = "build-conventions"
