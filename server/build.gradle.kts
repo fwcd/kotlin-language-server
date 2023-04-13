@@ -5,6 +5,7 @@ plugins {
     id("com.github.jk1.tcdeps")
     id("com.jaredsburrows.license")
     id("kotlin-language-server.publishing-conventions")
+    id("kotlin-language-server.distribution-conventions")
     id("kotlin-language-server.kotlin-conventions")
 }
 

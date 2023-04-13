@@ -1,18 +1,14 @@
 plugins {
     distribution
+    id("kotlin-language-server.distribution-conventions")
 }
 
 distributions {
     main {
-        distributionClassifier.set("classifier")
         contents {
             from(projectDir) {
                 include("*.json")
             }
         }
     }
-}
-
-tasks.getByName<Zip>("distZip") {
-    archiveFileName.set("${project.name}.zip")
 }
