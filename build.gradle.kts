@@ -41,13 +41,12 @@ tasks.register<DetektCreateBaselineTask>("createDetektBaseline") {
     baseline.set(file("$rootDir/detekt_baseline.xml"))
     include("**/*.kt")
     include("**/*.kts")
-    exclude("shared/build/**/*.*")
-    exclude("server/build/**/*.*")
-    exclude("gradle/plugins/build/**/*.*")
+    exclude("**/build/**")
 }
 
 tasks.withType<Detekt>().configureEach {
     jvmTarget = JavaVersion.VERSION_11.toString()
+    exclude("**/build/**")
     reports {
         html.required.set(true)
         md.required.set(true)

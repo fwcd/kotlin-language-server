@@ -61,7 +61,7 @@ INCREMENTS = {
 }
 EDITOR = os.environ.get("EDITOR", "vim") # https://stackoverflow.com/questions/6309587/call-up-an-editor-vim-from-a-python-script
 PROJECT_DIR = Path(__file__).parent.parent
-PROJECT_VERSION_KEY = "projectVersion"
+PROJECT_VERSION_KEY = "version"
 
 def main():
     parser = argparse.ArgumentParser(description="A small utility for updating the project's version and creating tags.")

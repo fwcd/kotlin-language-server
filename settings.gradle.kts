@@ -24,8 +24,6 @@ pluginManagement {
         id("com.github.jk1.tcdeps") version "1.2" apply false
         id("com.jaredsburrows.license") version "0.8.42" apply false
     }
-
-    includeBuild("gradle/plugins")
 }
 
 dependencyResolutionManagement {

@@ -1,28 +1,12 @@
-import groovy.lang.MissingPropertyException
-
 plugins {
     id("maven-publish")
     kotlin("jvm")
-    id("configure-publishing")
+    id("kotlin-language-server.publishing-conventions")
+    id("kotlin-language-server.kotlin-conventions")
 }
 
 repositories {
     mavenCentral()
-}
-
-version = project.version
-val javaVersion = try {
-    project.property("javaVersion").toString()
-} catch (_: MissingPropertyException) {
-    "11"
-}
-
-java {
-    toolchain {
-        languageVersion.set(
-            JavaLanguageVersion.of(javaVersion)
-        )
-    }
 }
 
 dependencies {
