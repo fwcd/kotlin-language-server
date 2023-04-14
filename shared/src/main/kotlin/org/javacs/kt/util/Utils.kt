@@ -90,7 +90,7 @@ inline fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     try {
         val resolved = resolver()
         if (resolved != null) {
-            LOG.info("Successfully resolved {}", what)
+            LOG.info("Successfully resolved {} to {}", what, resolved)
             return resolved
         } else {
             LOG.info("Could not resolve {} as it is null", what)
