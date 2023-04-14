@@ -10,3 +10,7 @@ exceptions:
       - NumberFormatException
       - ParseException
       - MissingPropertyException
+
+style:
+  MaxLineLength:
+    active: false
