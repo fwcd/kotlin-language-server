@@ -45,15 +45,15 @@ private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
 }
 
 private data class StdLibItem(
-    val key : String,
-    val major : Int,
+    val key: String,
+    val major: Int,
     val minor: Int,
-    val patch : Int,
+    val patch: Int,
     val path: Path
 ) {
     companion object {
         // Matches names like: "kotlin-stdlib-jdk7-1.2.51.jar"
-        val parser = Regex("""(kotlin-stdlib(-[^-]+)?)-(\d+)\.(\d+)\.(\d+)\.jar""")
+        val parser = Regex("""(kotlin-stdlib(-[^-]+)?)(?:-(\d+)\.(\d+)\.(\d+))?\.jar""")
 
         fun from(path: Path) : StdLibItem? {
             return parser.matchEntire(path.fileName.toString())?.let { match ->
