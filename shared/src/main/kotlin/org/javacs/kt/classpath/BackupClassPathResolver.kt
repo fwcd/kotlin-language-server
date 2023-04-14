@@ -33,7 +33,7 @@ private fun tryFindingLocalArtifactUsing(@Suppress("UNUSED_PARAMETER") group: St
                 val expected = "${artifact}-${version}.jar"
                 name == expected
             }
-            else -> name.startsWith(artifact) && name.endsWith(".jar")
+            else -> name.startsWith(artifact) && ("-sources" !in name) && name.endsWith(".jar")
         }
     }
     return Files.list(artifactDirResolution.artifactDir)
