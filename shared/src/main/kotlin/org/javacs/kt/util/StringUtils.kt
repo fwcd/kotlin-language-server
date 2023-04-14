@@ -83,8 +83,8 @@ fun containsCharactersInOrder(candidate: CharSequence, pattern: CharSequence, ca
         var testChar = candidate[iCandidate]
 
         if (!caseSensitive) {
-            patternChar = Character.toLowerCase(patternChar)
-            testChar = Character.toLowerCase(testChar)
+            patternChar = patternChar.lowercaseChar()
+            testChar = testChar.lowercaseChar()
         }
 
         if (patternChar == testChar) {
