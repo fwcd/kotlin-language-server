@@ -37,15 +37,15 @@ The project uses the internal APIs of the [Kotlin compiler](https://github.com/J
 
 ### Figuring out the dependencies
 
-Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven or Gradle to get a list of classpath JARs. Alternatively, projects can also 'manually' provide a list of dependencies through a shell script, located either at `[project root]/kotlinLspClasspath.{sh,bat,cmd}` or `[config root]/KotlinLanguageServer/classpath.{sh,bat,cmd}`, which outputs a list of JARs.
+Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven or Gradle to get a list of classpath JARs. Alternatively, projects can also 'manually' provide a list of dependencies through a shell script, located either at `[project root]/kls-classpath` or `[config root]/kotlin-language-server/classpath`, which outputs a list of JARs. Depending on your platform, the scripts also can be suffixed with `.{sh,bat,cmd}`.
 
-* Example of the `~/.config/KotlinLanguageServer/classpath.sh` on Linux:
+* Example of the `~/.config/kotlin-language-server/classpath` on Linux:
 ```bash
 #!/bin/bash
 echo /my/path/kotlin-compiler-1.4.10/lib/kotlin-stdlib.jar:/my/path/my-lib.jar
 ```
 
-* Example of the `%HOMEPATH%\.config\KotlinLanguageServer\classpath.bat` on Windows:
+* Example of the `%HOMEPATH%\.config\kotlin-language-server\classpath.bat` on Windows:
 ```cmd
 @echo off
 echo C:\my\path\kotlin-compiler-1.4.10\lib\kotlin-stdlib.jar;C:\my\path\my-lib.jar
