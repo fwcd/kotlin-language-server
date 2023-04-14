@@ -7,6 +7,7 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.function.BiPredicate
 import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.findCommandOnPath
+import org.javacs.kt.LOG
 import java.nio.file.Paths
 
 /** Backup classpath that find Kotlin in the user's Maven/Gradle home or kotlinc's libraries folder. */
@@ -16,8 +17,8 @@ object BackupClassPathResolver : ClassPathResolver {
 }
 
 fun findKotlinStdlib(): Path? =
-    findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
-    ?: findKotlinCliCompilerLibrary("kotlin-stdlib")
+    findKotlinCliCompilerLibrary("kotlin-stdlib")
+    ?: findLocalArtifact("org.jetbrains.kotlin", "kotlin-stdlib")
     ?: findAlternativeLibraryLocation("kotlin-stdlib")
 
 private fun findLocalArtifact(group: String, artifact: String) =
@@ -69,6 +70,9 @@ private fun findKotlinCliCompilerLibrary(name: String): Path? =
         ?.filter { it.fileName.toString() == "$name.jar" }
         ?.findFirst()
         ?.orElse(null)
+        ?.also {
+            LOG.info("Found Kotlin CLI compiler library $name at $it")
+        }
 
 
 // alternative library locations like for snap
