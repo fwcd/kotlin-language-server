@@ -37,6 +37,13 @@ internal class ShellClassPathResolver(
         /** Create a shell resolver if a file is a pom. */
         fun maybeCreate(file: Path): ShellClassPathResolver? =
             file.takeIf { scriptNames.any { name -> scriptExtensions.any { file.endsWith("$name$it") } } }
+                ?.takeIf {
+                    val isExecutable = Files.isExecutable(it)
+                    if (!isExecutable) {
+                        LOG.warn("Found classpath script $it that is NOT executable and therefore cannot be used. Perhaps you'd want to chmod +x it?")
+                    }
+                    isExecutable
+                }
                 ?.let { ShellClassPathResolver(it) }
 
         /** The root directory for config files. */
