@@ -8,6 +8,7 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.NotebookDocumentService
 import org.javacs.kt.command.ALL_COMMANDS
+import org.javacs.kt.database.DatabaseService
 import org.javacs.kt.progress.LanguageClientProgress
 import org.javacs.kt.progress.Progress
 import org.javacs.kt.semantictokens.semanticTokensLegend
@@ -23,11 +24,12 @@ import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val config = Configuration()
-    val classPath = CompilerClassPath(config.compiler)
+    val databaseService = DatabaseService()
+    val classPath = CompilerClassPath(config.compiler, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
-    val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing)
+    val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
     val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
@@ -90,10 +92,8 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
         serverCapabilities.documentHighlightProvider = Either.forLeft(true)
 
-        val db = setupServerDatabase(params)
-
-        sourcePath.index = if (db != null) SymbolIndex(db) else SymbolIndex()
-        classPath.db = db
+        val storagePath = getStoragePath(params)
+        databaseService.setup(storagePath)
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false

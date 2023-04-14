@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
 import org.jetbrains.kotlin.name.FqName
 import org.javacs.kt.LOG
+import org.javacs.kt.database.DatabaseService
 import org.javacs.kt.progress.Progress
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -81,8 +82,12 @@ class PositionEntity(id: EntityID<Int>) : IntEntity(id) {
  * A global view of all available symbols across all packages.
  */
 class SymbolIndex(
-    private val db: Database = Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
+    private val databaseService: DatabaseService
 ) {
+    private val db: Database by lazy {
+        databaseService.db ?: Database.connect("jdbc:h2:mem:symbolindex;DB_CLOSE_DELAY=-1", "org.h2.Driver")
+    }
+
     var progressFactory: Progress.Factory = Progress.Factory.None
 
     init {

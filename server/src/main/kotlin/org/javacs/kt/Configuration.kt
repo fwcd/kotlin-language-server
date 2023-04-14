@@ -6,9 +6,7 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
 import org.eclipse.lsp4j.InitializeParams
-import org.jetbrains.exposed.sql.Database
 import java.lang.reflect.Type
-import java.nio.file.Files
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -49,18 +47,12 @@ public data class ExternalSourcesConfiguration(
 )
 
 
-fun setupServerDatabase(params: InitializeParams): Database? {
-    val dbName = "kls_database"
-
+fun getStoragePath(params: InitializeParams): Path? {
     params.initializationOptions?.let { initializationOptions ->
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Path::class.java, GsonPathConverter()).create()
         val options = gson.fromJson(initializationOptions as JsonElement, InitializationOptions::class.java)
 
-        options.storagePath?.let { storagePath ->
-            if (Files.isDirectory(storagePath)) {
-                return Database.connect("jdbc:sqlite:${Path.of(storagePath.toString(), dbName)}.db")
-            }
-        }
+        return options.storagePath
     }
 
     return null
