@@ -26,10 +26,6 @@ pluginManagement {
     }
 }
 
-dependencyResolutionManagement {
-    includeBuild("gradle/platform")
-}
-
 rootProject.name = "kotlin-language-server"
 
 include(

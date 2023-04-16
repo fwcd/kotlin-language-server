@@ -33,11 +33,6 @@ repositories {
 }
 
 dependencies {
-    // dependencies are constrained to versions defined
-    // in /gradle/platform/build.gradle.kts
-    implementation(platform("dev.fwcd.kotlin-language-server:platform"))
-    annotationProcessor(platform("dev.fwcd.kotlin-language-server:platform"))
-
     implementation(project(":shared"))
 
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j")
