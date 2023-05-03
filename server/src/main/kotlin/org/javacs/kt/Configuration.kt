@@ -52,7 +52,7 @@ fun getStoragePath(params: InitializeParams): Path? {
         val gson = GsonBuilder().registerTypeHierarchyAdapter(Path::class.java, GsonPathConverter()).create()
         val options = gson.fromJson(initializationOptions as JsonElement, InitializationOptions::class.java)
 
-        return options.storagePath
+        return options?.storagePath
     }
 
     return null
