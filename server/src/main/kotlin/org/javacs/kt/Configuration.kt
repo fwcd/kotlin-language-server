@@ -58,7 +58,10 @@ fun getStoragePath(params: InitializeParams): Path? {
     return null
 }
 
-data class InitializationOptions(val storagePath: Path?)
+data class InitializationOptions(
+    // A path to a directory used by the language server to store data. Used for caching purposes.
+    val storagePath: Path?
+)
 
 class GsonPathConverter : JsonDeserializer<Path?> {
 
