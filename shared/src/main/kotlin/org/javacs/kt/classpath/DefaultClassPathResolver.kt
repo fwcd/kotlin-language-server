@@ -12,7 +12,7 @@ fun defaultClassPathResolver(workspaceRoots: Collection<Path>, db: Database? = n
             .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it) }.joined)
     ).or(BackupClassPathResolver)
 
-    return if (db != null) CachedClassPathResolver(childResolver, db) else childResolver
+    return db?.let { CachedClassPathResolver(childResolver, it) } ?: childResolver
 }
 
 /** Searches the workspace for all files that could provide classpath info. */
