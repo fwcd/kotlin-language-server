@@ -10,16 +10,36 @@
         "Programming Languages"
     ],
     "contributes": {
-        "languages": [{
-            "id": "kotlin",
-            "aliases": ["Kotlin", "kotlin"],
-            "extensions": [".kt",".kts"],
-            "configuration": "../kotlin.configuration.json"
-        }],
-        "grammars": [{
-            "language": "kotlin",
-            "scopeName": "source.kotlin",
-            "path": "../Kotlin.tmLanguage.json"
-        }]
+        "languages": [
+            {
+                "id": "kotlin",
+                "aliases": [
+                    "Kotlin",
+                    "kotlin"
+                ],
+                "extensions": [
+                    ".kt",
+                    ".kts"
+                ],
+                "configuration": "../kotlin.configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "kotlin",
+                "scopeName": "source.kotlin",
+                "path": "../Kotlin.tmLanguage.json"
+            },
+            {
+                "scopeName": "markdown.kotlin.codeblock",
+                "path": "../codeblock.json",
+                "injectTo": [
+                    "text.html.markdown"
+                ],
+                "embeddedLanguages": {
+                    "meta.embedded.block.kotlin": "kotlin"
+                }
+            }
+        ]
     }
 }
