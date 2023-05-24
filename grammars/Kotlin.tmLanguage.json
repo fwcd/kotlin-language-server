@@ -552,10 +552,6 @@
                     "name": "keyword.operator.logical.kotlin"
                 },
                 {
-                    "match": "(\\||&)",
-                    "name": "keyword.operator.bitwise.kotlin"
-                },
-                {
                     "match": "(--|\\+\\+)",
                     "name": "keyword.operator.increment-decrement.kotlin"
                 },
