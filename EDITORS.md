@@ -6,9 +6,6 @@ See [vscode-kotlin-ide](https://github.com/fwcd/vscode-kotlin-ide) or install th
 ## Sublime Text
 See [lsp-kotlin](https://github.com/sublimelsp/LSP-kotlin).
 
-## Atom
-See [atom-ide-kotlin](https://github.com/fwcd/atom-ide-kotlin).
-
 ## Emacs
 _using [`lsp-mode`](https://github.com/emacs-lsp/lsp-mode)_
 
@@ -30,7 +27,7 @@ Then you can activate `lsp-kotlin-lens-mode` to see the Run/Debug code lenses at
 
 
 ### Override members (e.g, toString and equals)
-The language server provides a custom protocol extension for finding overridable members of a class (variables and methods). `lsp-mode` provides a function that uses this called `lsp-kotlin-implement-member`. You can run it while hovering a class name, and you will get a menu with all available overridable members. (protip: Bind this function to a key!). If you have [Helm](https://github.com/emacs-helm/helm) or [Ivy](https://github.com/abo-abo/swiper) installed, one of them will be utilized. 
+The language server provides a custom protocol extension for finding overridable members of a class (variables and methods). `lsp-mode` provides a function that uses this called `lsp-kotlin-implement-member`. You can run it while hovering a class name, and you will get a menu with all available overridable members. (protip: Bind this function to a key!). If you have [Helm](https://github.com/emacs-helm/helm) or [Ivy](https://github.com/abo-abo/swiper) installed, one of them will be utilized.
 
 
 
