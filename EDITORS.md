@@ -3,6 +3,9 @@
 ## Visual Studio Code
 See [vscode-kotlin-ide](https://github.com/fwcd/vscode-kotlin-ide) or install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin).
 
+## Sublime Text
+See [lsp-kotlin](https://github.com/sublimelsp/LSP-kotlin).
+
 ## Atom
 See [atom-ide-kotlin](https://github.com/fwcd/atom-ide-kotlin).
 
