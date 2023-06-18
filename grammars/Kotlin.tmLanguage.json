@@ -117,7 +117,7 @@
                     "include": "#character"
                 },
                 {
-                    "include": "#lambda-expression"
+                    "include": "#lambda-arrow"
                 },
                 {
                     "include": "#operators"
@@ -525,7 +525,7 @@
             "match": "\\bnull\\b",
             "name": "constant.language.null.kotlin"
         },
-        "lambda-expression": {
+        "lambda-arrow": {
             "match": "->",
             "name": "storage.type.function.arrow.kotlin"
         },
