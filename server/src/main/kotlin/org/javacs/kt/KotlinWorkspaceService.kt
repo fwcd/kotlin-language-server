@@ -134,6 +134,10 @@ class KotlinWorkspaceService(
                 get("useKlsScheme")?.asBoolean?.let { externalSources.useKlsScheme = it }
                 get("autoConvertToKotlin")?.asBoolean?.let { externalSources.autoConvertToKotlin = it }
             }
+
+            get("gradle")?.asJsonObject?.apply {
+                get("home")?.asString?.let { config.gradle.home.clear().append(it) }
+            }
         }
 
         LOG.info("Updated configuration: {}", settings)

@@ -14,7 +14,7 @@ import java.nio.file.Path
  * Manages the class path (compiled JARs, etc), the Java source path
  * and the compiler. Note that Kotlin sources are stored in SourcePath.
  */
-class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
+class CompilerClassPath(private val config: CompilerConfiguration, private val gradleHome: StringBuilder) : Closeable {
     val workspaceRoots = mutableSetOf<Path>()
 
     private val javaSourcePath = mutableSetOf<Path>()
@@ -39,7 +39,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         updateJavaSourcePath: Boolean = true
     ): Boolean {
         // TODO: Fetch class path and build script class path concurrently (and asynchronously)
-        val resolver = defaultClassPathResolver(workspaceRoots)
+        val resolver = defaultClassPathResolver(workspaceRoots, gradleHome)
         var refreshCompiler = updateJavaSourcePath
 
         if (updateClassPath) {

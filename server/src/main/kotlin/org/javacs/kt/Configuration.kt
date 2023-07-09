@@ -35,10 +35,16 @@ public data class ExternalSourcesConfiguration(
     var autoConvertToKotlin: Boolean = false
 )
 
+public data class GradleConfiguration(
+    /** The JDK to use to launch gradle, the default is JAVA_HOME. */
+    val home: StringBuilder = StringBuilder("default")
+)
+
 public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val linting: LintingConfiguration = LintingConfiguration(),
     var indexing: IndexingConfiguration = IndexingConfiguration(),
-    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration()
+    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
+    val gradle: GradleConfiguration = GradleConfiguration()
 )

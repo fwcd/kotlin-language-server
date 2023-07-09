@@ -119,7 +119,7 @@ private fun generateMavenDependencySourcesList(pom: Path): Path {
 private fun runCommand(pom: Path, command: List<String>) {
     val workingDirectory = pom.toAbsolutePath().parent
     LOG.info("Run {} in {}", command, workingDirectory)
-    val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory)
+    val (result, errors) = execAndReadStdoutAndStderr(command, workingDirectory, null)
     LOG.debug(result)
     if ("BUILD FAILURE" in errors) {
         LOG.warn("Maven task failed: {}", errors.lines().firstOrNull())

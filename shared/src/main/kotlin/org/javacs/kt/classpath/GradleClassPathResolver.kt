@@ -10,7 +10,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
+internal class GradleClassPathResolver(
+    private val path: Path,
+    private val includeKotlinDSL: Boolean,
+    private val home: StringBuilder
+): ClassPathResolver {
     override val resolverType: String = "Gradle"
     private val projectDirectory: Path get() = path.getParent()
     override val classpath: Set<ClassPathEntry> get() {
@@ -33,11 +37,28 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
         }
     }
 
+    private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<Path> {
+        LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
+
+        val tmpScripts = gradleScripts.map { gradleScriptToTempFile(it, deleteOnExit = false).toPath().toAbsolutePath() }
+        val gradle = getGradleCommand(projectDirectory)
+
+        val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")
+        val dependencies = findGradleCLIDependencies(command, projectDirectory, home.toString())
+            ?.also { LOG.debug("Classpath for task {}", it) }
+            .orEmpty()
+            .filter { it.toString().lowercase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
+            .toSet()
+
+        tmpScripts.forEach(Files::delete)
+        return dependencies
+    }
+
     companion object {
         /** Create a Gradle resolver if a file is a pom. */
-        fun maybeCreate(file: Path): GradleClassPathResolver? =
+        fun maybeCreate(file: Path, gradleHome: StringBuilder): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
-                ?.let { GradleClassPathResolver(it, includeKotlinDSL = file.toString().endsWith(".kts")) }
+                ?.let { GradleClassPathResolver(it, includeKotlinDSL = file.toString().endsWith(".kts"), gradleHome) }
     }
 }
 
@@ -70,25 +91,8 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<Path> {
-    LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
-
-    val tmpScripts = gradleScripts.map { gradleScriptToTempFile(it, deleteOnExit = false).toPath().toAbsolutePath() }
-    val gradle = getGradleCommand(projectDirectory)
-
-    val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")
-    val dependencies = findGradleCLIDependencies(command, projectDirectory)
-        ?.also { LOG.debug("Classpath for task {}", it) }
-        .orEmpty()
-        .filter { it.toString().lowercase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
-        .toSet()
-
-    tmpScripts.forEach(Files::delete)
-    return dependencies
-}
-
-private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<Path>? {
-    val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
+private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path, home: String): Set<Path>? {
+    val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory, home)
     if ("FAILURE: Build failed" in errors) {
         LOG.warn("Gradle task failed: {}", errors)
     } else {

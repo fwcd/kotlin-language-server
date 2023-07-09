@@ -5,24 +5,24 @@ import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.nio.file.FileSystems
 
-fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver =
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>, gradleHome: StringBuilder): ClassPathResolver =
     WithStdlibResolver(
         ShellClassPathResolver.global(workspaceRoots.firstOrNull())
-            .or(workspaceRoots.asSequence().flatMap(::workspaceResolvers).joined)
+            .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it, gradleHome) }.joined)
     ).or(BackupClassPathResolver)
 
 /** Searches the workspace for all files that could provide classpath info. */
-private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {
+private fun workspaceResolvers(workspaceRoot: Path, gradleHome: StringBuilder): Sequence<ClassPathResolver> {
     val ignored: List<PathMatcher> = ignoredPathPatterns(workspaceRoot, workspaceRoot.resolve(".gitignore"))
-    return folderResolvers(workspaceRoot, ignored).asSequence()
+    return folderResolvers(workspaceRoot, ignored, gradleHome).asSequence()
 }
 
 /** Searches the folder for all build-files. */
-private fun folderResolvers(root: Path, ignored: List<PathMatcher>): Collection<ClassPathResolver> =
+private fun folderResolvers(root: Path, ignored: List<PathMatcher>, gradleHome: StringBuilder): Collection<ClassPathResolver> =
     root.toFile()
         .walk()
         .onEnter { file -> ignored.none { it.matches(file.toPath()) } }
-        .mapNotNull { asClassPathProvider(it.toPath()) }
+        .mapNotNull { asClassPathProvider(it.toPath(), gradleHome) }
         .toList()
 
 /** Tries to read glob patterns from a gitignore. */
@@ -47,7 +47,7 @@ private fun ignoredPathPatterns(root: Path, gitignore: Path): List<PathMatcher> 
         ?: emptyList()
 
 /** Tries to create a classpath resolver from a file using as many sources as possible */
-private fun asClassPathProvider(path: Path): ClassPathResolver? =
+private fun asClassPathProvider(path: Path, gradleHome: StringBuilder): ClassPathResolver? =
     MavenClassPathResolver.maybeCreate(path)
-        ?: GradleClassPathResolver.maybeCreate(path)
+        ?: GradleClassPathResolver.maybeCreate(path, gradleHome)
         ?: ShellClassPathResolver.maybeCreate(path)
