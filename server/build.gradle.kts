@@ -7,6 +7,7 @@ plugins {
     id("kotlin-language-server.publishing-conventions")
     id("kotlin-language-server.distribution-conventions")
     id("kotlin-language-server.kotlin-conventions")
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 }
 
 val debugPort = 8000
@@ -39,7 +40,6 @@ dependencies {
     annotationProcessor(platform("dev.fwcd.kotlin-language-server:platform"))
 
     implementation(project(":shared"))
-
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc")
     implementation(kotlin("compiler"))
@@ -121,4 +121,11 @@ tasks.installDist {
 
 tasks.build {
     finalizedBy("installDist")
+}
+
+tasks.named<Jar>("shadowJar") {
+    manifest {
+        attributes(mapOf("Main-Class" to ":server:org.javacs.kt.MainKt"))
+    }
+    archiveFileName.set("whole-project-without.jar")
 }

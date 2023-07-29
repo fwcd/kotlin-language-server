@@ -10,11 +10,11 @@ internal val userHome = Paths.get(System.getProperty("user.home"))
 internal fun isOSWindows() = (File.separatorChar == '\\')
 
 fun findCommandOnPath(name: String): Path? =
-        if (isOSWindows()) windowsCommand(name)
-        else unixCommand(name)
+    if (isOSWindows()) windowsCommand(name)
+    else unixCommand(name)
 
 private fun windowsCommand(name: String) =
-        findExecutableOnPath("$name.cmd")
+    findExecutableOnPath("$name.cmd")
         ?: findExecutableOnPath("$name.bat")
         ?: findExecutableOnPath("$name.exe")
 
@@ -23,15 +23,16 @@ private fun unixCommand(name: String) = findExecutableOnPath(name)
 private fun findExecutableOnPath(fileName: String): Path? {
     for (dir in System.getenv("PATH").split(File.pathSeparator)) {
         val file = File(dir, fileName)
-
         if (file.isFile && file.canExecute()) {
             LOG.info("Found {} at {}", fileName, file.absolutePath)
 
             return Paths.get(file.absolutePath)
         }
     }
-
-    return null
+    // TODO: remove hard crutches
+    val gradle = File("/opt/homebrew/bin/gradle")
+    LOG.warn("=========================\n GRADLE IS: " + gradle.exists() + "=========================\n")
+    return Paths.get(gradle.absolutePath)
 }
 
 fun findProjectCommandWithName(name: String, projectFile: Path): Path? =
