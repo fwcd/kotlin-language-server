@@ -65,6 +65,7 @@ private fun getGradleCommand(workspace: Path): Path {
         return wrapper
     } else {
         return workspace.parent?.let(::getGradleCommand)
+            // TODO: replace it via invoking tooling api
             ?: findCommandOnPath("gradle")
             ?: throw KotlinLSException("Could not find 'gradle' on PATH")
     }
