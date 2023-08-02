@@ -31,7 +31,6 @@ private fun findExecutableOnPath(fileName: String): Path? {
     }
     // TODO: remove hard crutches
     val gradle = File("/opt/homebrew/bin/gradle")
-    LOG.warn("=========================\n GRADLE IS: " + gradle.exists() + "=========================\n")
     return Paths.get(gradle.absolutePath)
 }
 
