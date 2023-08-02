@@ -3,12 +3,14 @@ package org.javacs.kt
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.util.ToolingKT
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlinx.coroutines.runBlocking
 
 /**
  * Manages the class path (compiled JARs, etc), the Java source path
@@ -18,10 +20,11 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     val workspaceRoots = mutableSetOf<Path>()
 
     private val javaSourcePath = mutableSetOf<Path>()
-    private val buildScriptClassPath = mutableSetOf<Path>()
-    val classPath = mutableSetOf<ClassPathEntry>()
+    private var buildScriptClassPath = mutableSetOf<Path>()
+    var classPath = mutableSetOf<ClassPathEntry>()
     val outputDirectory: File = Files.createTempDirectory("klsBuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
+    private var toolingApiSet = mutableSetOf<ClassPathEntry>()
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
         private set
@@ -43,7 +46,18 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         var refreshCompiler = updateJavaSourcePath
 
         if (updateClassPath) {
-            val newClassPath = resolver.classpathOrEmpty
+
+            // TODO: added
+            if (true){
+                val toolingCP = ToolingKT.invoke()
+                if (toolingCP.isNotEmpty()){
+                    toolingApiSet = toolingCP.map{ cp -> ClassPathEntry(cp.toPath(), null)}.toMutableSet()
+                    buildScriptClassPath = toolingCP.map {cp -> cp.toPath()}.toMutableSet()
+                }
+            }
+
+            // was without toolingApiSet
+            val newClassPath = resolver.classpathOrEmpty + toolingApiSet
             if (newClassPath != classPath) {
                 synchronized(classPath) {
                     syncPaths(classPath, newClassPath, "class path") { it.compiledJar }

@@ -33,6 +33,7 @@ import java.io.Closeable
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import kotlin.io.path.toPath
 
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
@@ -179,10 +180,16 @@ class KotlinTextDocumentService(
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
-        lintNow(uri)
         debounceLint.schedule {
             sp.save(uri)
         }
+
+        // TODO: added
+        if (cp.changedOnDisk(uri.toPath())){
+            sp.refresh()
+        }
+
+        lintNow(uri)
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
