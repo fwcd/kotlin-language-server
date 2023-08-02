@@ -38,7 +38,7 @@ dependencies {
     // in /gradle/platform/build.gradle.kts
     implementation(platform("dev.fwcd.kotlin-language-server:platform"))
     annotationProcessor(platform("dev.fwcd.kotlin-language-server:platform"))
-
+    implementation("org.gradle:gradle-tooling-api:7.3")
     implementation(project(":shared"))
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc")
@@ -127,5 +127,5 @@ tasks.named<Jar>("shadowJar") {
     manifest {
         attributes(mapOf("Main-Class" to ":server:org.javacs.kt.MainKt"))
     }
-    archiveFileName.set("whole-project-without.jar")
+    archiveFileName.set("kotlin-language-server.jar")
 }
