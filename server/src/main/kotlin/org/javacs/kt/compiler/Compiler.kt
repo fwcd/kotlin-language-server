@@ -60,6 +60,7 @@ import org.javacs.kt.LOG
 import org.javacs.kt.CompilerConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
+import org.javacs.kt.util.ToolingAPI
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.KotlinCodegenFacade
@@ -454,6 +455,9 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
     private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     companion object {
+
+        private val buildEnvByFile : MutableMap<String, CompilationEnvironment> = mutableMapOf()
+
         init {
             setIdeaIoUseFallback()
         }
@@ -461,6 +465,21 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
 
     init {
         localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
+    }
+
+    private fun getBuildEnvByFile(name: String) : CompilationEnvironment{
+        LOG.info { "build env was gotten for $name" }
+        return buildEnvByFile[name] ?: buildScriptCompileEnvironment ?: defaultCompileEnvironment
+    }
+
+    fun createBuildEnvForFile(path: Path) : Boolean{
+        val classPath = ToolingAPI.invoke(path)
+        if (classPath.isEmpty()) {
+            return false
+        }
+        val buildEnv = CompilationEnvironment(emptySet(), classPath)
+        buildEnvByFile[path.toString()] = buildEnv
+        return true
     }
 
     /**
@@ -525,7 +544,12 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         }
 
         compileLock.withLock {
-            val compileEnv = compileEnvironmentFor(kind)
+            var compileEnv = compileEnvironmentFor(kind)
+            // TODO: added
+            if (files.size == 1 && kind == CompilationKind.BUILD_SCRIPT){
+                val nameOfFile = files.first().name
+                compileEnv = getBuildEnvByFile(nameOfFile)
+            }
             val (container, trace) = compileEnv.createContainer(sourcePath)
             val module = container.getService(ModuleDescriptor::class.java)
             container.get<LazyTopDownAnalyzer>().analyzeDeclarations(TopDownAnalysisMode.TopLevelDeclarations, files)

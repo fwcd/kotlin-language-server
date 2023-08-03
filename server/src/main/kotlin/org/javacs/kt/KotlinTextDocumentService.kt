@@ -17,16 +17,9 @@ import org.javacs.kt.references.findReferences
 import org.javacs.kt.semantictokens.encodedSemanticTokens
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
 import org.javacs.kt.symbols.documentSymbols
-import org.javacs.kt.util.noResult
-import org.javacs.kt.util.AsyncExecutor
-import org.javacs.kt.util.Debouncer
-import org.javacs.kt.util.filePath
-import org.javacs.kt.util.TemporaryDirectory
-import org.javacs.kt.util.parseURI
-import org.javacs.kt.util.describeURI
-import org.javacs.kt.util.describeURIs
 import org.javacs.kt.rename.renameSymbol
 import org.javacs.kt.highlight.documentHighlightsAt
+import org.javacs.kt.util.*
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -174,22 +167,25 @@ class KotlinTextDocumentService(
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
+
+        cp.createEnvForBuildFile(uri.toPath())
+
         lintNow(uri)
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
+
+        cp.createEnvForBuildFile(uri.toPath())
+
+        lintNow(uri)
         debounceLint.schedule {
             sp.save(uri)
         }
 
-        // TODO: added
-        if (cp.changedOnDisk(uri.toPath())){
-            sp.refresh()
-        }
-
-        lintNow(uri)
+        // after linting errors remain, when user edits the file, file will be linted
+        clearDiagnostics(uri)
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
