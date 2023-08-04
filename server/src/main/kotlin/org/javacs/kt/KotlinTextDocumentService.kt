@@ -43,6 +43,8 @@ class KotlinTextDocumentService(
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
+    private val filesWithErrorsTAPI: MutableSet<String> = mutableSetOf()
+
     var lintRecompilationCallback: () -> Unit
         get() = sp.beforeCompileCallback
         set(callback) { sp.beforeCompileCallback = callback }
@@ -168,16 +170,28 @@ class KotlinTextDocumentService(
         val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
 
-        cp.createEnvForBuildFile(uri.toPath())
-
+        val success = cp.createEnvForBuildFile(uri.toPath())
+        if (success){
+            filesWithErrorsTAPI.remove(uri.toString())
+        }
+        else{
+            filesWithErrorsTAPI.add(uri.toString())
+        }
         lintNow(uri)
+
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        cp.createEnvForBuildFile(uri.toPath())
+        val success = cp.createEnvForBuildFile(uri.toPath())
+        if (success){
+            filesWithErrorsTAPI.remove(uri.toString())
+        }
+        else{
+            filesWithErrorsTAPI.add(uri.toString())
+        }
 
         lintNow(uri)
         debounceLint.schedule {
@@ -185,7 +199,7 @@ class KotlinTextDocumentService(
         }
 
         // after linting errors remain, when user edits the file, file will be linted
-        clearDiagnostics(uri)
+//        clearDiagnostics(uri)
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -307,7 +321,13 @@ class KotlinTextDocumentService(
 
         for ((uri, diagnostics) in byFile) {
             if (sf.isOpen(uri)) {
+
                 client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
+
+                if (filesWithErrorsTAPI.contains(uri.toString())){
+                    val localDiagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), "WRONG TAPI CALL")
+                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(localDiagnostic)))
+                }
 
                 LOG.info("Reported {} diagnostics in {}", diagnostics.size, describeURI(uri))
             }

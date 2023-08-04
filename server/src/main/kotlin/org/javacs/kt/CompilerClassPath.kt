@@ -3,7 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
-import org.javacs.kt.util.ToolingAPI
+import org.javacs.kt.util.BuildFileManager
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.io.File
@@ -21,7 +21,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     private val javaSourcePath = mutableSetOf<Path>()
     private var buildScriptClassPath = mutableSetOf<Path>()
     var classPath = mutableSetOf<ClassPathEntry>()
-    val outputDirectory: File = Files.createTempDirectory("klsBuildOutput").toFile()
+    val outputDirectory: File = Files.createTempDirectory("kls  BuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
@@ -137,10 +137,11 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         }
     }
 
-    fun createEnvForBuildFile(file: Path){
-        if (ToolingAPI.isKtsBuildScript(file)){
-            compiler.createBuildEnvForFile(file)
+    fun createEnvForBuildFile(file: Path) : Boolean{
+        if (BuildFileManager.isKtsBuildScript(file)){
+            return compiler.createBuildEnvForFile(file)
         }
+        return true
     }
 
     private fun isJavaSource(file: Path): Boolean = file.fileName.toString().endsWith(".java")

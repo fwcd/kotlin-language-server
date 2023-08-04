@@ -4,7 +4,7 @@ import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
 import java.nio.file.Path
 
-object ToolingAPI {
+object BuildFileManager {
     fun isKtsBuildScript(file: Path): Boolean =
         file.fileName.toString().let { it == "build.gradle.kts" }
 
