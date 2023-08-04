@@ -2,8 +2,8 @@ package org.javacs.kt
 
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
+import org.javacs.kt.compiler.BuildFileManager
 import org.javacs.kt.compiler.Compiler
-import org.javacs.kt.util.BuildFileManager
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.io.File
@@ -135,13 +135,6 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         } else {
             return false
         }
-    }
-
-    fun createEnvForBuildFile(file: Path) : Boolean{
-        if (BuildFileManager.isKtsBuildScript(file)){
-            return compiler.createBuildEnvForFile(file)
-        }
-        return true
     }
 
     private fun isJavaSource(file: Path): Boolean = file.fileName.toString().endsWith(".java")

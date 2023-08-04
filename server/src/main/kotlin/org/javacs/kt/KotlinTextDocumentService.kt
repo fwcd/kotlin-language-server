@@ -5,6 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.codeaction.codeActions
+import org.javacs.kt.compiler.BuildFileManager
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
@@ -42,8 +43,6 @@ class KotlinTextDocumentService(
     var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
-
-    private val filesWithErrorsTAPI: MutableSet<String> = mutableSetOf()
 
     var lintRecompilationCallback: () -> Unit
         get() = sp.beforeCompileCallback
@@ -170,36 +169,27 @@ class KotlinTextDocumentService(
         val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
 
-        val success = cp.createEnvForBuildFile(uri.toPath())
-        if (success){
-            filesWithErrorsTAPI.remove(uri.toString())
-        }
-        else{
-            filesWithErrorsTAPI.add(uri.toString())
+        if (BuildFileManager.isBuildScript(uri.toPath())){
+            BuildFileManager.updateBuildEnv(uri)
         }
         lintNow(uri)
-
     }
 
     override fun didSave(params: DidSaveTextDocumentParams) {
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        val success = cp.createEnvForBuildFile(uri.toPath())
-        if (success){
-            filesWithErrorsTAPI.remove(uri.toString())
+        if (BuildFileManager.isBuildScript(uri.toPath())){
+            BuildFileManager.updateBuildEnv(uri)
         }
-        else{
-            filesWithErrorsTAPI.add(uri.toString())
-        }
-
         lintNow(uri)
         debounceLint.schedule {
             sp.save(uri)
         }
 
         // after linting errors remain, when user edits the file, file will be linted
-//        clearDiagnostics(uri)
+        // TODO: what I should do here
+        clearDiagnostics(uri)
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -324,17 +314,21 @@ class KotlinTextDocumentService(
 
                 client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
 
-                if (filesWithErrorsTAPI.contains(uri.toString())){
-                    val localDiagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), "WRONG TAPI CALL")
-                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(localDiagnostic)))
-                }
-
                 LOG.info("Reported {} diagnostics in {}", diagnostics.size, describeURI(uri))
             }
             else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, describeURI(uri))
         }
 
-        val noErrors = compiled - byFile.keys
+        val notCompiledBuildFiles: MutableSet<URI> = mutableSetOf()
+        for (uri in compiled){
+            if (sf.isOpen(uri) && BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath()) && BuildFileManager.checkErrorFile(uri)){
+                val diagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), "last classpath update was fail, fix plugin block and save the file")
+                client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnostic)))
+                notCompiledBuildFiles.add(uri)
+            }
+        }
+
+        val noErrors = compiled - byFile.keys - notCompiledBuildFiles
         for (file in noErrors) {
             clearDiagnostics(file)
 

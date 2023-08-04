@@ -60,7 +60,6 @@ import org.javacs.kt.LOG
 import org.javacs.kt.CompilerConfiguration
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
-import org.javacs.kt.util.BuildFileManager
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
 import org.jetbrains.kotlin.codegen.KotlinCodegenFacade
@@ -85,7 +84,7 @@ private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*
  * Kotlin compiler APIs used to parse, analyze and compile
  * files and expressions.
  */
-private class CompilationEnvironment(
+class CompilationEnvironment(
     javaSourcePath: Set<Path>,
     classPath: Set<Path>
 ) : Closeable {
@@ -455,9 +454,6 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
     private val compileLock = ReentrantLock() // TODO: Lock at file-level
 
     companion object {
-
-        private val buildEnvByFile : MutableMap<String, CompilationEnvironment> = mutableMapOf()
-
         init {
             setIdeaIoUseFallback()
         }
@@ -467,21 +463,12 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         localFileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
     }
 
-    private fun getBuildEnvByFile(name: String) : CompilationEnvironment{
+    private fun getBuildEnvByFile(name: String) : CompilationEnvironment {
         LOG.info { "build env was gotten for $name" }
-        return buildEnvByFile[name] ?: buildScriptCompileEnvironment !!
-    }
-
-    fun createBuildEnvForFile(path: Path) : Boolean{
-        val classPath = BuildFileManager.invoke(path)
-        if (classPath.isEmpty()) {
-            LOG.info { "for $path tooling API was unsuccessful" }
-            return false
+        if (BuildFileManager.buildEnvByFile[name] == null){
+            LOG.info { "build env NULL $name" }
         }
-        LOG.info { "for $path all is okey" }
-        val buildEnv = CompilationEnvironment(emptySet(), classPath)
-        buildEnvByFile[path.toString()] = buildEnv
-        return true
+        return BuildFileManager.buildEnvByFile[name] ?: buildScriptCompileEnvironment !!
     }
 
     /**
