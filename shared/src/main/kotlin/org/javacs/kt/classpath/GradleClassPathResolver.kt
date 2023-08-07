@@ -1,5 +1,7 @@
 package org.javacs.kt.classpath
 
+import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
 import org.javacs.kt.LOG
 import org.javacs.kt.util.execAndReadStdoutAndStderr
 import org.javacs.kt.util.KotlinLSException
@@ -23,13 +25,26 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
     }
     override val buildScriptClasspath: Set<Path> get() {
         return if (includeKotlinDSL) {
-            val scripts = listOf("kotlinDSLClassPathFinder.gradle")
-            val tasks = listOf("kotlinLSPKotlinDSLDeps")
-
-            return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+            // TODO: replaced by TAPI invoking
+            return readBuildDependenciesViaTAPI()
                 .apply { if (isNotEmpty()) LOG.info("Successfully resolved build script dependencies for '${projectDirectory.fileName}' using Gradle") }
         } else {
             emptySet()
+        }
+    }
+
+    private fun readBuildDependenciesViaTAPI(): Set<Path> {
+        val connection = GradleConnector.newConnector().forProjectDirectory(projectDirectory.toFile()).connect()
+        return try {
+            val modelByFile = connection.getModel(KotlinDslScriptsModel::class.java).scriptModels
+            val classpath = modelByFile[path.toFile()]?.classPath
+            LOG.info { "invoking of TAPI was successful for file: $path" }
+            classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
+        } catch (_: Exception) {
+            LOG.info { "invoking of TAPI was fail for file: $path" }
+            emptySet()
+        } finally {
+            connection.close()
         }
     }
 
