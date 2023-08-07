@@ -25,7 +25,6 @@ object BuildFileManager {
         val classpath = invoke(pathToFile)
         if (classpath.isEmpty()) {
             filesWithErrorsTAPI.add(pathToFile)
-            LOG.info { "for $uri tooling API was unsuccessful" }
             return
         }
         filesWithErrorsTAPI.remove(pathToFile)
@@ -46,10 +45,11 @@ object BuildFileManager {
             val model = connection.getModel(KotlinDslScriptsModel::class.java)
             val scriptModels = model.scriptModels
 
-            val firstScriptModel = scriptModels[pathToFile.toFile()]
-            val classpath = firstScriptModel?.classPath
+            val neededModel = scriptModels[pathToFile.toFile()]
+            val classpath = neededModel?.classPath
             classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            LOG.info { "for $pathToFile tooling API was unsuccessful: $e" }
             emptySet()
         } finally {
             connection.close()
