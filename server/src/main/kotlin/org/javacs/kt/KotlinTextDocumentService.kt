@@ -179,14 +179,14 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath())){
+        if (BuildFileManager.isBuildScript(uri.toPath()) && sf.updatePluginBlock(uri)){
+            LOG.info { "updating build environment for $uri" }
             BuildFileManager.updateBuildEnv(uri)
         }
         lintNow(uri)
         debounceLint.schedule {
             sp.save(uri)
         }
-
         // after linting errors remain, when user edits the file, file will be linted
         // TODO: what I should do here
         clearDiagnostics(uri)

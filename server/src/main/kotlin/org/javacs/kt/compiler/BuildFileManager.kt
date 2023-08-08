@@ -17,6 +17,7 @@ object BuildFileManager {
 
 
     fun updateBuildEnv(uri: URI) {
+        LOG.info { "[updateBuildEnv]: $uri" }
         val pathToFile = uri.toPath()
         // for usual build files we need to get classpath only at first time
         if (!isBuildScriptWithDynamicClasspath(pathToFile) && buildEnvByFile.contains(pathToFile.toString())) {
@@ -47,9 +48,10 @@ object BuildFileManager {
 
             val neededModel = scriptModels[pathToFile.toFile()]
             val classpath = neededModel?.classPath
+            LOG.info { "for $pathToFile tooling API was successful" }
             classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
         } catch (e: Exception) {
-            LOG.info { "for $pathToFile tooling API was unsuccessful: $e" }
+            LOG.info { "for $pathToFile tooling API was failed: $e" }
             emptySet()
         } finally {
             connection.close()

@@ -5,6 +5,7 @@ import com.intellij.lang.java.JavaLanguage
 import com.intellij.lang.Language
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
+import org.javacs.kt.compiler.BuildFileManager
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.filePath
 import org.javacs.kt.util.partitionAroundLast
@@ -20,6 +21,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.toPath
 
 private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
 
@@ -72,8 +74,30 @@ class SourceFiles(
     private val files = NotifySourcePath(sp)
     private val open = mutableSetOf<URI>()
 
+    // only for build.gradle.kts files
+    private val pluginBlockByUri = mutableMapOf<URI, String> ()
+    private val filesWithChangedPluginBlock = mutableSetOf<URI>()
+
+    private fun extractPluginBlock(fileContent: String): String {
+        val pluginBlockRegex = """plugins\s*\{\s*([\s\S]*?)\s*\}""".toRegex()
+        val matchResult = pluginBlockRegex.find(fileContent)
+        return matchResult?.groups?.get(1)?.value ?: String()
+    }
+
+    fun updatePluginBlock(uri:URI) : Boolean {
+        var updated = false
+        if (filesWithChangedPluginBlock.contains(uri)){
+            updated = true
+        }
+        filesWithChangedPluginBlock.remove(uri)
+        return updated
+    }
+
     fun open(uri: URI, content: String, version: Int) {
         files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = !exclusions.isURIIncluded(uri))
+        if (BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath())){
+            pluginBlockByUri[uri] = extractPluginBlock(files[uri]?.content ?: String())
+        }
         open.add(uri)
     }
 
@@ -91,6 +115,9 @@ class SourceFiles(
                     files.remove(uri)
                 }
             }
+
+            pluginBlockByUri.remove(uri)
+            filesWithChangedPluginBlock.remove(uri)
         }
     }
 
@@ -110,6 +137,13 @@ class SourceFiles(
             }
 
             files[uri] = SourceVersion(newText, newVersion, existing.language, existing.isTemporary)
+            if (BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath())){
+                val newPluginBlock = extractPluginBlock(files[uri]?.content ?: String())
+                if (pluginBlockByUri[uri] != newPluginBlock){
+                    filesWithChangedPluginBlock.add(uri)
+                }
+                pluginBlockByUri[uri] = newPluginBlock
+            }
         }
     }
 

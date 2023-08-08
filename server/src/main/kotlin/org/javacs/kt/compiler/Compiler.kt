@@ -77,6 +77,7 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.samWithReceiver.CliSamWithReceiverComponentContributor
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import java.io.File
+import java.net.URI
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
 
@@ -464,10 +465,6 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
     }
 
     private fun getBuildEnvByFile(name: String) : CompilationEnvironment {
-        LOG.info { "build env was gotten for $name" }
-        if (BuildFileManager.buildEnvByFile[name] == null){
-            LOG.info { "build env NULL $name" }
-        }
         return BuildFileManager.buildEnvByFile[name] ?: buildScriptCompileEnvironment !!
     }
 
