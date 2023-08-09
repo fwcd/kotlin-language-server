@@ -33,10 +33,10 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
         return try {
             val modelByFile = connection.getModel(KotlinDslScriptsModel::class.java).scriptModels
             val classpath = modelByFile[path.toFile()]?.classPath
-            LOG.info { "[inside resolver]: invoking of TAPI was successful for file: $path" }
+            LOG.info { "[inside resolver]: no error file = $path" }
             classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
-        } catch (_: Exception) {
-            LOG.info { "[inside resolver]: invoking of TAPI was fail for file: $path" }
+        } catch (e: Exception) {
+            LOG.info { "[inside resolver]: file=$path error=$e" }
             emptySet()
         } finally {
             connection.close()

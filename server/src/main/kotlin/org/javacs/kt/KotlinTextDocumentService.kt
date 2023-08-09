@@ -169,9 +169,9 @@ class KotlinTextDocumentService(
         val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
 
-        if (BuildFileManager.isBuildScript(uri.toPath())){
-            BuildFileManager.updateBuildEnv(uri)
-        }
+//        if (BuildFileManager.isBuildScript(uri.toPath())){
+//            BuildFileManager.updateBuildEnv(uri)
+//        }
         lintNow(uri)
     }
 

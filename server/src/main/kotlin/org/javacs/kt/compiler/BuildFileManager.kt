@@ -16,10 +16,10 @@ object BuildFileManager {
     fun checkErrorFile(uri: URI): Boolean = filesWithErrorsTAPI.contains(uri.toPath())
 
 
-    fun updateBuildEnv(uri: URI) {
-        LOG.info { "[updateBuildEnv]: $uri" }
-        val pathToFile = uri.toPath()
-        // for usual build files we need to get classpath only at first time
+    fun updateBuildEnv(uri: URI){
+        updateBuildEnv(uri.toPath())
+    }
+    fun updateBuildEnv(pathToFile: Path) {
         if (!isBuildScriptWithDynamicClasspath(pathToFile) && buildEnvByFile.contains(pathToFile.toString())) {
             return
         }

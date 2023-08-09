@@ -465,6 +465,11 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
     }
 
     private fun getBuildEnvByFile(name: String) : CompilationEnvironment {
+        if (BuildFileManager.buildEnvByFile[name] == null){
+            val path = Path.of(name)
+            LOG.info { "initial creating... build environment for $path" }
+            BuildFileManager.updateBuildEnv(path)
+        }
         return BuildFileManager.buildEnvByFile[name] ?: buildScriptCompileEnvironment !!
     }
 
