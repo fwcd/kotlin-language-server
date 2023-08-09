@@ -19,7 +19,8 @@ object BuildFileManager {
         if (filesWithErrorsTAPI.isEmpty()){
             return Pair(false, String())
         }
-        val errorMessage = "Files with errors: $filesWithErrorsTAPI, \n Fix errors and save these files!"
+        val errorMessage = "Files with errors: $filesWithErrorsTAPI, \n " +
+            "Fix errors, save these files and make some changes in this file to get right diagnostic!"
         return Pair(true, errorMessage)
     }
 
