@@ -168,10 +168,6 @@ class KotlinTextDocumentService(
     override fun didOpen(params: DidOpenTextDocumentParams) {
         val uri = parseURI(params.textDocument.uri)
         sf.open(uri, params.textDocument.text, params.textDocument.version)
-
-//        if (BuildFileManager.isBuildScript(uri.toPath())){
-//            BuildFileManager.updateBuildEnv(uri)
-//        }
         lintNow(uri)
     }
 
@@ -179,17 +175,14 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath()) && sf.updatePluginBlock(uri)){
+        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.checkErrorFile(uri))){
             LOG.info { "updating build environment for $uri" }
             BuildFileManager.updateBuildEnv(uri)
         }
-        lintNow(uri)
         debounceLint.schedule {
             sp.save(uri)
         }
-        // after linting errors remain, when user edits the file, file will be linted
-        // TODO: what I should do here
-        clearDiagnostics(uri)
+        lintNow(uri)
     }
 
     override fun signatureHelp(position: SignatureHelpParams): CompletableFuture<SignatureHelp?> = async.compute {
@@ -298,6 +291,22 @@ class KotlinTextDocumentService(
     private fun doLint(cancelCallback: () -> Boolean) {
         LOG.info("Linting {}", describeURIs(lintTodo))
         val files = clearLint()
+
+        // if build configuration is broken then
+        // 1) we don't lint the files
+        // 2) we report to the client that build configuration is broken
+        val (buildFilesIsBroken, errMessage) = BuildFileManager.buildConfigurationContainsError()
+        if (buildFilesIsBroken){
+            for (uri in files){
+                if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())){
+                    val diagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), errMessage)
+                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnostic)))
+                }
+            }
+            return
+        }
+
+
         val context = sp.compileFiles(files)
         if (!cancelCallback.invoke()) {
             reportDiagnostics(files, context.diagnostics)
@@ -311,6 +320,7 @@ class KotlinTextDocumentService(
 
         for ((uri, diagnostics) in byFile) {
             if (sf.isOpen(uri)) {
+                clearDiagnostics(uri)
 
                 client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
 
@@ -319,16 +329,7 @@ class KotlinTextDocumentService(
             else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, describeURI(uri))
         }
 
-        val notCompiledBuildFiles: MutableSet<URI> = mutableSetOf()
-        for (uri in compiled){
-            if (sf.isOpen(uri) && BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath()) && BuildFileManager.checkErrorFile(uri)){
-                val diagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), "last classpath update was fail, fix plugin block and save the file")
-                client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnostic)))
-                notCompiledBuildFiles.add(uri)
-            }
-        }
-
-        val noErrors = compiled - byFile.keys - notCompiledBuildFiles
+        val noErrors = compiled - byFile.keys
         for (file in noErrors) {
             clearDiagnostics(file)
 

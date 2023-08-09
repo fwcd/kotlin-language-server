@@ -15,6 +15,14 @@ object BuildFileManager {
 
     fun checkErrorFile(uri: URI): Boolean = filesWithErrorsTAPI.contains(uri.toPath())
 
+    fun buildConfigurationContainsError() : Pair<Boolean, String>{
+        if (filesWithErrorsTAPI.isEmpty()){
+            return Pair(false, String())
+        }
+        val errorMessage = "Files with errors: $filesWithErrorsTAPI, \n Fix errors and save these files!"
+        return Pair(true, errorMessage)
+    }
+
 
     fun updateBuildEnv(uri: URI){
         updateBuildEnv(uri.toPath())
@@ -51,7 +59,8 @@ object BuildFileManager {
             LOG.info { "for $pathToFile tooling API was successful" }
             classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
         } catch (e: Exception) {
-            LOG.info { "for $pathToFile tooling API was failed: $e" }
+            val stackTrace = e.stackTraceToString()
+            LOG.info { "for $pathToFile tooling API was failed: " }
             emptySet()
         } finally {
             connection.close()
