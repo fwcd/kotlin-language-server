@@ -27,12 +27,10 @@ object BuildFileManager {
     fun updateBuildEnv() {
 //        LOG.warn { "workspaceRoots : $workspaceRoots" }
         for (root in workspaceRoots) {
-            LOG.info { "TAPI CALL for $root" }
             val (success, mapWithSources) = invokeTAPI(root.toFile())
-
+            LOG.info { "[success=$success] TAPI invoking for $root" }
             if (!success){
                 errorDuringTAPICall = true
-                LOG.info { "Error of TAPI call in workspace $root" }
                 return
             }
 
@@ -41,7 +39,6 @@ object BuildFileManager {
                 buildEnvByFile[file.toPath()] = CompilationEnvironment(emptySet(), classpath)
             }
         }
-        LOG.info { "TAPI call was successful" }
         errorDuringTAPICall = false
     }
 
