@@ -175,9 +175,9 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.checkErrorFile(uri))){
+        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.buildConfigurationContainsError())){
             LOG.info { "updating build environment for $uri" }
-            BuildFileManager.updateBuildEnv(uri)
+            BuildFileManager.updateBuildEnv()
         }
         debounceLint.schedule {
             sp.save(uri)
@@ -265,6 +265,9 @@ class KotlinTextDocumentService(
     }
 
     fun lintAll() {
+        if (BuildFileManager.buildConfigurationContainsError()){
+            return
+        }
         debounceLint.submitImmediately {
             sp.compileAllFiles()
             sp.saveAllFiles()
@@ -295,8 +298,8 @@ class KotlinTextDocumentService(
         // if build configuration is broken then
         // 1) we don't lint the files
         // 2) we report to the client that build configuration is broken
-        val (buildFilesIsBroken, errMessage) = BuildFileManager.buildConfigurationContainsError()
-        if (buildFilesIsBroken){
+        if (BuildFileManager.buildConfigurationContainsError()){
+            val errMessage = "Fix mistakes"
             for (uri in files){
                 if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())){
                     val diagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), errMessage)

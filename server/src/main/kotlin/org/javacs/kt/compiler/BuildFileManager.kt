@@ -1,42 +1,48 @@
 package org.javacs.kt.compiler
 
 import org.gradle.tooling.GradleConnector
+import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptModel
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
 import org.javacs.kt.LOG
-import java.net.URI
+import java.io.File
+import java.nio.file.Files
 
 import java.nio.file.Path
-import kotlin.io.path.toPath
 
 object BuildFileManager {
-    val buildEnvByFile: MutableMap<String, CompilationEnvironment> = mutableMapOf()
+    val buildEnvByFile: MutableMap<Path, CompilationEnvironment> = mutableMapOf()
 
-    private val filesWithErrorsTAPI: MutableSet<Path> = mutableSetOf()
+    var workspaceRoots = emptySet<Path>()
 
-    fun checkErrorFile(uri: URI): Boolean = filesWithErrorsTAPI.contains(uri.toPath())
+    private var errorDuringTAPICall = false
 
-    fun buildConfigurationContainsError() : Pair<Boolean, String>{
-        if (filesWithErrorsTAPI.isEmpty()){
-            return Pair(false, String())
-        }
-        val errorMessage = "Files with errors: $filesWithErrorsTAPI, \n " +
-            "Fix errors, save these files and make some changes in this file to get right diagnostic!"
-        return Pair(true, errorMessage)
+    private val errorMessage = "Files with errors:, \n " +
+        "Fix errors, save these files and make some changes in this file to get right diagnostic!"
+
+    fun buildConfigurationContainsError(): Boolean {
+        return errorDuringTAPICall
     }
 
 
-    fun updateBuildEnv(uri: URI){
-        updateBuildEnv(uri.toPath())
-    }
-    fun updateBuildEnv(pathToFile: Path) {
-        val classpath = invoke(pathToFile)
-        if (classpath.isEmpty()) {
-            filesWithErrorsTAPI.add(pathToFile)
-            return
+    fun updateBuildEnv() {
+//        LOG.warn { "workspaceRoots : $workspaceRoots" }
+        for (root in workspaceRoots) {
+            LOG.info { "TAPI CALL for $root" }
+            val (success, mapWithSources) = invokeTAPI(root.toFile())
+
+            if (!success){
+                errorDuringTAPICall = true
+                LOG.info { "Error of TAPI call in workspace $root" }
+                return
+            }
+
+            for ((file, model) in mapWithSources) {
+                val classpath = model.classPath.map { it.toPath() }.let { HashSet(it) }
+                buildEnvByFile[file.toPath()] = CompilationEnvironment(emptySet(), classpath)
+            }
         }
-        filesWithErrorsTAPI.remove(pathToFile)
-        val buildEnv = CompilationEnvironment(emptySet(), classpath)
-        buildEnvByFile[pathToFile.toString()] = buildEnv
+        LOG.info { "TAPI call was successful" }
+        errorDuringTAPICall = false
     }
 
     fun isBuildScriptWithDynamicClasspath(file: Path): Boolean =
@@ -44,26 +50,38 @@ object BuildFileManager {
 
     fun isBuildScript(file: Path): Boolean = file.fileName.toString().endsWith(".gradle.kts")
 
-    private fun invoke(pathToFile: Path): Set<Path> {
-        val projectDir = pathToFile.parent.toFile()
-        val connection = GradleConnector.newConnector().forProjectDirectory(projectDir).connect()
 
-        return try {
-            val model = connection.getModel(KotlinDslScriptsModel::class.java)
-            val scriptModels = model.scriptModels
+    fun getCommonBuildClasspath(): Set<Path> {
+        if (errorDuringTAPICall) {
+            val tempDir: Path = Files.createTempDirectory("temp-dir").toAbsolutePath()
+            val tempFile = tempDir.resolve("settings.gradle.kts")
+            Files.write(tempFile, "".toByteArray())
 
-            val neededModel = scriptModels[pathToFile.toFile()]
-            val classpath = neededModel?.classPath
-            LOG.info { "for $pathToFile tooling API was successful" }
-            classpath?.map { it.toPath() }?.let { HashSet(it) } ?: emptySet()
-        } catch (e: Exception) {
-            val stackTrace = e.stackTraceToString()
-            LOG.info { "for $pathToFile tooling API was failed: " }
-            emptySet()
-        } finally {
-            connection.close()
+            val (_, models) = invokeTAPI(tempDir.toFile())
+            val classpath = models.entries.first().value.classPath
+            return classpath.map { it.toPath() }.toSet()
         }
+        val classpath = mutableSetOf<Path>()
+        for (root in workspaceRoots) {
+            val (success, mapWithSources) = invokeTAPI(root.toFile())
+            for ((_, value) in mapWithSources){
+                classpath += value.classPath.map { it.toPath() }.toSet()
+            }
+        }
+        return classpath
     }
 
+    fun invokeTAPI(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
+        GradleConnector.newConnector().forProjectDirectory(pathToDirs).connect().use {
+            return try {
+                val model = it.getModel(KotlinDslScriptsModel::class.java)
+                return Pair(true,model.scriptModels)
+            } catch (e: Exception) {
+                val stackTrace = e.stackTraceToString()
+//                LOG.info { "for $pathToDirs tooling API was failed: " }
+                return Pair(false, emptyMap())
+            }
+        }
+    }
 
 }
