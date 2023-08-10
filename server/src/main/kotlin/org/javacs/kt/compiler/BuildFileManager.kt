@@ -29,9 +29,6 @@ object BuildFileManager {
         updateBuildEnv(uri.toPath())
     }
     fun updateBuildEnv(pathToFile: Path) {
-        if (!isBuildScriptWithDynamicClasspath(pathToFile) && buildEnvByFile.contains(pathToFile.toString())) {
-            return
-        }
         val classpath = invoke(pathToFile)
         if (classpath.isEmpty()) {
             filesWithErrorsTAPI.add(pathToFile)
@@ -47,7 +44,7 @@ object BuildFileManager {
 
     fun isBuildScript(file: Path): Boolean = file.fileName.toString().endsWith(".gradle.kts")
 
-    operator fun invoke(pathToFile: Path): Set<Path> {
+    private fun invoke(pathToFile: Path): Set<Path> {
         val projectDir = pathToFile.parent.toFile()
         val connection = GradleConnector.newConnector().forProjectDirectory(projectDir).connect()
 
