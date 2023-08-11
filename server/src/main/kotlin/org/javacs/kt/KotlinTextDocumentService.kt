@@ -175,7 +175,7 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.buildConfigurationContainsError())){
+        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.buildConfContainsError())){
             LOG.info { "updating build environment for $uri" }
             BuildFileManager.updateBuildEnv()
         }
@@ -265,7 +265,7 @@ class KotlinTextDocumentService(
     }
 
     fun lintAll() {
-        if (BuildFileManager.buildConfigurationContainsError()){
+        if (BuildFileManager.buildConfContainsError()){
             return
         }
         debounceLint.submitImmediately {
@@ -296,19 +296,17 @@ class KotlinTextDocumentService(
         val files = clearLint()
 
         // if build configuration is broken then
-        // 1) we don't lint the files
-        // 2) we report to the client that build configuration is broken
-        if (BuildFileManager.buildConfigurationContainsError()){
-            val errMessage = "Fix mistakes"
+        // 1) KLS doesn't lint the files
+        // 2) KLS reports to the client that build configuration is broken
+        if (BuildFileManager.buildConfContainsError()){
             for (uri in files){
                 if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())){
-                    val diagnostic = Diagnostic(Range(Position(0,0), Position(0,0)), errMessage)
-                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnostic)))
+                    val diagnosticFromTAPI = BuildFileManager.getError()
+                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnosticFromTAPI)))
                 }
             }
             return
         }
-
 
         val context = sp.compileFiles(files)
         if (!cancelCallback.invoke()) {

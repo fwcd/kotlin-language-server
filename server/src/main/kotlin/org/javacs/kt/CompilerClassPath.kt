@@ -42,8 +42,8 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         updateBuildScriptClassPath: Boolean = true,
         updateJavaSourcePath: Boolean = true
     ): Boolean {
-        // TODO: Fetch class path and build script class path concurrently (and asynchronously)
-        BuildFileManager.workspaceRoots = workspaceRoots
+        // TODO: Fetch build script class path concurrently (and asynchronously)
+        BuildFileManager.setWorkspaceRoots(workspaceRoots)
         BuildFileManager.updateBuildEnv()
 
         var refreshCompiler = updateClassPath
