@@ -25,10 +25,12 @@ object BuildFileManager {
 
 
     fun updateBuildEnv() {
-//        LOG.warn { "workspaceRoots : $workspaceRoots" }
-        for (root in workspaceRoots) {
-            val (success, mapWithSources) = invokeTAPI(root.toFile())
-            LOG.info { "[success=$success] TAPI invoking for $root" }
+
+        val rootWorkspaces = workspaceRoots.filter { workspaceIsRoot(it) }
+
+        for (workspace in rootWorkspaces) {
+            val (success, mapWithSources) = invokeTAPI(workspace.toFile())
+            LOG.info { "[success=$success] TAPI invoking for $workspace" }
             if (!success){
                 errorDuringTAPICall = true
                 return
@@ -59,8 +61,9 @@ object BuildFileManager {
             return classpath.map { it.toPath() }.toSet()
         }
         val classpath = mutableSetOf<Path>()
-        for (root in workspaceRoots) {
-            val (success, mapWithSources) = invokeTAPI(root.toFile())
+        val rootWorkspaces = workspaceRoots.filter { workspaceIsRoot(it) }
+        for (root in rootWorkspaces) {
+            val (_, mapWithSources) = invokeTAPI(root.toFile())
             for ((_, value) in mapWithSources){
                 classpath += value.classPath.map { it.toPath() }.toSet()
             }
@@ -68,15 +71,22 @@ object BuildFileManager {
         return classpath
     }
 
+    private fun workspaceIsRoot(path: Path) : Boolean{
+        val directory = path.toFile()
+        LOG.info {  "$path and files:${directory.listFiles()}" }
+        return directory.listFiles().any { it.name == "settings.gradle.kts" }
+    }
+
     fun invokeTAPI(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
         GradleConnector.newConnector().forProjectDirectory(pathToDirs).connect().use {
             return try {
+                // use it.action(BuildAction) to traverse the build tree (root build + included builds in a composite build)
                 val model = it.getModel(KotlinDslScriptsModel::class.java)
-                return Pair(true,model.scriptModels)
+                Pair(true,model.scriptModels)
             } catch (e: Exception) {
-                val stackTrace = e.stackTraceToString()
+//                val stackTrace = e.stackTraceToString()
 //                LOG.info { "for $pathToDirs tooling API was failed: " }
-                return Pair(false, emptyMap())
+                Pair(false, emptyMap())
             }
         }
     }
