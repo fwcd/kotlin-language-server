@@ -18,7 +18,7 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 * See [Troubleshooting](TROUBLESHOOTING.md) for tips on troubleshooting errors
 * See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
 * See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
-* See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for running and debugging support on the JVM inside your editor 
+* See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for editor-agnostic launch and debug support of Kotlin/JVM programs
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
 ## Packaging
