@@ -88,6 +88,10 @@ There is an extensive suite of behavioral [tests](server/src/test/kotlin/org/jav
 
 The Kotlin language server supports some non-standard requests through LSP. See [KotlinProtocolExtensions](server/src/main/kotlin/org/javacs/kt/KotlinProtocolExtensions.kt) for a description of the interface. The general syntax for these methods is `kotlin/someCustomMethod`.
 
+## Initialization Options
+
+The Kotlin language server supports some custom initialization options via the `initializationOptions` property in the `initialize` request parameters. See `InitializationOptions` in [Configuration](server/src/main/kotlin/org/javacs/kt/Configuration.kt) for a list of supported properties.
+
 ## Features
 
 ### Autocomplete

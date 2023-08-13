@@ -13,6 +13,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     private var artifacts: Set<Artifact>? = null
 
     override val resolverType: String = "Maven"
+
     override val classpath: Set<ClassPathEntry> get() {
         val dependenciesOutput = generateMavenDependencyList(pom)
         val artifacts = readMavenDependencyList(dependenciesOutput)
@@ -52,6 +53,8 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
             }
         }.toSet()
     }
+
+    override val currentBuildFileVersion: Long get() = pom.toFile().lastModified()
 
     companion object {
         /** Create a maven resolver if a file is a pom. */

@@ -54,6 +54,7 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("com.github.fwcd.ktfmt:ktfmt")
     implementation("com.beust:jcommander")
+    implementation("org.xerial:sqlite-jdbc")
 
     testImplementation("org.hamcrest:hamcrest-all")
     testImplementation("junit:junit")

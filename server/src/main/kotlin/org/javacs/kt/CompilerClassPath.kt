@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.classpath.ClassPathEntry
 import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.database.DatabaseService
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.io.File
@@ -14,7 +15,7 @@ import java.nio.file.Path
  * Manages the class path (compiled JARs, etc), the Java source path
  * and the compiler. Note that Kotlin sources are stored in SourcePath.
  */
-class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
+class CompilerClassPath(private val config: CompilerConfiguration, private val databaseService: DatabaseService) : Closeable {
     val workspaceRoots = mutableSetOf<Path>()
 
     private val javaSourcePath = mutableSetOf<Path>()
@@ -39,7 +40,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         updateJavaSourcePath: Boolean = true
     ): Boolean {
         // TODO: Fetch class path and build script class path concurrently (and asynchronously)
-        val resolver = defaultClassPathResolver(workspaceRoots)
+        val resolver = defaultClassPathResolver(workspaceRoots, databaseService.db)
         var refreshCompiler = updateJavaSourcePath
 
         if (updateClassPath) {

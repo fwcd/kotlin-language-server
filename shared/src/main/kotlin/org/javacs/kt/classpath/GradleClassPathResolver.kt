@@ -12,7 +12,8 @@ import java.nio.file.Paths
 
 internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
     override val resolverType: String = "Gradle"
-    private val projectDirectory: Path get() = path.getParent()
+    private val projectDirectory: Path get() = path.parent
+
     override val classpath: Set<ClassPathEntry> get() {
         val scripts = listOf("projectClassPathFinder.gradle")
         val tasks = listOf("kotlinLSPProjectDeps")
@@ -32,6 +33,8 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
             emptySet()
         }
     }
+
+    override val currentBuildFileVersion: Long get() = path.toFile().lastModified()
 
     companion object {
         /** Create a Gradle resolver if a file is a pom. */

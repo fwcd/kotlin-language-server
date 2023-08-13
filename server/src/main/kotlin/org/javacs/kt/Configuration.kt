@@ -1,5 +1,16 @@
 package org.javacs.kt
 
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import org.eclipse.lsp4j.InitializeParams
+import java.lang.reflect.Type
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
+import java.nio.file.Paths
+
 public data class SnippetsConfiguration(
     /** Whether code completion should return VSCode-style snippets. */
     var enabled: Boolean = true
@@ -34,6 +45,36 @@ public data class ExternalSourcesConfiguration(
     /** Whether external classes should be automatically converted to Kotlin. */
     var autoConvertToKotlin: Boolean = false
 )
+
+
+fun getStoragePath(params: InitializeParams): Path? {
+    params.initializationOptions?.let { initializationOptions ->
+        val gson = GsonBuilder().registerTypeHierarchyAdapter(Path::class.java, GsonPathConverter()).create()
+        val options = gson.fromJson(initializationOptions as JsonElement, InitializationOptions::class.java)
+
+        return options?.storagePath
+    }
+
+    return null
+}
+
+data class InitializationOptions(
+    // A path to a directory used by the language server to store data. Used for caching purposes.
+    val storagePath: Path?
+)
+
+class GsonPathConverter : JsonDeserializer<Path?> {
+
+    @Throws(JsonParseException::class)
+    override fun deserialize(json: JsonElement, type: Type?, context: JsonDeserializationContext?): Path? {
+        return try {
+            Paths.get(json.asString)
+        } catch (ex: InvalidPathException) {
+            LOG.printStackTrace(ex)
+            null
+        }
+    }
+}
 
 public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),

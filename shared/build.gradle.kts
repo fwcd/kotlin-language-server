@@ -15,6 +15,8 @@ dependencies {
     implementation(platform("dev.fwcd.kotlin-language-server:platform"))
 
     implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.exposed:exposed-core")
+    implementation("org.jetbrains.exposed:exposed-dao")
     testImplementation("org.hamcrest:hamcrest-all")
     testImplementation("junit:junit")
 }

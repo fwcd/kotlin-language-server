@@ -1,15 +1,19 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
+import org.jetbrains.exposed.sql.Database
 import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.nio.file.FileSystems
 
-fun defaultClassPathResolver(workspaceRoots: Collection<Path>): ClassPathResolver =
-    WithStdlibResolver(
+fun defaultClassPathResolver(workspaceRoots: Collection<Path>, db: Database? = null): ClassPathResolver {
+    val childResolver = WithStdlibResolver(
         ShellClassPathResolver.global(workspaceRoots.firstOrNull())
-            .or(workspaceRoots.asSequence().flatMap(::workspaceResolvers).joined)
+            .or(workspaceRoots.asSequence().flatMap { workspaceResolvers(it) }.joined)
     ).or(BackupClassPathResolver)
+
+    return db?.let { CachedClassPathResolver(childResolver, it) } ?: childResolver
+}
 
 /** Searches the workspace for all files that could provide classpath info. */
 private fun workspaceResolvers(workspaceRoot: Path): Sequence<ClassPathResolver> {

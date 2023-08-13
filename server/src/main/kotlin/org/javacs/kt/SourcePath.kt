@@ -8,6 +8,7 @@ import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.progress.Progress
 import com.intellij.lang.Language
+import org.javacs.kt.database.DatabaseService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -22,14 +23,15 @@ import java.util.concurrent.locks.ReentrantLock
 class SourcePath(
     private val cp: CompilerClassPath,
     private val contentProvider: URIContentProvider,
-    private val indexingConfig: IndexingConfiguration
+    private val indexingConfig: IndexingConfiguration,
+    private val databaseService: DatabaseService
 ) {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
 
     private val indexAsync = AsyncExecutor()
     var indexEnabled: Boolean by indexingConfig::enabled
-    val index = SymbolIndex()
+    val index = SymbolIndex(databaseService)
 
     var beforeCompileCallback: () -> Unit = {}
 
