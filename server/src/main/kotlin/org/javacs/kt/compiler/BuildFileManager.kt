@@ -22,6 +22,8 @@ object BuildFileManager {
 
     private val error = Diagnostic(Range(Position(0, 0), Position(0, 0)), String())
 
+    private var defaultBuildClasspath = emptySet<Path>()
+
     fun getError(): Diagnostic = error
 
     fun setWorkspaceRoots(wr: Set<Path>) = run { workspaceRoots = wr }
@@ -41,6 +43,7 @@ object BuildFileManager {
 
             for ((file, model) in scriptModelByFile) {
                 val classpath = model.classPath.map { it.toPath() }.let { HashSet(it) }
+                defaultBuildClasspath += classpath
                 buildEnvByFile[file.toPath()] = CompilationEnvironment(emptySet(), classpath)
             }
         }
@@ -53,25 +56,17 @@ object BuildFileManager {
     fun isBuildScript(file: Path): Boolean = file.fileName.toString().endsWith(".gradle.kts")
 
     fun getCommonBuildClasspath(): Set<Path> {
-        if (TAPICallFailed) {
-            // KLS takes build classpath from temporary settings build file to provide correct compilation on initial stage
-            val tempDir: Path = Files.createTempDirectory("temp-dir").toAbsolutePath()
-            val settingsBuildFile = tempDir.resolve("settings.gradle.kts")
-            Files.write(settingsBuildFile, "".toByteArray())
+        if (defaultBuildClasspath.isNotEmpty()) {
+            return defaultBuildClasspath
+        }
+        // KLS takes build classpath from temporary settings build file to provide correct compilation on initial stage
+        val tempDir: Path = Files.createTempDirectory("temp-dir").toAbsolutePath()
+        val settingsBuildFile = tempDir.resolve("settings.gradle.kts")
+        Files.write(settingsBuildFile, "".toByteArray())
 
-            val models = invokeTAPI(tempDir.toFile()).second
-            val classpath = models.entries.first().value.classPath
-            return classpath.map { it.toPath() }.toSet()
-        }
-        val commonClasspath = mutableSetOf<Path>()
-        val rootWorkspaces = workspaceRoots.filter { workspaceIsRoot(it) }
-        for (root in rootWorkspaces) {
-            val (_, mapWithSources) = invokeTAPI(root.toFile())
-            for (scriptModel in mapWithSources.values) {
-                commonClasspath += scriptModel.classPath.map { it.toPath() }.toSet()
-            }
-        }
-        return commonClasspath
+        val models = invokeTAPI(tempDir.toFile()).second
+        val classpath = models.entries.first().value.classPath
+        return classpath.map { it.toPath() }.toSet()
     }
 
     private fun workspaceIsRoot(path: Path): Boolean {

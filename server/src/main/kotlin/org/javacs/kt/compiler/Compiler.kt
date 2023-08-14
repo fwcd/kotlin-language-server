@@ -468,6 +468,7 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         val path = Path.of(name)
         if (BuildFileManager.buildEnvByFile[path] == null){
             LOG.info { "null build environment for $path" }
+            // at the first time TAPI will be invoked for all projects
             BuildFileManager.updateBuildEnv()
         }
         return BuildFileManager.buildEnvByFile[path] ?: buildScriptCompileEnvironment !!

@@ -1,9 +1,6 @@
 package org.javacs.kt
 
-import org.jetbrains.kotlin.konan.file.createTempDir
-import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
 import org.javacs.kt.classpath.ClassPathEntry
-import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.BuildFileManager
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.util.AsyncExecutor
@@ -12,7 +9,6 @@ import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.exists
 
 /**
  * Manages the class path (compiled JARs, etc), the Java source path
@@ -26,6 +22,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     var classPath = mutableSetOf<ClassPathEntry>()
     val outputDirectory: File = Files.createTempDirectory("kls  BuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
+    var TAPIwasInvoked = false
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
         private set
@@ -44,13 +41,17 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     ): Boolean {
         // TODO: Fetch build script class path concurrently (and asynchronously)
         BuildFileManager.setWorkspaceRoots(workspaceRoots)
-        BuildFileManager.updateBuildEnv()
+        if (!TAPIwasInvoked){
+            LOG.info { "launch TAPI at the first time" }
+            TAPIwasInvoked = true
+            BuildFileManager.updateBuildEnv()
+        }
 
         var refreshCompiler = updateClassPath
 
-        if (updateClassPath) {
+        if (updateBuildScriptClassPath) {
             LOG.info("Update build script path")
-            var newBuildScriptClassPath = BuildFileManager.getCommonBuildClasspath()
+            val newBuildScriptClassPath = BuildFileManager.getCommonBuildClasspath()
 
             if (newBuildScriptClassPath != buildScriptClassPath) {
                 syncPaths(buildScriptClassPath, newBuildScriptClassPath, "build script class path") { it }
@@ -89,7 +90,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
 
         workspaceRoots.add(root)
         javaSourcePath.addAll(findJavaSourceFiles(root))
-
+        // TODO: on each refresh not update compiler on each refresh
         return refresh()
     }
 
