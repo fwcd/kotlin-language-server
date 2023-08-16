@@ -175,9 +175,14 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath()) && (sf.updatePluginBlock(uri) || BuildFileManager.buildConfContainsError())){
-            LOG.info { "updating build environment for $uri" }
-            BuildFileManager.updateBuildEnv()
+        if (BuildFileManager.isBuildScript(uri.toPath())) {
+            if (BuildFileManager.buildConfContainsError()) {
+                LOG.info { "updating build environments for ALL" }
+                BuildFileManager.updateBuildEnvironments()
+            } else if (sf.updatePluginBlock(uri)) {
+                LOG.info { "updating build environment for $uri" }
+                BuildFileManager.updateBuildEnvironment(uri.toPath())
+            }
         }
         debounceLint.schedule {
             sp.save(uri)
@@ -265,7 +270,7 @@ class KotlinTextDocumentService(
     }
 
     fun lintAll() {
-        if (BuildFileManager.buildConfContainsError()){
+        if (BuildFileManager.buildConfContainsError()) {
             return
         }
         debounceLint.submitImmediately {
@@ -298,19 +303,27 @@ class KotlinTextDocumentService(
         // if build configuration is broken then
         // 1) KLS doesn't lint the files
         // 2) KLS reports to the client that build configuration is broken
-        if (BuildFileManager.buildConfContainsError()){
-            for (uri in files){
-                if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())){
-                    val diagnosticFromTAPI = BuildFileManager.getError()
-                    client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), listOf(diagnosticFromTAPI)))
-                }
-            }
-            return
-        }
+
 
         val context = sp.compileFiles(files)
         if (!cancelCallback.invoke()) {
-            reportDiagnostics(files, context.diagnostics)
+            if (!BuildFileManager.buildConfContainsError()) {
+                reportDiagnostics(files, context.diagnostics)
+            }
+            else {
+                for (uri in files) {
+                    if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())) {
+                        val diagnosticFromTAPI = BuildFileManager.getError()
+                        client.publishDiagnostics(
+                            PublishDiagnosticsParams(
+                                uri.toString(),
+                                listOf(diagnosticFromTAPI)
+                            )
+                        )
+                    }
+                }
+                lintCount++
+            }
         }
         lintCount++
     }

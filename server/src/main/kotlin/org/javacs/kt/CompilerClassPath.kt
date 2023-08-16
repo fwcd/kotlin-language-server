@@ -41,11 +41,11 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     ): Boolean {
         // TODO: Fetch build script class path concurrently (and asynchronously)
         BuildFileManager.setWorkspaceRoots(workspaceRoots)
-        if (!TAPIwasInvoked){
-            LOG.info { "launch TAPI at the first time" }
-            TAPIwasInvoked = true
-            BuildFileManager.updateBuildEnv()
-        }
+//        if (!TAPIwasInvoked){
+//            LOG.info { "launch TAPI at the first time" }
+//            TAPIwasInvoked = true
+//            BuildFileManager.updateBuildEnvironments()
+//        }
 
         var refreshCompiler = updateClassPath
 
@@ -91,6 +91,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.add(root)
         javaSourcePath.addAll(findJavaSourceFiles(root))
         // TODO: on each refresh not update compiler on each refresh
+        BuildFileManager.updateBuildEnvironment(root.resolve("smth"))
         return refresh()
     }
 

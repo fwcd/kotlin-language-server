@@ -77,7 +77,6 @@ import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.samWithReceiver.CliSamWithReceiverComponentContributor
 import org.jetbrains.kotlin.extensions.StorageComponentContainerContributor
 import java.io.File
-import java.net.URI
 
 private val GRADLE_DSL_DEPENDENCY_PATTERN = Regex("^gradle-(?:kotlin-dsl|core).*\\.jar$")
 
@@ -469,7 +468,14 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         if (BuildFileManager.buildEnvByFile[path] == null){
             LOG.info { "null build environment for $path" }
             // at the first time TAPI will be invoked for all projects
-            BuildFileManager.updateBuildEnv()
+            if (BuildFileManager.buildEnvByFile.isEmpty()){
+                LOG.info { "update build environments for all" }
+                BuildFileManager.updateBuildEnvironments()
+            }
+            else{
+                LOG.info { "update build environments for concrete workspace" }
+                BuildFileManager.updateBuildEnvironment(path)
+            }
         }
         return BuildFileManager.buildEnvByFile[path] ?: buildScriptCompileEnvironment !!
     }
@@ -538,6 +544,8 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
         compileLock.withLock {
             var compileEnv = compileEnvironmentFor(kind)
             // TODO: added
+            LOG.warn { "compiling $files with $kind" }
+
             if (files.size == 1 && kind == CompilationKind.BUILD_SCRIPT){
                 val nameOfFile = files.first().name
                 compileEnv = getBuildEnvByFile(nameOfFile)

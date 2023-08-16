@@ -85,6 +85,7 @@ class SourceFiles(
     }
 
     fun updatePluginBlock(uri:URI) : Boolean {
+        LOG.warn { "files with changed plugins block: $filesWithChangedPluginBlock" }
         var updated = false
         if (filesWithChangedPluginBlock.contains(uri)){
             updated = true
@@ -185,6 +186,7 @@ class SourceFiles(
     }
 
     fun addWorkspaceRoot(root: Path) {
+        // TODO: gsoc remove usual kt files
         val addSources = findSourceFiles(root)
 
         logAdded(addSources, root)
@@ -257,7 +259,7 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
 }
 
 private fun findSourceFiles(root: Path): Set<URI> {
-    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
+    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kts}")
     return SourceExclusions(root)
         .walkIncluded()
         .filter { sourceMatcher.matches(it.fileName) }
