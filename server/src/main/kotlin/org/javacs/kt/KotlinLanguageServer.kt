@@ -83,11 +83,11 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.workspaceSymbolProvider = Either.forLeft(true)
         serverCapabilities.referencesProvider = Either.forLeft(true)
         serverCapabilities.semanticTokensProvider = SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)
-        serverCapabilities.codeActionProvider = Either.forLeft(true)
+//        serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
-        serverCapabilities.documentHighlightProvider = Either.forLeft(true)
+//        serverCapabilities.documentHighlightProvider = Either.forLeft(true)
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false

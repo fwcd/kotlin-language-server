@@ -101,6 +101,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.remove(root)
         javaSourcePath.removeAll(findJavaSourceFiles(root))
 
+        // TODO: write removing build environments from map
         return refresh()
     }
 
