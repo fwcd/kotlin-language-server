@@ -16,7 +16,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 object BuildFileManager {
-    val buildEnvByFile: MutableMap<Path, CompilationEnvironment> = mutableMapOf()
+    var buildEnvByFile: MutableMap<Path, CompilationEnvironment> = mutableMapOf()
 
     private var workspaceRoots = emptySet<Path>()
 
@@ -78,6 +78,10 @@ object BuildFileManager {
         val models = invokeTAPI(tempDir.toFile()).second
         val classpath = models.entries.first().value.classPath
         return classpath.map { it.toPath() }.toSet()
+    }
+
+    fun removeWorkspace(pathToWorkspace: Path){
+        buildEnvByFile = buildEnvByFile.filter {!it.key.startsWith(pathToWorkspace)}.toMutableMap()
     }
 
     private fun containsSettingsFile(path: Path): Boolean {
