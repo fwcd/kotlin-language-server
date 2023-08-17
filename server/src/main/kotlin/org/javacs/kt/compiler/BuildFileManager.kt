@@ -142,14 +142,16 @@ object BuildFileManager {
     }
 
     private fun initializeErrorMessage(e: Exception){
-        // TODO: take previous before last message
-        var descriptionOfProblem = e.message
+        // take message before last because it's full of information about file and it's errors
+        var lastMessage = e.message
+        var previousMessage = e.message
         var cause = e.cause
         while (cause != null) {
-            descriptionOfProblem = cause.message
+            previousMessage = lastMessage
+            lastMessage = cause.message
             cause = cause.cause
         }
-        error.message = "Fix errors and save the file \n $descriptionOfProblem"
+        error.message = "Fix errors and save the file \n\n $previousMessage"
     }
 
 
