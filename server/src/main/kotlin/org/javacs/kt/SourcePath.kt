@@ -8,6 +8,7 @@ import org.javacs.kt.util.describeURI
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.progress.Progress
 import com.intellij.lang.Language
+import org.javacs.kt.compiler.BuildFileManager
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -198,8 +199,8 @@ class SourcePath(
         val (changedBuildScripts, changedSources) = allChanged.partition { it.kind == CompilationKind.BUILD_SCRIPT }
 
         // Compile changed files
-        fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): BindingContext? {
-            if (changed.isEmpty()) return null
+        fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): List<BindingContext> {
+            if (changed.isEmpty()) return emptyList()
 
             // Get clones of the old files, so we can remove the old declarations from the index
             val oldFiles = changed.mapNotNull {
@@ -216,10 +217,12 @@ class SourcePath(
             // Get all the files. This will parse them if they changed
             val allFiles = all()
             beforeCompileCallback.invoke()
-            val (context, module) = cp.compiler.compileKtFiles(parse.values, allFiles, kind)
 
+            val listContexts = mutableListOf<BindingContext>()
             // Update cache
             for ((f, parsed) in parse) {
+                val (context, module) = cp.compiler.compileKtFile(parsed, allFiles, kind)
+                listContexts.add(context)
                 parseDataWriteLock.withLock {
                     if (f.parsed == parsed) {
                         //only updated if the parsed file didn't change:
@@ -235,15 +238,15 @@ class SourcePath(
                 refreshWorkspaceIndexes(oldFiles, parse.keys.toList())
             }
 
-            return context
+            return listContexts
         }
 
         val buildScriptsContext = compileAndUpdate(changedBuildScripts, CompilationKind.BUILD_SCRIPT)
-        val sourcesContext = compileAndUpdate(changedSources, CompilationKind.DEFAULT)
+//        val sourcesContext = compileAndUpdate(changedSources, CompilationKind.DEFAULT)
 
         // Combine with past compilations
         val same = sources - allChanged
-        val combined = listOf(buildScriptsContext, sourcesContext).filterNotNull() + same.map { it.compiledContext!! }
+        val combined = buildScriptsContext + same.map { it.compiledContext!! }
 
         return CompositeBindingContext.create(combined)
     }

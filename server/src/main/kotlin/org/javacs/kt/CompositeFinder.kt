@@ -19,9 +19,7 @@ class CompositeFinder {
             }
 
             if (relativePathToParent == null) return null
-            val result = pathToWorkspace.resolve(relativePathToParent!!).normalize()
-            LOG.info { "parent is $result" }
-            return result
+            return pathToWorkspace.resolve(relativePathToParent!!).normalize()
         }
     }
 }

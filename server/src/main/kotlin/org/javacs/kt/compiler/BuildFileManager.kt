@@ -40,7 +40,7 @@ object BuildFileManager {
         val workspaceForCall = getWorkspaceForCall(workspace) ?: return
 
         // this condition means that we have already invoked TAPI for this directory
-        // why if I type this if I got exceptions from compiler, but if I don't then all is good
+        // TODO: Here is race condition if you type these strings
 //        if (initializedWorkspaces.contains(workspace)) return
 //        initializedWorkspaces += setOf<Path>(workspace)
 
@@ -122,7 +122,8 @@ object BuildFileManager {
     }
 
     private fun invokeTAPI(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
-        GradleConnector.newConnector().forProjectDirectory(pathToDirs).connect().use {
+        // use last version of gradle because some features isn't supported by default gradle version
+        GradleConnector.newConnector().forProjectDirectory(pathToDirs).useGradleVersion("8.2.1").connect().use {
             return try {
                 val action = CompositeModelQueryKotlin(KotlinDslScriptsModel::class.java)
                 val result = it.action(action).run()
@@ -133,9 +134,8 @@ object BuildFileManager {
                         models.putAll(model)
                     }
                 }
-                var modelsString = ""
-                models.keys.forEach { file -> modelsString += file.toString() + "\n" }
-                LOG.info { "models : ${modelsString}" }
+
+                LOG.debug { "models : ${models.keys}" }
                 Pair(true, models)
             } catch (e: Exception) {
                 initializeErrorMessage(e)

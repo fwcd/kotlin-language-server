@@ -305,9 +305,9 @@ class KotlinTextDocumentService(
         // 2) KLS reports to the client that build configuration is broken
 
 
-        val context = sp.compileFiles(files)
         if (!cancelCallback.invoke()) {
             if (!BuildFileManager.buildConfContainsError()) {
+                val context = sp.compileFiles(files)
                 reportDiagnostics(files, context.diagnostics)
             }
             else {

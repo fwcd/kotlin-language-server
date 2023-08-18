@@ -465,7 +465,10 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
 
     private fun getBuildEnvByFile(name: String) : CompilationEnvironment {
         val path = Path.of(name)
-        if (BuildFileManager.buildEnvByFile[path] == null){
+        // the second statement is needed because if script has error then we shouldn't invoke TAPI again - we just give to it common environment
+        // when build conf don't contain error, compilation environment will be updated here
+        // TODO: here there is race
+        if (BuildFileManager.buildEnvByFile[path] == null && !BuildFileManager.buildConfContainsError()){
             LOG.info { "null build environment for $path" }
             // at the first time TAPI will be invoked for all projects
             if (BuildFileManager.buildEnvByFile.isEmpty()){
