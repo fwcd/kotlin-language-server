@@ -28,6 +28,20 @@ object BuildFileManager {
 
     private var initializedWorkspaces = emptySet<Path>()
 
+    private fun createDefaultModel(): KotlinDslScriptModel {
+        // KLS takes build classpath from temporary settings build file
+        // to provide correct default classpath and correct default implicit imports in CompilationEnvironent
+        val tempDir: Path = Files.createTempDirectory("temp-dir").toAbsolutePath()
+        val settingsBuildFile = tempDir.resolve("settings.gradle.kts")
+        Files.write(settingsBuildFile, "".toByteArray())
+
+        val models = invokeTAPI(tempDir.toFile()).second
+        LOG.info { "Default build model has been created" }
+        return models.entries.first().value
+    }
+
+    val defaultModel: KotlinDslScriptModel = createDefaultModel()
+
     fun getError(): Diagnostic = error
 
     fun setWorkspaceRoots(wr: Set<Path>) = run { workspaceRoots = wr }
@@ -70,18 +84,12 @@ object BuildFileManager {
         if (defaultBuildClasspath.isNotEmpty()) {
             return defaultBuildClasspath
         }
-        // KLS takes build classpath from temporary settings build file to provide correct compilation on initial stage
-        val tempDir: Path = Files.createTempDirectory("temp-dir").toAbsolutePath()
-        val settingsBuildFile = tempDir.resolve("settings.gradle.kts")
-        Files.write(settingsBuildFile, "".toByteArray())
-
-        val models = invokeTAPI(tempDir.toFile()).second
-        val classpath = models.entries.first().value.classPath
-        return classpath.map { it.toPath() }.toSet()
+        return defaultModel.classPath.map { it.toPath() }.toSet()
     }
 
-    fun removeWorkspace(pathToWorkspace: Path){
-        buildEnvByFile = buildEnvByFile.filter {!it.key.startsWith(pathToWorkspace)}.toMutableMap()
+    fun removeWorkspace(pathToWorkspace: Path) {
+        buildEnvByFile =
+            buildEnvByFile.filter { !it.key.startsWith(pathToWorkspace) }.toMutableMap()
     }
 
     private fun containsSettingsFile(path: Path): Boolean {
@@ -123,29 +131,30 @@ object BuildFileManager {
 
     private fun invokeTAPI(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
         // use last version of gradle because some features isn't supported by default gradle version
-        GradleConnector.newConnector().forProjectDirectory(pathToDirs).useGradleVersion("8.2.1").connect().use {
-            return try {
-                val action = CompositeModelQueryKotlin(KotlinDslScriptsModel::class.java)
-                val result = it.action(action).run()
-                val models = LinkedHashMap<File, KotlinDslScriptModel>()
-                result?.values?.forEach { kotlinDslScriptsModel ->
-                    run {
-                        val model = kotlinDslScriptsModel.scriptModels
-                        models.putAll(model)
+        GradleConnector.newConnector().forProjectDirectory(pathToDirs).useGradleVersion("8.2.1")
+            .connect().use {
+                return try {
+                    val action = CompositeModelQueryKotlin(KotlinDslScriptsModel::class.java)
+                    val result = it.action(action).run()
+                    val models = LinkedHashMap<File, KotlinDslScriptModel>()
+                    result?.values?.forEach { kotlinDslScriptsModel ->
+                        run {
+                            val model = kotlinDslScriptsModel.scriptModels
+                            models.putAll(model)
+                        }
                     }
-                }
 
-                LOG.debug { "models : ${models.keys}" }
-                Pair(true, models)
-            } catch (e: Exception) {
-                initializeErrorMessage(e)
+                    LOG.debug { "models : ${models.keys}" }
+                    Pair(true, models)
+                } catch (e: Exception) {
+                    initializeErrorMessage(e)
 //                val stackTrace = e.stackTraceToString()
-                Pair(false, emptyMap())
+                    Pair(false, emptyMap())
+                }
             }
-        }
     }
 
-    private fun initializeErrorMessage(e: Exception){
+    private fun initializeErrorMessage(e: Exception) {
         // take message before last because it's full of information about file and it's errors
         var lastMessage = e.message
         var previousMessage = e.message
