@@ -546,9 +546,7 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
 
         compileLock.withLock {
             var compileEnv = compileEnvironmentFor(kind)
-            // TODO: added
             LOG.warn { "compiling $files with $kind" }
-
             if (files.size == 1 && kind == CompilationKind.BUILD_SCRIPT){
                 val nameOfFile = files.first().name
                 compileEnv = getBuildEnvByFile(nameOfFile)

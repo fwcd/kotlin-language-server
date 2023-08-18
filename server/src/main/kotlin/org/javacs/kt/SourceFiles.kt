@@ -85,7 +85,6 @@ class SourceFiles(
     }
 
     fun updatePluginBlock(uri:URI) : Boolean {
-        LOG.warn { "files with changed plugins block: $filesWithChangedPluginBlock" }
         var updated = false
         if (filesWithChangedPluginBlock.contains(uri)){
             updated = true

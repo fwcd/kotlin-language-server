@@ -36,7 +36,7 @@ object BuildFileManager {
 
     fun updateBuildEnvironment(pathToFile: Path) {
         val workspace = pathToFile.parent
-        LOG.info { "UPDATE build env for $workspace" }
+        LOG.info { "UPDATE build env $workspace" }
         val workspaceForCall = getWorkspaceForCall(workspace) ?: return
 
         // this condition means that we have already invoked TAPI for this directory
@@ -48,7 +48,7 @@ object BuildFileManager {
     }
 
     fun updateBuildEnvironments() {
-        LOG.info { "UPDATE BUILD ENVIRONMENTS" }
+        LOG.info { "UPDATE all build environments" }
         val workspacesForTAPI = ArrayList<File>()
         for (workspace in workspaceRoots) {
             val workspaceForCall = getWorkspaceForCall(workspace) ?: continue
@@ -100,7 +100,7 @@ object BuildFileManager {
         }
 
         if (containsSettingsFile(workspace)) {
-            LOG.info { "$workspace doesn't have parent, but contains settings file" }
+            LOG.info { "$workspace contains settings file" }
             return workspace
         }
         return null
@@ -108,7 +108,7 @@ object BuildFileManager {
 
     private fun makeTapiCall(workspace: File) {
         val (success, scriptModelByFile) = invokeTAPI(workspace)
-        LOG.info { "[success=$success] TAPI invoking for $workspace" }
+        LOG.info { "[TAPI success=$success] workspace=$workspace" }
         if (!success) {
             TAPICallFailed = true
             return
