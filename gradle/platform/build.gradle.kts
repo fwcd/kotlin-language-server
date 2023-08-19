@@ -10,7 +10,7 @@ javaPlatform {
 
 val kotlinVersion = "1.8.10"
 val exposedVersion = "0.37.3"
-val lsp4jVersion = "0.15.0"
+val lsp4jVersion = "0.21.0"
 
 // constrain the dependencies that we use to these specific versions
 dependencies {
