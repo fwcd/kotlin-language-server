@@ -126,7 +126,7 @@ class CompilationEnvironment(
                 val scriptDefinitions: MutableList<ScriptDefinition> = mutableListOf(ScriptDefinition.getDefault(defaultJvmScriptingHostConfiguration))
 
                 if (classPath.any { GRADLE_DSL_DEPENDENCY_PATTERN.matches(it.fileName.toString()) }) {
-                    LOG.info("Configuring Kotlin DSL script templates...")
+                    LOG.debug("Configuring Kotlin DSL script templates...")
 
                     val scriptTemplates = listOf(
                         "org.gradle.kotlin.dsl.KotlinInitScript",
@@ -171,7 +171,7 @@ class CompilationEnvironment(
                     }
                 }
 
-                LOG.info("Adding script definitions ${scriptDefinitions.map { it.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName }}")
+                LOG.debug("Adding script definitions ${scriptDefinitions.map { it.asLegacyOrNull<KotlinScriptDefinition>()?.template?.simpleName }}")
                 addAll(ScriptingConfigurationKeys.SCRIPT_DEFINITIONS, scriptDefinitions)
             },
             configFiles = EnvironmentConfigFiles.JVM_CONFIG_FILES
@@ -319,7 +319,7 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
 
         compileLock.withLock {
             var compileEnv = compileEnvironmentFor(kind)
-            LOG.warn { "compiling $files with $kind" }
+            LOG.debug { "compiling $files with $kind" }
             if (files.size == 1 && kind == CompilationKind.BUILD_SCRIPT) {
                 val nameOfFile = files.first().name
                 compileEnv = getBuildEnvByFile(nameOfFile)

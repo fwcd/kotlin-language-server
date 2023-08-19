@@ -196,7 +196,7 @@ class SourcePath(
         // Figure out what has changed
         val sources = all.map { files[it]!! }
         val allChanged = sources.filter { it.content != it.compiledFile?.text }
-        val (changedBuildScripts, changedSources) = allChanged.partition { it.kind == CompilationKind.BUILD_SCRIPT }
+        val (changedBuildScripts, _) = allChanged.partition { it.kind == CompilationKind.BUILD_SCRIPT }
 
         // Compile changed files
         fun compileAndUpdate(changed: List<SourceFile>, kind: CompilationKind): List<BindingContext> {
