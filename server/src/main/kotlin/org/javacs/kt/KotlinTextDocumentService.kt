@@ -5,7 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.codeaction.codeActions
-import org.javacs.kt.compiler.BuildFileManager
+import org.javacs.kt.toolingapi.BuildFileManager
 import org.javacs.kt.completion.*
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
@@ -175,10 +175,10 @@ class KotlinTextDocumentService(
         // Lint after saving to prevent inconsistent diagnostics
         val uri = parseURI(params.textDocument.uri)
 
-        if (BuildFileManager.isBuildScript(uri.toPath())) {
+        if (BuildFileManager.isGradleKTS(uri.toPath())) {
             if (BuildFileManager.buildConfContainsError()) {
                 LOG.info { "updating build environments for ALL" }
-                BuildFileManager.updateBuildEnvironments()
+                BuildFileManager.updateAllBuildEnvironments()
             } else if (sf.updatePluginBlock(uri)) {
                 LOG.info { "updating build environment for $uri" }
                 BuildFileManager.updateBuildEnvironment(uri.toPath(), sf.updatePluginBlock(uri) )
@@ -312,7 +312,7 @@ class KotlinTextDocumentService(
             }
             else {
                 for (uri in files) {
-                    if (sf.isOpen(uri) && BuildFileManager.isBuildScript(uri.toPath())) {
+                    if (sf.isOpen(uri) && BuildFileManager.isGradleKTS(uri.toPath())) {
                         val diagnosticFromTAPI = BuildFileManager.getError()
                         client.publishDiagnostics(
                             PublishDiagnosticsParams(

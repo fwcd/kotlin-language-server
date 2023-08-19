@@ -1,4 +1,4 @@
-package org.javacs.kt.compiler
+package org.javacs.kt.toolingapi
 
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.Position
@@ -7,10 +7,9 @@ import org.eclipse.lsp4j.Range
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptModel
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
-import org.javacs.kt.CompositeFinder
-import org.javacs.kt.CompositeModelQuery
 
 import org.javacs.kt.LOG
+import org.javacs.kt.compiler.CompilationEnvironment
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -19,13 +18,13 @@ object BuildFileManager {
     var buildEnvByFile: MutableMap<Path, CompilationEnvironment> = mutableMapOf()
 
     // workspaces which TAPI was invoked for at least once
-    private var localWorkspaces = mutableSetOf<Path>()
+    private var invokedWorkspaces = mutableSetOf<Path>()
 
     private var TAPICallFailed = false
 
     private val error = Diagnostic(Range(Position(0, 0), Position(0, 0)), String())
 
-    private var defaultBuildClasspath = emptySet<Path>()
+    private var commonBuildClasspath = emptySet<Path>()
 
     private fun createDefaultModel(): KotlinDslScriptModel {
         // KLS takes build classpath from temporary settings build file
@@ -34,7 +33,7 @@ object BuildFileManager {
         val settingsBuildFile = tempDir.resolve("settings.gradle.kts")
         Files.write(settingsBuildFile, "".toByteArray())
 
-        val models = invokeTAPI(tempDir.toFile()).second
+        val models = getKotlinDSLScriptsModels(tempDir.toFile()).second
         LOG.info { "Default build model has been created" }
         return models.entries.first().value
     }
@@ -47,37 +46,37 @@ object BuildFileManager {
 
     fun updateBuildEnvironment(pathToFile: Path, updatedPluginBlock: Boolean = false) {
         val workspace = pathToFile.parent
-        LOG.info { "UPDATE build env $workspace \n workspaces: \n $localWorkspaces" }
+        LOG.info { "UPDATE build env $workspace \n workspaces: \n $invokedWorkspaces" }
 
-        val workspaceForCall = CompositeFinder.getWorkspaceForCall(workspace) ?: return
+        val workspaceForCall = WorkspaceForCallFinder.getWorkspaceForCall(workspace) ?: return
 
-        if (localWorkspaces.contains(workspace) && !updatedPluginBlock) return
-        localWorkspaces.add(workspaceForCall)
+        if (invokedWorkspaces.contains(workspace) && !updatedPluginBlock) return
+        invokedWorkspaces.add(workspaceForCall)
 
-        makeTapiCall(workspaceForCall.toFile())
+        createEnvForEachFile(workspaceForCall.toFile())
     }
 
-    fun updateBuildEnvironments() {
+    fun updateAllBuildEnvironments() {
         LOG.info {
             "UPDATE all build environments \n" +
                 " workspaces: \n" +
-                " $localWorkspaces"
+                " $invokedWorkspaces"
         }
 
-        for (workspace in localWorkspaces) {
-            makeTapiCall(workspace.toFile())
+        for (workspace in invokedWorkspaces) {
+            createEnvForEachFile(workspace.toFile())
         }
         TAPICallFailed = false
     }
 
-    fun isBuildScriptWithDynamicClasspath(file: Path): Boolean =
+    fun isBuildGradleKTS(file: Path): Boolean =
         file.fileName.toString().let { it == "build.gradle.kts" }
 
-    fun isBuildScript(file: Path): Boolean = file.fileName.toString().endsWith(".gradle.kts")
+    fun isGradleKTS(file: Path): Boolean = file.fileName.toString().endsWith(".gradle.kts")
 
     fun getCommonBuildClasspath(): Set<Path> {
-        if (defaultBuildClasspath.isNotEmpty()) {
-            return defaultBuildClasspath
+        if (commonBuildClasspath.isNotEmpty()) {
+            return commonBuildClasspath
         }
         return defaultModel.classPath.map { it.toPath() }.toSet()
     }
@@ -85,11 +84,11 @@ object BuildFileManager {
     fun removeWorkspace(pathToWorkspace: Path) {
         buildEnvByFile =
             buildEnvByFile.filter { !it.key.startsWith(pathToWorkspace) }.toMutableMap()
-        localWorkspaces = localWorkspaces.filter { !it.startsWith(pathToWorkspace) }.toMutableSet()
+        invokedWorkspaces = invokedWorkspaces.filter { !it.startsWith(pathToWorkspace) }.toMutableSet()
     }
 
-    private fun makeTapiCall(workspace: File) {
-        val (success, scriptModelByFile) = invokeTAPI(workspace)
+    private fun createEnvForEachFile(workspace: File) {
+        val (success, scriptModelByFile) = getKotlinDSLScriptsModels(workspace)
         LOG.info { "[TAPI success=$success] workspace=$workspace" }
         if (!success) {
             TAPICallFailed = true
@@ -98,12 +97,12 @@ object BuildFileManager {
 
         for ((file, model) in scriptModelByFile) {
             val classpath = model.classPath.map { it.toPath() }.let { HashSet(it) }
-            defaultBuildClasspath += classpath
+            commonBuildClasspath += classpath
             buildEnvByFile[file.toPath()] = CompilationEnvironment(emptySet(), classpath)
         }
     }
 
-    private fun invokeTAPI(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
+    private fun getKotlinDSLScriptsModels(pathToDirs: File): Pair<Boolean, Map<File, KotlinDslScriptModel>> {
         // use last version of gradle because some features isn't supported by default gradle version
         GradleConnector.newConnector().forProjectDirectory(pathToDirs).useGradleVersion("8.2.1")
             .connect().use {
@@ -140,6 +139,4 @@ object BuildFileManager {
         }
         error.message = "Fix errors and save the file \n\n $previousMessage"
     }
-
-
 }

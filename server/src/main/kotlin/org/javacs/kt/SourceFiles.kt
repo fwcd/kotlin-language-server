@@ -1,14 +1,12 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
-import com.intellij.lang.java.JavaLanguage
 import com.intellij.lang.Language
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
-import org.javacs.kt.compiler.BuildFileManager
+import org.javacs.kt.toolingapi.BuildFileManager
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.filePath
-import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.describeURIs
 import org.javacs.kt.util.describeURI
 import java.io.BufferedReader
@@ -18,9 +16,7 @@ import java.io.IOException
 import java.io.FileNotFoundException
 import java.net.URI
 import java.nio.file.FileSystems
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import kotlin.io.path.toPath
 
 private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
@@ -95,7 +91,7 @@ class SourceFiles(
 
     fun open(uri: URI, content: String, version: Int) {
         files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = !exclusions.isURIIncluded(uri))
-        if (BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath())){
+        if (BuildFileManager.isBuildGradleKTS(uri.toPath())){
             pluginBlockByUri[uri] = extractPluginBlock(files[uri]?.content ?: String())
         }
         open.add(uri)
@@ -137,7 +133,7 @@ class SourceFiles(
             }
 
             files[uri] = SourceVersion(newText, newVersion, existing.language, existing.isTemporary)
-            if (BuildFileManager.isBuildScriptWithDynamicClasspath(uri.toPath())){
+            if (BuildFileManager.isBuildGradleKTS(uri.toPath())){
                 val newPluginBlock = extractPluginBlock(files[uri]?.content ?: String())
                 if (pluginBlockByUri[uri] != newPluginBlock){
                     filesWithChangedPluginBlock.add(uri)

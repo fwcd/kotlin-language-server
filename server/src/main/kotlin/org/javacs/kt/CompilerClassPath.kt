@@ -1,7 +1,7 @@
 package org.javacs.kt
 
 import org.javacs.kt.classpath.ClassPathEntry
-import org.javacs.kt.compiler.BuildFileManager
+import org.javacs.kt.toolingapi.BuildFileManager
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable

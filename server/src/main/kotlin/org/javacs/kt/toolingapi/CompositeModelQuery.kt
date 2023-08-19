@@ -1,4 +1,4 @@
-package org.javacs.kt
+package org.javacs.kt.toolingapi
 
 import org.gradle.tooling.BuildAction
 import org.gradle.tooling.BuildController

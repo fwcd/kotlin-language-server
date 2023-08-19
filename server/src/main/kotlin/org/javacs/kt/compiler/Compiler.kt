@@ -58,6 +58,7 @@ import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.JvmDependency
 import org.javacs.kt.LOG
 import org.javacs.kt.CompilerConfiguration
+import org.javacs.kt.toolingapi.BuildFileManager
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
