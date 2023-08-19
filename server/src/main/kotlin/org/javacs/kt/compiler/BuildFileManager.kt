@@ -8,7 +8,7 @@ import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptModel
 import org.gradle.tooling.model.kotlin.dsl.KotlinDslScriptsModel
 import org.javacs.kt.CompositeFinder
-import org.javacs.kt.CompositeModelQueryKotlin
+import org.javacs.kt.CompositeModelQuery
 
 import org.javacs.kt.LOG
 import java.io.File
@@ -26,8 +26,6 @@ object BuildFileManager {
     private val error = Diagnostic(Range(Position(0, 0), Position(0, 0)), String())
 
     private var defaultBuildClasspath = emptySet<Path>()
-
-    private var initializedWorkspaces = emptySet<Path>()
 
     private fun createDefaultModel(): KotlinDslScriptModel {
         // KLS takes build classpath from temporary settings build file
@@ -51,7 +49,7 @@ object BuildFileManager {
         val workspace = pathToFile.parent
         LOG.info { "UPDATE build env $workspace \n workspaces: \n $localWorkspaces" }
 
-        val workspaceForCall = getWorkspaceForCall(workspace) ?: return
+        val workspaceForCall = CompositeFinder.getWorkspaceForCall(workspace) ?: return
 
         if (localWorkspaces.contains(workspace) && !updatedPluginBlock) return
         localWorkspaces.add(workspaceForCall)
@@ -90,28 +88,6 @@ object BuildFileManager {
         localWorkspaces = localWorkspaces.filter { !it.startsWith(pathToWorkspace) }.toMutableSet()
     }
 
-    private fun containsSettingsFile(path: Path): Boolean {
-        val directory = path.toFile()
-        if (directory.isDirectory) {
-            return directory.listFiles().any { it.name == "settings.gradle.kts" }
-        }
-        return false
-    }
-
-    private fun getWorkspaceForCall(workspace: Path): Path? {
-        val parent = CompositeFinder.findParent(workspace)
-        if (parent != null) {
-            LOG.info { "parent for $workspace is $parent" }
-            return parent
-        }
-
-        if (containsSettingsFile(workspace)) {
-            LOG.info { "$workspace contains settings file" }
-            return workspace
-        }
-        return null
-    }
-
     private fun makeTapiCall(workspace: File) {
         val (success, scriptModelByFile) = invokeTAPI(workspace)
         LOG.info { "[TAPI success=$success] workspace=$workspace" }
@@ -132,7 +108,7 @@ object BuildFileManager {
         GradleConnector.newConnector().forProjectDirectory(pathToDirs).useGradleVersion("8.2.1")
             .connect().use {
                 return try {
-                    val action = CompositeModelQueryKotlin(KotlinDslScriptsModel::class.java)
+                    val action = CompositeModelQuery(KotlinDslScriptsModel::class.java)
                     val result = it.action(action).run()
                     val models = LinkedHashMap<File, KotlinDslScriptModel>()
                     result?.values?.forEach { kotlinDslScriptsModel ->

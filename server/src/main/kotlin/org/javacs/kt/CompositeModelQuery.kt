@@ -5,7 +5,7 @@ import org.gradle.tooling.BuildController
 import org.gradle.tooling.model.gradle.GradleBuild
 import java.util.*
 
-class CompositeModelQueryKotlin<T>(private val modelType: Class<T>) :
+class CompositeModelQuery<T>(private val modelType: Class<T>) :
     BuildAction<Map<String?, T>?> {
     override fun execute(controller: BuildController): Map<String?, T> {
         val acc: MutableMap<String, T> = HashMap()
@@ -59,7 +59,7 @@ class CompositeModelQueryKotlin<T>(private val modelType: Class<T>) :
         if (javaClass != other.javaClass) {
             return false
         }
-        val otherModel = other as CompositeModelQueryKotlin<*>
+        val otherModel = other as CompositeModelQuery<*>
         return modelType == otherModel.modelType
     }
 
