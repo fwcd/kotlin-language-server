@@ -59,8 +59,8 @@ class CompositeModelQueryKotlin<T>(private val modelType: Class<T>) :
         if (javaClass != other.javaClass) {
             return false
         }
-        val other = other as CompositeModelQueryKotlin<*>
-        return modelType == other.modelType
+        val otherModel = other as CompositeModelQueryKotlin<*>
+        return modelType == otherModel.modelType
     }
 
     companion object {

@@ -36,17 +36,9 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
     /** Updates and possibly reinstantiates the compiler using new paths. */
     private fun refresh(
         updateClassPath: Boolean = true,
-        updateBuildScriptClassPath: Boolean = true,
-        updateJavaSourcePath: Boolean = true
+        updateBuildScriptClassPath: Boolean = true
     ): Boolean {
         // TODO: Fetch build script class path concurrently (and asynchronously)
-        BuildFileManager.setWorkspaceRoots(workspaceRoots)
-//        if (!TAPIwasInvoked){
-//            LOG.info { "launch TAPI at the first time" }
-//            TAPIwasInvoked = true
-//            BuildFileManager.updateBuildEnvironments()
-//        }
-
         var refreshCompiler = updateClassPath
 
         if (updateBuildScriptClassPath) {
@@ -89,8 +81,6 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         LOG.info("Searching for dependencies and Java sources in workspace root {}", root)
 
         workspaceRoots.add(root)
-        javaSourcePath.addAll(findJavaSourceFiles(root))
-        // TODO: on each refresh not update compiler on each refresh
         BuildFileManager.updateBuildEnvironment(root.resolve("smth"))
         return refresh()
     }
@@ -101,7 +91,6 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         workspaceRoots.remove(root)
         javaSourcePath.removeAll(findJavaSourceFiles(root))
 
-        // TODO: write removing build environments from map
         BuildFileManager.removeWorkspace(root)
         return refresh()
     }
@@ -124,7 +113,7 @@ class CompilerClassPath(private val config: CompilerConfiguration) : Closeable {
         val buildScript = isBuildScript(file)
         val javaSource = isJavaSource(file)
         if (buildScript || javaSource) {
-            return refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)
+            return refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false)
         } else {
             return false
         }

@@ -149,7 +149,7 @@ class KotlinWorkspaceService(
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
         for (change in params.event.removed) {
             LOG.info("Dropping workspace {} from source path", change.uri)
-
+            // TODO: maybe here there is a bug from client, because uri is empty
             val root = Paths.get(parseURI(change.uri))
 
             sf.removeWorkspaceRoot(root)

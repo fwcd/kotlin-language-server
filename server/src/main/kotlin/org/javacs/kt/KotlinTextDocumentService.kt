@@ -181,7 +181,7 @@ class KotlinTextDocumentService(
                 BuildFileManager.updateBuildEnvironments()
             } else if (sf.updatePluginBlock(uri)) {
                 LOG.info { "updating build environment for $uri" }
-                BuildFileManager.updateBuildEnvironment(uri.toPath())
+                BuildFileManager.updateBuildEnvironment(uri.toPath(), sf.updatePluginBlock(uri) )
             }
         }
         debounceLint.schedule {

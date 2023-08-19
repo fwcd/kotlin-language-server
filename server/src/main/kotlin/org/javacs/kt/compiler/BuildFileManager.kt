@@ -18,7 +18,8 @@ import java.nio.file.Path
 object BuildFileManager {
     var buildEnvByFile: MutableMap<Path, CompilationEnvironment> = mutableMapOf()
 
-    private var workspaceRoots = emptySet<Path>()
+    // workspaces which TAPI was invoked for at least once
+    private var localWorkspaces = mutableSetOf<Path>()
 
     private var TAPICallFailed = false
 
@@ -44,33 +45,29 @@ object BuildFileManager {
 
     fun getError(): Diagnostic = error
 
-    fun setWorkspaceRoots(wr: Set<Path>) = run { workspaceRoots = wr }
-
     fun buildConfContainsError(): Boolean = TAPICallFailed
 
-    fun updateBuildEnvironment(pathToFile: Path) {
+    fun updateBuildEnvironment(pathToFile: Path, updatedPluginBlock: Boolean = false) {
         val workspace = pathToFile.parent
-        LOG.info { "UPDATE build env $workspace" }
+        LOG.info { "UPDATE build env $workspace \n workspaces: \n $localWorkspaces" }
+
         val workspaceForCall = getWorkspaceForCall(workspace) ?: return
 
-        // this condition means that we have already invoked TAPI for this directory
-        // TODO: Here is race condition if you type these strings
-//        if (initializedWorkspaces.contains(workspace)) return
-//        initializedWorkspaces += setOf<Path>(workspace)
+        if (localWorkspaces.contains(workspace) && !updatedPluginBlock) return
+        localWorkspaces.add(workspaceForCall)
 
         makeTapiCall(workspaceForCall.toFile())
     }
 
     fun updateBuildEnvironments() {
-        LOG.info { "UPDATE all build environments" }
-        val workspacesForTAPI = ArrayList<File>()
-        for (workspace in workspaceRoots) {
-            val workspaceForCall = getWorkspaceForCall(workspace) ?: continue
-            workspacesForTAPI.add(workspaceForCall.toFile())
+        LOG.info {
+            "UPDATE all build environments \n" +
+                " workspaces: \n" +
+                " $localWorkspaces"
         }
 
-        for (workspace in workspacesForTAPI) {
-            makeTapiCall(workspace)
+        for (workspace in localWorkspaces) {
+            makeTapiCall(workspace.toFile())
         }
         TAPICallFailed = false
     }
@@ -90,6 +87,7 @@ object BuildFileManager {
     fun removeWorkspace(pathToWorkspace: Path) {
         buildEnvByFile =
             buildEnvByFile.filter { !it.key.startsWith(pathToWorkspace) }.toMutableMap()
+        localWorkspaces = localWorkspaces.filter { !it.startsWith(pathToWorkspace) }.toMutableSet()
     }
 
     private fun containsSettingsFile(path: Path): Boolean {
