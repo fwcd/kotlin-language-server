@@ -8,6 +8,7 @@ import java.util.function.BiPredicate
 import org.javacs.kt.util.tryResolving
 import org.javacs.kt.util.findCommandOnPath
 import org.javacs.kt.LOG
+import org.javacs.kt.util.OSContext
 import java.nio.file.Paths
 
 /** Backup classpath that find Kotlin in the user's Maven/Gradle home or kotlinc's libraries folder. */
@@ -78,7 +79,7 @@ private fun findKotlinCliCompilerLibrary(name: String): Path? =
 // alternative library locations like for snap
 // (can probably just use elvis operator and multiple similar expressions for other install directories)
 private fun findAlternativeLibraryLocation(name: String): Path? =
-    Paths.get("/snap/kotlin/current/lib/${name}.jar").existsOrNull()
+    OSContext.CURRENT_OS.candidateAlternativeLibraryLocations(name).firstNotNullOfOrNull { Paths.get(it).existsOrNull() }
 
 private fun Path.existsOrNull() =
     if (Files.exists(this)) this else null
