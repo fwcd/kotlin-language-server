@@ -14,13 +14,13 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
     override val resolverType: String = "Gradle"
     private val projectDirectory: Path get() = path.parent
 
-    override val classpath: Set<ClassPathEntry> get() {
+    override val classpath: ClassPathResult get() {
         val scripts = listOf("projectClassPathFinder.gradle")
         val tasks = listOf("kotlinLSPProjectDeps")
 
-        return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+        return ClassPathResult(readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
-            .map { ClassPathEntry(it, null) }.toSet()
+            .map { ClassPathEntry(it, null) }.toSet())
     }
     override val buildScriptClasspath: Set<Path> get() {
         return if (includeKotlinDSL) {

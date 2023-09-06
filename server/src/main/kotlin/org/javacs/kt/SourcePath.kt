@@ -290,8 +290,6 @@ class SourcePath(
     }
 
     fun refreshDependencyIndexes() {
-        compileAllFiles()
-
         val module = files.values.first { it.module != null }.module
         if (module != null) {
             refreshDependencyIndexes(module)
@@ -315,7 +313,7 @@ class SourcePath(
      * Refreshes the indexes. If already done, refreshes only the declarations in the files that were changed.
      */
     private fun refreshDependencyIndexes(module: ModuleDescriptor) = indexAsync.execute {
-        if (indexEnabled) {
+        if (indexEnabled && !cp.classpathCached) {
             val declarations = getDeclarationDescriptors(files.values)
             index.refresh(module, declarations)
         }
@@ -344,6 +342,7 @@ class SourcePath(
             LOG.info("Refreshing source path")
             files.values.forEach { it.clean() }
             files.values.forEach { it.compile() }
+            refreshDependencyIndexes()
         }
     }
 

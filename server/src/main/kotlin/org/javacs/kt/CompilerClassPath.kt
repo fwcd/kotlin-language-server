@@ -23,6 +23,7 @@ class CompilerClassPath(private val config: CompilerConfiguration, private val d
     val classPath = mutableSetOf<ClassPathEntry>()
     val outputDirectory: File = Files.createTempDirectory("klsBuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
+    var classpathCached = false
 
     var compiler = Compiler(javaSourcePath, classPath.map { it.compiledJar }.toSet(), buildScriptClassPath, outputDirectory)
         private set
@@ -45,17 +46,18 @@ class CompilerClassPath(private val config: CompilerConfiguration, private val d
 
         if (updateClassPath) {
             val newClassPath = resolver.classpathOrEmpty
-            if (newClassPath != classPath) {
+            if (newClassPath.entries != classPath) {
                 synchronized(classPath) {
-                    syncPaths(classPath, newClassPath, "class path") { it.compiledJar }
+                    syncPaths(classPath, newClassPath.entries, "class path") { it.compiledJar }
                 }
+                classpathCached = newClassPath.cacheHit
                 refreshCompiler = true
             }
 
             async.compute {
                 val newClassPathWithSources = resolver.classpathWithSources
                 synchronized(classPath) {
-                    syncPaths(classPath, newClassPathWithSources, "class path with sources") { it.compiledJar }
+                    syncPaths(classPath, newClassPathWithSources.entries, "class path with sources") { it.compiledJar }
                 }
             }
         }
