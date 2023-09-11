@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.5]
+- Fix push trigger in Docker CI workflow
+
 ## [1.3.4]
 - Cache dependencies
 - Modernize the Docker image
