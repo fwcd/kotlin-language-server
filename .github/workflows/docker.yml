@@ -33,6 +33,6 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64/v8
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
