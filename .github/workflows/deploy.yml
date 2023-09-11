@@ -38,14 +38,6 @@ jobs:
         run: |
           tag="${{ steps.tag.outputs.tag }}"
           gh release upload "$tag" {server,grammars}/build/distributions/*
-      - name: Deploy Docker image to GitHub Packages
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: fwcd/kotlin-language-server/server
-          tag_with_ref: true
       - name: Deploy Maven artifacts to GitHub Packages
         run: ./gradlew :shared:publish :server:publish
         env:
