@@ -3,15 +3,18 @@
 
 FROM eclipse-temurin:11 AS builder
 
-WORKDIR /kotlin-language-server
+WORKDIR /src/kotlin-language-server
+
 COPY . .
 RUN ./gradlew :server:installDist
 
 FROM eclipse-temurin:11
 
-WORKDIR /
-COPY --from=builder /kotlin-language-server/server/build/install/server /server
+WORKDIR /opt/kotlin-language-server
+
+COPY --from=builder /src/kotlin-language-server/server/build/install/server /opt/kotlin-language-server
+RUN ln -s /opt/kotlin-language-server/bin/kotlin-language-server /usr/local/bin/kotlin-language-server
 
 EXPOSE 49100
 
-CMD ["/server/bin/kotlin-language-server", "--tcpServerPort", "49100"]
+CMD ["/usr/local/bin/kotlin-language-server", "--tcpServerPort", "49100"]
