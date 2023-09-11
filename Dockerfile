@@ -1,14 +1,16 @@
 # Running this container will start a language server that listens for TCP connections on port 49100
 # Every connection will be run in a forked child process
 
-FROM --platform=$BUILDPLATFORM eclipse-temurin:11 AS builder
+ARG JDKVERSION=11
+
+FROM --platform=$BUILDPLATFORM eclipse-temurin:${JDKVERSION} AS builder
 
 WORKDIR /src/kotlin-language-server
 
 COPY . .
 RUN ./gradlew :server:installDist
 
-FROM eclipse-temurin:11
+FROM eclipse-temurin:${JDKVERSION}
 
 WORKDIR /opt/kotlin-language-server
 
