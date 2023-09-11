@@ -27,7 +27,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v4
         with:
-          images: fwcd/kotlin-language-server
+          images: ghcr.io/fwcd/kotlin-language-server
       - name: Build and push image
         uses: docker/build-push-action@v4
         with:
