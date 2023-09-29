@@ -80,7 +80,10 @@ fun provideHints(file: CompiledFile): List<InlayHint> {
                 hints.addAll(lambdaValueParamsToHints(node, file))
             }
             is KtCallExpression -> {
-                hints.addAll(valueArgsToHints(node, file))
+                //hints are not rendered for argument of type lambda expression i.e. list.map { it }
+                if (node.getChildOfType<KtLambdaArgument>() == null) {
+                    hints.addAll(valueArgsToHints(node, file))
+                }
             }
             is KtDestructuringDeclaration -> {
                 hints.addAll(node.entries.mapNotNull {  it.hintBuilder(InlayHintKind.Type, file) })
