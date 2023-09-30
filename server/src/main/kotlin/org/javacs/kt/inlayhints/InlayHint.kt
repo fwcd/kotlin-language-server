@@ -13,7 +13,7 @@ import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.resolve.BindingContext
-import org.jetbrains.kotlin.resolve.calls.model.ArgumentMatch
+import org.jetbrains.kotlin.resolve.calls.model.VarargValueArgument
 import org.jetbrains.kotlin.resolve.calls.smartcasts.getKotlinTypeForComparison
 import org.jetbrains.kotlin.resolve.calls.util.*
 import org.jetbrains.kotlin.types.KotlinType
@@ -47,7 +47,7 @@ private fun PsiElement.hintBuilder(kind: InlayHintKind, file: CompiledFile, labe
             this.determineType(file.compile) ?.let {
                 InlayHint(range.end, Either.forLeft(": ${DECL_RENDERER.renderType(it)}"))
             } ?: return null
-        InlayHintKind.Parameter -> InlayHint(range.start, Either.forLeft("$label ="))
+        InlayHintKind.Parameter -> InlayHint(range.start, Either.forLeft("$label:"))
     }
     hint.kind = kind
     hint.paddingRight = true
@@ -55,15 +55,27 @@ private fun PsiElement.hintBuilder(kind: InlayHintKind, file: CompiledFile, labe
     return hint
 }
 
-private fun valueArgsToHints(
+private fun callableArgsToHints(
     callExpression: KtCallExpression,
     file: CompiledFile,
 ): List<InlayHint> {
-    return callExpression.valueArguments.mapNotNull {
-        val call = it.getParentResolvedCall(file.compile)
-        val arg = (call?.getArgumentMapping(it) as ArgumentMatch).valueParameter.name
-        it.hintBuilder(InlayHintKind.Parameter, file, label = arg.asString())
+    val resolvedCall = callExpression.getResolvedCall(file.compile)
+
+    val hints = mutableListOf<InlayHint>()
+    resolvedCall?.valueArguments?.forEach { (t, u) ->
+        val valueArg = u.arguments.first()
+
+        if (!valueArg.isNamed()) {
+            val label = (t.name).let { name ->
+                when (u) {
+                    is VarargValueArgument -> "...$name"
+                    else -> name.asString()
+                }
+            }
+            valueArg.asElement().hintBuilder(InlayHintKind.Parameter, file, label)?.let { hints.add(it) }
+        }
     }
+    return hints
 }
 
 private fun lambdaValueParamsToHints(node: KtLambdaArgument, file: CompiledFile): List<InlayHint> {
@@ -82,7 +94,7 @@ fun provideHints(file: CompiledFile): List<InlayHint> {
             is KtCallExpression -> {
                 //hints are not rendered for argument of type lambda expression i.e. list.map { it }
                 if (node.getChildOfType<KtLambdaArgument>() == null) {
-                    hints.addAll(valueArgsToHints(node, file))
+                    hints.addAll(callableArgsToHints(node, file))
                 }
             }
             is KtDestructuringDeclaration -> {
