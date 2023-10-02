@@ -8,7 +8,7 @@ FROM --platform=$BUILDPLATFORM eclipse-temurin:${JDKVERSION} AS builder
 WORKDIR /src/kotlin-language-server
 
 COPY . .
-RUN ./gradlew :server:installDist
+RUN ./gradlew :server:installDist -PjavaVersion=${JDKVERSION}
 
 FROM eclipse-temurin:${JDKVERSION}
 
