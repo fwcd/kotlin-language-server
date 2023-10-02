@@ -63,16 +63,19 @@ private fun callableArgsToHints(
 
     val hints = mutableListOf<InlayHint>()
     resolvedCall?.valueArguments?.forEach { (t, u) ->
-        val valueArg = u.arguments.first()
+        if (u.arguments.isNotEmpty()) {
+            val valueArg = u.arguments.first()
 
-        if (!valueArg.isNamed()) {
-            val label = (t.name).let { name ->
-                when (u) {
-                    is VarargValueArgument -> "...$name"
-                    else -> name.asString()
+            if (!valueArg.isNamed()) {
+                val label = (t.name).let { name ->
+                    when (u) {
+                        is VarargValueArgument -> "...$name"
+                        else -> name.asString()
+                    }
                 }
+                valueArg.asElement().hintBuilder(InlayKind.ParameterHint, file, label)?.let { hints.add(it) }
             }
-            valueArg.asElement().hintBuilder(InlayHintKind.Parameter, file, label)?.let { hints.add(it) }
+
         }
     }
     return hints
