@@ -66,7 +66,7 @@ private fun PsiElement.hintBuilder(kind: InlayKind, file: CompiledFile, label: S
         else ->
             this.determineType(file.compile) ?.let {
                 InlayHint(range.end, Either.forLeft(
-                    "${(kind == InlayKind.TypeHint).let { ":" }} $it"
+                    "${(if (kind == InlayKind.TypeHint) ": " else "")}$it"
                 ))
             } ?: return null
     }
