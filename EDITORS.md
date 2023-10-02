@@ -81,6 +81,9 @@ require'lspconfig'.kotlin_language_server.setup{
 }
 ```
 
+## Monaco Editor
+See [kotlin-monaco-language-server](https://github.com/yahorbarkouski/kotlin-monaco-language-server). 
+
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
 
