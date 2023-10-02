@@ -1,7 +1,7 @@
 # Editor Integration
 
 ## Visual Studio Code
-See [vscode-kotlin-ide](https://github.com/fwcd/vscode-kotlin-ide) or install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin).
+See [vscode-kotlin](https://github.com/fwcd/vscode-kotlin) or install the extension from the [marketplace](https://marketplace.visualstudio.com/items?itemName=fwcd.kotlin).
 
 ## Sublime Text
 See [lsp-kotlin](https://github.com/sublimelsp/LSP-kotlin).
@@ -82,7 +82,7 @@ require'lspconfig'.kotlin_language_server.setup{
 ```
 
 ## Monaco Editor
-See [kotlin-monaco-language-server](https://github.com/yahorbarkouski/kotlin-monaco-language-server). 
+See [kotlin-monaco-language-server](https://github.com/yahorbarkouski/kotlin-monaco-language-server).
 
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
