@@ -5,6 +5,8 @@ ARG JDKVERSION=17
 
 FROM --platform=$BUILDPLATFORM eclipse-temurin:${JDKVERSION} AS builder
 
+ARG JDKVERSION
+
 WORKDIR /src/kotlin-language-server
 
 COPY . .
