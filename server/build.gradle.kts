@@ -34,9 +34,9 @@ repositories {
 
 dependencies {
     // dependencies are constrained to versions defined
-    // in /gradle/platform/build.gradle.kts
-    implementation(platform("dev.fwcd.kotlin-language-server:platform"))
-    annotationProcessor(platform("dev.fwcd.kotlin-language-server:platform"))
+    // in /platform/build.gradle.kts
+    implementation(platform(project(":platform")))
+    annotationProcessor(platform(project(":platform")))
 
     implementation(project(":shared"))
 
