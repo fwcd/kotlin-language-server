@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import org.jetbrains.kotlin.diagnostics.Severity
 import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -58,6 +59,9 @@ class SourcePath(
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
             else CompilationKind.DEFAULT
+
+        val hasErrors: Boolean
+            get() = compiledContext?.diagnostics?.any { it.severity == Severity.ERROR } ?: false
 
         fun put(newContent: String) {
             content = newContent
@@ -268,7 +272,7 @@ class SourcePath(
      */
     fun save(uri: URI) {
         files[uri]?.let {
-            if (!it.isScript) {
+            if (!it.isScript && !it.hasErrors) {
                 // If the code generation fails for some reason, we generate code for the other files anyway
                 try {
                     cp.compiler.removeGeneratedCode(listOfNotNull(it.lastSavedFile))
