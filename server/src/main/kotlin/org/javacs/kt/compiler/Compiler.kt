@@ -10,10 +10,15 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
+import org.jetbrains.kotlin.backend.common.phaser.PhaseConfig
+import org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory
+import org.jetbrains.kotlin.backend.jvm.jvmPhases
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.codegen.CodegenFactory
+import org.jetbrains.kotlin.codegen.DefaultCodegenFactory
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration as KotlinCompilerConfiguration
 import org.jetbrains.kotlin.container.ComponentProvider
@@ -93,6 +98,16 @@ private class CompilationEnvironment(
     val environment: KotlinCoreEnvironment
     val parser: KtPsiFactory
     val scripts: ScriptDefinitionProvider
+
+    // https://github.com/JetBrains/kotlin-compiler-server/blob/d37ab40ed9/src/main/kotlin/com/compiler/server/compiler/components/KotlinCompiler.kt#L140-L147
+    // Licensed under Apache-2.0
+    val codegenFactory: CodegenFactory
+        get() = if (environment.configuration.getBoolean(JVMConfigurationKeys.IR)) {
+            JvmIrCodegenFactory(
+                environment.configuration,
+                environment.configuration.get(CLIConfigurationKeys.PHASE_CONFIG) ?: PhaseConfig(jvmPhases)
+            )
+        } else DefaultCodegenFactory
 
     init {
         environment = KotlinCoreEnvironment.createForProduction(
@@ -581,7 +596,7 @@ class Compiler(javaSourcePath: Set<Path>, classPath: Set<Path>, buildScriptClass
                     bindingContext = bindingContext,
                     files = files.toList(),
                     configuration = compileEnv.environment.configuration
-                ).build()
+                ).codegenFactory(compileEnv.codegenFactory).build()
                 KotlinCodegenFacade.compileCorrectFiles(state)
                 state.factory.writeAllTo(it)
             }
