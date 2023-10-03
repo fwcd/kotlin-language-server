@@ -130,6 +130,7 @@ private class CompilationEnvironment(
                 put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, LoggingMessageCollector)
                 add(ComponentRegistrar.PLUGIN_COMPONENT_REGISTRARS, ScriptingCompilerConfigurationComponentRegistrar())
                 put(JVMConfigurationKeys.USE_PSI_CLASS_FILES_READING, true)
+                put(JVMConfigurationKeys.IR, true)
 
                 // configure jvm runtime classpaths
                 configureJdkClasspathRoots()
