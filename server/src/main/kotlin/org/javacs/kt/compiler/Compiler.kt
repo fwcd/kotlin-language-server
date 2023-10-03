@@ -119,6 +119,11 @@ private class CompilationEnvironment(
                 // configure jvm runtime classpaths
                 configureJdkClasspathRoots()
 
+                // Kotlin 1.8.20 requires us to specify the JDK home, otherwise java.* classes won't resolve
+                // See https://github.com/JetBrains/kotlin-compiler-server/pull/626
+                val jdkHome = File(System.getProperty("java.home"))
+                put(JVMConfigurationKeys.JDK_HOME, jdkHome)
+
                 addJvmClasspathRoots(classPath.map { it.toFile() })
                 addJavaSourceRoots(javaSourcePath.map { it.toFile() })
 
