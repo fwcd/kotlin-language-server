@@ -11,8 +11,8 @@ repositories {
 
 dependencies {
     // dependencies are constrained to versions defined
-    // in /gradle/platform/build.gradle.kts
-    implementation(platform("dev.fwcd.kotlin-language-server:platform"))
+    // in /platform/build.gradle.kts
+    implementation(platform(project(":platform")))
 
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.exposed:exposed-core")

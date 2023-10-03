@@ -2,8 +2,6 @@ plugins {
     id("java-platform")
 }
 
-group = "dev.fwcd.kotlin-language-server"
-
 javaPlatform {
     allowDependencies()
 }
