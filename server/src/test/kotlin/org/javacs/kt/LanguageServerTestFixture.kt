@@ -127,8 +127,8 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     private var version = 1
 
     fun replace(relativePath: String, line: Int, char: Int, oldText: String, newText: String) {
-        val range = Range(position(line, char), Position(line - 1, char - 1 + oldText.length))
-        val edit = TextDocumentContentChangeEvent(range, oldText.length, newText)
+        val range = Range(position(line, char), position(line, char + oldText.length))
+        val edit = TextDocumentContentChangeEvent(range, newText)
         val doc = VersionedTextDocumentIdentifier(uri(relativePath).toString(), version++)
 
         languageServer.textDocumentService.didChange(DidChangeTextDocumentParams(doc, listOf(edit)))
