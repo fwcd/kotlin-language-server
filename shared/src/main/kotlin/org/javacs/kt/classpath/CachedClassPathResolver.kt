@@ -60,7 +60,7 @@ internal class CachedClassPathResolver(
             ClassPathCacheEntryEntity.all().map {
                 ClassPathEntry(
                     compiledJar = Paths.get(it.compiledJar),
-                    sourceJar = if (it.sourceJar != null) Paths.get(it.sourceJar) else null
+                    sourceJar = it.sourceJar?.let(Paths::get)
                 )
             }.toSet()
         }
@@ -69,7 +69,7 @@ internal class CachedClassPathResolver(
             newEntries.map {
                 ClassPathCacheEntryEntity.new {
                     compiledJar = it.compiledJar.toString()
-                    sourceJar = it.sourceJar.toString()
+                    sourceJar = it.sourceJar?.toString()
                 }
             }
         }

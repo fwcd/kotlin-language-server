@@ -35,10 +35,11 @@ class ClassContentProvider(
      * If the file is inside a source archive, the source code is returned as is.
      */
     fun contentOf(uri: KlsURI): Pair<KlsURI, String> {
+        LOG.info("Resolving {} for contents", uri)
         val resolvedUri = sourceArchiveProvider.fetchSourceArchive(uri.archivePath)?.let(uri.withSource(true)::withArchivePath) ?: uri
         val key = resolvedUri.toString()
         val (contents, extension) = cachedContents[key] ?: run {
-                LOG.info("Finding contents of {}", describeURI(resolvedUri.fileUri))
+                LOG.info("Reading contents of {}", describeURI(resolvedUri.fileUri))
                 tryReadContentOf(resolvedUri)
                     ?: tryReadContentOf(resolvedUri.withFileExtension("class"))
                     ?: tryReadContentOf(resolvedUri.withFileExtension("java"))
