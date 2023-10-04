@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 import org.eclipse.lsp4j.Location
+import java.nio.file.Path
 import java.nio.file.Paths
 
 class CompiledFile(
@@ -69,9 +70,11 @@ class CompiledFile(
         val cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
+        // NOTE: Due to our tiny-fake-file mechanism, we may have `path == /dummy.virtual.kt != parse.containingFile.toPath`
+        val path = surroundingExpr.containingFile.toPath()
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
-        return referenceFromContext(cursor, context)
+        return referenceFromContext(cursor, path, context)
     }
 
     /**
@@ -80,13 +83,14 @@ class CompiledFile(
      * This method should not be used for anything other than finding definitions (at least for now).
      */
     fun referenceExpressionAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
-        return referenceFromContext(cursor, compile)
+        val path = parse.containingFile.toPath()
+        return referenceFromContext(cursor, path, compile)
     }
 
-    private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
+    private fun referenceFromContext(cursor: Int, path: Path, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
         return targets.asSequence()
-                .filter { cursor in it.key.textRange }
+                .filter { cursor in it.key.textRange && it.key.containingFile.toPath() == path }
                 .sortedBy { it.key.textRange.length }
                 .map { it.toPair() }
                 .firstOrNull()
@@ -221,8 +225,13 @@ class CompiledFile(
      */
     fun scopeAtPoint(cursor: Int): LexicalScope? {
         val oldCursor = oldOffset(cursor)
+        val path = parse.containingFile.toPath()
         return compile.getSliceContents(BindingContext.LEXICAL_SCOPE).asSequence()
-                .filter { it.key.textRange.startOffset <= oldCursor && oldCursor <= it.key.textRange.endOffset }
+                .filter {
+                    it.key.textRange.startOffset <= oldCursor
+                    && oldCursor <= it.key.textRange.endOffset
+                    && it.key.containingFile.toPath() == path
+                }
                 .sortedBy { it.key.textRange.length  }
                 .map { it.value }
                 .firstOrNull()
