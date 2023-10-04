@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
 import org.eclipse.lsp4j.Location
+import java.nio.file.Path
 import java.nio.file.Paths
 
 class CompiledFile(
@@ -32,6 +33,8 @@ class CompiledFile(
     val isScript: Boolean = false,
     val kind: CompilationKind = CompilationKind.DEFAULT
 ) {
+    val path: Path by lazy { parse.containingFile.toPath() }
+
     /**
      * Find the type of the expression at `cursor`
      */
@@ -86,7 +89,7 @@ class CompiledFile(
     private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
         return targets.asSequence()
-                .filter { cursor in it.key.textRange }
+                .filter { cursor in it.key.textRange && it.key.containingFile.toPath() == path }
                 .sortedBy { it.key.textRange.length }
                 .map { it.toPair() }
                 .firstOrNull()
@@ -222,7 +225,11 @@ class CompiledFile(
     fun scopeAtPoint(cursor: Int): LexicalScope? {
         val oldCursor = oldOffset(cursor)
         return compile.getSliceContents(BindingContext.LEXICAL_SCOPE).asSequence()
-                .filter { it.key.textRange.startOffset <= oldCursor && oldCursor <= it.key.textRange.endOffset }
+                .filter {
+                    it.key.textRange.startOffset <= oldCursor
+                    && oldCursor <= it.key.textRange.endOffset
+                    && it.key.containingFile.toPath() == path
+                }
                 .sortedBy { it.key.textRange.length  }
                 .map { it.value }
                 .firstOrNull()
