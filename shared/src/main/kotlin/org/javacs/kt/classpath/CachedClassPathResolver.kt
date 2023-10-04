@@ -16,7 +16,7 @@ private const val MAX_PATH_LENGTH = 255
 
 private object ClassPathMetadataCache : IntIdTable() {
     val includesSources = bool("includessources")
-    val buildFileVersion = long("buidlfileversion").nullable()
+    val buildFileVersion = long("buildfileversion").nullable()
 }
 
 private object ClassPathCacheEntry : IntIdTable() {
