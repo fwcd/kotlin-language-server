@@ -26,7 +26,7 @@ class DatabaseMetadataEntity(id: EntityID<Int>) : IntEntity(id) {
 class DatabaseService {
 
     companion object {
-        const val LATEST_VERSION = 3
+        const val DB_VERSION = 3
         const val DB_FILENAME = "kls_database.db"
     }
 
@@ -42,8 +42,8 @@ class DatabaseService {
             DatabaseMetadataEntity.all().firstOrNull()?.version ?: 0
         }
 
-        if (currentVersion < LATEST_VERSION) {
-            LOG.info("Database has outdated version $currentVersion < $LATEST_VERSION and will be rebuilt...")
+        if (currentVersion != DB_VERSION) {
+            LOG.info("Database has version $currentVersion != $DB_VERSION (the required version), therefore it will be rebuilt...")
 
             deleteDb(storagePath)
             db = getDbFromFile(storagePath)
@@ -52,10 +52,10 @@ class DatabaseService {
                 SchemaUtils.createMissingTablesAndColumns(DatabaseMetadata)
 
                 DatabaseMetadata.deleteAll()
-                DatabaseMetadata.insert { it[version] = LATEST_VERSION }
+                DatabaseMetadata.insert { it[version] = DB_VERSION }
             }
         } else {
-            LOG.info("Database has latest version $currentVersion and will be used as-is")
+            LOG.info("Database has the correct version $currentVersion and will be used as-is")
         }
     }
 
