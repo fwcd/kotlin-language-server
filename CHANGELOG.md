@@ -3,6 +3,10 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.7]
+- Fix definition lookup for external sources
+- Fix binding context query for other definition lookups
+
 ## [1.3.6]
 - Update to Gradle 8.3 and Kotlin 1.9.10
 
