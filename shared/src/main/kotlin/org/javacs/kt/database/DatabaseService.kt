@@ -1,5 +1,6 @@
 package org.javacs.kt.database
 
+import org.javacs.kt.LOG
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -25,7 +26,7 @@ class DatabaseMetadataEntity(id: EntityID<Int>) : IntEntity(id) {
 class DatabaseService {
 
     companion object {
-        const val CURRENT_VERSION = 1
+        const val LATEST_VERSION = 1
         const val DB_FILENAME = "kls_database.db"
     }
 
@@ -38,20 +39,23 @@ class DatabaseService {
         val currentVersion = transaction(db) {
             SchemaUtils.createMissingTablesAndColumns(DatabaseMetadata)
 
-            DatabaseMetadataEntity.all().firstOrNull()?.version
+            DatabaseMetadataEntity.all().firstOrNull()?.version ?: 0
         }
 
-        if ((currentVersion ?: 0) < CURRENT_VERSION) {
-            deleteDb(storagePath)
+        if (currentVersion < LATEST_VERSION) {
+            LOG.info("Database has outdated version $currentVersion < $LATEST_VERSION and will be rebuilt...")
 
+            deleteDb(storagePath)
             db = getDbFromFile(storagePath)
 
             transaction(db) {
                 SchemaUtils.createMissingTablesAndColumns(DatabaseMetadata)
 
                 DatabaseMetadata.deleteAll()
-                DatabaseMetadata.insert { it[version] = CURRENT_VERSION }
+                DatabaseMetadata.insert { it[version] = LATEST_VERSION }
             }
+        } else {
+            LOG.info("Database has latest version $currentVersion and will be used as-is")
         }
     }
 
