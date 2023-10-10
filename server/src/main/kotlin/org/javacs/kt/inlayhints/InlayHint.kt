@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
+import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
@@ -66,7 +67,7 @@ private fun PsiElement.hintBuilder(kind: InlayKind, file: CompiledFile, label: S
         else ->
             this.determineType(file.compile) ?.let {
                 InlayHint(range.end, Either.forLeft(
-                    "${(if (kind == InlayKind.TypeHint) ": " else "")}$it"
+                    "${(if (kind == InlayKind.TypeHint) ": " else "")}${DECL_RENDERER.renderType(it)}"
                 ))
             } ?: return null
     }
