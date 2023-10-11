@@ -21,13 +21,6 @@ To create a ZIP-archive of the language server, run:
 
 >`./gradlew :server:distZip`
 
-## Grammars
-
-### Packaging
-To create a ZIP-archive of the grammars, run:
-
->`./gradlew :grammars:distZip`
-
 ## Gradle Tasks
 This paragraph assumes that you are familiar with Gradle's [task system](https://docs.gradle.org/current/userguide/build_lifecycle.html). In short: Every task describes an atomic piece of work and may depend on other tasks. Task dependencies will automatically be executed. The following subsections describe the available tasks for each module of this project.
 
@@ -43,9 +36,3 @@ This paragraph assumes that you are familiar with Gradle's [task system](https:/
 | Build | `./gradlew :server:build` | Builds, tests and packages the language server |
 | Package for Release | `./gradlew :server:distZip` | Creates a release zip in `server/build/distributions`. If any dependencies have changed since the last release, a new license report should be generated and placed in `src/main/dist` before creating the distribution. |
 | Generate License Report | `./gradlew :server:licenseReport` | Generates a license report from the dependencies in `server/build/reports/licenses` |
-
-### Grammars (:grammars)
-
-| Task | Command | Description |
-| ---- | ------- | ----------- |
-| Package for Release | `./gradlew :grammars:distZip` | Creates a zip of the grammars in `grammars/build/distributions` |
