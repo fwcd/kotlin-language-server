@@ -12,6 +12,7 @@ import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens.DOT
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDestructuringDeclaration
 import org.jetbrains.kotlin.psi.KtDestructuringDeclarationEntry
@@ -22,6 +23,7 @@ import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 import org.jetbrains.kotlin.resolve.BindingContext
+import org.jetbrains.kotlin.resolve.calls.model.ResolvedValueArgument
 import org.jetbrains.kotlin.resolve.calls.model.VarargValueArgument
 import org.jetbrains.kotlin.resolve.calls.smartcasts.getKotlinTypeForComparison
 import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
@@ -51,7 +53,6 @@ private fun PsiElement.determineType(ctx: BindingContext): KotlinType? =
             resolvedCall?.resultingDescriptor?.returnType
         }
         is KtProperty -> {
-            //TODO: better handling for unresolved-type error
             val type = this.getKotlinTypeForComparison(ctx)
             if (type is ErrorType) null else type
         }
@@ -89,12 +90,7 @@ private fun callableArgsToHints(
             val valueArg = u.arguments.first()
 
             if (!valueArg.isNamed()) {
-                val label = (t.name).let { name ->
-                    when (u) {
-                        is VarargValueArgument -> "...$name"
-                        else -> name.asString()
-                    }
-                }
+                val label = getLabel(t.name, u)
                 valueArg.asElement().hintBuilder(InlayKind.ParameterHint, file, label)?.let { hints.add(it) }
             }
 
@@ -102,6 +98,14 @@ private fun callableArgsToHints(
     }
     return hints
 }
+
+private fun getLabel(name: Name, arg: ResolvedValueArgument) =
+    (name).let {
+        when (arg) {
+            is VarargValueArgument -> "...$it"
+            else -> it.asString()
+        }
+    }
 
 private fun lambdaValueParamsToHints(node: KtLambdaArgument, file: CompiledFile): List<InlayHint> {
     return node.getLambdaExpression()!!.valueParameters.mapNotNull {
