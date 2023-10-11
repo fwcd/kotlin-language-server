@@ -2,7 +2,17 @@ config:
   validation: true # verifies that this config file is valid
   warningsAsErrors: false
 
+comments:
+  excludes: ["**/src/test/resources/**"]
+
+complexity:
+  excludes: ["**/src/test/resources/**"]
+  
+empty-blocks:
+  excludes: ["**/src/test/resources/**"]
+  
 exceptions:
+  excludes: ["**/src/test/resources/**"]
   SwallowedException:
     ignoredExceptionTypes:
       - InterruptedException
@@ -11,6 +21,16 @@ exceptions:
       - ParseException
       - MissingPropertyException
 
+naming:
+  excludes: ["**/src/test/resources/**"]
+
+performance:
+  excludes: ["**/src/test/resources/**"]
+
+potential-bugs:
+  excludes: ["**/src/test/resources/**"]
+  
 style:
+  excludes: ["**/src/test/resources/**"]
   MaxLineLength:
     active: false
