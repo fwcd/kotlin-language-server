@@ -108,7 +108,16 @@ private fun getLabel(name: Name, arg: ResolvedValueArgument) =
     }
 
 private fun lambdaValueParamsToHints(node: KtLambdaArgument, file: CompiledFile): List<InlayHint> {
-    return node.getLambdaExpression()!!.valueParameters.mapNotNull {
+    val params = node.getLambdaExpression()!!.valueParameters
+
+    //hint should not be rendered when parameter is of type DestructuringDeclaration
+    //example: Map.forEach { (k,v) -> _ }
+    //lambda parameter (k,v) becomes (k :hint, v :hint) :hint <- outer hint isnt needed
+    params.singleOrNull()?.let {
+        if (it.destructuringDeclaration != null) return emptyList()
+    }
+
+    return params.mapNotNull {
         it.hintBuilder(InlayKind.TypeHint, file)
     }
 }
