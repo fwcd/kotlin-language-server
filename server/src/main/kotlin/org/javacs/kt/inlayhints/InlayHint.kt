@@ -31,12 +31,6 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.error.ErrorType
 
 
-enum class InlayKind(val base: InlayHintKind) {
-    TypeHint(InlayHintKind.Type),
-    ParameterHint(InlayHintKind.Parameter),
-    ChainingHint(InlayHintKind.Type),
-}
-
 private fun PsiElement.determineType(ctx: BindingContext): KotlinType? =
     when (this) {
         is KtCallExpression -> {
@@ -83,20 +77,15 @@ private fun callableArgsToHints(
     file: CompiledFile,
 ): List<InlayHint> {
     val resolvedCall = callExpression.getResolvedCall(file.compile)
+    val entries = resolvedCall?.valueArguments?.entries ?: return emptyList()
 
-    val hints = mutableListOf<InlayHint>()
-    resolvedCall?.valueArguments?.forEach { (t, u) ->
-        if (u.arguments.isNotEmpty()) {
-            val valueArg = u.arguments.first()
-
-            if (!valueArg.isNamed()) {
-                val label = getLabel(t.name, u)
-                valueArg.asElement().hintBuilder(InlayKind.ParameterHint, file, label)?.let { hints.add(it) }
-            }
-
-        }
+    return entries.mapNotNull { (t, u) ->
+        val valueArg = u.arguments.singleOrNull()
+        if (valueArg != null && !valueArg.isNamed()) {
+            val label = getLabel(t.name, u)
+            valueArg.asElement().hintBuilder(InlayKind.ParameterHint, file, label)
+        } else null
     }
-    return hints
 }
 
 private fun getLabel(name: Name, arg: ResolvedValueArgument) =
@@ -128,6 +117,20 @@ private fun chainedMethodsHints(node: KtDotQualifiedExpression, file: CompiledFi
         }
 }
 
+private fun destructuringVarHints(
+    node: KtDestructuringDeclaration,
+    file: CompiledFile
+): List<InlayHint> {
+    return node.entries.mapNotNull {  it.hintBuilder(InlayKind.TypeHint, file) }
+}
+
+private fun declarationHint(node: KtProperty, file: CompiledFile): InlayHint? {
+    //check decleration does not include type i.e. var t1: String
+    return if (node.typeReference == null) {
+        node.hintBuilder(InlayKind.TypeHint, file)
+    } else null
+}
+
 fun provideHints(file: CompiledFile): List<InlayHint> {
     val hints = mutableListOf<InlayHint>()
     for (node in file.parse.preOrderTraversal().asIterable()) {
@@ -137,10 +140,11 @@ fun provideHints(file: CompiledFile): List<InlayHint> {
             }
             is KtDotQualifiedExpression -> {
                 ///chaining is defined as an expression whose next sibling tokens are newline and dot
-                (node.nextSibling as? PsiWhiteSpace)?.let {
-                    if (it.nextSibling.node.elementType == DOT) {
-                       hints.addAll(chainedMethodsHints(node, file))
-                    }
+                val next = (node.nextSibling as? PsiWhiteSpace)
+                val nextSiblingElement = next?.nextSibling?.node?.elementType
+
+                if (nextSiblingElement != null && nextSiblingElement == DOT) {
+                   hints.addAll(chainedMethodsHints(node, file))
                 }
             }
             is KtCallExpression -> {
@@ -150,15 +154,16 @@ fun provideHints(file: CompiledFile): List<InlayHint> {
                 }
             }
             is KtDestructuringDeclaration -> {
-                hints.addAll(node.entries.mapNotNull {  it.hintBuilder(InlayKind.TypeHint, file) })
+                hints.addAll(destructuringVarHints(node, file))
             }
-            is KtProperty -> {
-                //check decleration does not include type i.e. var t1: String
-                if (node.typeReference == null) {
-                    node.hintBuilder(InlayKind.TypeHint, file)?.let { hints.add(it) }
-                }
-            }
+            is KtProperty -> declarationHint(node, file)?.let { hints.add(it) }
         }
     }
     return hints
+}
+
+enum class InlayKind(val base: InlayHintKind) {
+    TypeHint(InlayHintKind.Type),
+    ParameterHint(InlayHintKind.Parameter),
+    ChainingHint(InlayHintKind.Type),
 }
