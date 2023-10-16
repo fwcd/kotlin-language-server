@@ -81,23 +81,30 @@ private fun PsiElement.hintBuilder(kind: InlayKind, file: CompiledFile, label: S
     return hint
 }
 
-private fun callableArgsToHints(
+private fun callableArgNameHints(
+    acc: MutableList<InlayHint>,
     callExpression: KtCallExpression,
     file: CompiledFile,
-): List<InlayHint> {
-    val resolvedCall = callExpression.getResolvedCall(file.compile)
-    val entries = resolvedCall?.valueArguments?.entries ?: return emptyList()
+) {
+    //hints are not rendered for argument of type lambda expression i.e. list.map { it }
+    if (callExpression.getChildOfType<KtLambdaArgument>() != null) {
+        return
+    }
 
-    return entries.mapNotNull { (t, u) ->
+    val resolvedCall = callExpression.getResolvedCall(file.compile)
+    val entries = resolvedCall?.valueArguments?.entries ?: return
+
+    val hints = entries.mapNotNull { (t, u) ->
         val valueArg = u.arguments.firstOrNull()
         if (valueArg != null && !valueArg.isNamed()) {
-            val label = getLabel(t.name, u)
+            val label = getArgLabel(t.name, u)
             valueArg.asElement().hintBuilder(InlayKind.ParameterHint, file, label)
         } else null
     }
+    acc.addAll(hints)
 }
 
-private fun getLabel(name: Name, arg: ResolvedValueArgument) =
+private fun getArgLabel(name: Name, arg: ResolvedValueArgument) =
     (name).let {
         when (arg) {
             is VarargValueArgument -> "...$it"
@@ -105,79 +112,92 @@ private fun getLabel(name: Name, arg: ResolvedValueArgument) =
         }
     }
 
-private fun lambdaValueParamsToHints(node: KtLambdaArgument, file: CompiledFile): List<InlayHint> {
+private fun lambdaValueParamHints(
+    acc: MutableList<InlayHint>,
+    node: KtLambdaArgument,
+    file: CompiledFile
+) {
     val params = node.getLambdaExpression()!!.valueParameters
 
     //hint should not be rendered when parameter is of type DestructuringDeclaration
     //example: Map.forEach { (k,v) -> _ }
     //lambda parameter (k,v) becomes (k :hint, v :hint) :hint <- outer hint isnt needed
     params.singleOrNull()?.let {
-        if (it.destructuringDeclaration != null) return emptyList()
+        if (it.destructuringDeclaration != null) return
     }
 
-    return params.mapNotNull {
+    val hints = params.mapNotNull {
         it.hintBuilder(InlayKind.TypeHint, file)
     }
+    acc.addAll(hints)
 }
 
-private fun chainedMethodsHints(node: KtDotQualifiedExpression, file: CompiledFile): List<InlayHint> {
-        return node.getChildrenOfType<KtCallExpression>().mapNotNull {
-            it.hintBuilder(InlayKind.ChainingHint, file)
+private fun chainedExpressionHints(
+    acc: MutableList<InlayHint>,
+    node: KtDotQualifiedExpression,
+    file: CompiledFile
+) {
+        ///chaining is defined as an expression whose next sibling tokens are newline and dot
+        val next = (node.nextSibling as? PsiWhiteSpace)
+        val nextSiblingElement = next?.nextSibling?.node?.elementType
+
+        if (nextSiblingElement != null && nextSiblingElement == DOT) {
+            val hints = node.getChildrenOfType<KtCallExpression>().mapNotNull {
+                it.hintBuilder(InlayKind.ChainingHint, file)
+            }
+            acc.addAll(hints)
         }
 }
 
 private fun destructuringVarHints(
+    acc: MutableList<InlayHint>,
     node: KtDestructuringDeclaration,
     file: CompiledFile
-): List<InlayHint> {
-    return node.entries.mapNotNull {  it.hintBuilder(InlayKind.TypeHint, file) }
+) {
+    val hints = node.entries.mapNotNull {
+        it.hintBuilder(InlayKind.TypeHint, file)
+    }
+    acc.addAll(hints)
 }
 
-private fun declarationHint(node: KtProperty, file: CompiledFile): InlayHint? {
+private fun declarationHint(
+    acc: MutableList<InlayHint>,
+    node: KtProperty,
+    file: CompiledFile
+) {
     //check decleration does not include type i.e. var t1: String
-    return if (node.typeReference == null) {
-        node.hintBuilder(InlayKind.TypeHint, file)
-    } else null
+    if (node.typeReference != null) return
+
+    val hint = node.hintBuilder(InlayKind.TypeHint, file) ?: return
+    acc.add(hint)
 }
 
-private fun functionHint(node: KtNamedFunction, file: CompiledFile): InlayHint? {
+private fun functionHint(
+    acc: MutableList<InlayHint>,
+    node: KtNamedFunction,
+    file: CompiledFile
+) {
     //only render hints for functions without block body
     //functions WITH block body will always specify return types explicitly
-    return if (!node.hasDeclaredReturnType() && !node.hasBlockBody()) {
-        node.hintBuilder(InlayKind.TypeHint, file)
-    } else null
+    if (!node.hasDeclaredReturnType() && !node.hasBlockBody()) {
+        val hint = node.hintBuilder(InlayKind.TypeHint, file) ?: return
+        acc.add(hint)
+    }
 }
 
 fun provideHints(file: CompiledFile): List<InlayHint> {
-    val hints = mutableListOf<InlayHint>()
+    val res = mutableListOf<InlayHint>()
     for (node in file.parse.preOrderTraversal().asIterable()) {
         when (node) {
-            is KtNamedFunction -> functionHint(node, file)?.let { hints.add(it) }
-            is KtLambdaArgument -> {
-                hints.addAll(lambdaValueParamsToHints(node, file))
-            }
-            is KtDotQualifiedExpression -> {
-                ///chaining is defined as an expression whose next sibling tokens are newline and dot
-                val next = (node.nextSibling as? PsiWhiteSpace)
-                val nextSiblingElement = next?.nextSibling?.node?.elementType
-
-                if (nextSiblingElement != null && nextSiblingElement == DOT) {
-                   hints.addAll(chainedMethodsHints(node, file))
-                }
-            }
-            is KtCallExpression -> {
-                //hints are not rendered for argument of type lambda expression i.e. list.map { it }
-                if (node.getChildOfType<KtLambdaArgument>() == null) {
-                    hints.addAll(callableArgsToHints(node, file))
-                }
-            }
-            is KtDestructuringDeclaration -> {
-                hints.addAll(destructuringVarHints(node, file))
-            }
-            is KtProperty -> declarationHint(node, file)?.let { hints.add(it) }
+            is KtNamedFunction -> functionHint(res, node, file)
+            is KtLambdaArgument -> lambdaValueParamHints(res, node, file)
+            is KtDotQualifiedExpression -> chainedExpressionHints(res, node, file)
+            is KtCallExpression -> callableArgNameHints(res, node, file)
+            is KtDestructuringDeclaration -> destructuringVarHints(res, node, file)
+            is KtProperty -> declarationHint(res, node, file)
         }
     }
-    return hints
+    return res
 }
 
 enum class InlayKind(val base: InlayHintKind) {
