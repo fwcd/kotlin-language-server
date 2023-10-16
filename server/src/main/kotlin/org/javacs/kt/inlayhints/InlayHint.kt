@@ -7,7 +7,6 @@ import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
-import org.javacs.kt.LOG
 import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
@@ -18,7 +17,9 @@ import org.jetbrains.kotlin.psi.KtCallExpression
 import org.jetbrains.kotlin.psi.KtDestructuringDeclaration
 import org.jetbrains.kotlin.psi.KtDestructuringDeclarationEntry
 import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
+import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtLambdaArgument
+import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.psiUtil.getChildOfType
@@ -34,6 +35,10 @@ import org.jetbrains.kotlin.types.error.ErrorType
 
 private fun PsiElement.determineType(ctx: BindingContext): KotlinType? =
     when (this) {
+        is KtNamedFunction -> {
+            val descriptor = ctx[BindingContext.FUNCTION, this]
+            descriptor?.returnType
+        }
         is KtCallExpression -> {
             this.getKotlinTypeForComparison(ctx)
         }
@@ -55,16 +60,19 @@ private fun PsiElement.determineType(ctx: BindingContext): KotlinType? =
     }
 
 private fun PsiElement.hintBuilder(kind: InlayKind, file: CompiledFile, label: String? = null): InlayHint? {
-    val namedElement = ((this as? PsiNameIdentifierOwner)?.nameIdentifier ?: this)
-    val range = range(file.parse.text, namedElement.textRange)
+    val element = when(this) {
+        is KtFunction -> this.valueParameterList!!.originalElement
+        is PsiNameIdentifierOwner -> this.nameIdentifier
+        else -> this
+    } ?: return null
+
+    val range = range(file.parse.text, element.textRange)
 
     val hint = when(kind) {
         InlayKind.ParameterHint -> InlayHint(range.start, Either.forLeft("$label:"))
         else ->
             this.determineType(file.compile) ?.let {
-                InlayHint(range.end, Either.forLeft(
-                    "${(if (kind == InlayKind.TypeHint) ": " else "")}${DECL_RENDERER.renderType(it)}"
-                ))
+                InlayHint(range.end, Either.forLeft(DECL_RENDERER.renderType(it)))
             } ?: return null
     }
     hint.kind = kind.base
@@ -132,10 +140,19 @@ private fun declarationHint(node: KtProperty, file: CompiledFile): InlayHint? {
     } else null
 }
 
+private fun functionHint(node: KtNamedFunction, file: CompiledFile): InlayHint? {
+    //only render hints for functions without block body
+    //functions WITH block body will always specify return types explicitly
+    return if (!node.hasDeclaredReturnType() && !node.hasBlockBody()) {
+        node.hintBuilder(InlayKind.TypeHint, file)
+    } else null
+}
+
 fun provideHints(file: CompiledFile): List<InlayHint> {
     val hints = mutableListOf<InlayHint>()
     for (node in file.parse.preOrderTraversal().asIterable()) {
         when (node) {
+            is KtNamedFunction -> functionHint(node, file)?.let { hints.add(it) }
             is KtLambdaArgument -> {
                 hints.addAll(lambdaValueParamsToHints(node, file))
             }

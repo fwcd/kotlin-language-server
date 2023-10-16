@@ -19,3 +19,5 @@ fun destructure() {
 }
 
 val box = Box(0)
+
+fun <T> toStr(b: Box<T>) = b.value.toString()

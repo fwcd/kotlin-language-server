@@ -66,11 +66,20 @@ class InlayHintDeclarationTest : SingleFileTestFixture("inlayhints", "Declaratio
         val expected = listOf(Position(5, 13), Position(20, 7))
 
         val result = hints.filter {
-            it.label.left.matches(Regex(": Box<([^)]+)>"))
+            it.label.left.matches(Regex("Box<([^)]+)>"))
         }.map { it.position }
 
         assertEquals(result.size, expected.size)
         assertEquals(result.sortedBy { it.line }, expected.sortedBy { it.line })
+    }
+
+    @Test
+    fun `inferred hint for single-expression function`() {
+        val hint = hints.filter {
+            it.position == Position(22, 24)
+        }
+        assertThat(hint, hasSize(1))
+        assertThat(hint.single().label.left, containsString("String"))
     }
 
 }
