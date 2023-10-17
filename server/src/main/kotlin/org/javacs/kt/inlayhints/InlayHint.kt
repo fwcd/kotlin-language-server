@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.resolve.calls.model.ResolvedValueArgument
 import org.jetbrains.kotlin.resolve.calls.model.VarargValueArgument
 import org.jetbrains.kotlin.resolve.calls.smartcasts.getKotlinTypeForComparison
 import org.jetbrains.kotlin.resolve.calls.util.getResolvedCall
+import org.jetbrains.kotlin.resolve.calls.util.isSingleUnderscore
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.error.ErrorType
 
@@ -50,8 +51,14 @@ private fun PsiElement.determineType(ctx: BindingContext): KotlinType? =
             } else null
         }
         is KtDestructuringDeclarationEntry -> {
-            val resolvedCall = ctx[BindingContext.COMPONENT_RESOLVED_CALL, this]
-            resolvedCall?.resultingDescriptor?.returnType
+            //skip unused variable denoted by underscore
+            //https://kotlinlang.org/docs/destructuring-declarations.html#underscore-for-unused-variables
+            if (this.isSingleUnderscore) {
+                null
+            } else {
+                val resolvedCall = ctx[BindingContext.COMPONENT_RESOLVED_CALL, this]
+                resolvedCall?.resultingDescriptor?.returnType
+            }
         }
         is KtProperty -> {
             val type = this.getKotlinTypeForComparison(ctx)
