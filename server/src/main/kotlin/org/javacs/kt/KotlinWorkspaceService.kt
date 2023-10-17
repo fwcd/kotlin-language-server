@@ -103,7 +103,7 @@ class KotlinWorkspaceService(
             }
 
             // Update options for inlay hints
-            get("hints")?.asJsonObject?.apply {
+            get("inlayHints")?.asJsonObject?.apply {
                 val hints = config.hints
                 get("typeHints")?.asBoolean?.let { hints.typeHints = it }
                 get("parameterHints")?.asBoolean?.let { hints.parameterHints = it }
