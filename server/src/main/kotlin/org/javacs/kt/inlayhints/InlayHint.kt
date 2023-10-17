@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.InlayHint
 import org.eclipse.lsp4j.InlayHintKind
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
+import org.javacs.kt.InlayHintsConfiguration
 import org.javacs.kt.completion.DECL_RENDERER
 import org.javacs.kt.position.range
 import org.javacs.kt.util.preOrderTraversal
@@ -85,7 +86,10 @@ private fun callableArgNameHints(
     acc: MutableList<InlayHint>,
     callExpression: KtCallExpression,
     file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
+    if (!config.parameterHints) return
+
     //hints are not rendered for argument of type lambda expression i.e. list.map { it }
     if (callExpression.getChildOfType<KtLambdaArgument>() != null) {
         return
@@ -115,8 +119,11 @@ private fun getArgLabel(name: Name, arg: ResolvedValueArgument) =
 private fun lambdaValueParamHints(
     acc: MutableList<InlayHint>,
     node: KtLambdaArgument,
-    file: CompiledFile
+    file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
+    if (!config.typeHints) return
+
     val params = node.getLambdaExpression()!!.valueParameters
 
     //hint should not be rendered when parameter is of type DestructuringDeclaration
@@ -135,25 +142,31 @@ private fun lambdaValueParamHints(
 private fun chainedExpressionHints(
     acc: MutableList<InlayHint>,
     node: KtDotQualifiedExpression,
-    file: CompiledFile
+    file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
-        ///chaining is defined as an expression whose next sibling tokens are newline and dot
-        val next = (node.nextSibling as? PsiWhiteSpace)
-        val nextSiblingElement = next?.nextSibling?.node?.elementType
+    if (!config.chainedHints) return
 
-        if (nextSiblingElement != null && nextSiblingElement == DOT) {
-            val hints = node.getChildrenOfType<KtCallExpression>().mapNotNull {
-                it.hintBuilder(InlayKind.ChainingHint, file)
-            }
-            acc.addAll(hints)
+    ///chaining is defined as an expression whose next sibling tokens are newline and dot
+    val next = (node.nextSibling as? PsiWhiteSpace)
+    val nextSiblingElement = next?.nextSibling?.node?.elementType
+
+    if (nextSiblingElement != null && nextSiblingElement == DOT) {
+        val hints = node.getChildrenOfType<KtCallExpression>().mapNotNull {
+            it.hintBuilder(InlayKind.ChainingHint, file)
         }
+        acc.addAll(hints)
+    }
 }
 
 private fun destructuringVarHints(
     acc: MutableList<InlayHint>,
     node: KtDestructuringDeclaration,
-    file: CompiledFile
+    file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
+    if (!config.typeHints) return
+
     val hints = node.entries.mapNotNull {
         it.hintBuilder(InlayKind.TypeHint, file)
     }
@@ -163,8 +176,11 @@ private fun destructuringVarHints(
 private fun declarationHint(
     acc: MutableList<InlayHint>,
     node: KtProperty,
-    file: CompiledFile
+    file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
+    if (!config.typeHints) return
+
     //check decleration does not include type i.e. var t1: String
     if (node.typeReference != null) return
 
@@ -175,8 +191,11 @@ private fun declarationHint(
 private fun functionHint(
     acc: MutableList<InlayHint>,
     node: KtNamedFunction,
-    file: CompiledFile
+    file: CompiledFile,
+    config: InlayHintsConfiguration
 ) {
+    if (!config.typeHints) return
+
     //only render hints for functions without block body
     //functions WITH block body will always specify return types explicitly
     if (!node.hasDeclaredReturnType() && !node.hasBlockBody()) {
@@ -185,16 +204,16 @@ private fun functionHint(
     }
 }
 
-fun provideHints(file: CompiledFile): List<InlayHint> {
+fun provideHints(file: CompiledFile, config: InlayHintsConfiguration): List<InlayHint> {
     val res = mutableListOf<InlayHint>()
     for (node in file.parse.preOrderTraversal().asIterable()) {
         when (node) {
-            is KtNamedFunction -> functionHint(res, node, file)
-            is KtLambdaArgument -> lambdaValueParamHints(res, node, file)
-            is KtDotQualifiedExpression -> chainedExpressionHints(res, node, file)
-            is KtCallExpression -> callableArgNameHints(res, node, file)
-            is KtDestructuringDeclaration -> destructuringVarHints(res, node, file)
-            is KtProperty -> declarationHint(res, node, file)
+            is KtNamedFunction -> functionHint(res, node, file, config)
+            is KtLambdaArgument -> lambdaValueParamHints(res, node, file, config)
+            is KtDotQualifiedExpression -> chainedExpressionHints(res, node, file, config)
+            is KtCallExpression -> callableArgNameHints(res, node, file, config)
+            is KtDestructuringDeclaration -> destructuringVarHints(res, node, file, config)
+            is KtProperty -> declarationHint(res, node, file, config)
         }
     }
     return res
