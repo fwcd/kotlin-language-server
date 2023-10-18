@@ -6,9 +6,7 @@ import java.nio.file.Paths
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.userHome
 
-private fun createPathOrNull(envVar: String): Path? {
-  return System.getenv(envVar)?.let { Paths.get(it) }
-}
+private fun createPathOrNull(envVar: String): Path? = System.getenv(envVar)?.let(Paths::get)
 
 private val possibleMavenRepositoryPaths =
     sequenceOf(
