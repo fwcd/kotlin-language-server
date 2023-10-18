@@ -10,12 +10,12 @@ private fun createPathOrNull(envVar: String): Path? = System.getenv(envVar)?.let
 
 private val possibleMavenRepositoryPaths =
     sequenceOf(
-            createPathOrNull("MAVEN_REPOSITORY"),
-            createPathOrNull("MAVEN_HOME")?.let { it.resolve("repository") },
-            createPathOrNull("M2_HOME")?.let { it.resolve("repository") },
-            userHome.resolve(".m2/repository"),
-        )
-        .filterNotNull()
+        createPathOrNull("MAVEN_REPOSITORY"),
+        createPathOrNull("MAVEN_HOME")?.let { it.resolve("repository") },
+        createPathOrNull("M2_HOME")?.let { it.resolve("repository") },
+        userHome.resolve(".m2/repository"),
+    )
+    .filterNotNull()
 
 internal val mavenRepository =
     possibleMavenRepositoryPaths.firstOrNull { Files.exists(it) }
