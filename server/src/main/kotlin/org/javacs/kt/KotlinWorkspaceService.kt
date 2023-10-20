@@ -102,6 +102,14 @@ class KotlinWorkspaceService(
                 }
             }
 
+            // Update options for inlay hints
+            get("inlayHints")?.asJsonObject?.apply {
+                val hints = config.hints
+                get("typeHints")?.asBoolean?.let { hints.typeHints = it }
+                get("parameterHints")?.asBoolean?.let { hints.parameterHints = it }
+                get("chainedHints")?.asBoolean?.let { hints.chainedHints = it }
+            }
+
             // Update linter options
             get("linting")?.asJsonObject?.apply {
                 val linting = config.linting

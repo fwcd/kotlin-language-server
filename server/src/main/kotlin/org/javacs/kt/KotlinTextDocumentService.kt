@@ -5,7 +5,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.codeaction.codeActions
-import org.javacs.kt.completion.*
+import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.formatting.formatKotlinCode
@@ -16,17 +16,18 @@ import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.semantictokens.encodedSemanticTokens
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
-import org.javacs.kt.symbols.documentSymbols
-import org.javacs.kt.util.noResult
-import org.javacs.kt.util.AsyncExecutor
-import org.javacs.kt.util.Debouncer
-import org.javacs.kt.util.filePath
-import org.javacs.kt.util.TemporaryDirectory
-import org.javacs.kt.util.parseURI
-import org.javacs.kt.util.describeURI
-import org.javacs.kt.util.describeURIs
 import org.javacs.kt.rename.renameSymbol
 import org.javacs.kt.highlight.documentHighlightsAt
+import org.javacs.kt.inlayhints.provideHints
+import org.javacs.kt.symbols.documentSymbols
+import org.javacs.kt.util.AsyncExecutor
+import org.javacs.kt.util.Debouncer
+import org.javacs.kt.util.TemporaryDirectory
+import org.javacs.kt.util.describeURI
+import org.javacs.kt.util.describeURIs
+import org.javacs.kt.util.filePath
+import org.javacs.kt.util.noResult
+import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -93,6 +94,11 @@ class KotlinTextDocumentService(
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
         val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.NEVER)
         codeActions(file, sp.index, params.range, params.context)
+    }
+
+    override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>> = async.compute {
+        val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.ALWAYS)
+        provideHints(file, config.hints)
     }
 
     override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {

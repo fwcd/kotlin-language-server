@@ -46,6 +46,12 @@ public data class ExternalSourcesConfiguration(
     var autoConvertToKotlin: Boolean = false
 )
 
+data class InlayHintsConfiguration(
+    var typeHints: Boolean = false,
+    var parameterHints: Boolean = false,
+    var chainedHints: Boolean = false
+)
+
 
 fun getStoragePath(params: InitializeParams): Path? {
     params.initializationOptions?.let { initializationOptions ->
@@ -81,5 +87,6 @@ public data class Configuration(
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val linting: LintingConfiguration = LintingConfiguration(),
     var indexing: IndexingConfiguration = IndexingConfiguration(),
-    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration()
+    val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
+    val hints: InlayHintsConfiguration = InlayHintsConfiguration()
 )

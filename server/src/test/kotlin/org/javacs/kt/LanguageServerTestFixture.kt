@@ -36,6 +36,12 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
             name = workspaceRoot.fileName.toString()
             uri = workspaceRoot.toUri().toString()
         })
+
+        languageServer.config.hints.apply {
+            this.typeHints = true
+            this.parameterHints = true
+            this.chainedHints = true
+        }
         languageServer.sourcePath.indexEnabled = false
         languageServer.connect(this)
         languageServer.initialize(init).join()
@@ -79,6 +85,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
 
     fun hoverParams(relativePath: String, line: Int, column: Int): HoverParams =
         textDocumentPosition(relativePath, line, column).run { HoverParams(textDocument, position) }
+
+    fun inlayHintParams(relativePath: String, range: Range): InlayHintParams =
+        textDocumentPosition(relativePath, 0, 0).run { InlayHintParams(textDocument, range) }
 
     fun semanticTokensParams(relativePath: String): SemanticTokensParams =
         textDocumentPosition(relativePath, 0, 0).run { SemanticTokensParams(textDocument) }

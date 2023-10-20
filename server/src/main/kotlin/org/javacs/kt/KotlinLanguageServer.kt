@@ -77,6 +77,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.workspace.workspaceFolders = WorkspaceFoldersOptions()
         serverCapabilities.workspace.workspaceFolders.supported = true
         serverCapabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
+        serverCapabilities.inlayHintProvider = Either.forLeft(true)
         serverCapabilities.hoverProvider = Either.forLeft(true)
         serverCapabilities.renameProvider = Either.forLeft(true)
         serverCapabilities.completionProvider = CompletionOptions(false, listOf("."))
