@@ -249,6 +249,8 @@ private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
             ?: el.parent?.parent as? KtQualifiedExpression
             // ?
             ?: el as? KtNameReferenceExpression
+            // x ? y (infix)
+            ?: el.parent as? KtBinaryExpression
 }
 
 private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
@@ -319,11 +321,25 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
             identifiers(scope)
         }
+        // x ? y (infix)
+        is KtBinaryExpression -> {
+            if (surroundingElement.operationToken == KtTokens.IDENTIFIER) {
+                completeMembers(file, cursor, surroundingElement.left!!)
+            } else emptySequence()
+        }
         else -> {
             LOG.info("{} {} didn't look like a type, a member, or an identifier", surroundingElement::class.simpleName, surroundingElement.text)
             emptySequence()
         }
     }
+}
+
+private fun receiverDescriptors(exp: KtExpression, vararg descriptors: Sequence<DeclarationDescriptor>): Sequence<DeclarationDescriptor> {
+    val seq = sequenceOf(*descriptors).flatten()
+    if (exp.parent !is KtBinaryExpression) return seq
+
+    // filter if infix call
+    return seq.filter { declarationIsInfix(it) }
 }
 
 private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence<DeclarationDescriptor> {
@@ -341,7 +357,7 @@ private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExp
             LOG.debug("Completing members of instance '{}'", receiverType)
             val members = receiverType.memberScope.getContributedDescriptors().asSequence()
             val extensions = extensionFunctions(lexicalScope).filter { isExtensionFor(receiverType, it) }
-            descriptors = members + extensions
+            descriptors = receiverDescriptors(receiverExpr, members, extensions)
 
             if (!isCompanionOfEnum(receiverType) && !isCompanionOfSealed(receiverType)) {
                 return descriptors
@@ -368,6 +384,11 @@ private fun ClassDescriptor.getDescriptors(): Sequence<DeclarationDescriptor> {
 
     return (statics + classes + types + companionDescriptors).toSet().asSequence()
 
+}
+
+private fun declarationIsInfix(declaration: DeclarationDescriptor): Boolean {
+    val functionDescriptor = declaration as? FunctionDescriptor ?: return false
+    return functionDescriptor.isInfix
 }
 
 private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {

@@ -65,6 +65,32 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
     }
 }
 
+class InfixMethodTest : SingleFileTestFixture("completions", "InfixFunctions.kt") {
+    @Test fun `complete member function`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 10, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("cmpB")))
+        assertThat(labels, not(hasItem(startsWith("cmpA"))))
+    }
+
+    @Test fun `includes completion for stdlib`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 15, 9)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasSize(2))
+        assertThat(labels, hasItem(startsWith("and")))
+        assertThat(labels, hasItem("andTo"))
+    }
+
+    @Test fun `complete extension function`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 19, 9)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("funcA"))
+    }
+}
+
 class InstanceMembersJava : SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
     @Test fun `convert getFileName to fileName`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 14)).get().right!!
