@@ -1,0 +1,47 @@
+build:
+  - buildSrc/**
+  - server/build.gradle.kts
+  - shared/build.gradle.kts
+  - build.gradle.kts
+  - gradle
+  - gradle.properties
+  - gradlew
+  - gradlew.bat
+  - settings.gradle.kts
+
+ci-cd:
+  - .github/**
+
+code completion:
+  - server/src/main/kotlin/org/javacs/kt/completion/**
+  - server/src/test/resources/completions/**
+
+code quality:
+  - server/src/test/**
+  - shared/src/test/**
+
+dependency resolution:
+  - shared/src/main/kotlin/org/javacs/kt/classpath/**
+
+diagnostics:
+  - server/src/main/kotlin/org/javacs/kt/diagnostic/**
+
+docker:
+  - Dockerfile
+
+editor support:
+  - EDITORS.md
+
+formatting:
+  - server/src/main/kotlin/org/javacs/kt/formatting/**
+  - server/test/resources/formatting/**
+
+gradle:
+  - shared/src/main/kotlin/org/javacs/kt/classpath/Gradle*
+  - shared/src/main/resources/*.gradle
+
+index:
+  - server/src/main/kotlin/org/javacs/kt/index/**
+
+maven:
+  - shared/src/main/kotlin/org/javacs/kt/classpath/Maven*
