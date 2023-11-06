@@ -75,7 +75,7 @@ class InfixMethodTest : SingleFileTestFixture("completions", "InfixFunctions.kt"
     }
 
     @Test fun `includes completion for stdlib`() {
-        val completions = languageServer.textDocumentService.completion(completionParams(file, 15, 9)).get().right!!
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 15, 10)).get().right!!
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasSize(2))
@@ -88,6 +88,22 @@ class InfixMethodTest : SingleFileTestFixture("completions", "InfixFunctions.kt"
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem("funcA"))
+    }
+
+    @Test fun `complete global scope`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 26, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasSize(3))
+        assertThat(labels, hasItem("ord"))
+    }
+
+    @Test fun `has global completions for binary expression`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 30, 7)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("funcA"))
+        assertThat(labels.filter { it.startsWith("and") }, hasSize(2))
     }
 }
 

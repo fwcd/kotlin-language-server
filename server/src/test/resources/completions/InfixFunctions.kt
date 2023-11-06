@@ -19,3 +19,14 @@ private fun extensionFunc() {
     2 fu 3
 }
 
+enum class FOO { T, U }
+infix fun FOO.ord(n: Int) = this.ordinal == n
+
+private fun globalEnumFunc() {
+    FOO.U
+}
+
+private fun globalBinaryExpFunc() {
+    4  4
+}
+
