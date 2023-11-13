@@ -247,6 +247,31 @@ private fun asGlobalCompletable(file: CompiledFile, cursor: Int, el: KtElement):
         ?: element as? KtConstantExpression
 }
 
+private fun KtElement.asKtClass(): KtElement? {
+    return this.findParent<KtImportDirective>() // import x.y.?
+        // package x.y.?
+        ?: this.findParent<KtPackageDirective>()
+        // :?
+        ?: this as? KtUserType
+        ?: this.parent as? KtTypeElement
+        // .?
+        ?: this as? KtQualifiedExpression
+        ?: this.parent as? KtQualifiedExpression
+        // something::?
+        ?: this as? KtCallableReferenceExpression
+        ?: this.parent as? KtCallableReferenceExpression
+        // something.foo() with cursor in the method
+        ?: this.parent?.parent as? KtQualifiedExpression
+        // ?
+        ?: this as? KtNameReferenceExpression
+        // x ? y (infix)
+        ?: this.parent as? KtBinaryExpression
+        // x()
+        ?: this as? KtCallExpression
+        // x (constant)
+        ?: this as? KtConstantExpression
+}
+
 private fun completableElement(file: CompiledFile, cursor: Int): Pair<KtElement, Boolean>? {
     val parsed = file.parseAtPoint(cursor - 1) ?: return null
     val asGlobal = isGlobalCall(parsed)
@@ -254,35 +279,12 @@ private fun completableElement(file: CompiledFile, cursor: Int): Pair<KtElement,
             if (asGlobal) asGlobalCompletable(file, cursor, parsed) else null
      ) ?: parsed
 
-                                     // import x.y.?
-    val elementAsType = el.findParent<KtImportDirective>()
-        // package x.y.?
-        ?: el.findParent<KtPackageDirective>()
-        // :?
-        ?: el as? KtUserType
-        ?: el.parent as? KtTypeElement
-        // .?
-        ?: el as? KtQualifiedExpression
-        ?: el.parent as? KtQualifiedExpression
-        // something::?
-        ?: el as? KtCallableReferenceExpression
-        ?: el.parent as? KtCallableReferenceExpression
-        // something.foo() with cursor in the method
-        ?: el.parent?.parent as? KtQualifiedExpression
-        // ?
-        ?: el as? KtNameReferenceExpression
-        // x ? y (infix)
-        ?: el.parent as? KtBinaryExpression
-        // x()
-        ?: el as? KtCallExpression
-        // x (constant)
-        ?: el as? KtConstantExpression
-
-    return elementAsType?.let {
+    return el.asKtClass()?.let {
         Pair(it, asGlobal)
     }
 }
 
+@Suppress("LongMethod", "ReturnCount", "CyclomaticComplexMethod")
 private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement, infixCall: Boolean): Sequence<DeclarationDescriptor> {
     return when (surroundingElement) {
         // import x.y.?
