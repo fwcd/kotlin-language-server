@@ -65,6 +65,48 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
     }
 }
 
+class InfixMethodTest : SingleFileTestFixture("completions", "InfixFunctions.kt") {
+    @Test fun `complete member function`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 10, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem(startsWith("cmpB")))
+        assertThat(labels, not(hasItem(startsWith("cmpA"))))
+    }
+
+    @Test fun `includes completion for stdlib`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 15, 10)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasSize(2))
+        assertThat(labels, hasItem(startsWith("and")))
+        assertThat(labels, hasItem("andTo"))
+    }
+
+    @Test fun `complete extension function`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 19, 9)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("funcA"))
+    }
+
+    @Test fun `complete global scope`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 26, 11)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasSize(3))
+        assertThat(labels, hasItem("ord"))
+    }
+
+    @Test fun `has global completions for binary expression`() {
+        val completions = languageServer.textDocumentService.completion(completionParams(file, 30, 7)).get().right!!
+        val labels = completions.items.map { it.label }
+
+        assertThat(labels, hasItem("funcA"))
+        assertThat(labels.filter { it.startsWith("and") }, hasSize(2))
+    }
+}
+
 class InstanceMembersJava : SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
     @Test fun `convert getFileName to fileName`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 14)).get().right!!
