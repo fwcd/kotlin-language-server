@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
 import java.nio.file.Paths
 
-private const val MAX_PATH_LENGTH = 255
+private const val MAX_PATH_LENGTH = 65535
 
 private object ClassPathMetadataCache : IntIdTable() {
     val includesSources = bool("includessources")
