@@ -98,7 +98,7 @@ class KotlinTextDocumentService(
 
     override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>> = async.compute {
         val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.ALWAYS)
-        provideHints(file, config.hints)
+        provideHints(file, config.inlayHints)
     }
 
     override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {
