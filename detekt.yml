@@ -3,16 +3,19 @@ config:
   warningsAsErrors: false
 
 comments:
-  excludes: ["**/src/test/**"]
+  excludes: &standardExcludes
+    - '**/bin/**'
+    - '**/build/**'
+    - '**/src/test/**'
 
 complexity:
-  excludes: ["**/src/test/**"]
+  excludes: *standardExcludes
 
 empty-blocks:
-  excludes: ["**/src/test/**"]
+  excludes: *standardExcludes
 
 exceptions:
-  excludes: ["**/src/test/**"]
+  excludes: *standardExcludes
   SwallowedException:
     ignoredExceptionTypes:
       - CancellationException
@@ -23,16 +26,16 @@ exceptions:
       - MissingPropertyException
 
 naming:
-  excludes: ["**/src/test/resources/**"]
+  excludes: *standardExcludes
 
 performance:
-  excludes: ["**/src/test/resources/**"]
+  excludes: *standardExcludes
 
 potential-bugs:
-  excludes: ["**/src/test/resources/**"]
+  excludes: *standardExcludes
 
 style:
-  excludes: ["**/src/test/resources/**"]
+  excludes: *standardExcludes
   MaxLineLength:
     active: false
   WildcardImport:
