@@ -25,6 +25,7 @@ code completion:
 code quality:
   - changed-files:
       - any-glob-to-any-file:
+          - detekt.yml
           - server/src/test/**
           - shared/src/test/**
 
