@@ -8,6 +8,7 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 - Provide infix function completions (#521)
 - Support Gradle 8.5 and Kotlin 1.9.20 (#537)
 - Make .kts and .gradle.kts language features opt-in (#536)
+
 Thanks to @ElamC, @themkat, @chenrui333, @calamont, @ks-korovina and @daplf for
 your contributions!
 
