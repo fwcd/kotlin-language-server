@@ -33,6 +33,16 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
         assertThat(warnings, empty<Diagnostic>())
     }
 
+    @Test fun `disable diagnostics`() {
+        languageServer.config.diagnostics.enabled = false
+
+        // Trigger a diagnostics update via a dummy change.
+        replace(file, 1, 1, "", " ")
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+
+        assertThat(diagnostics, empty<Diagnostic>())
+    }
+
     @Test fun `only lint once for many edits in a short period`() {
         var text = "1"
         for (i in 1..10) {
