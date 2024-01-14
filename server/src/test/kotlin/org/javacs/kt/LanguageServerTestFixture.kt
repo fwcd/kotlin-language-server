@@ -12,7 +12,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
     val languageServer = createLanguageServer()
 
-    val diagnostics = mutableListOf<Diagnostic>()
+    var diagnostics = listOf<Diagnostic>()
     val errors: List<Diagnostic>
         get() = diagnostics.filter { it.severity == DiagnosticSeverity.Error }
     val warnings: List<Diagnostic>
@@ -151,8 +151,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     // LanguageClient functions
 
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        this.diagnostics.clear()
-        this.diagnostics.addAll(diagnostics.diagnostics)
+        this.diagnostics = diagnostics.diagnostics
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {
