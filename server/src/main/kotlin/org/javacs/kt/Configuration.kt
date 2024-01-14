@@ -20,7 +20,7 @@ public data class CompletionConfiguration(
     val snippets: SnippetsConfiguration = SnippetsConfiguration()
 )
 
-public data class LintingConfiguration(
+public data class DiagnosticsConfiguration(
     /** The time interval between subsequent lints in ms. */
     var debounceTime: Long = 250L
 )
@@ -85,7 +85,7 @@ class GsonPathConverter : JsonDeserializer<Path?> {
 public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
-    val linting: LintingConfiguration = LintingConfiguration(),
+    val diagnostics: DiagnosticsConfiguration = DiagnosticsConfiguration(),
     var indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
     val hints: InlayHintsConfiguration = InlayHintsConfiguration()

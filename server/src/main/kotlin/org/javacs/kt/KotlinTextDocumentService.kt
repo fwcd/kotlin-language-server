@@ -46,7 +46,7 @@ class KotlinTextDocumentService(
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
@@ -267,7 +267,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     }
 
     fun lintAll() {

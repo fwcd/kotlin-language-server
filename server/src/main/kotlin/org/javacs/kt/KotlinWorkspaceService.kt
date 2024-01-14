@@ -85,7 +85,7 @@ class KotlinWorkspaceService(
         settings?.get("kotlin")?.asJsonObject?.apply {
             // Update deprecated configuration keys
             get("debounceTime")?.asLong?.let {
-                config.linting.debounceTime = it
+                config.diagnostics.debounceTime = it
                 docService.updateDebouncer()
             }
             get("snippetsEnabled")?.asBoolean?.let { config.completion.snippets.enabled = it }
@@ -110,12 +110,16 @@ class KotlinWorkspaceService(
                 get("chainedHints")?.asBoolean?.let { hints.chainedHints = it }
             }
 
-            // Update linter options
-            get("linting")?.asJsonObject?.apply {
-                val linting = config.linting
-                get("debounceTime")?.asLong?.let {
-                    linting.debounceTime = it
-                    docService.updateDebouncer()
+            // Update diagnostics options
+            // Note that the 'linting' key is deprecated and only kept
+            // for backwards compatibility.
+            for (diagnosticsKey in listOf("linting", "diagnostics")) {
+                get(diagnosticsKey)?.asJsonObject?.apply {
+                    val diagnostics = config.diagnostics
+                    get("debounceTime")?.asLong?.let {
+                        diagnostics.debounceTime = it
+                        docService.updateDebouncer()
+                    }
                 }
             }
 
