@@ -3,10 +3,10 @@ config:
   warningsAsErrors: false
 
 comments:
-  excludes: ["**/src/test/resources/**"]
+  excludes: ["**/src/test/**"]
 
 complexity:
-  excludes: ["**/src/test/resources/**"]
+  excludes: ["**/src/test/**"]
 
 empty-blocks:
   excludes: ["**/src/test/**"]
