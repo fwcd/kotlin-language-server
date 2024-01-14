@@ -6,6 +6,7 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
 import org.eclipse.lsp4j.InitializeParams
+import org.eclipse.lsp4j.DiagnosticSeverity
 import java.lang.reflect.Type
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
@@ -21,6 +22,10 @@ public data class CompletionConfiguration(
 )
 
 public data class DiagnosticsConfiguration(
+    /** Whether diagnostics are enabled. */
+    var enabled: Boolean = true,
+    /** The minimum severity of enabled diagnostics. */
+    var level: DiagnosticSeverity = DiagnosticSeverity.Hint,
     /** The time interval between subsequent lints in ms. */
     var debounceTime: Long = 250L
 )

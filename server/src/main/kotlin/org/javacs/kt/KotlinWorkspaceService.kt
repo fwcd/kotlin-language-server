@@ -116,6 +116,17 @@ class KotlinWorkspaceService(
             for (diagnosticsKey in listOf("linting", "diagnostics")) {
                 get(diagnosticsKey)?.asJsonObject?.apply {
                     val diagnostics = config.diagnostics
+                    get("enabled")?.asBoolean?.let {
+                        diagnostics.enabled = it
+                    }
+                    get("level")?.asString?.let {
+                        diagnostics.level = when (it.lowercase()) {
+                            "error" -> DiagnosticSeverity.Error
+                            "warning" -> DiagnosticSeverity.Warning
+                            "information" -> DiagnosticSeverity.Information
+                            else -> DiagnosticSeverity.Hint
+                        }
+                    }
                     get("debounceTime")?.asLong?.let {
                         diagnostics.debounceTime = it
                         docService.updateDebouncer()
