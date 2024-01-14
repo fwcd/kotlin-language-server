@@ -23,8 +23,6 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
         languageServer.config.diagnostics.level = DiagnosticSeverity.Error
 
         // Trigger a diagnostics update via a dummy change.
-        // TODO: Use the LSP configuration change notification mechanism instead
-        // and automatically update diagnostics.
         replace(file, 6, 1, "", " ")
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
 
