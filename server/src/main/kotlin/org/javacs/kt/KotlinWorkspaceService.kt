@@ -135,6 +135,13 @@ class KotlinWorkspaceService(
                 }
             }
 
+            // Update scripts options
+            get("scripts")?.asJsonObject?.apply {
+                val scripts = config.scripts
+                get("enabled")?.asBoolean?.let { scripts.enabled = it }
+                get("buildScriptsEnabled")?.asBoolean?.let { scripts.buildScriptsEnabled = it }
+            }
+
             // Update code-completion options
             get("completion")?.asJsonObject?.apply {
                 val completion = config.completion

@@ -22,15 +22,16 @@ import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
-    val config = Configuration()
+class KotlinLanguageServer(
+    val config: Configuration = Configuration()
+) : LanguageServer, LanguageClientAware, Closeable {
     val databaseService = DatabaseService()
-    val classPath = CompilerClassPath(config.compiler, databaseService)
+    val classPath = CompilerClassPath(config.compiler, config.scripts, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
-    val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
+    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
