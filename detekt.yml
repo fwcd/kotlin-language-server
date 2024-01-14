@@ -35,3 +35,6 @@ style:
   excludes: ["**/src/test/resources/**"]
   MaxLineLength:
     active: false
+  WildcardImport:
+    excludeImports:
+      - org.hamcrest.Matchers.*
