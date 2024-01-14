@@ -65,7 +65,8 @@ private class NotifySourcePath(private val sp: SourcePath) {
  */
 class SourceFiles(
     private val sp: SourcePath,
-    private val contentProvider: URIContentProvider
+    private val contentProvider: URIContentProvider,
+    private val scriptsConfig: ScriptsConfiguration
 ) {
     private val workspaceRoots = mutableSetOf<Path>()
     private var exclusions = SourceExclusions(workspaceRoots)
@@ -175,6 +176,19 @@ class SourceFiles(
         updateExclusions()
     }
 
+    private fun findSourceFiles(root: Path): Set<URI> {
+        val glob = if (scriptsConfig.enabled) "*.{kt,kts}" else "*.kt"
+        val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:$glob")
+        return SourceExclusions(root)
+            .walkIncluded()
+            .filter {
+                sourceMatcher.matches(it.fileName)
+                && (scriptsConfig.buildScriptsEnabled || !it.endsWith(".gradle.kts"))
+            }
+            .map(Path::toUri)
+            .toSet()
+    }
+
     private fun updateExclusions() {
         exclusions = SourceExclusions(workspaceRoots)
     }
@@ -220,15 +234,6 @@ private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): S
         if (next == -1) return writer.toString()
         else writer.write(next)
     }
-}
-
-private fun findSourceFiles(root: Path): Set<URI> {
-    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
-    return SourceExclusions(root)
-        .walkIncluded()
-        .filter { sourceMatcher.matches(it.fileName) }
-        .map(Path::toUri)
-        .toSet()
 }
 
 private fun logAdded(sources: Collection<URI>, rootPath: Path?) {
