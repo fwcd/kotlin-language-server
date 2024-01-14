@@ -1,47 +1,71 @@
 build:
-  - buildSrc/**
-  - server/build.gradle.kts
-  - shared/build.gradle.kts
-  - build.gradle.kts
-  - gradle
-  - gradle.properties
-  - gradlew
-  - gradlew.bat
-  - settings.gradle.kts
+  - changed-files:
+      - any-glob-to-any-file:
+          - buildSrc/**
+          - server/build.gradle.kts
+          - shared/build.gradle.kts
+          - build.gradle.kts
+          - gradle
+          - gradle.properties
+          - gradlew
+          - gradlew.bat
+          - settings.gradle.kts
 
 ci-cd:
-  - .github/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
 
 code completion:
-  - server/src/main/kotlin/org/javacs/kt/completion/**
-  - server/src/test/resources/completions/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/completion/**
+          - server/src/test/resources/completions/**
 
 code quality:
-  - server/src/test/**
-  - shared/src/test/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/test/**
+          - shared/src/test/**
 
 dependency resolution:
-  - shared/src/main/kotlin/org/javacs/kt/classpath/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/**
 
 diagnostics:
-  - server/src/main/kotlin/org/javacs/kt/diagnostic/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/diagnostic/**
 
 docker:
-  - Dockerfile
+  - changed-files:
+      - any-glob-to-any-file:
+          - Dockerfile
 
 editor support:
-  - EDITORS.md
+  - changed-files:
+      - any-glob-to-any-file:
+          - EDITORS.md
 
 formatting:
-  - server/src/main/kotlin/org/javacs/kt/formatting/**
-  - server/test/resources/formatting/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/formatting/**
+          - server/test/resources/formatting/**
 
 gradle:
-  - shared/src/main/kotlin/org/javacs/kt/classpath/Gradle*
-  - shared/src/main/resources/*.gradle
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/Gradle*
+          - shared/src/main/resources/*.gradle
 
 index:
-  - server/src/main/kotlin/org/javacs/kt/index/**
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/index/**
 
 maven:
-  - shared/src/main/kotlin/org/javacs/kt/classpath/Maven*
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/Maven*
