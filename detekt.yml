@@ -9,12 +9,10 @@ complexity:
   excludes: ["**/src/test/resources/**"]
 
 empty-blocks:
-  excludes: ["**/src/test/resources/**"]
-  EmptyCatchBlock:
-    allowedExceptionNameRegex: '_|(cancel|interrupt|ignore|expected).*'
+  excludes: ["**/src/test/**"]
 
 exceptions:
-  excludes: ["**/src/test/resources/**"]
+  excludes: ["**/src/test/**"]
   SwallowedException:
     ignoredExceptionTypes:
       - CancellationException
