@@ -37,4 +37,5 @@ style:
     active: false
   WildcardImport:
     excludeImports:
+      - java.util.*
       - org.hamcrest.Matchers.*
