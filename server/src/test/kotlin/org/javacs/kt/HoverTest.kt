@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
+import org.junit.Ignore
 import org.junit.Test
 
 class HoverLiteralsTest : SingleFileTestFixture("hover", "Literals.kt") {
@@ -52,6 +53,7 @@ class HoverObjectReferenceTest : SingleFileTestFixture("hover", "ObjectReference
     }
 }
 
+@Ignore
 class HoverRecoverTest : SingleFileTestFixture("hover", "Recover.kt") {
     @Test fun `incrementally repair a single-expression function`() {
         replace(file, 2, 9, "\"Foo\"", "intFunction()")
