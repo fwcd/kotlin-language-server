@@ -9,7 +9,7 @@ import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
 
-class DiagnosticTest : SingleFileTestFixture("diagnostic", "DiagnosticErrors.kt") {
+class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
     @Test fun `report error on open`() {
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
 
@@ -21,7 +21,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "DiagnosticErrors.kt"
         for (i in 1..10) {
             val newText = text + "1"
 
-            replace(file, 3, 16, text, newText)
+            replace(file, 7, 16, text, newText)
             text = newText
         }
 
@@ -37,11 +37,12 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "DiagnosticErrors.kt"
         languageServer.textDocumentService.lintRecompilationCallback = {
             if (callbackCount++ == 0) {
                 diagnostics.clear()
-                replace(file, 3, 9, "return 11", "")
+                replace(file, 7, 9, "return 11", "")
                 languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(TextDocumentIdentifier(uri(file).toString()))).get()
             }
         }
-        replace(file, 3, 16, "", "1")
+        replace(file, 6, 9, "Foo()", "")
+        replace(file, 7, 16, "", "1")
 
         while (callbackCount < 2) {
             try {
