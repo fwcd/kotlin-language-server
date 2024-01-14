@@ -2,6 +2,7 @@ package org.javacs.kt
 
 import java.util.concurrent.CancellationException
 import org.eclipse.lsp4j.Diagnostic
+import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.DocumentSymbolParams
 import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.TextDocumentIdentifier
@@ -10,10 +11,12 @@ import org.junit.Assert.assertThat
 import org.junit.Test
 
 class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
-    @Test fun `report error on open`() {
+    @Test fun `report diagnostics on open`() {
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
 
-        assertThat(diagnostics, not(empty<Diagnostic>()))
+        assertThat(diagnostics, hasSize(2))
+        assertThat(diagnostics.filter { it.severity == DiagnosticSeverity.Warning }, hasSize(1))
+        assertThat(diagnostics.filter { it.severity == DiagnosticSeverity.Error }, hasSize(1))
     }
 
     @Test fun `only lint once for many edits in a short period`() {
