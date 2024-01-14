@@ -91,7 +91,7 @@ public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val diagnostics: DiagnosticsConfiguration = DiagnosticsConfiguration(),
-    var indexing: IndexingConfiguration = IndexingConfiguration(),
+    val indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
     val hints: InlayHintsConfiguration = InlayHintsConfiguration()
 )
