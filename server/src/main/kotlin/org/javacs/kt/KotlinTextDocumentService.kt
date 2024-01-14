@@ -46,7 +46,7 @@ class KotlinTextDocumentService(
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
@@ -267,7 +267,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     }
 
     fun lintAll() {
@@ -305,7 +305,9 @@ class KotlinTextDocumentService(
     }
 
     private fun reportDiagnostics(compiled: Collection<URI>, kotlinDiagnostics: Diagnostics) {
-        val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
+        val langServerDiagnostics = kotlinDiagnostics
+            .flatMap(::convertDiagnostic)
+            .filter { config.diagnostics.enabled && it.second.severity <= config.diagnostics.level }
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((uri, diagnostics) in byFile) {

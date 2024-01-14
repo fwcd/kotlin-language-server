@@ -6,6 +6,7 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
 import com.google.gson.JsonParseException
 import org.eclipse.lsp4j.InitializeParams
+import org.eclipse.lsp4j.DiagnosticSeverity
 import java.lang.reflect.Type
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
@@ -20,7 +21,11 @@ public data class CompletionConfiguration(
     val snippets: SnippetsConfiguration = SnippetsConfiguration()
 )
 
-public data class LintingConfiguration(
+public data class DiagnosticsConfiguration(
+    /** Whether diagnostics are enabled. */
+    var enabled: Boolean = true,
+    /** The minimum severity of enabled diagnostics. */
+    var level: DiagnosticSeverity = DiagnosticSeverity.Hint,
     /** The time interval between subsequent lints in ms. */
     var debounceTime: Long = 250L
 )
@@ -85,7 +90,7 @@ class GsonPathConverter : JsonDeserializer<Path?> {
 public data class Configuration(
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
-    val linting: LintingConfiguration = LintingConfiguration(),
+    val diagnostics: DiagnosticsConfiguration = DiagnosticsConfiguration(),
     var indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
     val hints: InlayHintsConfiguration = InlayHintsConfiguration()

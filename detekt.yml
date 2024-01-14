@@ -7,14 +7,15 @@ comments:
 
 complexity:
   excludes: ["**/src/test/resources/**"]
-  
+
 empty-blocks:
-  excludes: ["**/src/test/resources/**"]
-  
+  excludes: ["**/src/test/**"]
+
 exceptions:
-  excludes: ["**/src/test/resources/**"]
+  excludes: ["**/src/test/**"]
   SwallowedException:
     ignoredExceptionTypes:
+      - CancellationException
       - InterruptedException
       - MalformedURLException
       - NumberFormatException
@@ -29,8 +30,12 @@ performance:
 
 potential-bugs:
   excludes: ["**/src/test/resources/**"]
-  
+
 style:
   excludes: ["**/src/test/resources/**"]
   MaxLineLength:
     active: false
+  WildcardImport:
+    excludeImports:
+      - java.util.*
+      - org.hamcrest.Matchers.*

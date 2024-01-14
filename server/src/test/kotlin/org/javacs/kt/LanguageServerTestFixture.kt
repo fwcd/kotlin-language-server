@@ -11,7 +11,12 @@ import java.util.concurrent.CompletableFuture
 abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
     val languageServer = createLanguageServer()
-    val diagnostics = mutableListOf<Diagnostic>()
+
+    var diagnostics = listOf<Diagnostic>()
+    val errors: List<Diagnostic>
+        get() = diagnostics.filter { it.severity == DiagnosticSeverity.Error }
+    val warnings: List<Diagnostic>
+        get() = diagnostics.filter { it.severity == DiagnosticSeverity.Warning }
 
     fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
         val testResources = testResourcesRoot()
@@ -146,7 +151,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     // LanguageClient functions
 
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        this.diagnostics.addAll(diagnostics.diagnostics)
+        this.diagnostics = diagnostics.diagnostics
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {
