@@ -10,6 +10,8 @@ complexity:
 
 empty-blocks:
   excludes: ["**/src/test/resources/**"]
+  EmptyCatchBlock:
+    allowedExceptionNameRegex: '_|(cancel|interrupt|ignore|expected).*'
 
 exceptions:
   excludes: ["**/src/test/resources/**"]
