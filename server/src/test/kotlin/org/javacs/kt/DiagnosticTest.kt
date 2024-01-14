@@ -19,6 +19,21 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
         assertThat(warnings, hasSize(1))
     }
 
+    @Test fun `report only errors`() {
+        languageServer.config.diagnostics.level = DiagnosticSeverity.Error
+        diagnostics.clear()
+
+        // Trigger a diagnostics update via a dummy change.
+        // TODO: Use the LSP configuration change notification mechanism instead
+        // and automatically update diagnostics.
+        replace(file, 6, 1, "", " ")
+        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+
+        assertThat(diagnostics, hasSize(1))
+        assertThat(errors, hasSize(1))
+        assertThat(warnings, empty<Diagnostic>())
+    }
+
     @Test fun `only lint once for many edits in a short period`() {
         var text = "1"
         for (i in 1..10) {
