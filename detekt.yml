@@ -7,14 +7,15 @@ comments:
 
 complexity:
   excludes: ["**/src/test/resources/**"]
-  
+
 empty-blocks:
   excludes: ["**/src/test/resources/**"]
-  
+
 exceptions:
   excludes: ["**/src/test/resources/**"]
   SwallowedException:
     ignoredExceptionTypes:
+      - CancellationException
       - InterruptedException
       - MalformedURLException
       - NumberFormatException
@@ -29,7 +30,7 @@ performance:
 
 potential-bugs:
   excludes: ["**/src/test/resources/**"]
-  
+
 style:
   excludes: ["**/src/test/resources/**"]
   MaxLineLength:
