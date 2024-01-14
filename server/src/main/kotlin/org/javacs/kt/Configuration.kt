@@ -101,5 +101,5 @@ public data class Configuration(
     val scripts: ScriptsConfiguration = ScriptsConfiguration(),
     val indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
-    val hints: InlayHintsConfiguration = InlayHintsConfiguration()
+    val inlayHints: InlayHintsConfiguration = InlayHintsConfiguration()
 )

@@ -45,10 +45,10 @@ abstract class LanguageServerTestFixture(
             uri = workspaceRoot.toUri().toString()
         })
 
-        languageServer.config.hints.apply {
-            this.typeHints = true
-            this.parameterHints = true
-            this.chainedHints = true
+        languageServer.config.inlayHints.apply {
+            typeHints = true
+            parameterHints = true
+            chainedHints = true
         }
         languageServer.sourcePath.indexEnabled = false
         languageServer.connect(this)

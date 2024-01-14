@@ -105,10 +105,10 @@ class KotlinWorkspaceService(
 
             // Update options for inlay hints
             get("inlayHints")?.asJsonObject?.apply {
-                val hints = config.hints
-                get("typeHints")?.asBoolean?.let { hints.typeHints = it }
-                get("parameterHints")?.asBoolean?.let { hints.parameterHints = it }
-                get("chainedHints")?.asBoolean?.let { hints.chainedHints = it }
+                val inlayHints = config.inlayHints
+                get("typeHints")?.asBoolean?.let { inlayHints.typeHints = it }
+                get("parameterHints")?.asBoolean?.let { inlayHints.parameterHints = it }
+                get("chainedHints")?.asBoolean?.let { inlayHints.chainedHints = it }
             }
 
             // Update diagnostics options
