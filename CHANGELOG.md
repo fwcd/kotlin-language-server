@@ -3,6 +3,14 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.8]
+- Add optional inlay hints (#498)
+- Provide infix function completions (#521)
+- Support Gradle 8.5 and Kotlin 1.9.20 (#537)
+- Make .kts and .gradle.kts language features opt-in (#536)
+Thanks to @ElamC, @themkat, @chenrui333, @calamont, @ks-korovina and @daplf for
+your contributions!
+
 ## [1.3.7]
 - Fix definition lookup for external sources
 - Fix binding context query for other definition lookups
