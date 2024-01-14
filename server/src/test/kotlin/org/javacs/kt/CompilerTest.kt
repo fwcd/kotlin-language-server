@@ -41,6 +41,7 @@ private class FileToEdit {
 
         @JvmStatic @AfterClass
         fun tearDown() {
+            compiler.close()
             outputDirectory.delete()
         }
     }
@@ -94,9 +95,5 @@ private class FileToEdit {
         val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!
 
         assertThat(target.name, hasToString("intFunction"))
-    }
-
-    @After fun cleanUp() {
-        compiler.close()
     }
 }
