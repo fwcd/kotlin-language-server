@@ -151,6 +151,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     // LanguageClient functions
 
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
+        this.diagnostics.clear()
         this.diagnostics.addAll(diagnostics.diagnostics)
     }
 

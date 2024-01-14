@@ -21,7 +21,6 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
     @Test fun `report only errors`() {
         languageServer.config.diagnostics.level = DiagnosticSeverity.Error
-        diagnostics.clear()
 
         // Trigger a diagnostics update via a dummy change.
         // TODO: Use the LSP configuration change notification mechanism instead
@@ -54,7 +53,6 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
         languageServer.textDocumentService.lintRecompilationCallback = {
             if (callbackCount++ == 0) {
-                diagnostics.clear()
                 replace(file, 7, 9, "return 11", "")
                 languageServer.textDocumentService.documentSymbol(DocumentSymbolParams(TextDocumentIdentifier(uri(file).toString()))).get()
             }
