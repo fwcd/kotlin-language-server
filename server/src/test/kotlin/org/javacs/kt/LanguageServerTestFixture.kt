@@ -8,9 +8,12 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : LanguageClient {
+abstract class LanguageServerTestFixture(
+    relativeWorkspaceRoot: String,
+    config: Configuration = Configuration()
+) : LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
-    val languageServer = createLanguageServer()
+    val languageServer = createLanguageServer(config)
 
     var diagnostics = listOf<Diagnostic>()
     val errors: List<Diagnostic>
@@ -23,8 +26,8 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
         return testResources.resolve(relativeWorkspaceRoot)
     }
 
-    private fun createLanguageServer(): KotlinLanguageServer {
-        val languageServer = KotlinLanguageServer()
+    private fun createLanguageServer(config: Configuration): KotlinLanguageServer {
+        val languageServer = KotlinLanguageServer(config)
         val init = InitializeParams().apply {
             capabilities = ClientCapabilities().apply {
                 textDocument = TextDocumentClientCapabilities().apply {
@@ -177,7 +180,11 @@ fun testResourcesRoot(): Path {
     return Paths.get(anchorTxt).parent!!
 }
 
-open class SingleFileTestFixture(relativeWorkspaceRoot: String, val file: String) : LanguageServerTestFixture(relativeWorkspaceRoot) {
+open class SingleFileTestFixture(
+    relativeWorkspaceRoot: String,
+    val file: String,
+    config: Configuration = Configuration()
+) : LanguageServerTestFixture(relativeWorkspaceRoot, config) {
     @Before fun openFile() {
         open(file)
 
