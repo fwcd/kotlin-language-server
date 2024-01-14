@@ -15,8 +15,8 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
         languageServer.textDocumentService.debounceLint.waitForPendingTask()
 
         assertThat(diagnostics, hasSize(2))
-        assertThat(diagnostics.filter { it.severity == DiagnosticSeverity.Warning }, hasSize(1))
-        assertThat(diagnostics.filter { it.severity == DiagnosticSeverity.Error }, hasSize(1))
+        assertThat(errors, hasSize(1))
+        assertThat(warnings, hasSize(1))
     }
 
     @Test fun `only lint once for many edits in a short period`() {
