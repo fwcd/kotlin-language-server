@@ -25,7 +25,7 @@ import java.util.concurrent.CompletableFuture.completedFuture
 class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
     val config = Configuration()
     val databaseService = DatabaseService()
-    val classPath = CompilerClassPath(config.compiler, databaseService)
+    val classPath = CompilerClassPath(config.compiler, config.scripts, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
