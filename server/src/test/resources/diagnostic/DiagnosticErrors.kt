@@ -1,4 +1,4 @@
-private class LintErrors {
+private class DiagnosticErrors {
     fun foo() {
         return 1
     }
