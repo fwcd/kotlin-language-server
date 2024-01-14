@@ -45,7 +45,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
     @Test fun `only lint once for many edits in a short period`() {
         var text = "1"
-        for (i in 1..10) {
+        repeat(10) {
             val newText = text + "1"
 
             replace(file, 7, 16, text, newText)
