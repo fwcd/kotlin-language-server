@@ -80,6 +80,7 @@ class KotlinWorkspaceService(
         }
     }
 
+    @Suppress("LongMethod")
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
         val settings = params.settings as? JsonObject
         settings?.get("kotlin")?.asJsonObject?.apply {
