@@ -188,7 +188,7 @@ class SourceFiles(
             .toSet()
     }
 
-    private fun updateExclusions() {
+    fun updateExclusions() {
         exclusions = SourceExclusions(workspaceRoots, scriptsConfig)
     }
 
