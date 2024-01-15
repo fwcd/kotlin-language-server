@@ -23,7 +23,7 @@ import org.javacs.kt.LOG
 
 fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
     val (signatures, activeDeclaration, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
-    return SignatureHelp(signatures, activeDeclaration, activeParameter)
+    return SignatureHelp(signatures, (if (activeDeclaration >= 0) activeDeclaration else null), (if (activeDeclaration >= 0) activeParameter else null))
 }
 
 /**
