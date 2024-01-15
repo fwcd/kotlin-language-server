@@ -1,7 +1,7 @@
 # Running this image will start a language server that listens for TCP connections on port 49100
 # Every connection will be run in a forked child process
 
-ARG JDKVERSION=17
+ARG JDKVERSION=21
 
 FROM --platform=$BUILDPLATFORM eclipse-temurin:${JDKVERSION} AS builder
 
