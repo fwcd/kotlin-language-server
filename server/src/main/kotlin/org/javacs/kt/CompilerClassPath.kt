@@ -157,18 +157,18 @@ class CompilerClassPath(
 
     private fun isBuildScript(file: Path): Boolean = file.fileName.toString().let { it == "pom.xml" || it == "build.gradle" || it == "build.gradle.kts" }
 
+    private fun findJavaSourceFiles(root: Path): Set<Path> {
+        val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
+        return SourceExclusions(listOf(root), scriptsConfig)
+            .walkIncluded()
+            .filter { sourceMatcher.matches(it.fileName) }
+            .toSet()
+    }
+
     override fun close() {
         compiler.close()
         outputDirectory.delete()
     }
-}
-
-private fun findJavaSourceFiles(root: Path): Set<Path> {
-    val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
-    return SourceExclusions(root)
-        .walkIncluded()
-        .filter { sourceMatcher.matches(it.fileName) }
-        .toSet()
 }
 
 private fun logAdded(sources: Collection<Path>, name: String) {
