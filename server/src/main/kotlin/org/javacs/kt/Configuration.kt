@@ -30,13 +30,6 @@ public data class DiagnosticsConfiguration(
     var debounceTime: Long = 250L
 )
 
-public data class ScriptsConfiguration(
-    /** Whether .kts scripts are handled. */
-    var enabled: Boolean = false,
-    /** Whether .gradle.kts scripts are handled. Only considered if scripts are enabled in general. */
-    var buildScriptsEnabled: Boolean = false
-)
-
 public data class JVMConfiguration(
     /** Which JVM target the Kotlin compiler uses. See Compiler.jvmTargetFrom for possible values. */
     var target: String = "default"

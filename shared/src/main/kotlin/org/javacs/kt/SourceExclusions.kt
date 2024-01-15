@@ -9,10 +9,18 @@ import java.nio.file.Paths
 
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them
-class SourceExclusions(private val workspaceRoots: Collection<Path>) {
-	private val excludedPatterns = listOf(".*", "bazel-*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }
-
-    constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
+class SourceExclusions(
+    private val workspaceRoots: Collection<Path>,
+    private val scriptsConfig: ScriptsConfiguration
+) {
+	private val excludedPatterns = (listOf(
+        ".*", "bazel-*", "bin", "build", "node_modules", "target"
+    ) + when {
+        !scriptsConfig.enabled -> listOf("*.kts")
+        !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
+        else -> emptyList()
+    })
+        .map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
     /** Finds all non-excluded files recursively. */
     fun walkIncluded(): Sequence<Path> = workspaceRoots.asSequence().flatMap { root ->

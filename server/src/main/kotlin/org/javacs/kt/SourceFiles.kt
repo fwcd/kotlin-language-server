@@ -69,13 +69,15 @@ class SourceFiles(
     private val scriptsConfig: ScriptsConfiguration
 ) {
     private val workspaceRoots = mutableSetOf<Path>()
-    private var exclusions = SourceExclusions(workspaceRoots)
+    private var exclusions = SourceExclusions(workspaceRoots, scriptsConfig)
     private val files = NotifySourcePath(sp)
     private val open = mutableSetOf<URI>()
 
     fun open(uri: URI, content: String, version: Int) {
-        files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = !exclusions.isURIIncluded(uri))
-        open.add(uri)
+        if (exclusions.isURIIncluded(uri)) {
+            files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = false)
+            open.add(uri)
+        }
     }
 
     fun close(uri: URI) {
@@ -177,23 +179,21 @@ class SourceFiles(
     }
 
     private fun findSourceFiles(root: Path): Set<URI> {
-        val glob = if (scriptsConfig.enabled) "*.{kt,kts}" else "*.kt"
-        val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:$glob")
-        return SourceExclusions(root)
+        val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.{kt,kts}")
+        return SourceExclusions(listOf(root), scriptsConfig)
             .walkIncluded()
-            .filter {
-                sourceMatcher.matches(it.fileName)
-                && (scriptsConfig.buildScriptsEnabled || !it.endsWith(".gradle.kts"))
-            }
+            .filter { sourceMatcher.matches(it.fileName) }
             .map(Path::toUri)
             .toSet()
     }
 
     private fun updateExclusions() {
-        exclusions = SourceExclusions(workspaceRoots)
+        exclusions = SourceExclusions(workspaceRoots, scriptsConfig)
     }
 
     fun isOpen(uri: URI): Boolean = (uri in open)
+
+    fun isIncluded(uri: URI): Boolean = exclusions.isURIIncluded(uri)
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
