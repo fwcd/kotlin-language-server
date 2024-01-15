@@ -190,6 +190,7 @@ class SourceFiles(
 
     fun updateExclusions() {
         exclusions = SourceExclusions(workspaceRoots, scriptsConfig)
+        LOG.info("Updated exclusions: ${exclusions.excludedPatterns}")
     }
 
     fun isOpen(uri: URI): Boolean = (uri in open)
