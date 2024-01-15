@@ -154,6 +154,7 @@ class SourceFiles(
     }
 
     fun addWorkspaceRoot(root: Path) {
+        LOG.info("Searching $root using exclusions: ${exclusions.excludedPatterns}")
         val addSources = findSourceFiles(root)
 
         logAdded(addSources, root)
