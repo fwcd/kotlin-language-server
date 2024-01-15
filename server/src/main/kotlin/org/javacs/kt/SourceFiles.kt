@@ -192,6 +192,8 @@ class SourceFiles(
     }
 
     fun isOpen(uri: URI): Boolean = (uri in open)
+
+    fun isIncluded(uri: URI): Boolean = exclusions.isURIIncluded(uri)
 }
 
 private fun patch(sourceText: String, change: TextDocumentContentChangeEvent): String {
