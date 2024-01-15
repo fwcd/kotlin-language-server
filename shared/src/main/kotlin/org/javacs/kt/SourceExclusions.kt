@@ -13,13 +13,15 @@ class SourceExclusions(
     private val workspaceRoots: Collection<Path>,
     private val scriptsConfig: ScriptsConfiguration
 ) {
-	private val excludedPatterns = (listOf(
+	val excludedPatterns = (listOf(
         ".*", "bazel-*", "bin", "build", "node_modules", "target"
     ) + when {
         !scriptsConfig.enabled -> listOf("*.kts")
         !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
         else -> emptyList()
     })
+
+    private val exclusionMatchers = excludedPatterns
         .map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
     /** Finds all non-excluded files recursively. */
@@ -35,10 +37,10 @@ class SourceExclusions(
 
     /** Tests whether the given path is not excluded. */
     fun isPathIncluded(file: Path): Boolean = workspaceRoots.any { file.startsWith(it) }
-        && excludedPatterns.none { pattern ->
+        && exclusionMatchers.none { matcher ->
             workspaceRoots
                 .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
                 .flatMap { it } // Extract path segments
-                .any(pattern::matches)
+                .any(matcher::matches)
         }
 }

@@ -74,7 +74,7 @@ class SourceFiles(
     private val open = mutableSetOf<URI>()
 
     fun open(uri: URI, content: String, version: Int) {
-        if (exclusions.isURIIncluded(uri)) {
+        if (isIncluded(uri)) {
             files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = false)
             open.add(uri)
         }
@@ -98,7 +98,7 @@ class SourceFiles(
     }
 
     fun edit(uri: URI, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
-        if (exclusions.isURIIncluded(uri)) {
+        if (isIncluded(uri)) {
             val existing = files[uri]!!
             var newText = existing.content
 
@@ -143,7 +143,7 @@ class SourceFiles(
         null
     }
 
-    private fun isSource(uri: URI): Boolean = exclusions.isURIIncluded(uri) && languageOf(uri) != null
+    private fun isSource(uri: URI): Boolean = isIncluded(uri) && languageOf(uri) != null
 
     private fun languageOf(uri: URI): Language? {
         val fileName = uri.filePath?.fileName?.toString() ?: return null
@@ -154,6 +154,7 @@ class SourceFiles(
     }
 
     fun addWorkspaceRoot(root: Path) {
+        LOG.info("Searching $root using exclusions: ${exclusions.excludedPatterns}")
         val addSources = findSourceFiles(root)
 
         logAdded(addSources, root)
@@ -187,8 +188,9 @@ class SourceFiles(
             .toSet()
     }
 
-    private fun updateExclusions() {
+    fun updateExclusions() {
         exclusions = SourceExclusions(workspaceRoots, scriptsConfig)
+        LOG.info("Updated exclusions: ${exclusions.excludedPatterns}")
     }
 
     fun isOpen(uri: URI): Boolean = (uri in open)

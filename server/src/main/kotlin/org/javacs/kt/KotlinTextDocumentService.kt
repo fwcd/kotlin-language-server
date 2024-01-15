@@ -80,7 +80,10 @@ class KotlinTextDocumentService(
 
     private fun recover(uriString: String, position: Position, recompile: Recompile): Pair<CompiledFile, Int>? {
         val uri = parseURI(uriString)
-        if (!sf.isIncluded(uri)) return null
+        if (!sf.isIncluded(uri)) {
+            LOG.warn("URI is excluded, therefore cannot be recovered: $uri")
+            return null
+        }
         val content = sp.content(uri)
         val offset = offset(content, position.line, position.character)
         val shouldRecompile = when (recompile) {

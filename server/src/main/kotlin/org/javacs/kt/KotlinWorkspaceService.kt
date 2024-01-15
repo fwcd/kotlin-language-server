@@ -140,6 +140,7 @@ class KotlinWorkspaceService(
                 val scripts = config.scripts
                 get("enabled")?.asBoolean?.let { scripts.enabled = it }
                 get("buildScriptsEnabled")?.asBoolean?.let { scripts.buildScriptsEnabled = it }
+                sf.updateExclusions()
             }
 
             // Update code-completion options
