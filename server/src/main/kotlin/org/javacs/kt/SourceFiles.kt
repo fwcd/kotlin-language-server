@@ -74,8 +74,10 @@ class SourceFiles(
     private val open = mutableSetOf<URI>()
 
     fun open(uri: URI, content: String, version: Int) {
-        files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = !exclusions.isURIIncluded(uri))
-        open.add(uri)
+        if (exclusions.isURIIncluded(uri)) {
+            files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = false)
+            open.add(uri)
+        }
     }
 
     fun close(uri: URI) {
