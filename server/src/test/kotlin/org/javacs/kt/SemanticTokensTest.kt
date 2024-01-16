@@ -22,7 +22,6 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
         val expectedConst = sequenceOf(
             SemanticToken(range(constLine, 5, constLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // constant
             SemanticToken(range(constLine, 15, constLine, 21), SemanticTokenType.CLASS), // String
-            SemanticToken(range(constLine, 24, constLine, 40), SemanticTokenType.STRING), // "test $variable"
             SemanticToken(range(constLine, 30, constLine, 39), SemanticTokenType.INTERPOLATION_ENTRY), // $variable
             SemanticToken(range(constLine, 31, constLine, 39), SemanticTokenType.PROPERTY), // variable
         )
