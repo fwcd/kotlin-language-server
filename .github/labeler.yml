@@ -38,6 +38,7 @@ diagnostics:
   - changed-files:
       - any-glob-to-any-file:
           - server/src/main/kotlin/org/javacs/kt/diagnostic/**
+          - server/src/test/resources/diagnostic/**
 
 docker:
   - changed-files:
@@ -53,7 +54,7 @@ formatting:
   - changed-files:
       - any-glob-to-any-file:
           - server/src/main/kotlin/org/javacs/kt/formatting/**
-          - server/test/resources/formatting/**
+          - server/src/test/resources/formatting/**
 
 gradle:
   - changed-files:
