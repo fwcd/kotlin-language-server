@@ -70,3 +70,9 @@ maven:
   - changed-files:
       - any-glob-to-any-file:
           - shared/src/main/kotlin/org/javacs/kt/classpath/Maven*
+
+semantic tokens:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/semantictokens/**
+          - server/src/test/resources/semantictokens/**
