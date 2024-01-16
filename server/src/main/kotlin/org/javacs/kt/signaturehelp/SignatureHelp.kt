@@ -20,10 +20,11 @@ import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.javacs.kt.LOG
+import kotlin.math.abs
 
 fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
-    val (signatures, activeDeclaration, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
-    return SignatureHelp(signatures, (if (activeDeclaration >= 0) activeDeclaration else null), (if (activeDeclaration >= 0) activeParameter else null))
+    val (signatures, activeSignature, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
+    return SignatureHelp(signatures, activeSignature,activeParameter)
 }
 
 /**
@@ -41,14 +42,17 @@ fun getDocString(file: CompiledFile, cursor: Int): String {
 }
 
 // TODO better function name?
-private fun getSignatureTriplet(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int, Int>? {
+private fun getSignatureTriplet(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int?, Int?>? {
     val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return null
     val candidates = candidates(call, file)
-    val activeDeclaration = activeDeclaration(call, candidates)
+    if (candidates.isEmpty()) {
+        return null
+    }
+    val activeSignature = activeSignature(call, candidates)
     val activeParameter = activeParameter(call, cursor)
     val signatures = candidates.map(::toSignature)
 
-    return Triple(signatures, activeDeclaration, activeParameter)
+    return Triple(signatures, activeSignature, activeParameter)
 }
 
 private fun getSignatures(file: CompiledFile, cursor: Int): List<SignatureInformation>? {
@@ -97,8 +101,13 @@ private fun candidates(call: KtCallExpression, file: CompiledFile): List<Callabl
     return emptyList()
 }
 
-private fun activeDeclaration(call: KtCallExpression, candidates: List<CallableDescriptor>): Int {
-    return candidates.indexOfFirst { isCompatibleWith(call, it) }
+private fun activeSignature(call: KtCallExpression, candidates: List<CallableDescriptor>): Int? {
+    val activeIndex = candidates.indexOfFirst { isCompatibleWith(call, it) }
+    if (activeIndex < 0) {
+        LOG.warn("No activeSignature found, omitting from SignatureHelp response.")
+        return null
+    }
+    return activeIndex
 }
 
 private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescriptor): Boolean {
@@ -118,8 +127,8 @@ private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescript
     return true
 }
 
-private fun activeParameter(call: KtCallExpression, cursor: Int): Int {
-    val args = call.valueArgumentList ?: return -1
+private fun activeParameter(call: KtCallExpression, cursor: Int): Int? {
+    val args = call.valueArgumentList ?: return null
     val text = args.text
     if (text.length == 2)
         return 0
