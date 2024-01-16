@@ -12,18 +12,27 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
     @Test fun `tokenize file`() {
         val varLine = 1
         val constLine = 2
-        val classLine = 4
-        val funLine = 6
-        val enumLine = 8
+        val stringLine = 3
+        val classLine = 5
+        val funLine = 7
+        val enumLine = 9
 
         val expectedVar = sequenceOf(
             SemanticToken(range(varLine, 5, varLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION)), // variable
         )
+        // Neither string literals nor interpolations (which are both
+        // represented as string templates) are currently emitted as semantic
+        // tokens. This is to avoid "covering" interpolations with the literal.
+        // A more sophisticated implementation would slice up the string tokens
+        // to not include child nodes, but that's for a future implementation.
         val expectedConst = sequenceOf(
             SemanticToken(range(constLine, 5, constLine, 13), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // constant
             SemanticToken(range(constLine, 15, constLine, 21), SemanticTokenType.CLASS), // String
             SemanticToken(range(constLine, 30, constLine, 39), SemanticTokenType.INTERPOLATION_ENTRY), // $variable
             SemanticToken(range(constLine, 31, constLine, 39), SemanticTokenType.PROPERTY), // variable
+        )
+        val expectedString = sequenceOf(
+            SemanticToken(range(stringLine, 5, stringLine, 11), SemanticTokenType.PROPERTY, setOf(SemanticTokenModifier.DECLARATION, SemanticTokenModifier.READONLY)), // string
         )
         val expectedClass = sequenceOf(
             SemanticToken(range(classLine, 12, classLine, 16), SemanticTokenType.CLASS, setOf(SemanticTokenModifier.DECLARATION)), // Type
@@ -43,11 +52,11 @@ class SemanticTokensTest : SingleFileTestFixture("semantictokens", "SemanticToke
             SemanticToken(range(enumLine, 19, enumLine, 27), SemanticTokenType.ENUM_MEMBER, setOf(SemanticTokenModifier.DECLARATION)) // Variant1
         )
 
-        val partialExpected = encodeTokens(expectedConst + expectedClass)
+        val partialExpected = encodeTokens(expectedConst + expectedString + expectedClass)
         val partialResponse = languageServer.textDocumentService.semanticTokensRange(semanticTokensRangeParams(file, range(constLine, 0, classLine + 1, 0))).get()!!
         assertThat(partialResponse.data, contains(*partialExpected.toTypedArray()))
 
-        val fullExpected = encodeTokens(expectedVar + expectedConst + expectedClass + expectedFun + expectedEnum)
+        val fullExpected = encodeTokens(expectedVar + expectedConst + expectedString + expectedClass + expectedFun + expectedEnum)
         val fullResponse = languageServer.textDocumentService.semanticTokensFull(semanticTokensParams(file)).get()!!
         assertThat(fullResponse.data, contains(*fullExpected.toTypedArray()))
     }

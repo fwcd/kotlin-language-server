@@ -1,5 +1,6 @@
 var variable = 3
 val constant: String = "test $variable"
+val string = "abc"
 
 data class Type(val property: Int)
 
