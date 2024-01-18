@@ -20,11 +20,10 @@ import org.jetbrains.kotlin.psi.KtDotQualifiedExpression
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.javacs.kt.LOG
-import kotlin.math.abs
 
 fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
     val (signatures, activeSignature, activeParameter) = getSignatureTriplet(file, cursor) ?: return nullResult("No call around ${file.describePosition(cursor)}")
-    return SignatureHelp(signatures, activeSignature,activeParameter)
+    return SignatureHelp(signatures, activeSignature, activeParameter)
 }
 
 /**
@@ -42,6 +41,7 @@ fun getDocString(file: CompiledFile, cursor: Int): String {
 }
 
 // TODO better function name?
+@Suppress("ReturnCount")
 private fun getSignatureTriplet(file: CompiledFile, cursor: Int): Triple<List<SignatureInformation>, Int?, Int?>? {
     val call = file.parseAtPoint(cursor)?.findParent<KtCallExpression>() ?: return null
     val candidates = candidates(call, file)
@@ -127,6 +127,7 @@ private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescript
     return true
 }
 
+@Suppress("ReturnCount")
 private fun activeParameter(call: KtCallExpression, cursor: Int): Int? {
     val args = call.valueArgumentList ?: return null
     val text = args.text
