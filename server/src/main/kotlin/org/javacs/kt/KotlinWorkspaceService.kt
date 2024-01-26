@@ -103,6 +103,22 @@ class KotlinWorkspaceService(
                 }
             }
 
+            // Update options for formatting
+            get("formatting")?.asJsonObject?.apply {
+                val formatting = config.formatting
+                get("formatter")?.asString?.let {
+                    formatting.formatter = it
+                }
+                get("ktfmt")?.asJsonObject?.apply {
+                    val ktfmt = formatting.ktFmt
+                    get("style")?.asString?.let { ktfmt.style = it }
+                    get("indent")?.asInt?.let { ktfmt.indent = it }
+                    get("maxWidth")?.asInt?.let { ktfmt.maxWidth = it }
+                    get("continuationIndent")?.asInt?.let { ktfmt.continuationIndent = it }
+                    get("removeUnusedImports")?.asBoolean?.let { ktfmt.removeUnusedImports = it }
+                }
+            }
+
             // Update options for inlay hints
             get("inlayHints")?.asJsonObject?.apply {
                 val inlayHints = config.inlayHints

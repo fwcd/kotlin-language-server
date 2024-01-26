@@ -8,7 +8,7 @@ import org.javacs.kt.codeaction.codeActions
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
-import org.javacs.kt.formatting.formatKotlinCode
+import org.javacs.kt.formatting.FormattingService
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.extractRange
@@ -45,6 +45,7 @@ class KotlinTextDocumentService(
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
+    private val formattingService = FormattingService(config.formatting)
 
     var debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     val lintTodo = mutableSetOf<URI>()
@@ -139,7 +140,7 @@ class KotlinTextDocumentService(
         val code = extractRange(params.textDocument.content, params.range)
         listOf(TextEdit(
             params.range,
-            formatKotlinCode(code, params.options)
+            formattingService.formatKotlinCode(code, params.options)
         ))
     }
 
@@ -215,7 +216,7 @@ class KotlinTextDocumentService(
         LOG.info("Formatting {}", describeURI(params.textDocument.uri))
         listOf(TextEdit(
             Range(Position(0, 0), position(code, code.length)),
-            formatKotlinCode(code, params.options)
+            formattingService.formatKotlinCode(code, params.options)
         ))
     }
 

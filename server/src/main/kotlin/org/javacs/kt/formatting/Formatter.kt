@@ -1,14 +1,31 @@
 package org.javacs.kt.formatting
 
-import com.facebook.ktfmt.format.Formatter
-import com.facebook.ktfmt.format.FormattingOptions as KtfmtOptions
-import org.eclipse.lsp4j.FormattingOptions
+import org.javacs.kt.Configuration
+import org.javacs.kt.FormattingConfiguration
+import org.eclipse.lsp4j.FormattingOptions as LspFromattingOptions
 
-fun formatKotlinCode(
-    code: String,
-    options: FormattingOptions = FormattingOptions(4, true)
-): String = Formatter.format(KtfmtOptions(
-    style = KtfmtOptions.Style.GOOGLE,
-    blockIndent = options.tabSize,
-    continuationIndent = 2 * options.tabSize
-), code)
+private const val DEFAULT_INDENT = 4
+
+class FormattingService(private val config: FormattingConfiguration) {
+
+    private val formatter: Formatter get() = when (config.formatter) {
+        "ktfmt" -> KtFmtFormatter(config.ktFmt)
+        "none" -> NopFormatter
+        else -> KtFmtFormatter(config.ktFmt)
+    }
+
+    fun formatKotlinCode(
+        code: String,
+        options: LspFromattingOptions = LspFromattingOptions(DEFAULT_INDENT, true)
+    ): String = this.formatter.format(code, options)
+}
+
+
+interface Formatter {
+    fun format(code: String, options: LspFromattingOptions): String
+}
+
+object NopFormatter : Formatter {
+    override fun format(code: String, options: LspFromattingOptions): String = code
+}
+
