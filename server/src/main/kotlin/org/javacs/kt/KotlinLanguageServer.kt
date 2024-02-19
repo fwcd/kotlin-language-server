@@ -108,6 +108,10 @@ class KotlinLanguageServer(
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
+        config.workspace.symbolResolveSupport = clientCapabilities?.workspace?.symbol?.resolveSupport?.properties?.let { properties ->
+            if (properties.size > 0) SymbolResolveSupport(true, properties) else null
+        } ?: SymbolResolveSupport(false, emptyList())
+
         @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
             ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)

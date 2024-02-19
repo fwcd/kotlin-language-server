@@ -3,6 +3,7 @@
 package org.javacs.kt.symbols
 
 import com.intellij.psi.PsiElement
+import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.SymbolInformation
 import org.eclipse.lsp4j.SymbolKind
 import org.eclipse.lsp4j.DocumentSymbol
@@ -33,10 +34,10 @@ private fun doDocumentSymbols(element: PsiElement): List<DocumentSymbol> {
     } ?: children
 }
 
-fun workspaceSymbols(query: String, sp: SourcePath): List<WorkspaceSymbol> =
+fun workspaceSymbols(locationRequired: Boolean, query: String, sp: SourcePath): List<WorkspaceSymbol> =
         doWorkspaceSymbols(sp)
                 .filter { containsCharactersInOrder(it.name!!, query, false) }
-                .mapNotNull(::workspaceSymbol)
+                .mapNotNull(workspaceSymbol(locationRequired))
                 .toList()
 
 private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
@@ -56,10 +57,18 @@ private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtN
             else -> null
         }
 
-private fun workspaceSymbol(d: KtNamedDeclaration): WorkspaceSymbol? {
-    val name = d.name ?: return null
+private fun workspaceSymbol(locationRequired: Boolean): (KtNamedDeclaration) -> WorkspaceSymbol? {
+    return { d ->
+        d.name?.let { name ->
+            val location: Either<Location, WorkspaceSymbolLocation>? = if (locationRequired) {
+                location(d)?.let { l -> Either.forLeft(l) }
+            } else {
+                Either.forRight(workspaceSymbolLocation(d))
+            }
 
-    return WorkspaceSymbol(name, symbolKind(d), Either.forRight(workspaceLocation(d)), symbolContainer(d))
+            location?.let { WorkspaceSymbol(name, symbolKind(d), it, symbolContainer(d)) }
+        }
+    }
 }
 
 private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
@@ -73,10 +82,18 @@ private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
             else -> throw IllegalArgumentException("Unexpected symbol $d")
         }
 
-private fun workspaceLocation(d: KtNamedDeclaration): WorkspaceSymbolLocation {
-    val file = d.containingFile
-    val uri = file.toPath().toUri().toString()
+private fun location(d: KtNamedDeclaration): Location? {
+    val uri = d.containingFile.toPath().toUri().toString()
+    val (content, textRange) = try { d.containingFile?.text to d.nameIdentifier?.textRange } catch (e: Exception) { null to null }
+    return if (content != null && textRange != null) {
+        Location(uri, range(content, textRange))
+    } else {
+        null
+    }
+}
 
+private fun workspaceSymbolLocation(d: KtNamedDeclaration): WorkspaceSymbolLocation {
+    val uri = d.containingFile.toPath().toUri().toString()
     return WorkspaceSymbolLocation(uri)
 }
 
