@@ -12,9 +12,9 @@ import org.eclipse.lsp4j.WorkspaceSymbolLocation
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.range
+import org.javacs.kt.position.toURIString
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.preOrderTraversal
-import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
@@ -82,20 +82,22 @@ private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
             else -> throw IllegalArgumentException("Unexpected symbol $d")
         }
 
-private fun location(d: KtNamedDeclaration): Location? {
-    val uri = d.containingFile.toPath().toUri().toString()
-    val (content, textRange) = try { d.containingFile?.text to d.nameIdentifier?.textRange } catch (e: Exception) { null to null }
-    return if (content != null && textRange != null) {
-        Location(uri, range(content, textRange))
-    } else {
+private fun location(d: KtNamedDeclaration): Location? =
+    try {
+        val content = d.containingFile?.text
+        val locationInContent = (d.nameIdentifier?.textRange ?: d.textRange)
+        if (content != null && locationInContent != null) {
+            Location(d.containingFile.toURIString(), range(content, locationInContent))
+        } else {
+            null
+        }
+    } catch (e: Exception) {
         null
     }
-}
 
-private fun workspaceSymbolLocation(d: KtNamedDeclaration): WorkspaceSymbolLocation {
-    val uri = d.containingFile.toPath().toUri().toString()
-    return WorkspaceSymbolLocation(uri)
-}
+
+private fun workspaceSymbolLocation(d: KtNamedDeclaration): WorkspaceSymbolLocation =
+    WorkspaceSymbolLocation(d.containingFile.toURIString())
 
 private fun symbolContainer(d: KtNamedDeclaration): String? =
         d.parents
