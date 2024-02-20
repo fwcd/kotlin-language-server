@@ -57,7 +57,7 @@ data class InlayHintsConfiguration(
     var chainedHints: Boolean = false
 )
 
-data class KtFmtConfiguration(
+data class KtfmtConfiguration(
     var style: String = "google",
     var indent: Int = 4,
     var maxWidth: Int = 100,
@@ -67,7 +67,7 @@ data class KtFmtConfiguration(
 
 data class FormattingConfiguration(
     var formatter: String = "ktfmt",
-    var ktFmt: KtFmtConfiguration = KtFmtConfiguration()
+    var ktfmt: KtfmtConfiguration = KtfmtConfiguration()
 )
 
 fun getStoragePath(params: InitializeParams): Path? {

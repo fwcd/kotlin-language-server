@@ -1,11 +1,11 @@
 package org.javacs.kt.formatting
 
-import org.javacs.kt.KtFmtConfiguration
-import com.facebook.ktfmt.format.Formatter as KtFmt
+import org.javacs.kt.KtfmtConfiguration
+import com.facebook.ktfmt.format.Formatter as Ktfmt
 import com.facebook.ktfmt.format.FormattingOptions as KtfmtOptions
 import org.eclipse.lsp4j.FormattingOptions as LspFormattingOptions
 
-class KtFmtFormatter(private val config: KtFmtConfiguration) : Formatter {
+class KtfmtFormatter(private val config: KtfmtConfiguration) : Formatter {
     override fun format(
         code: String,
         options: LspFormattingOptions,
@@ -16,7 +16,7 @@ class KtFmtFormatter(private val config: KtFmtConfiguration) : Formatter {
             "dropbox" -> KtfmtOptions.Style.DROPBOX
             else -> KtfmtOptions.Style.GOOGLE
         }
-        return KtFmt.format(KtfmtOptions(
+        return Ktfmt.format(KtfmtOptions(
             style = style,
             maxWidth = config.maxWidth,
             blockIndent = options.tabSize.takeUnless { it == 0 } ?: config.indent,

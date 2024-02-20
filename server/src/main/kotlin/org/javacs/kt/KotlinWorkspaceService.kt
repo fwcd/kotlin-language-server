@@ -110,7 +110,7 @@ class KotlinWorkspaceService(
                     formatting.formatter = it
                 }
                 get("ktfmt")?.asJsonObject?.apply {
-                    val ktfmt = formatting.ktFmt
+                    val ktfmt = formatting.ktfmt
                     get("style")?.asString?.let { ktfmt.style = it }
                     get("indent")?.asInt?.let { ktfmt.indent = it }
                     get("maxWidth")?.asInt?.let { ktfmt.maxWidth = it }
