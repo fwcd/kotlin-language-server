@@ -4,7 +4,6 @@ import java.util.concurrent.CancellationException
 import org.eclipse.lsp4j.Diagnostic
 import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.DocumentSymbolParams
-import org.eclipse.lsp4j.PublishDiagnosticsParams
 import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat

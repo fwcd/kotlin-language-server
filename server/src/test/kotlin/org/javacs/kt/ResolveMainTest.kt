@@ -1,7 +1,5 @@
 package org.javacs.kt
 
-import com.google.gson.Gson
-import org.eclipse.lsp4j.ExecuteCommandParams
 import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.TextDocumentIdentifier

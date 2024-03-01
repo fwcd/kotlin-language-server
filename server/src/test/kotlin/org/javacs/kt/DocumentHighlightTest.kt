@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.DocumentHighlight
 import org.eclipse.lsp4j.DocumentHighlightKind
 import org.eclipse.lsp4j.DocumentHighlightParams
 import org.eclipse.lsp4j.TextDocumentIdentifier
@@ -83,7 +82,7 @@ class DocumentHighlightTest : SingleFileTestFixture("highlight", "DocumentHighli
         assertThat(secondHighlight.range, equalTo(range(9, 13, 9, 31)))
         assertThat(secondHighlight.kind, equalTo(DocumentHighlightKind.Text))
     }
-    
+
     @Test
     fun `should highlight shadowed variable correctly, just show the shadowed variable`() {
         val fileUri = workspaceRoot.resolve(file).toUri().toString()

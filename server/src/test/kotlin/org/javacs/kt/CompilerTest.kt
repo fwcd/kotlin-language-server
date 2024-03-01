@@ -7,10 +7,8 @@ import org.jetbrains.kotlin.psi.KtReferenceExpression
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.javacs.kt.compiler.Compiler
-import org.javacs.kt.ScriptsConfiguration
 import org.junit.Assert.assertThat
 import org.junit.Test
-import org.junit.After
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.io.File
