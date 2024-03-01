@@ -7,6 +7,7 @@ import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.location
 import org.javacs.kt.position.position
 import org.javacs.kt.position.range
+import org.javacs.kt.position.toURIString
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
@@ -214,7 +215,7 @@ class CompiledFile(
 
         return declaration?.let {
             Pair(it,
-                 Location(it.containingFile.name,
+                 Location(it.containingFile.toURIString(),
                           range(content, it.nameIdentifier?.textRange ?: return null)))
         }
     }
