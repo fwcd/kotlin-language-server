@@ -13,8 +13,10 @@ class SourceExclusions(
     private val workspaceRoots: Collection<Path>,
     private val scriptsConfig: ScriptsConfiguration
 ) {
-	val excludedPatterns = (listOf(
-        ".*", "bazel-*", "bin", "build", "node_modules", "target"
+    val excludedPatterns = (listOf(
+        ".git", ".hg", ".svn",                                                      // Version control systems
+        ".idea", ".idea_modules", ".vs", ".vscode", ".code-workspace", ".settings", // IDEs
+        "bazel-*", "bin", "build", "node_modules", "target",                        // Build systems
     ) + when {
         !scriptsConfig.enabled -> listOf("*.kts")
         !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
