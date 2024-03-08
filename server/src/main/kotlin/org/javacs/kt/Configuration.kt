@@ -57,6 +57,18 @@ data class InlayHintsConfiguration(
     var chainedHints: Boolean = false
 )
 
+data class KtfmtConfiguration(
+    var style: String = "google",
+    var indent: Int = 4,
+    var maxWidth: Int = 100,
+    var continuationIndent: Int = 8,
+    var removeUnusedImports: Boolean = true,
+)
+
+data class FormattingConfiguration(
+    var formatter: String = "ktfmt",
+    var ktfmt: KtfmtConfiguration = KtfmtConfiguration()
+)
 
 fun getStoragePath(params: InitializeParams): Path? {
     params.initializationOptions?.let { initializationOptions ->
@@ -94,5 +106,6 @@ public data class Configuration(
     val scripts: ScriptsConfiguration = ScriptsConfiguration(),
     val indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
-    val inlayHints: InlayHintsConfiguration = InlayHintsConfiguration()
+    val inlayHints: InlayHintsConfiguration = InlayHintsConfiguration(),
+    val formatting: FormattingConfiguration = FormattingConfiguration(),
 )
