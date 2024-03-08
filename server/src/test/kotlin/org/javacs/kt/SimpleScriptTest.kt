@@ -2,7 +2,6 @@ package org.javacs.kt
 
 import org.junit.*
 import org.junit.Assert.*
-import org.hamcrest.Matchers.*
 import kotlin.script.experimental.api.*
 import kotlin.script.experimental.jvm.jvm
 import kotlin.script.experimental.jvm.dependenciesFromCurrentContext

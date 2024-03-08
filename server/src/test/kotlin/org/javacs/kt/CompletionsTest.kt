@@ -1,6 +1,5 @@
 package org.javacs.kt
 
-import org.eclipse.lsp4j.CompletionList
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test

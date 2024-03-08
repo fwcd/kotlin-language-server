@@ -1,10 +1,8 @@
 package org.javacs.kt
 
-import org.junit.Before
 import org.junit.Test
 import org.junit.Assert.assertThat
 import org.hamcrest.Matchers.*
-import org.eclipse.lsp4j.MarkupContent
 
 class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.gradle.kts", Configuration().apply {
     scripts.enabled = true

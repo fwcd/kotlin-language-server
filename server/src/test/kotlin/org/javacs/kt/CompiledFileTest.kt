@@ -3,7 +3,6 @@ package org.javacs.kt
 import org.hamcrest.Matchers.equalTo
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.database.DatabaseService
-import org.javacs.kt.ScriptsConfiguration
 import org.junit.AfterClass
 import org.junit.Assert.assertThat
 import org.junit.Test
