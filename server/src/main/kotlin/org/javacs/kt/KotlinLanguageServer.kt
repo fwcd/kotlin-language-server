@@ -108,9 +108,7 @@ class KotlinLanguageServer(
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
-        config.workspace.symbolResolveSupport = clientCapabilities?.workspace?.symbol?.resolveSupport?.properties?.let { properties ->
-            if (properties.size > 0) SymbolResolveSupport(true, properties) else null
-        } ?: SymbolResolveSupport(false, emptyList())
+        config.workspace.symbolResolveSupport = clientHasWorkspaceSymbolResolveSupport(clientCapabilities)
 
         @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
@@ -144,6 +142,11 @@ class KotlinLanguageServer(
 
         InitializeResult(serverCapabilities, serverInfo)
     }
+
+    private fun clientHasWorkspaceSymbolResolveSupport(clientCapabilities: ClientCapabilities) =
+        clientCapabilities?.workspace?.symbol?.resolveSupport?.properties?.let { properties ->
+            if (properties.size > 0) SymbolResolveSupport(true, properties) else null
+        } ?: SymbolResolveSupport(false, emptyList())
 
     private fun connectLoggingBackend() {
         val backend: (LogMessage) -> Unit = {
