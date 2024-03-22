@@ -8,13 +8,13 @@ import kotlin.math.max
 interface ClassPathResolver {
     val resolverType: String
 
-    val classpath: Set<ClassPathEntry> // may throw exceptions
-    val classpathOrEmpty: Set<ClassPathEntry> // does not throw exceptions
+    val classpath: ClassPathResult // may throw exceptions
+    val classpathOrEmpty: ClassPathResult // does not throw exceptions
         get() = try {
             classpath
         } catch (e: Exception) {
             LOG.warn("Could not resolve classpath using {}: {}", resolverType, e.message)
-            emptySet<ClassPathEntry>()
+            ClassPathResult(emptySet<ClassPathEntry>())
         }
 
     val buildScriptClasspath: Set<Path>
@@ -27,7 +27,7 @@ interface ClassPathResolver {
             emptySet<Path>()
         }
 
-    val classpathWithSources: Set<ClassPathEntry> get() = classpath
+    val classpathWithSources: ClassPathResult get() = classpath
 
     /**
      * This should return the current build file version.
@@ -43,7 +43,7 @@ interface ClassPathResolver {
         /** A default empty classpath implementation */
         val empty = object : ClassPathResolver {
             override val resolverType = "[]"
-            override val classpath = emptySet<ClassPathEntry>()
+            override val classpath = ClassPathResult(emptySet<ClassPathEntry>())
         }
     }
 }
@@ -61,22 +61,22 @@ infix fun ClassPathResolver.or(other: ClassPathResolver): ClassPathResolver = Fi
 /** The union of two class path resolvers. */
 internal class UnionClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
     override val resolverType: String get() = "(${lhs.resolverType} + ${rhs.resolverType})"
-    override val classpath get() = lhs.classpath + rhs.classpath
-    override val classpathOrEmpty get() = lhs.classpathOrEmpty + rhs.classpathOrEmpty
+    override val classpath get() = ClassPathResult(lhs.classpath.entries + rhs.classpath.entries)
+    override val classpathOrEmpty get() = ClassPathResult(lhs.classpathOrEmpty.entries + rhs.classpathOrEmpty.entries)
     override val buildScriptClasspath get() = lhs.buildScriptClasspath + rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty + rhs.buildScriptClasspathOrEmpty
-    override val classpathWithSources get() = lhs.classpathWithSources + rhs.classpathWithSources
+    override val classpathWithSources get() = ClassPathResult(lhs.classpathWithSources.entries + rhs.classpathWithSources.entries)
     override val currentBuildFileVersion: Long get() = max(lhs.currentBuildFileVersion, rhs.currentBuildFileVersion)
 }
 
 internal class FirstNonEmptyClassPathResolver(val lhs: ClassPathResolver, val rhs: ClassPathResolver) : ClassPathResolver {
     override val resolverType: String get() = "(${lhs.resolverType} or ${rhs.resolverType})"
-    override val classpath get() = lhs.classpath.takeIf { it.isNotEmpty() } ?: rhs.classpath
-    override val classpathOrEmpty get() = lhs.classpathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty
+    override val classpath get() = ClassPathResult(lhs.classpath.entries.takeIf { it.isNotEmpty() } ?: rhs.classpath.entries)
+    override val classpathOrEmpty get() = ClassPathResult(lhs.classpathOrEmpty.entries.takeIf { it.isNotEmpty() } ?: rhs.classpathOrEmpty.entries)
     override val buildScriptClasspath get() = lhs.buildScriptClasspath.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspath
     override val buildScriptClasspathOrEmpty get() = lhs.buildScriptClasspathOrEmpty.takeIf { it.isNotEmpty() } ?: rhs.buildScriptClasspathOrEmpty
-    override val classpathWithSources get() = lhs.classpathWithSources.takeIf {
+    override val classpathWithSources get() = ClassPathResult(lhs.classpathWithSources.entries.takeIf {
         it.isNotEmpty()
-    } ?: rhs.classpathWithSources
+    } ?: rhs.classpathWithSources.entries)
     override val currentBuildFileVersion: Long get() = max(lhs.currentBuildFileVersion, rhs.currentBuildFileVersion)
 }
