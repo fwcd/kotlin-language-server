@@ -39,15 +39,6 @@ public data class CompilerConfiguration(
     val jvm: JVMConfiguration = JVMConfiguration()
 )
 
-public data class SymbolResolveSupport(
-    val enabled: Boolean = false,
-    val properties: List<String> = emptyList()
-)
-
-public data class WorkspaceConfiguration(
-    var symbolResolveSupport: SymbolResolveSupport = SymbolResolveSupport()
-)
-
 public data class IndexingConfiguration(
     /** Whether an index of global symbols should be built in the background. */
     var enabled: Boolean = true
@@ -116,6 +107,5 @@ public data class Configuration(
     val indexing: IndexingConfiguration = IndexingConfiguration(),
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
     val inlayHints: InlayHintsConfiguration = InlayHintsConfiguration(),
-    val formatting: FormattingConfiguration = FormattingConfiguration(),
-    val workspace: WorkspaceConfiguration = WorkspaceConfiguration()
+    val formatting: FormattingConfiguration = FormattingConfiguration()
 )

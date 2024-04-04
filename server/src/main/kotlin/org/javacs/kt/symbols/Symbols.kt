@@ -34,10 +34,10 @@ private fun doDocumentSymbols(element: PsiElement): List<DocumentSymbol> {
     } ?: children
 }
 
-fun workspaceSymbols(locationRequired: Boolean, query: String, sp: SourcePath): List<WorkspaceSymbol> =
+fun workspaceSymbols(query: String, sp: SourcePath, locationRequired: Boolean): List<WorkspaceSymbol> =
         doWorkspaceSymbols(sp)
                 .filter { containsCharactersInOrder(it.name!!, query, false) }
-                .mapNotNull(workspaceSymbol(locationRequired))
+                .mapNotNull { workspaceSymbol(it, locationRequired) }
                 .toList()
 
 private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
@@ -57,29 +57,22 @@ private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtN
             else -> null
         }
 
-private fun workspaceSymbol(locationRequired: Boolean): (KtNamedDeclaration) -> WorkspaceSymbol? {
-    fun location(d: KtNamedDeclaration): Location? {
-        val content = d.containingFile?.text
-        val locationInContent = (d.nameIdentifier?.textRange ?: d.textRange)
-        return if (content != null && locationInContent != null) {
-            Location(d.containingFile.toURIString(), range(content, locationInContent))
-        } else {
-            null
-        }
-    }
-
-    return { d ->
-        d.name?.let { name ->
-            val location: Either<Location, WorkspaceSymbolLocation>? = if (locationRequired) {
-                location(d)?.let { l -> Either.forLeft(l) }
+private fun workspaceSymbol(d: KtNamedDeclaration, locationRequired: Boolean): WorkspaceSymbol? =
+    d.name?.let { name ->
+        val location: Either<Location, WorkspaceSymbolLocation>? = if (locationRequired) {
+            val content = d.containingFile?.text
+            val locationInContent = (d.nameIdentifier?.textRange ?: d.textRange)
+            if (content != null && locationInContent != null) {
+                Either.forLeft(Location(d.containingFile.toURIString(), range(content, locationInContent)))
             } else {
-                Either.forRight(WorkspaceSymbolLocation(d.containingFile.toURIString()))
+                null
             }
-
-            location?.let { WorkspaceSymbol(name, symbolKind(d), it, symbolContainer(d)) }
+        } else {
+            d.containingFile?.let { Either.forRight(WorkspaceSymbolLocation(it.toURIString())) }
         }
+
+        location?.let { WorkspaceSymbol(name, symbolKind(d), it, symbolContainer(d)) }
     }
-}
 
 private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
         when (d) {
