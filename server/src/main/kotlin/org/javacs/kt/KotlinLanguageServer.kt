@@ -31,7 +31,7 @@ class KotlinLanguageServer(
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
-    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
+    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts, mutableListOf())
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
@@ -72,6 +72,14 @@ class KotlinLanguageServer(
     fun getProtocolExtensionService(): KotlinProtocolExtensions = protocolExtensions
 
     override fun initialize(params: InitializeParams): CompletableFuture<InitializeResult> = async.compute {
+        // Parse initialization options
+        val options = getInitializationOptions(params)
+        databaseService.setup(options?.storagePath)
+
+        if(options?.additionalSourceExclusions != null) {
+            sourceFiles.updateAdditionalExclusions(options.additionalSourceExclusions.toMutableList())
+        }
+
         val serverCapabilities = ServerCapabilities()
         serverCapabilities.setTextDocumentSync(TextDocumentSyncKind.Incremental)
         serverCapabilities.workspace = WorkspaceServerCapabilities()
@@ -94,8 +102,6 @@ class KotlinLanguageServer(
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
         serverCapabilities.documentHighlightProvider = Either.forLeft(true)
 
-        val storagePath = getStoragePath(params)
-        databaseService.setup(storagePath)
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
