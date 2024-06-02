@@ -43,14 +43,20 @@ class OneFilePerformance {
         private var fileSystem = VirtualFileManager.getInstance().getFileSystem(StandardFileSystems.FILE_PROTOCOL)
         internal var bigFile = openFile("/kotlinCompilerPerformance/BigFile.kt")
 
-        internal fun openFile(resourcePath: String?): KtFile {
+        internal fun openFile(resourcePath: String): KtFile {
             val locate = OneFilePerformance::class.java.getResource(resourcePath)
-            val file = fileSystem.findFileByPath(URLDecoder.decode(locate.path, StandardCharsets.UTF_8.toString()))
+                ?: throw IllegalArgumentException("Resource not found: $resourcePath")
+
+            // Decode the file path, handling platform-specific file separators
+            val decodedPath = URLDecoder.decode(locate.path, StandardCharsets.UTF_8.toString())
+            val normalizedPath = decodedPath.replaceFirst("^/(.:/)".toRegex(), "$1")
+
+            val file = fileSystem.findFileByPath(normalizedPath)
             return PsiManager.getInstance(env.project).findFile(file!!) as KtFile
         }
 
         internal fun compile(compile: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingTraceContext {
-            val trace = CliBindingTrace(env.project)
+            val trace = CliBindingTrace(env.projectEnvironment.project)
             val container = CompilerFixtures.createContainer(
                 env.project,
                 sourcePath,
