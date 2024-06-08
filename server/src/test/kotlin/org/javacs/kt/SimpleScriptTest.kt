@@ -43,6 +43,8 @@ class SimpleScriptTest {
         assertNotError(result)
 
         val resultValue = (result as ResultWithDiagnostics.Success).value.returnValue as ResultValue.Value
+        println(resultValue.value)
+
         // TODO:
         // assertThat(resultValue.type, equalTo("Int"))
     }

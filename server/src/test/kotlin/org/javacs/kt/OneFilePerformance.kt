@@ -53,7 +53,7 @@ class OneFilePerformance {
         }
 
         internal fun compile(compile: Collection<KtFile>, sourcePath: Collection<KtFile>): BindingTraceContext {
-            val trace = CliBindingTrace()
+            val trace = CliBindingTrace(env.projectEnvironment.project)
             val container = CompilerFixtures.createContainer(
                 env.project,
                 sourcePath,
