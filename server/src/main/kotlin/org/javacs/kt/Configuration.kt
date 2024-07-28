@@ -19,7 +19,7 @@ public data class SnippetsConfiguration(
 
 public data class CodegenConfiguration(
     /** Whether to enable code generation to a temporary build directory for Java interoperability. */
-    var enabled: Boolean = true
+    var enabled: Boolean = false
 )
 
 public data class CompletionConfiguration(
