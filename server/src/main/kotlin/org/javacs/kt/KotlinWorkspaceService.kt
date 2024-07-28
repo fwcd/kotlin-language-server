@@ -159,6 +159,12 @@ class KotlinWorkspaceService(
                 sf.updateExclusions()
             }
 
+            // Update code generation options
+            get("codegen")?.asJsonObject?.apply {
+                val codegen = config.codegen
+                get("enabled")?.asBoolean?.let { codegen.enabled = it }
+            }
+
             // Update code-completion options
             get("completion")?.asJsonObject?.apply {
                 val completion = config.completion

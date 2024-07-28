@@ -18,6 +18,7 @@ import java.nio.file.Path
 class CompilerClassPath(
     private val config: CompilerConfiguration,
     private val scriptsConfig: ScriptsConfiguration,
+    private val codegenConfig: CodegenConfiguration,
     private val databaseService: DatabaseService
 ) : Closeable {
     val workspaceRoots = mutableSetOf<Path>()
@@ -33,6 +34,7 @@ class CompilerClassPath(
         classPath.map { it.compiledJar }.toSet(),
         buildScriptClassPath,
         scriptsConfig,
+        codegenConfig,
         outputDirectory
     )
         private set
@@ -87,6 +89,7 @@ class CompilerClassPath(
                 classPath.map { it.compiledJar }.toSet(),
                 buildScriptClassPath,
                 scriptsConfig,
+                codegenConfig,
                 outputDirectory
             )
             updateCompilerConfiguration()
