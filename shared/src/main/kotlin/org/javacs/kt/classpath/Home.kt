@@ -17,10 +17,7 @@ private val possibleMavenRepositoryPaths =
     )
     .filterNotNull()
 
-internal val mavenRepository =
+internal val mavenRepository: Path? =
     possibleMavenRepositoryPaths.firstOrNull { Files.exists(it) }
-        ?: throw KotlinLSException(
-            "No repositories found at \$MAVEN_REPOSITORY, \$MAVEN_HOME, \$M2_HOME or \$HOME/.m2"
-        )
 
 internal val gradleHome = createPathOrNull("GRADLE_USER_HOME") ?: userHome.resolve(".gradle")
