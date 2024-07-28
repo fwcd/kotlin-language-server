@@ -17,6 +17,11 @@ public data class SnippetsConfiguration(
     var enabled: Boolean = true
 )
 
+public data class CodegenConfiguration(
+    /** Whether to enable code generation to a temporary build directory for Java interoperability. */
+    var enabled: Boolean = true
+)
+
 public data class CompletionConfiguration(
     val snippets: SnippetsConfiguration = SnippetsConfiguration()
 )
@@ -100,6 +105,7 @@ class GsonPathConverter : JsonDeserializer<Path?> {
 }
 
 public data class Configuration(
+    val codegen: CodegenConfiguration = CodegenConfiguration(),
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
     val diagnostics: DiagnosticsConfiguration = DiagnosticsConfiguration(),
