@@ -26,7 +26,7 @@ class KotlinLanguageServer(
     val config: Configuration = Configuration()
 ) : LanguageServer, LanguageClientAware, Closeable {
     val databaseService = DatabaseService()
-    val classPath = CompilerClassPath(config.compiler, config.scripts, databaseService)
+    val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
