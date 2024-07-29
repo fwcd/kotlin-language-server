@@ -1,7 +1,12 @@
 package org.javacs.kt
 
+import org.eclipse.lsp4j.ClientCapabilities
+import org.eclipse.lsp4j.SymbolCapabilities
 import org.eclipse.lsp4j.SymbolKind
+import org.eclipse.lsp4j.WorkspaceClientCapabilities
 import org.eclipse.lsp4j.WorkspaceSymbolParams
+import org.eclipse.lsp4j.WorkspaceSymbolResolveSupportCapabilities
+import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.not
 import org.junit.Assert.assertThat
@@ -20,5 +25,29 @@ class WorkspaceSymbolsTest : SingleFileTestFixture("symbols", "DocumentSymbols.k
         assertThat(all, not(hasItem("aFunctionArg")))
         assertThat(all, not(hasItem("aConstructorArg")))
         assertThat(all, not(hasItem("otherFileLocalVariable")))
+    }
+
+    @Test fun `returns location information if resolve is not supported by the client`() {
+        languageServer.workspaceService.initialize(clientCapabilities(false))
+        val found = languageServer.workspaceService.symbol(WorkspaceSymbolParams("")).get().right
+        assertThat(found.all { s -> s.location.isLeft }, equalTo(true))
+    }
+
+    @Test fun `returns no location information if resolve is supported by the client`() {
+        languageServer.workspaceService.initialize(clientCapabilities(true))
+        val found = languageServer.workspaceService.symbol(WorkspaceSymbolParams("")).get().right
+        assertThat(found.all { s -> s.location.isRight }, equalTo(true))
+    }
+
+    private fun clientCapabilities(resolveSupported: Boolean): ClientCapabilities {
+        val properties = if (resolveSupported) listOf("location.range") else emptyList()
+
+        val workspaceClientCapabilities = WorkspaceClientCapabilities()
+        val symbolCapabilities = SymbolCapabilities()
+        val workspaceSymbolResolveSupportCapabilities = WorkspaceSymbolResolveSupportCapabilities()
+        workspaceSymbolResolveSupportCapabilities.properties = properties
+        symbolCapabilities.resolveSupport = workspaceSymbolResolveSupportCapabilities
+        workspaceClientCapabilities.symbol = symbolCapabilities
+        return ClientCapabilities(workspaceClientCapabilities, null, null)
     }
 }

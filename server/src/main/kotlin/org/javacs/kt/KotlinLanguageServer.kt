@@ -108,6 +108,8 @@ class KotlinLanguageServer(
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
+        workspaces.initialize(clientCapabilities)
+
         @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
             ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)

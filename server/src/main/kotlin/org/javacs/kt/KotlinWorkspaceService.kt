@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture
 import com.google.gson.JsonElement
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.javacs.kt.symbols.symbolResolveSupport
 
 class KotlinWorkspaceService(
     private val sf: SourceFiles,
@@ -26,9 +27,14 @@ class KotlinWorkspaceService(
 ) : WorkspaceService, LanguageClientAware {
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
+    private var clientCapabilities: ClientCapabilities? = null
 
     override fun connect(client: LanguageClient): Unit {
         languageClient = client
+    }
+
+    fun initialize(clientCapabilities: ClientCapabilities) {
+        this.clientCapabilities = clientCapabilities
     }
 
     override fun executeCommand(params: ExecuteCommandParams): CompletableFuture<Any> {
@@ -195,7 +201,7 @@ class KotlinWorkspaceService(
 
     @Suppress("DEPRECATION")
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<Either<List<SymbolInformation>, List<WorkspaceSymbol>>> {
-        val result = workspaceSymbols(params.query, sp)
+        val result = workspaceSymbols(params.query, sp, !clientCapabilities.symbolResolveSupport.enabled)
 
         return CompletableFuture.completedFuture(Either.forRight(result))
     }
