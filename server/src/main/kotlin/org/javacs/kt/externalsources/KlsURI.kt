@@ -14,7 +14,7 @@ import java.nio.file.Paths
 import java.util.zip.ZipFile
 
 fun URI.toKlsURI(): KlsURI? = when (scheme) {
-    "kls" -> KlsURI(URI("kls:${schemeSpecificPart.replace(" ", "%20")}"))
+    "kls" -> KlsURI(URI("kls:${schemeSpecificPart}"))
     "file" -> KlsURI(URI("kls:$this"))
     else -> null
 }
