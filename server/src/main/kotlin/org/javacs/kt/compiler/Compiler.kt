@@ -57,6 +57,7 @@ import kotlin.script.experimental.host.configurationDependencies
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
 import kotlin.script.experimental.jvm.JvmDependency
 import org.javacs.kt.LOG
+import org.javacs.kt.CodegenConfiguration
 import org.javacs.kt.CompilerConfiguration
 import org.javacs.kt.ScriptsConfiguration
 import org.javacs.kt.util.KotlinLSException
@@ -460,6 +461,7 @@ class Compiler(
     classPath: Set<Path>,
     buildScriptClassPath: Set<Path> = emptySet(),
     scriptsConfig: ScriptsConfiguration,
+    private val codegenConfig: CodegenConfiguration,
     private val outputDirectory: File,
 ) : Closeable {
     private var closed = false
@@ -584,7 +586,7 @@ class Compiler(
     }
 
     fun generateCode(module: ModuleDescriptor, bindingContext: BindingContext, files: Collection<KtFile>) {
-        outputDirectory.let {
+        outputDirectory.takeIf { codegenConfig.enabled }?.let {
             compileLock.withLock {
                 val compileEnv = compileEnvironmentFor(CompilationKind.DEFAULT)
                 val state = GenerationState.Builder(

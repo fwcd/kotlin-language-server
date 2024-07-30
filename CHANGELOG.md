@@ -3,6 +3,17 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.12]
+- Make code generation for Java interop opt-in (#585)
+
+## [1.3.11]
+- Fix crash when a Maven repository is missing (#584)
+
+## [1.3.10]
+- Update LSP4J to 0.21.2
+- Increase maximum length in class path cache (#532)
+- Fix some bugs
+
 ## [1.3.9]
 - Improve source file exclusion logic
 

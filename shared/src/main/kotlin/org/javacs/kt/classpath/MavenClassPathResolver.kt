@@ -88,10 +88,10 @@ private fun readMavenDependencyListWithSources(artifacts: Set<Artifact>, sources
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
     val result = mavenRepository
-        .resolve(a.group.replace('.', File.separatorChar))
-        .resolve(a.artifact)
-        .resolve(a.version)
-        .resolve(mavenJarName(a, source))
+        ?.resolve(a.group.replace('.', File.separatorChar))
+        ?.resolve(a.artifact)
+        ?.resolve(a.version)
+        ?.resolve(mavenJarName(a, source))
 
     return if (Files.exists(result))
         result

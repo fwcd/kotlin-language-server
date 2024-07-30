@@ -33,6 +33,7 @@ private class FileToEdit {
                 javaSourcePath = setOf(),
                 classPath = setOf(),
                 scriptsConfig = ScriptsConfiguration(),
+                codegenConfig = CodegenConfiguration(),
                 outputDirectory = outputDirectory
             )
         }
