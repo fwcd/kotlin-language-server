@@ -11,13 +11,14 @@ import java.nio.file.Paths
 // hardcoding them
 class SourceExclusions(
     private val workspaceRoots: Collection<Path>,
-    private val scriptsConfig: ScriptsConfiguration
+    private val scriptsConfig: ScriptsConfiguration,
+    private val additionalSourceExclusions: List<String>
 ) {
     val excludedPatterns = (listOf(
         ".git", ".hg", ".svn",                                                      // Version control systems
         ".idea", ".idea_modules", ".vs", ".vscode", ".code-workspace", ".settings", // IDEs
         "bazel-*", "bin", "build", "node_modules", "target",                        // Build systems
-    ) + when {
+    ) + additionalSourceExclusions + when {
         !scriptsConfig.enabled -> listOf("*.kts")
         !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
         else -> emptyList()
