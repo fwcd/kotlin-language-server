@@ -86,9 +86,9 @@ private fun Path.existsOrNull() =
 private fun findLocalArtifactDirUsingMaven(group: String, artifact: String) =
     LocalArtifactDirectoryResolution(
         mavenRepository
-            .resolve(group.replace('.', File.separatorChar))
-            .resolve(artifact)
-            .existsOrNull(), "Maven")
+            ?.resolve(group.replace('.', File.separatorChar))
+            ?.resolve(artifact)
+            ?.existsOrNull(), "Maven")
 
 private fun findLocalArtifactDirUsingGradle(group: String, artifact: String) =
     LocalArtifactDirectoryResolution(gradleCaches
