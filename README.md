@@ -29,6 +29,7 @@ Though, some features, that our users may expect, lies outside of our responsibi
 
 ## Getting Started
 
+* See [contribution.md](CONTRIBUTION.md) for development guidelines
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](EDITORS.md) for editor-specific instructions
 * See [Troubleshooting](TROUBLESHOOTING.md) for tips on troubleshooting errors
