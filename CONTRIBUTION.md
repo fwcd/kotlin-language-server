@@ -14,6 +14,12 @@ Additionally we introduce the next ones:
 - `refactor` - for changes, which heavily modifies the code with the sole goal to simplify the code. The change MUST NOT introduce any new features, but MAY introduce fixes occasionally.
 - `chore` - for small changes, such as variable/file renaming, changes to comments, import organisation, formatting
 
+## Feature based workflow
+
+We use feature based workflow, which implies branch per feature/bug/issue
+
+## How
+
 ## Tracking issues
 
 If you want to introduce massive change, please create a corresponding tracking issue and pull-request.
