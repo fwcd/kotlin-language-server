@@ -5,18 +5,34 @@
 [![Downloads](https://img.shields.io/github/downloads/fwcd/kotlin-language-server/total)](https://github.com/fwcd/kotlin-language-server/releases)
 [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da)](https://discord.gg/cNtppzN)
 
+## Notice and status
+
+This is fork of currently almost unmaintained upstream repo: https://github.com/fwcd/kotling-language-server
+
+*This fork* is being actively maintained. Our goal is to make this extension usable and feature complete. We *do not* aim for full feature parity with JetBrains ide's Kotlin support.
+
+> We do support only Linux and MacOS. Windows is not tested but still may work. Windows only        issues has least priority.
+
+## Kotlin Language Server
+
 A [language server](https://microsoft.github.io/language-server-protocol/) that provides smart code completion, diagnostics, hover, document symbols, definition lookup, method signature help and more for [Kotlin](https://kotlinlang.org).
 
 ![Icon](Icon128.png)
 
 Any editor conforming to LSP is supported, including [VSCode](https://github.com/fwcd/vscode-kotlin) and [Atom](https://github.com/fwcd/atom-ide-kotlin).
 
+### Scope of the project
+
+This project is strictly limited by Language Server Protocol capabilities. We aim to provide complete language server experience.
+
+Though, some features, that our users may expect, lies outside of our responsibility. We won't deliver any features related to code and test running, project building. These tasks should be performed by other means. We offload these features to editor specific extensions.
+
 ## Getting Started
 
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](EDITORS.md) for editor-specific instructions
 * See [Troubleshooting](TROUBLESHOOTING.md) for tips on troubleshooting errors
-* See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
+* See [Roadmap](./ROADMAP.md) for features and major technical goals
 * See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
 * See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for editor-agnostic launch and debug support of Kotlin/JVM programs
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
@@ -26,6 +42,8 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 [![Packaging status](https://repology.org/badge/vertical-allrepos/kotlin-language-server.svg)](https://repology.org/project/kotlin-language-server/versions)
 
 ## This repository needs your help!
+
+> See (CONTRIBUTION.md)[./CONTRIBUTION.md]
 
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
 
@@ -114,5 +132,12 @@ The Kotlin language server supports some custom initialization options via the `
 
 
 ## Authors
+
+### Current maintainers team
+* [owl-from-hogvarts](https://github.com/owl-from-hogvarts)
+* [localPiper](https://github.com/localPiper)
+* [Zerumi](https://github.com/zerumi)
+
+### Original authors
 * [georgewfraser](https://github.com/georgewfraser)
 * [fwcd](https://github.com/fwcd)
