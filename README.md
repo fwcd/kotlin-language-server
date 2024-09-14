@@ -44,7 +44,7 @@ Though, some features, that our users may expect, lies outside of our responsibi
 
 ## This repository needs your help!
 
-> See (CONTRIBUTION.md)[./CONTRIBUTION.md]
+> See [CONTRIBUTION.md](./CONTRIBUTION.md)
 
 [The original author](https://github.com/georgewfraser) created this project while he was considering using Kotlin in his work. He ended up deciding not to and is not really using Kotlin these days though this is a pretty fully-functional language server that just needs someone to use it every day for a while and iron out the last few pesky bugs.
 
