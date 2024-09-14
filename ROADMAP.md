@@ -1,4 +1,6 @@
-# TODO
+# Roadmap
+
+Our primary goal is to make this extension usable
 
 ## Bugs
 
