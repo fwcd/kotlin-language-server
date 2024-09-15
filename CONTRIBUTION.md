@@ -18,7 +18,15 @@ Additionally we introduce the next ones:
 
 We use feature based workflow, which implies branch per feature/bug/issue
 
-## How
+## New to Kotlin?
+
+Check out these links:
+- [Kotlin Function features](https://kotlinlang.org/docs/functions.html)
+- [infix notation](https://kotlinlang.org/docs/functions.html#infix-notation)
+- [Kotlin lambdas](https://kotlinlang.org/docs/lambdas.html)
+- [Scope functions](https://kotlinlang.org/docs/scope-functions.html)
+
+While working with kotlin, you are likely to encounter concepts from the above list
 
 ## Tracking issues
 
