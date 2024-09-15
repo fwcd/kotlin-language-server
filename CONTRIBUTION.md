@@ -28,6 +28,10 @@ Check out these links:
 
 While working with kotlin, you are likely to encounter concepts from the above list
 
+## How to Setup Custom Kotlin Language Server
+
+While working on this project, it may be useful to try it out right away! Luckily for us, `vscode-kotlin` extension supports custom versions for kotlin-language-server. Check out [kotlin.languageServer.path](vscode://settings/kotlin.languageServer.path) in vscode settings (if link does not work, use above setting id to search for it).
+
 ## Tracking issues
 
 If you want to introduce massive change, please create a corresponding tracking issue and pull-request.
