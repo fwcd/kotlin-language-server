@@ -18,6 +18,21 @@ Additionally we introduce the next ones:
 
 We use feature based workflow, which implies branch per feature/bug/issue
 
+## Tracking issues
+
+If you want to introduce massive change, please create a corresponding tracking issue and pull-request.
+
+## Project-wise requirements
+
+> These requirements apply to the project as a whole.
+
+KLSP:
+- *MUST NOT* create any system files in user's project folder, and user's home folder.
+- *SHOULD NOT* rely on editor specific features
+
+
+# Development
+
 ## New to Kotlin?
 
 Check out these links:
@@ -29,6 +44,8 @@ Check out these links:
 While working with kotlin, you are likely to encounter concepts from the above list
 
 ## How to Setup Custom Kotlin Language Server
+
+> Custom version of `vscode-kotlin` required
 
 While working on this project, it may be useful to try it out right away! Luckily for us, `vscode-kotlin` extension supports custom versions for kotlin-language-server.
 
@@ -78,15 +95,3 @@ Default port is `7721`
 #### Implementation details
 
 `vscode-kotlin` launches tcp server to accept new connections. Once `vscode-languageclient` requests new connection, `vscode-kotlin` starts to listen for new connections on the [kotlin.languageServer.port](vscode://settings/kotlin.languageServer.port). When single connection is accepted, `vscode-kotlin` stops to listen for new connections. Once connections is closed and `vscode-languageclient` requests new connection, `vscode-kotlin` starts to listen for connections again.
-
-## Tracking issues
-
-If you want to introduce massive change, please create a corresponding tracking issue and pull-request.
-
-## Project-wise requirements
-
-> These requirements apply to the project as a whole.
-
-KLSP:
-- *MUST NOT* create any system files in user's project folder, and user's home folder.
-- *SHOULD NOT* rely on editor specific features
