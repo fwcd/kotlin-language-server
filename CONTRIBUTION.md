@@ -45,7 +45,7 @@ While working with kotlin, you are likely to encounter concepts from the above l
 
 ## How to Setup Custom Kotlin Language Server
 
-> Custom version of `vscode-kotlin` required
+> Custom version of [`vscode-kotlin`](#custom-vscode-kotlin) required
 
 While working on this project, it may be useful to try it out right away! Luckily for us, `vscode-kotlin` extension supports custom versions for kotlin-language-server.
 
@@ -95,3 +95,15 @@ Default port is `7721`
 #### Implementation details
 
 `vscode-kotlin` launches tcp server to accept new connections. Once `vscode-languageclient` requests new connection, `vscode-kotlin` starts to listen for new connections on the [kotlin.languageServer.port](vscode://settings/kotlin.languageServer.port). When single connection is accepted, `vscode-kotlin` stops to listen for new connections. Once connections is closed and `vscode-languageclient` requests new connection, `vscode-kotlin` starts to listen for connections again.
+
+## Custom `vscode-kotlin`
+
+We have fork of `fwcd/vscode-kotlin` in our organisation: `Kotlin-Language-Server/vscode-kotlin`. Our fork is the *custom* version of the extension. If you are a part of the team, you can download custom builds from github.
+
+1. Proceed to [Build and Publish Devs Only](https://github.com/Kotlin-Language-Server/vscode-kotlin/actions/workflows/build.yml)
+2. Click on the latest run
+3. Scroll down until **Artifacts** section appears
+4. Press download button on the right side of `vscode-kotlin-<short_sha>`
+5. Unzip the downloaded artifact
+6. Install `kotlin.vsix`
+7. Reload vscode
