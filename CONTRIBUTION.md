@@ -18,16 +18,18 @@ Additionally we introduce the next ones:
 
 We use feature based workflow, which implies branch per feature/bug/issue
 
-## Tracking issues
+## ~~Tracking issues~~
 
-If you want to introduce massive change, please create a corresponding tracking issue and pull-request.
+> **⚠️Tracking issues are canceled. We are using epics, user stories and tasks for the same purpose on our Taiga board. Please, use [this](./.github/ISSUE_TEMPLATE/tracking-issue.md) template.**
+
+~~If you want to introduce massive change, please create a corresponding tracking issue and pull-request.~~
 
 ## Project-wise requirements
 
 > These requirements apply to the project as a whole.
 
 KLSP:
-- *MUST NOT* create any system files in user's project folder, and user's home folder.
+- *MUST NOT* create any system files in user's project folder, and user's home folder. Temporary files, such as logs and databases, are allowed to be stored in OS's temp directory.
 - *SHOULD NOT* rely on editor specific features
 
 
