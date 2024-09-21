@@ -25,15 +25,15 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 
 This project is strictly limited by Language Server Protocol capabilities. We aim to provide complete language server experience.
 
-Though, some features, that our users may expect, lies outside of our responsibility. We won't deliver any features related to code and test running, project building. These tasks should be performed by other means. We offload these features to editor specific extensions.
+Some features, that our users may expect, lies outside of our responsibility. We won't deliver any features related to code and test running, project building. These tasks should be performed by other means. We offload these features to editor specific extensions.
 
 ## Getting Started
 
-* See [contribution.md](CONTRIBUTION.md) for development guidelines
+* See [CONTRIBUTION.md](CONTRIBUTION.md) for development guidelines
+* See [Taiga board](https://tree.taiga.io/project/owl-from-hogvarts-kotlin-language-server/timeline) for ongoing and planed work. Core team uses it as main tool for cooperation and project's status tracking
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](EDITORS.md) for editor-specific instructions
 * See [Troubleshooting](TROUBLESHOOTING.md) for tips on troubleshooting errors
-* See [Roadmap](./ROADMAP.md) for features and major technical goals
 * See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
 * See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for editor-agnostic launch and debug support of Kotlin/JVM programs
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
