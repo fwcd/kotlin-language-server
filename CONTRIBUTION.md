@@ -1,5 +1,5 @@
 
-# Project workflow
+# Project workflow and Guidelines
 
 ## Conventional commits
 
@@ -18,9 +18,18 @@ Additionally we introduce the next ones:
 
 We use feature based workflow, which implies branch per feature/bug/issue
 
+## Guidelines
+
+Project has a lot of old code. It heavily relies on side-effects. Whenever working on project, try to spot usage of side effects and rewrite them with pure code.
+
+## SCRUM
+
+SCRUM appreciates initiative from every project participant. You can choose and create tasks for your self, define your focus as long, as this aligns with major project goals.
+
 ## ~~Tracking issues~~
 
-> **⚠️Tracking issues are canceled. We are using epics, user stories and tasks for the same purpose on our Taiga board. Please, use [this](./.github/ISSUE_TEMPLATE/tracking-issue.md) template.**
+> ### ⚠️Tracking issues are canceled.
+> We are using epics, user stories and tasks for the same purpose on our Taiga board. Please, use [this](./.github/ISSUE_TEMPLATE/tracking-issue.md) template.
 
 ~~If you want to introduce massive change, please create a corresponding tracking issue and pull-request.~~
 
@@ -29,8 +38,14 @@ We use feature based workflow, which implies branch per feature/bug/issue
 > These requirements apply to the project as a whole.
 
 KLSP:
-- *MUST NOT* create any system files in user's project folder, and user's home folder. Temporary files, such as logs and databases, are allowed to be stored in OS's temp directory.
+- ***MUST NOT* create any system files in user's project folder, and user's home folder.**
+  - It clogs user's project with unnecessary information which can be stored in more appropriate place. Such files can be modified, deleted or corrupted in other way.
+  - Consider using temp files or placing files according to XDG specs (`~/.config/<program-name>/config`)
+  - Temporary files, such as logs and databases, are allowed to be stored in OS's temp directory.
 - *SHOULD NOT* rely on editor specific features
+- *SHOULD* have dedicated class for server configuration. sourcepath, etc.
+- ***SHOULD NOT* rely on command line tools even if they are a part of POSIX standard.**
+  - Command line tools are mainly designed for humans, not programs. Their usage involves text parsing which is error prone approach. Usage of CLI tools via ProcessBuilder or any other means of process spawning is considered a crutch and should be replaced with a proper API calls.
 
 
 # Development
