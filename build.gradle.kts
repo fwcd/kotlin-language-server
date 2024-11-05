@@ -24,7 +24,7 @@ detekt {
 // Registers a baseline for Detekt.
 //
 // The way it works is that you set create "baseline" for Detekt
-// by running this task. It will then creatae a detekt-baseline.xml which
+// by running this task. It will then create a detekt-baseline.xml which
 // contains a list of current issues found within the project.
 // Then every time you run the "detekt" task it will only report errors
 // that are not in the baseline config.
@@ -33,6 +33,7 @@ detekt {
 // fix detekt issues so that we can prevent regressions.
 tasks.register<DetektCreateBaselineTask>("createDetektBaseline") {
     description = "Overrides current baseline."
+    group = "verification"
     buildUponDefaultConfig.set(true)
     ignoreFailures.set(true)
     parallel.set(true)

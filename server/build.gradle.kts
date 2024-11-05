@@ -9,8 +9,9 @@ plugins {
     id("kotlin-language-server.kotlin-conventions")
 }
 
+val serverDebugPort = 4000
 val debugPort = 8000
-val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
+val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=$debugPort,suspend=n,quiet=y"
 
 val serverMainClassName = "org.javacs.kt.MainKt"
 val applicationName = "kotlin-language-server"
@@ -20,8 +21,21 @@ application {
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
     applicationDistribution.into("bin") {
-        filePermissions { unix("755".toInt(radix = 8)) }
+        //fileMode = 755
+        filePermissions {
+            user {
+                read = true
+                execute = true
+                write = true
+            }
+            other {
+                read = true
+                write = false
+                execute = true
+            }
+        }
     }
+
 }
 
 repositories {
@@ -42,6 +56,9 @@ dependencies {
 
     implementation(libs.org.eclipse.lsp4j.lsp4j)
     implementation(libs.org.eclipse.lsp4j.jsonrpc)
+
+    implementation(libs.org.slf4j.api)
+    implementation(libs.org.slf4j.simple)
 
     implementation(kotlin("compiler"))
     implementation(kotlin("scripting-compiler"))
@@ -74,8 +91,8 @@ configurations.forEach { config -> config.resolutionStrategy { preferProjectModu
 tasks.startScripts { applicationName = "kotlin-language-server" }
 
 tasks.register<Exec>("fixFilePermissions") {
-    // When running on macOS or Linux the start script
-    // needs executable permissions to run.
+    group = "Distribution"
+    description = "Fix file permissions for the start script on macOS or Linux."
 
     onlyIf { !System.getProperty("os.name").lowercase().contains("windows") }
     commandLine(
@@ -86,15 +103,20 @@ tasks.register<Exec>("fixFilePermissions") {
 }
 
 tasks.register<JavaExec>("debugRun") {
+    group = "Application"
+    description = "Run the application with debugging enabled."
     mainClass.set(serverMainClassName)
     classpath(sourceSets.main.get().runtimeClasspath)
     standardInput = System.`in`
 
     jvmArgs(debugArgs)
+    args(listOf("--tcpServerPort", serverDebugPort, "--tcpDebug", "--fullLog"))
     doLast { println("Using debug port $debugPort") }
 }
 
 tasks.register<CreateStartScripts>("debugStartScripts") {
+    group = "Distribution"
+    description = "Create start scripts with debug options for the application."
     applicationName = "kotlin-language-server"
     mainClass.set(serverMainClassName)
     outputDir = tasks.installDist.get().destinationDir.toPath().resolve("bin").toFile()
@@ -103,6 +125,8 @@ tasks.register<CreateStartScripts>("debugStartScripts") {
 }
 
 tasks.register<Sync>("installDebugDist") {
+    group = "Distribution"
+    description = "Install the debug distribution and create debug start scripts."
     dependsOn("installDist")
     finalizedBy("debugStartScripts")
 }
