@@ -9,7 +9,7 @@
 
 This is fork of currently almost unmaintained upstream repo: https://github.com/fwcd/kotling-language-server
 
-*This fork* is being actively maintained. Our goal is to make this extension usable and feature complete. We *do not* aim for full feature parity with JetBrains ide's Kotlin support.
+*This fork* is being maintained in developers' spare time. Our goal is to make this extension usable and feature complete. We *do not* aim for full feature parity with JetBrains ide's Kotlin support.
 
 > We do support only Linux and MacOS. Windows is not tested but still may work. Windows only        issues has least priority.
 
