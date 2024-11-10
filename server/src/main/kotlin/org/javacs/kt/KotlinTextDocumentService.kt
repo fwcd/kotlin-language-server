@@ -148,7 +148,7 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    override fun rename(params: RenameParams) = async.compute {
+    override fun rename(params: RenameParams): CompletableFuture<WorkspaceEdit> = async.compute {
         val (file, cursor) = recover(params, Recompile.NEVER) ?: return@compute null
         renameSymbol(file, cursor, sp, params.newName)
     }

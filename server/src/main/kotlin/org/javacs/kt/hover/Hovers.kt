@@ -27,45 +27,51 @@ fun hoverAt(file: CompiledFile, cursor: Int): Hover? {
     val javaDoc = getDocString(file, cursor)
     val location = ref.textRange
     val hoverText = DECL_RENDERER.render(target)
-    val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
+    val hover = MarkupContent(
+        "markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n")
+    )
     val range = Range(
-            position(file.content, location.startOffset),
-            position(file.content, location.endOffset))
+        position(file.content, location.startOffset), position(file.content, location.endOffset)
+    )
     return Hover(hover, range)
 }
 
 private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
     val expression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
-    val javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
+    val javaDoc: String =
+        expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
     val scope = file.scopeAtPoint(cursor) ?: return null
-    val context = file.bindingContextOf(expression, scope) ?: return null
-    val hoverText = renderTypeOf(expression, context)
-    val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
+    val hoverTextMaybe = file.bindingContextOf(expression, scope)?.let { renderTypeOf(expression, it) }
+    val hoverText = hoverTextMaybe ?: return null
+    val hover = MarkupContent(
+        "markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n")
+    )
     return Hover(hover)
 }
 
 // Source: https://github.com/JetBrains/kotlin/blob/master/idea/src/org/jetbrains/kotlin/idea/codeInsight/KotlinExpressionTypeProvider.kt
-
-private val TYPE_RENDERER: DescriptorRenderer by lazy { DescriptorRenderer.COMPACT.withOptions {
-    textFormat = RenderingFormat.PLAIN
-    classifierNamePolicy = object: ClassifierNamePolicy {
-        override fun renderClassifier(classifier: ClassifierDescriptor, renderer: DescriptorRenderer): String {
-            if (DescriptorUtils.isAnonymousObject(classifier)) {
-                return "<anonymous object>"
+private val TYPE_RENDERER: DescriptorRenderer by lazy {
+    DescriptorRenderer.COMPACT.withOptions {
+        textFormat = RenderingFormat.PLAIN
+        classifierNamePolicy = object : ClassifierNamePolicy {
+            override fun renderClassifier(classifier: ClassifierDescriptor, renderer: DescriptorRenderer): String {
+                if (DescriptorUtils.isAnonymousObject(classifier)) {
+                    return "<anonymous object>"
+                }
+                return ClassifierNamePolicy.SHORT.renderClassifier(classifier, renderer)
             }
-            return ClassifierNamePolicy.SHORT.renderClassifier(classifier, renderer)
         }
     }
-} }
+}
 
 private fun renderJavaDoc(text: String): String {
     val split = text.split('\n')
-    return split.mapIndexed { i, it ->
-        val ret: String
-        if (i == 0) ret = it.substring(it.indexOf("/**") + 3) // get rid of the start comment characters
-        else if (i == split.size - 1) ret = it.substring(it.indexOf("*/") + 2) // get rid of the end comment characters
-        else ret = it.substring(it.indexOf('*') + 1) // get rid of any leading *
-        ret
+    return split.mapIndexed { i, spl ->
+        when (i) {
+            0 -> spl.substring(spl.indexOf("/**") + 3) // get rid of the start comment characters
+            split.size - 1 -> spl.substring(spl.indexOf("*/") + 2) // get rid of the end comment characters
+            else -> spl.substring(spl.indexOf('*') + 1) // get rid of any leading *
+        }
     }.joinToString("\n")
 }
 
@@ -80,7 +86,8 @@ private fun renderTypeOf(element: KtExpression, bindingContext: BindingContext):
         }
     }
 
-    val expressionType = bindingContext[BindingContext.EXPRESSION_TYPE_INFO, element]?.type ?: element.getType(bindingContext)
+    val expressionType =
+        bindingContext[BindingContext.EXPRESSION_TYPE_INFO, element]?.type ?: element.getType(bindingContext)
     val result = expressionType?.let { TYPE_RENDERER.renderType(it) } ?: return null
 
     val smartCast = bindingContext[BindingContext.SMARTCAST, element]

@@ -1,9 +1,6 @@
 package org.javacs.kt
 
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.util.*
-import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import java.util.logging.Handler
 import java.util.logging.Level
@@ -57,11 +54,10 @@ class Logger {
     private val errStream = DelegatePrintStream { logError(LogMessage(LogLevel.ERROR, it.trimEnd())) }
     val outStream = DelegatePrintStream { log(LogMessage(LogLevel.INFO, it.trimEnd())) }
 
-    private val newline = System.lineSeparator()
-    val logTime = false
+    private val logTime = false
     var level = LogLevel.INFO
 
-    fun logError(msg: LogMessage) {
+    private fun logError(msg: LogMessage) {
         if (errBackend == null) {
             errQueue.offer(msg)
         } else {
@@ -144,7 +140,7 @@ class Logger {
         val lastIndex = msgLength - 1
         var charIndex = 0
         var placeholderIndex = 0
-        var result = StringBuilder()
+        val result = StringBuilder()
 
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
@@ -176,12 +172,11 @@ class Logger {
 
     private fun format(msg: String): String {
         val time = if (logTime) "${Instant.now()} " else ""
-        var thread = Thread.currentThread().name
-
-        return time + shortenOrPad(thread, 10) + msg.trimEnd()
+        val thread = Thread.currentThread().name
+        return time + shortenOrPad(thread) + msg.trimEnd()
     }
 
-    private fun shortenOrPad(str: String, length: Int): String =
+    private fun shortenOrPad(str: String, length: Int = 10): String =
             if (str.length <= length) {
                 str.padEnd(length, ' ')
             } else {

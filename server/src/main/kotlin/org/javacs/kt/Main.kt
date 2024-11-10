@@ -15,7 +15,6 @@ class Args {
      *  - TCP Server, in which case the client has to connect to the specified tcpServerPort (used by the Docker image)
      *  - TCP Client, in which case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode)
      */
-
     @Parameter(names = ["--tcpServerPort", "-sp"])
     var tcpServerPort: Int? = null
     @Parameter(names = ["--tcpClientPort", "-p"])

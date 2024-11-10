@@ -56,7 +56,7 @@ class SourcePath(
         val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
         val kind: CompilationKind =
-            if (path?.fileName?.toString()?.endsWith(".gradle.kts") ?: false) CompilationKind.BUILD_SCRIPT
+            if (path?.fileName?.toString()?.endsWith(".gradle.kts") == true) CompilationKind.BUILD_SCRIPT
             else CompilationKind.DEFAULT
 
         fun put(newContent: String) {

@@ -16,7 +16,6 @@ import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
 import org.javacs.kt.externalsources.*
-import org.javacs.kt.index.SymbolIndex
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -25,13 +24,13 @@ import java.util.concurrent.CompletableFuture.completedFuture
 class KotlinLanguageServer(
     val config: Configuration = Configuration()
 ) : LanguageServer, LanguageClientAware, Closeable {
-    val databaseService = DatabaseService()
+    private val databaseService = DatabaseService()
     val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
-    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
+    private val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
@@ -41,10 +40,6 @@ class KotlinLanguageServer(
 
     private val async = AsyncExecutor()
     private var progressFactory: Progress.Factory = Progress.Factory.None
-        set(factory: Progress.Factory) {
-            field = factory
-            sourcePath.progressFactory = factory
-        }
 
     companion object {
         val VERSION: String? = System.getProperty("kotlinLanguageServer.version")
@@ -100,11 +95,11 @@ class KotlinLanguageServer(
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (clientCapabilities?.window?.workDoneProgress ?: false) {
+        if (clientCapabilities?.window?.workDoneProgress == true) {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        if (clientCapabilities?.textDocument?.rename?.prepareSupport ?: false) {
+        if (clientCapabilities?.textDocument?.rename?.prepareSupport == true) {
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 

@@ -81,17 +81,31 @@ private class FileToEdit {
         assertThat(context.getType(kt), hasToString("Int"))
     }
 
-    @Test fun editRef() {
+    @Test
+    fun editRef() {
         val file1 = testResourcesRoot().resolve("hover/Recover.kt")
         val content = Files.readAllLines(file1).joinToString("\n")
         val original = compiler.createKtFile(content, file1)
         val (context, _) = compiler.compileKtFile(original, listOf(original))
-        val function = original.findElementAt(49)!!.parentsWithSelf.filterIsInstance<KtNamedFunction>().first()
-        val scope = context.get(BindingContext.LEXICAL_SCOPE, function.bodyExpression)!!
+        val function = original.findElementAt(49)
+            ?.parentsWithSelf
+            ?.filterIsInstance<KtNamedFunction>()
+            ?.first() ?: error("Failed to find function at position 49")
+
+        val scope = context.get(BindingContext.LEXICAL_SCOPE, function.bodyExpression)
+            ?: error("Failed to get lexical scope for the function")
+
         val recompile = compiler.createKtDeclaration("""private fun singleExpressionFunction() = intFunction()""")
-        val (recompileContext, _) = compiler.compileKtExpression(recompile, scope, setOf(original))!!
-        val intFunctionRef = recompile.findElementAt(41)!!.parentsWithSelf.filterIsInstance<KtReferenceExpression>().first()
-        val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!
+        val (recompileContext, _) = compiler.compileKtExpression(recompile, scope, setOf(original))
+            ?: error("Failed to compile KtExpression")
+
+        val intFunctionRef = recompile.findElementAt(41)
+            ?.parentsWithSelf
+            ?.filterIsInstance<KtReferenceExpression>()
+            ?.first() ?: error("Failed to find reference expression at position 41")
+
+        val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)
+            ?: error("Failed to resolve reference target")
 
         assertThat(target.name, hasToString("intFunction"))
     }
