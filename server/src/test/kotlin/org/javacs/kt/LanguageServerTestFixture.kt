@@ -4,6 +4,7 @@ import org.eclipse.lsp4j.*
 import org.eclipse.lsp4j.services.LanguageClient
 import org.junit.Before
 import org.junit.After
+import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
@@ -26,8 +27,8 @@ abstract class LanguageServerTestFixture(
         return testResources.resolve(relativeWorkspaceRoot)
     }
 
-    private fun createLanguageServer(config: Configuration): KotlinLanguageServer {
-        val languageServer = KotlinLanguageServer(config)
+    private fun createLanguageServer(config: Configuration): Server {
+        val languageServer = Server(config)
         val init = InitializeParams().apply {
             capabilities = ClientCapabilities().apply {
                 textDocument = TextDocumentClientCapabilities().apply {
@@ -79,7 +80,7 @@ abstract class LanguageServerTestFixture(
         return CompletionParams(fileId, position)
     }
 
-    fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams =
+    private fun textDocumentPosition(relativePath: String, line: Int, column: Int): TextDocumentPositionParams =
         textDocumentPosition(relativePath, position(line, column))
 
     fun codeActionParams(relativePath: String, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int, diagnostics: List<Diagnostic>, only: List<String>): CodeActionParams {
@@ -112,7 +113,7 @@ abstract class LanguageServerTestFixture(
     fun definitionParams(relativePath: String, position: Position): DefinitionParams =
         textDocumentPosition(relativePath, position).run { DefinitionParams(textDocument, position) }
 
-    fun textDocumentPosition(relativePath: String, position: Position): TextDocumentPositionParams {
+    private fun textDocumentPosition(relativePath: String, position: Position): TextDocumentPositionParams {
         val file = workspaceRoot.resolve(relativePath)
         val fileId = TextDocumentIdentifier(file.toUri().toString())
         return TextDocumentPositionParams(fileId, position)
@@ -123,7 +124,7 @@ abstract class LanguageServerTestFixture(
     fun range(startLine: Int, startColumn: Int, endLine: Int, endColumn: Int) =
         Range(position(startLine, startColumn), position(endLine, endColumn))
 
-    fun uri(relativePath: String) =
+    fun uri(relativePath: String): URI =
             workspaceRoot.resolve(relativePath).toUri()
 
     fun referenceParams(relativePath: String, line: Int, column: Int): ReferenceParams =
@@ -176,8 +177,8 @@ abstract class LanguageServerTestFixture(
 }
 
 fun testResourcesRoot(): Path {
-    val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt").toURI()
-    return Paths.get(anchorTxt).parent!!
+    val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt")?.toURI()
+    return anchorTxt?.let { Paths.get(it).parent } ?: throw RuntimeException("Could not find test resources root")
 }
 
 open class SingleFileTestFixture(
@@ -189,6 +190,6 @@ open class SingleFileTestFixture(
         open(file)
 
         // Wait for lint, so subsequent replace(...) operations cause recovery
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
     }
 }

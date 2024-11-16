@@ -2,7 +2,7 @@ package org.javacs.kt
 
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
-import org.javacs.kt.compiler.CompilationKind
+import org.javacs.kt.compiler.CompilationType
 import org.javacs.kt.position.changedRegion
 import org.javacs.kt.position.location
 import org.javacs.kt.position.position
@@ -29,10 +29,10 @@ class CompiledFile(
     val parse: KtFile,
     val compile: BindingContext,
     val module: ModuleDescriptor,
-    val sourcePath: Collection<KtFile>,
-    val classPath: CompilerClassPath,
-    val isScript: Boolean = false,
-    val kind: CompilationKind = CompilationKind.DEFAULT
+    private val sourcePath: Collection<KtFile>,
+    private val classPath: CompilerClassPath,
+    private val isScript: Boolean = false,
+    val kind: CompilationType = CompilationType.DEFAULT
 ) {
     /**
      * Find the type of the expression at `cursor`
@@ -99,9 +99,9 @@ class CompiledFile(
 
     private fun expandForReference(cursor: Int, surroundingExpr: KtExpression): KtExpression {
         val parent: KtExpression? =
-            surroundingExpr.parent as? KtDotQualifiedExpression // foo.bar
-            ?: surroundingExpr.parent as? KtSafeQualifiedExpression // foo?.bar
-            ?: surroundingExpr.parent as? KtCallExpression // foo()
+            surroundingExpr.parent as? KtDotQualifiedExpression
+            ?: surroundingExpr.parent as? KtSafeQualifiedExpression
+            ?: surroundingExpr.parent as? KtCallExpression
         return parent?.let { expandForReference(cursor, it) } ?: surroundingExpr
     }
 
@@ -155,12 +155,12 @@ class CompiledFile(
 
         // Otherwise just use the expression
         val recoveryRange = parent.textRange
-        LOG.info("Re-parsing {}", describeRange(recoveryRange, true))
+        LOG.info("Re-parsing {}", describeRange(recoveryRange))
 
         surroundingContent = content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
         offset = recoveryRange.startOffset
 
-        if (asReference && !((parent as? KtParameter)?.hasValOrVar() ?: true)) {
+        if (asReference && (parent as? KtParameter)?.hasValOrVar() == false) {
             // Prepend 'val' to (e.g. function) parameters
             val prefix = "val "
             surroundingContent = prefix + surroundingContent
@@ -264,7 +264,7 @@ class CompiledFile(
         return "$file ${pos.line + 1}:${pos.character + 1}"
     }
 
-    private fun describeRange(range: TextRange, oldContent: Boolean = false): String {
+    private fun describeRange(range: TextRange, oldContent: Boolean = true): String {
         val c = if (oldContent) parse.text else content
         val start = position(c, range.startOffset)
         val end = position(c, range.endOffset)

@@ -38,11 +38,11 @@ private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
             ).first().path
         }
 
-    val stdlibs = linkedStdLibs.ifEmpty {
+    val stdLibs = linkedStdLibs.ifEmpty {
         findKotlinStdlib()?.let { listOf(it) } ?: listOf()
     }
 
-    return paths.filterNot(isStdlib).union(stdlibs)
+    return paths.filterNot(isStdlib).union(stdLibs)
 }
 
 private data class StdLibItem(

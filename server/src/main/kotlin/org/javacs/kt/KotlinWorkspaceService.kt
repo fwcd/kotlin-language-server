@@ -27,7 +27,7 @@ class KotlinWorkspaceService(
     private val gson = Gson()
     private var languageClient: LanguageClient? = null
 
-    override fun connect(client: LanguageClient): Unit {
+    override fun connect(client: LanguageClient) {
         languageClient = client
     }
 
