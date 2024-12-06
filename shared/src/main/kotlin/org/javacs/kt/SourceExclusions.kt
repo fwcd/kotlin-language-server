@@ -53,26 +53,21 @@ class SourceExclusions(
             .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
             .flatten()
 
-        // Check if we're in a target directory
-        if (relativePaths.contains(Path.of("target"))) {
-            val pathList = relativePaths.toList()
-            val targetIndex = pathList.indexOf(Path.of("target"))
-
-            // Allow only target directory itself or if next directory is generated-sources
-            return pathList.size <= targetIndex + 1 ||
-                pathList[targetIndex + 1] == Path.of("generated-sources")
+        val isIncluded = when {
+            // Check if we're in a target directory
+            relativePaths.contains(Path.of("target")) -> {
+                val pathList = relativePaths.toList()
+                val targetIndex = pathList.indexOf(Path.of("target"))
+                // Allow only target directory itself or if next directory is generated-sources
+                pathList.size <= targetIndex + 1 || pathList[targetIndex + 1] == Path.of("generated-sources")
+            }
+            // Check exclusion patterns
+            exclusionMatchers.any { matcher -> relativePaths.any(matcher::matches) } -> false
+            // Include paths outside target directory by default
+            else -> true
         }
 
-        // If path matches any exclusion pattern, exclude it
-        if (exclusionMatchers.any { matcher ->
-                relativePaths.any(matcher::matches)
-            }) {
-            return false
-        }
-
-        // Include paths outside target directory by default
-        return true
+        return isIncluded
     }
-
 }
 
