@@ -1,9 +1,10 @@
 [versions]
 kotlinVersion = "2.1.0"
-lsp4jVersion = "0.21.2"
-exposedVersion = "0.37.3"
+lsp4jVersion = "0.23.1"
+exposedVersion = "0.58.0"
 jmhVersion = "1.20"
-guavaVersion = "33.3.0-jre"
+slf4j = "2.0.16"
+gruavaVersion = "33.4.0-jre"
 
 [libraries]
 org-jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
@@ -32,7 +33,7 @@ org-jetbrains-fernflower = { module = "org.jetbrains:fernflower", version = "1.0
 
 com-github-fwcd-ktfmt = { module = "com.github.fwcd.ktfmt:ktfmt", version = "b5d31d1" }
 
-com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "guavaVersion" }
+com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "gruavaVersion" }
 
 com-h2database-h2 = { module = "com.h2database:h2", version = "1.4.200" }
 
@@ -41,12 +42,16 @@ com-beust-jcommander = { module = "com.beust:jcommander", version = "1.78" }
 org-openjdk-jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmhVersion" }
 org-openjdk-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmhVersion" }
 
-org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.41.2.1" }
+org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.48.0.0" }
 
 # buildSrc
-org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin",version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
+
+org-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+org-slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
 
 [plugins]
-com-github-jk1-tcdeps = { id = "com.github.jk1.tcdeps", version = "1.2" }
-com-jaredsburrows-license = { id = "com.jaredsburrows.license", version = "0.8.42" }
+com-github-jk1-tcdeps = { id = "com.github.jk1.tcdeps", version = "1.6.2" }
+com-jaredsburrows-license = { id = "com.jaredsburrows.license", version = "0.9.8" }
 io-gitlab-arturbosch-detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.22.0" }
