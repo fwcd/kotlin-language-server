@@ -40,6 +40,9 @@ org-openjdk-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh
 
 org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.41.2.1" }
 
+# buildSrc
+org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin",version.ref = "kotlinVersion" }
+
 [plugins]
 com-github-jk1-tcdeps = { id = "com.github.jk1.tcdeps", version = "1.2" }
 com-jaredsburrows-license = { id = "com.jaredsburrows.license", version = "0.8.42" }
