@@ -1,0 +1,44 @@
+config:
+  validation: true # verifies that this config file is valid
+  warningsAsErrors: false
+
+comments:
+  excludes: &standardExcludes
+    - '**/bin/**'
+    - '**/build/**'
+    - '**/src/test/**'
+
+complexity:
+  excludes: *standardExcludes
+
+empty-blocks:
+  excludes: *standardExcludes
+
+exceptions:
+  excludes: *standardExcludes
+  SwallowedException:
+    ignoredExceptionTypes:
+      - CancellationException
+      - InterruptedException
+      - MalformedURLException
+      - NumberFormatException
+      - ParseException
+      - MissingPropertyException
+
+naming:
+  excludes: *standardExcludes
+
+performance:
+  excludes: *standardExcludes
+
+potential-bugs:
+  excludes: *standardExcludes
+
+style:
+  excludes: *standardExcludes
+  MaxLineLength:
+    active: false
+  WildcardImport:
+    excludeImports:
+      - java.util.*
+      - org.hamcrest.Matchers.*

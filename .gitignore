@@ -9,6 +9,7 @@ hs_err_*
 .factorypath
 .gradle
 .idea
+.metals
 *.iml
 bin
 build

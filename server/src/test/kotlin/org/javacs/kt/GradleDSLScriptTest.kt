@@ -3,9 +3,11 @@ package org.javacs.kt
 import org.junit.Test
 import org.junit.Assert.assertThat
 import org.hamcrest.Matchers.*
-import org.eclipse.lsp4j.MarkupContent
 
-class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.gradle.kts") {
+class GradleDSLScriptTest : SingleFileTestFixture("kotlinDSLWorkspace", "build.gradle.kts", Configuration().apply {
+    scripts.enabled = true
+    scripts.buildScriptsEnabled = true
+}) {
     @Test fun `edit repositories`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 7, 13)).get().right!!
         val labels = completions.items.map { it.label }

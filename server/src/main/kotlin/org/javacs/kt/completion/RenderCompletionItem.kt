@@ -9,20 +9,13 @@ import org.jetbrains.kotlin.builtins.isFunctionType
 import org.jetbrains.kotlin.renderer.ClassifierNamePolicy
 import org.jetbrains.kotlin.renderer.DescriptorRenderer
 import org.jetbrains.kotlin.renderer.ParameterNameRenderingPolicy
-import org.jetbrains.kotlin.types.ErrorUtils
-import org.jetbrains.kotlin.types.UnresolvedType
 
 val DECL_RENDERER = DescriptorRenderer.withOptions {
     withDefinedIn = false
     modifiers = emptySet()
     classifierNamePolicy = ClassifierNamePolicy.SHORT
     parameterNameRenderingPolicy = ParameterNameRenderingPolicy.ONLY_NON_SYNTHESIZED
-    typeNormalizer = {
-        when (it) {
-            is UnresolvedType ->  ErrorUtils.createErrorTypeWithCustomDebugName(it.presentableName)
-            else -> it
-        }
-    }
+    typeNormalizer = { it -> it }
 }
 
 private val GOOD_IDENTIFIER = Regex("[a-zA-Z]\\w*")

@@ -9,52 +9,37 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository == 'fwcd/kotlin-language-server'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '11'
-      - uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Get tag name
+        id: tag
+        run: |
+          tag=$(basename "${{ github.ref }}")
+          echo "tag=$tag" >> $GITHUB_OUTPUT
       - name: Build distribution
-        run: ./gradlew :server:distZip :grammars:distZip
+        run: ./gradlew :server:distZip
       - name: Create release
-        uses: actions/create-release@v1
-        id: create_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Version ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Upload server asset
-        uses: actions/upload-release-asset@v1
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          gh release create "$tag" --title "Version $tag"
+      - name: Upload assets
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./server/build/distributions/server.zip
-          asset_name: server.zip
-          asset_content_type: application/zip
-      - name: Upload grammar asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./grammars/build/distributions/grammars.zip
-          asset_name: grammars.zip
-          asset_content_type: application/zip
-      - name: Deploy Docker image to GitHub Packages
-        uses: docker/build-push-action@v1
-        with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: fwcd/kotlin-language-server/server
-          tag_with_ref: true
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${{ steps.tag.outputs.tag }}"
+          gh release upload "$tag" server/build/distributions/*
       - name: Deploy Maven artifacts to GitHub Packages
         run: ./gradlew :shared:publish :server:publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPR_USERNAME: ${{ github.actor }}
+          GPR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}

@@ -9,10 +9,22 @@ import java.nio.file.Paths
 
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them
-class SourceExclusions(private val workspaceRoots: Collection<Path>) {
-	private val excludedPatterns = listOf(".*", "bin", "build", "node_modules", "target").map { FileSystems.getDefault().getPathMatcher("glob:$it") }
+class SourceExclusions(
+    private val workspaceRoots: Collection<Path>,
+    private val scriptsConfig: ScriptsConfiguration
+) {
+    val excludedPatterns = (listOf(
+        ".git", ".hg", ".svn",                                                      // Version control systems
+        ".idea", ".idea_modules", ".vs", ".vscode", ".code-workspace", ".settings", // IDEs
+        "bazel-*", "bin", "build", "node_modules", "target",                        // Build systems
+    ) + when {
+        !scriptsConfig.enabled -> listOf("*.kts")
+        !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
+        else -> emptyList()
+    })
 
-    constructor(workspaceRoot: Path) : this(listOf(workspaceRoot)) {}
+    private val exclusionMatchers = excludedPatterns
+        .map { FileSystems.getDefault().getPathMatcher("glob:$it") }
 
     /** Finds all non-excluded files recursively. */
     fun walkIncluded(): Sequence<Path> = workspaceRoots.asSequence().flatMap { root ->
@@ -27,10 +39,10 @@ class SourceExclusions(private val workspaceRoots: Collection<Path>) {
 
     /** Tests whether the given path is not excluded. */
     fun isPathIncluded(file: Path): Boolean = workspaceRoots.any { file.startsWith(it) }
-        && excludedPatterns.none { pattern ->
+        && exclusionMatchers.none { matcher ->
             workspaceRoots
                 .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
                 .flatMap { it } // Extract path segments
-                .any(pattern::matches)
+                .any(matcher::matches)
         }
 }

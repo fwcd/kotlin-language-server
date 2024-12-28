@@ -8,26 +8,30 @@ import org.eclipse.lsp4j.services.LanguageClientAware
 import org.eclipse.lsp4j.services.LanguageServer
 import org.eclipse.lsp4j.services.NotebookDocumentService
 import org.javacs.kt.command.ALL_COMMANDS
-import org.javacs.kt.externalsources.*
+import org.javacs.kt.database.DatabaseService
+import org.javacs.kt.progress.LanguageClientProgress
+import org.javacs.kt.progress.Progress
+import org.javacs.kt.semantictokens.semanticTokensLegend
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.parseURI
-import org.javacs.kt.progress.Progress
-import org.javacs.kt.progress.LanguageClientProgress
-import org.javacs.kt.semantictokens.semanticTokensLegend
+import org.javacs.kt.externalsources.*
+import org.javacs.kt.index.SymbolIndex
 import java.io.Closeable
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
-class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
-    val config = Configuration()
-    val classPath = CompilerClassPath(config.compiler)
+class KotlinLanguageServer(
+    val config: Configuration = Configuration()
+) : LanguageServer, LanguageClientAware, Closeable {
+    val databaseService = DatabaseService()
+    val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
     private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
-    val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing)
-    val sourceFiles = SourceFiles(sourcePath, uriContentProvider)
+    val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
+    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
 
     private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
@@ -74,6 +78,7 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.workspace.workspaceFolders = WorkspaceFoldersOptions()
         serverCapabilities.workspace.workspaceFolders.supported = true
         serverCapabilities.workspace.workspaceFolders.changeNotifications = Either.forRight(true)
+        serverCapabilities.inlayHintProvider = Either.forLeft(true)
         serverCapabilities.hoverProvider = Either.forLeft(true)
         serverCapabilities.renameProvider = Either.forLeft(true)
         serverCapabilities.completionProvider = CompletionOptions(false, listOf("."))
@@ -87,6 +92,10 @@ class KotlinLanguageServer : LanguageServer, LanguageClientAware, Closeable {
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
+        serverCapabilities.documentHighlightProvider = Either.forLeft(true)
+
+        val storagePath = getStoragePath(params)
+        databaseService.setup(storagePath)
 
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false

@@ -9,7 +9,8 @@ internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : Clas
     override val classpathOrEmpty: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathOrEmpty)
     override val buildScriptClasspath: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspath)
     override val buildScriptClasspathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspathOrEmpty)
-    override val classpathWithSources: Set<ClassPathEntry> = wrapWithStdlibEntries(wrapped.classpathWithSources)
+    override val classpathWithSources: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathWithSources)
+    override val currentBuildFileVersion: Long get() = wrapped.currentBuildFileVersion
 }
 
 private fun wrapWithStdlibEntries(paths: Set<ClassPathEntry>): Set<ClassPathEntry> {
@@ -45,15 +46,15 @@ private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
 }
 
 private data class StdLibItem(
-    val key : String,
-    val major : Int,
+    val key: String,
+    val major: Int,
     val minor: Int,
-    val patch : Int,
+    val patch: Int,
     val path: Path
 ) {
     companion object {
         // Matches names like: "kotlin-stdlib-jdk7-1.2.51.jar"
-        val parser = Regex("""(kotlin-stdlib(-[^-]+)?)-(\d+)\.(\d+)\.(\d+)\.jar""")
+        val parser = Regex("""(kotlin-stdlib(-[^-]+)?)(?:-(\d+)\.(\d+)\.(\d+))?\.jar""")
 
         fun from(path: Path) : StdLibItem? {
             return parser.matchEntire(path.fileName.toString())?.let { match ->

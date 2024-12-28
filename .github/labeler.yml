@@ -1,0 +1,79 @@
+build:
+  - changed-files:
+      - any-glob-to-any-file:
+          - buildSrc/**
+          - server/build.gradle.kts
+          - shared/build.gradle.kts
+          - build.gradle.kts
+          - gradle
+          - gradle.properties
+          - gradlew
+          - gradlew.bat
+          - settings.gradle.kts
+
+ci-cd:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+code completion:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/completion/**
+          - server/src/test/resources/completions/**
+
+code quality:
+  - changed-files:
+      - any-glob-to-any-file:
+          - detekt.yml
+          - server/src/test/**
+          - shared/src/test/**
+
+dependency resolution:
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/**
+
+diagnostics:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/diagnostic/**
+          - server/src/test/resources/diagnostic/**
+
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - Dockerfile
+
+editor support:
+  - changed-files:
+      - any-glob-to-any-file:
+          - EDITORS.md
+
+formatting:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/formatting/**
+          - server/src/test/resources/formatting/**
+
+gradle:
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/Gradle*
+          - shared/src/main/resources/*.gradle
+
+index:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/index/**
+
+maven:
+  - changed-files:
+      - any-glob-to-any-file:
+          - shared/src/main/kotlin/org/javacs/kt/classpath/Maven*
+
+semantic tokens:
+  - changed-files:
+      - any-glob-to-any-file:
+          - server/src/main/kotlin/org/javacs/kt/semantictokens/**
+          - server/src/test/resources/semantictokens/**

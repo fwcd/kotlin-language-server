@@ -1,17 +1,24 @@
-# Running this container will start a language server that listens for TCP connections on port 49100
+# Running this image will start a language server that listens for TCP connections on port 49100
 # Every connection will be run in a forked child process
 
-FROM openjdk:11 AS builder
+ARG JDKVERSION=17
 
-WORKDIR /kotlin-language-server
+FROM --platform=$BUILDPLATFORM eclipse-temurin:${JDKVERSION} AS builder
+
+ARG JDKVERSION
+
+WORKDIR /src/kotlin-language-server
+
 COPY . .
-RUN ./gradlew :server:installDist
+RUN ./gradlew :server:installDist -PjavaVersion=${JDKVERSION}
 
-FROM openjdk:11
+FROM eclipse-temurin:${JDKVERSION}
 
-WORKDIR /
-COPY --from=builder /kotlin-language-server/server/build/install/server /server
+WORKDIR /opt/kotlin-language-server
+
+COPY --from=builder /src/kotlin-language-server/server/build/install/server /opt/kotlin-language-server
+RUN ln -s /opt/kotlin-language-server/bin/kotlin-language-server /usr/local/bin/kotlin-language-server
 
 EXPOSE 49100
 
-CMD ["/server/bin/kotlin-language-server", "--tcpServerPort", "49100"]
+CMD ["/usr/local/bin/kotlin-language-server", "--tcpServerPort", "49100"]

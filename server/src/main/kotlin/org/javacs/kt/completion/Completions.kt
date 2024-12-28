@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.TypeUtils
 import org.jetbrains.kotlin.types.typeUtil.replaceArgumentsWithStarProjections
 import org.jetbrains.kotlin.types.checker.KotlinTypeChecker
+import org.jetbrains.kotlin.utils.addToStdlib.applyIf
 import java.util.concurrent.TimeUnit
 
 // The maximum number of completion items
@@ -159,12 +160,14 @@ data class ElementCompletionItems(val items: Sequence<CompletionItem>, val eleme
 
 /** Finds completions based on the element around the user's cursor. */
 private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
-    val surroundingElement = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence())
-    val completions = elementCompletions(file, cursor, surroundingElement)
-
-    val matchesName = completions.filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
-    val sorted = matchesName.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
-        ?: matchesName.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
+    val (surroundingElement, isGlobal) = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence())
+    val completions = elementCompletions(file, cursor, surroundingElement, isGlobal)
+        .applyIf(isGlobal) { filter { declarationIsInfix(it) } }
+        .applyIf(surroundingElement.endOffset == cursor) {
+            filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
+        }
+    val sorted = completions.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
+        ?: completions.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
     return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, surroundingElement)
@@ -231,28 +234,59 @@ private fun isSetter(d: DeclarationDescriptor): Boolean =
         d.name.identifier.matches(Regex("set[A-Z]\\w+")) &&
         d.valueParameters.size == 1
 
-private fun completableElement(file: CompiledFile, cursor: Int): KtElement? {
-    val el = file.parseAtPoint(cursor - 1) ?: return null
-            // import x.y.?
-    return el.findParent<KtImportDirective>()
-            // package x.y.?
-            ?: el.findParent<KtPackageDirective>()
-            // :?
-            ?: el as? KtUserType
-            ?: el.parent as? KtTypeElement
-            // .?
-            ?: el as? KtQualifiedExpression
-            ?: el.parent as? KtQualifiedExpression
-            // something::?
-            ?: el as? KtCallableReferenceExpression
-            ?: el.parent as? KtCallableReferenceExpression
-            // something.foo() with cursor in the method
-            ?: el.parent?.parent as? KtQualifiedExpression
-            // ?
-            ?: el as? KtNameReferenceExpression
+private fun isGlobalCall(el: KtElement) = el is KtBlockExpression || el is KtClassBody || el.parent is KtBinaryExpression
+
+private fun asGlobalCompletable(file: CompiledFile, cursor: Int, el: KtElement): KtElement? {
+    val psi =  file.parse.findElementAt(cursor) ?: return null
+    val element = when (val e = psi.getPrevSiblingIgnoringWhitespace() ?: psi.parent) {
+        is KtProperty -> e.children.lastOrNull()
+        is KtBinaryExpression -> el
+        else -> e
+    }
+    return element as? KtReferenceExpression
+        ?: element as? KtQualifiedExpression
+        ?: element as? KtConstantExpression
 }
 
-private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence<DeclarationDescriptor> {
+private fun KtElement.asKtClass(): KtElement? {
+    return this.findParent<KtImportDirective>() // import x.y.?
+        // package x.y.?
+        ?: this.findParent<KtPackageDirective>()
+        // :?
+        ?: this as? KtUserType
+        ?: this.parent as? KtTypeElement
+        // .?
+        ?: this as? KtQualifiedExpression
+        ?: this.parent as? KtQualifiedExpression
+        // something::?
+        ?: this as? KtCallableReferenceExpression
+        ?: this.parent as? KtCallableReferenceExpression
+        // something.foo() with cursor in the method
+        ?: this.parent?.parent as? KtQualifiedExpression
+        // ?
+        ?: this as? KtNameReferenceExpression
+        // x ? y (infix)
+        ?: this.parent as? KtBinaryExpression
+        // x()
+        ?: this as? KtCallExpression
+        // x (constant)
+        ?: this as? KtConstantExpression
+}
+
+private fun completableElement(file: CompiledFile, cursor: Int): Pair<KtElement, Boolean>? {
+    val parsed = file.parseAtPoint(cursor - 1) ?: return null
+    val asGlobal = isGlobalCall(parsed)
+    val el = (
+            if (asGlobal) asGlobalCompletable(file, cursor, parsed) else null
+     ) ?: parsed
+
+    return el.asKtClass()?.let {
+        Pair(it, asGlobal)
+    }
+}
+
+@Suppress("LongMethod", "ReturnCount", "CyclomaticComplexMethod")
+private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement, infixCall: Boolean): Sequence<DeclarationDescriptor> {
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {
@@ -299,7 +333,8 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // .?
         is KtQualifiedExpression -> {
             LOG.info("Completing member expression '{}'", surroundingElement.text)
-            completeMembers(file, cursor, surroundingElement.receiverExpression, surroundingElement is KtSafeQualifiedExpression)
+            val exp = if (infixCall) surroundingElement else surroundingElement.receiverExpression
+            completeMembers(file, cursor, exp, surroundingElement is KtSafeQualifiedExpression)
         }
         is KtCallableReferenceExpression -> {
             // something::?
@@ -317,8 +352,21 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
         // ?
         is KtNameReferenceExpression -> {
             LOG.info("Completing identifier '{}'", surroundingElement.text)
-            val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
-            identifiers(scope)
+            if (infixCall) {
+                completeMembers(file, surroundingElement.startOffset, surroundingElement)
+            } else {
+                val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+                identifiers(scope)
+            }
+        }
+        // x ? y (infix)
+        is KtBinaryExpression -> {
+            if (surroundingElement.operationToken == KtTokens.IDENTIFIER) {
+                completeMembers(file, cursor, surroundingElement.left!!)
+            } else emptySequence()
+        }
+        is KtCallExpression, is KtConstantExpression -> {
+            completeMembers(file, cursor, surroundingElement as KtExpression)
         }
         else -> {
             LOG.info("{} {} didn't look like a type, a member, or an identifier", surroundingElement::class.simpleName, surroundingElement.text)
@@ -369,6 +417,11 @@ private fun ClassDescriptor.getDescriptors(): Sequence<DeclarationDescriptor> {
 
     return (statics + classes + types + companionDescriptors).toSet().asSequence()
 
+}
+
+private fun declarationIsInfix(declaration: DeclarationDescriptor): Boolean {
+    val functionDescriptor = declaration as? FunctionDescriptor ?: return false
+    return functionDescriptor.isInfix
 }
 
 private fun isCompanionOfEnum(kotlinType: KotlinType): Boolean {

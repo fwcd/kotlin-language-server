@@ -1,8 +1,23 @@
 package org.javacs.kt.classpath
 
-import org.javacs.kt.util.userHome
+import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import org.javacs.kt.util.KotlinLSException
+import org.javacs.kt.util.userHome
 
-internal val gradleHome = System.getenv("GRADLE_USER_HOME")?.let { Paths.get(it) } ?: userHome.resolve(".gradle")
-// TODO: try and figure out if mavenHome is in non-default position (requires finding and parsing settings.xml)
-internal val mavenHome = userHome.resolve(".m2")
+private fun createPathOrNull(envVar: String): Path? = System.getenv(envVar)?.let(Paths::get)
+
+private val possibleMavenRepositoryPaths =
+    sequenceOf(
+        createPathOrNull("MAVEN_REPOSITORY"),
+        createPathOrNull("MAVEN_HOME")?.let { it.resolve("repository") },
+        createPathOrNull("M2_HOME")?.let { it.resolve("repository") },
+        userHome.resolve(".m2/repository"),
+    )
+    .filterNotNull()
+
+internal val mavenRepository: Path? =
+    possibleMavenRepositoryPaths.firstOrNull { Files.exists(it) }
+
+internal val gradleHome = createPathOrNull("GRADLE_USER_HOME") ?: userHome.resolve(".gradle")

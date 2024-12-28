@@ -3,6 +3,55 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.12]
+- Make code generation for Java interop opt-in (#585)
+
+## [1.3.11]
+- Fix crash when a Maven repository is missing (#584)
+
+## [1.3.10]
+- Update LSP4J to 0.21.2
+- Increase maximum length in class path cache (#532)
+- Fix some bugs
+
+## [1.3.9]
+- Improve source file exclusion logic
+
+## [1.3.8]
+- Add optional inlay hints (#498)
+- Provide infix function completions (#521)
+- Support Gradle 8.5 and Kotlin 1.9.20 (#537)
+- Make .kts and .gradle.kts language features opt-in (#536)
+Thanks to @ElamC, @themkat, @chenrui333, @calamont, @ks-korovina and @daplf for
+your contributions!
+
+## [1.3.7]
+- Fix definition lookup for external sources
+- Fix binding context query for other definition lookups
+
+## [1.3.6]
+- Update to Gradle 8.3 and Kotlin 1.9.10
+
+## [1.3.5]
+- Fix push trigger in Docker CI workflow
+
+## [1.3.4]
+- Cache dependencies
+- Modernize the Docker image
+
+## [1.3.3]
+- Minor bug fixes
+
+## [1.3.2]
+- Update to Kotlin 1.8.10 and Gradle 8
+- Backtick soft keywords in imports (#416, #455)
+- Improve syntax highlighting w.r.t strings in type annotations (#405)
+- Add support for variable renaming from declaration sites (#399)
+- Add support for SAM with receiver annotations (#394)
+- Implement document highlight (#393)
+- Add override/implement (#359)
+Special thanks to @themkat, @RenFraser and all other contributors for the great work!
+
 ## [1.3.1]
 - Add support for run/debug code lenses
 - Add definition lookup support for JDT symbols

@@ -5,7 +5,6 @@ import org.junit.Test
 import org.junit.Assert.assertThat
 import org.junit.Ignore
 import org.hamcrest.Matchers.equalTo
-import java.nio.file.Paths
 
 class JavaToKotlinTest : LanguageServerTestFixture("j2k") {
     // TODO: Seems to throw the same exception as

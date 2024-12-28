@@ -15,9 +15,10 @@ Any editor conforming to LSP is supported, including [VSCode](https://github.com
 
 * See [BUILDING.md](BUILDING.md) for build instructions
 * See [Editor Integration](EDITORS.md) for editor-specific instructions
+* See [Troubleshooting](TROUBLESHOOTING.md) for tips on troubleshooting errors
 * See [Roadmap](https://github.com/fwcd/kotlin-language-server/projects/1) for features, planned additions, bugfixes and changes
 * See [Kotlin Quick Start](https://github.com/fwcd/kotlin-quick-start) for a sample project
-* See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for debugging support on JVM
+* See [Kotlin Debug Adapter](https://github.com/fwcd/kotlin-debug-adapter) for editor-agnostic launch and debug support of Kotlin/JVM programs
 * See [tree-sitter-kotlin](https://github.com/fwcd/tree-sitter-kotlin) for an experimental [Tree-Sitter](https://tree-sitter.github.io/tree-sitter/) grammar
 
 ## Packaging
@@ -36,15 +37,15 @@ The project uses the internal APIs of the [Kotlin compiler](https://github.com/J
 
 ### Figuring out the dependencies
 
-Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven or Gradle to get a list of classpath JARs. Alternatively, projects can also 'manually' provide a list of dependencies through a shell script, located either at `[project root]/kotlinLspClasspath.{sh,bat,cmd}` or `[config root]/KotlinLanguageServer/classpath.{sh,bat,cmd}`, which outputs a list of JARs.
+Dependencies are determined by the [DefaultClassPathResolver.kt](shared/src/main/kotlin/org/javacs/kt/classpath/DefaultClassPathResolver.kt), which invokes Maven or Gradle to get a list of classpath JARs. Alternatively, projects can also 'manually' provide a list of dependencies through a shell script, located either at `[project root]/kls-classpath` or `[config root]/kotlin-language-server/classpath`, which outputs a list of JARs. Depending on your platform, the scripts also can be suffixed with `.{sh,bat,cmd}`.
 
-* Example of the `~/.config/KotlinLanguageServer/classpath.sh` on Linux:
+* Example of the `~/.config/kotlin-language-server/classpath` on Linux:
 ```bash
 #!/bin/bash
 echo /my/path/kotlin-compiler-1.4.10/lib/kotlin-stdlib.jar:/my/path/my-lib.jar
 ```
 
-* Example of the `%HOMEPATH%\.config\KotlinLanguageServer\classpath.bat` on Windows:
+* Example of the `%HOMEPATH%\.config\kotlin-language-server\classpath.bat` on Windows:
 ```cmd
 @echo off
 echo C:\my\path\kotlin-compiler-1.4.10\lib\kotlin-stdlib.jar;C:\my\path\my-lib.jar
@@ -87,6 +88,10 @@ There is an extensive suite of behavioral [tests](server/src/test/kotlin/org/jav
 
 The Kotlin language server supports some non-standard requests through LSP. See [KotlinProtocolExtensions](server/src/main/kotlin/org/javacs/kt/KotlinProtocolExtensions.kt) for a description of the interface. The general syntax for these methods is `kotlin/someCustomMethod`.
 
+## Initialization Options
+
+The Kotlin language server supports some custom initialization options via the `initializationOptions` property in the `initialize` request parameters. See `InitializationOptions` in [Configuration](server/src/main/kotlin/org/javacs/kt/Configuration.kt) for a list of supported properties.
+
 ## Features
 
 ### Autocomplete
@@ -106,6 +111,7 @@ The Kotlin language server supports some non-standard requests through LSP. See 
 
 ### Global symbols
 ![Global symbols](images/GlobalSymbols.png)
+
 
 ## Authors
 * [georgewfraser](https://github.com/georgewfraser)

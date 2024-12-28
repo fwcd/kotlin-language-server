@@ -5,10 +5,10 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.services.LanguageClient
 import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.codeaction.codeActions
-import org.javacs.kt.completion.*
+import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
 import org.javacs.kt.diagnostic.convertDiagnostic
-import org.javacs.kt.formatting.formatKotlinCode
+import org.javacs.kt.formatting.FormattingService
 import org.javacs.kt.hover.hoverAt
 import org.javacs.kt.position.offset
 import org.javacs.kt.position.extractRange
@@ -16,16 +16,18 @@ import org.javacs.kt.position.position
 import org.javacs.kt.references.findReferences
 import org.javacs.kt.semantictokens.encodedSemanticTokens
 import org.javacs.kt.signaturehelp.fetchSignatureHelpAt
+import org.javacs.kt.rename.renameSymbol
+import org.javacs.kt.highlight.documentHighlightsAt
+import org.javacs.kt.inlayhints.provideHints
 import org.javacs.kt.symbols.documentSymbols
-import org.javacs.kt.util.noResult
 import org.javacs.kt.util.AsyncExecutor
 import org.javacs.kt.util.Debouncer
-import org.javacs.kt.util.filePath
 import org.javacs.kt.util.TemporaryDirectory
-import org.javacs.kt.util.parseURI
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
-import org.javacs.kt.rename.renameSymbol
+import org.javacs.kt.util.filePath
+import org.javacs.kt.util.noResult
+import org.javacs.kt.util.parseURI
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
 import java.net.URI
 import java.io.Closeable
@@ -43,8 +45,9 @@ class KotlinTextDocumentService(
 ) : TextDocumentService, Closeable {
     private lateinit var client: LanguageClient
     private val async = AsyncExecutor()
+    private val formattingService = FormattingService(config.formatting)
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+    var debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
@@ -72,12 +75,16 @@ class KotlinTextDocumentService(
         ALWAYS, AFTER_DOT, NEVER
     }
 
-    private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int> {
+    private fun recover(position: TextDocumentPositionParams, recompile: Recompile): Pair<CompiledFile, Int>? {
         return recover(position.textDocument.uri, position.position, recompile)
     }
 
-    private fun recover(uriString: String, position: Position, recompile: Recompile): Pair<CompiledFile, Int> {
+    private fun recover(uriString: String, position: Position, recompile: Recompile): Pair<CompiledFile, Int>? {
         val uri = parseURI(uriString)
+        if (!sf.isIncluded(uri)) {
+            LOG.warn("URI is excluded, therefore cannot be recovered: $uri")
+            return null
+        }
         val content = sp.content(uri)
         val offset = offset(content, position.line, position.character)
         val shouldRecompile = when (recompile) {
@@ -90,21 +97,27 @@ class KotlinTextDocumentService(
     }
 
     override fun codeAction(params: CodeActionParams): CompletableFuture<List<Either<Command, CodeAction>>> = async.compute {
-        val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.NEVER)
+        val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.NEVER) ?: return@compute emptyList()
         codeActions(file, sp.index, params.range, params.context)
+    }
+
+    override fun inlayHint(params: InlayHintParams): CompletableFuture<List<InlayHint>> = async.compute {
+        val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.ALWAYS) ?: return@compute emptyList()
+        provideHints(file, config.inlayHints)
     }
 
     override fun hover(position: HoverParams): CompletableFuture<Hover?> = async.compute {
         reportTime {
             LOG.info("Hovering at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, Recompile.NEVER)
+            val (file, cursor) = recover(position, Recompile.NEVER) ?: return@compute null
             hoverAt(file, cursor) ?: noResult("No hover found at ${describePosition(position)}", null)
         }
     }
 
-    override fun documentHighlight(position: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>> {
-        TODO("not implemented")
+    override fun documentHighlight(position: DocumentHighlightParams): CompletableFuture<List<DocumentHighlight>> = async.compute {
+        val (file, cursor) = recover(position.textDocument.uri, position.position, Recompile.NEVER) ?: return@compute emptyList()
+        documentHighlightsAt(file, cursor)
     }
 
     override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
@@ -115,7 +128,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Go-to-definition at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, Recompile.NEVER)
+            val (file, cursor) = recover(position, Recompile.NEVER) ?: return@compute Either.forLeft(emptyList())
             goToDefinition(file, cursor, uriContentProvider.classContentProvider, tempDirectory, config.externalSources, cp)
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
@@ -127,7 +140,7 @@ class KotlinTextDocumentService(
         val code = extractRange(params.textDocument.content, params.range)
         listOf(TextEdit(
             params.range,
-            formatKotlinCode(code, params.options)
+            formattingService.formatKotlinCode(code, params.options)
         ))
     }
 
@@ -136,19 +149,19 @@ class KotlinTextDocumentService(
     }
 
     override fun rename(params: RenameParams) = async.compute {
-        val (file, cursor) = recover(params, Recompile.NEVER)
+        val (file, cursor) = recover(params, Recompile.NEVER) ?: return@compute null
         renameSymbol(file, cursor, sp, params.newName)
     }
 
-    override fun completion(position: CompletionParams) = async.compute {
+    override fun completion(position: CompletionParams): CompletableFuture<Either<List<CompletionItem>, CompletionList>> = async.compute {
         reportTime {
             LOG.info("Completing at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, Recompile.NEVER) // TODO: Investigate when to recompile
+            val (file, cursor) = recover(position, Recompile.NEVER) ?: return@compute Either.forRight(CompletionList()) // TODO: Investigate when to recompile
             val completions = completions(file, cursor, sp.index, config.completion)
             LOG.info("Found {} items", completions.items.size)
 
-            Either.forRight<List<CompletionItem>, CompletionList>(completions)
+            Either.forRight(completions)
         }
     }
 
@@ -187,7 +200,7 @@ class KotlinTextDocumentService(
         reportTime {
             LOG.info("Signature help at {}", describePosition(position))
 
-            val (file, cursor) = recover(position, Recompile.NEVER)
+            val (file, cursor) = recover(position, Recompile.NEVER) ?: return@compute null
             fetchSignatureHelpAt(file, cursor) ?: noResult("No function call around ${describePosition(position)}", null)
         }
     }
@@ -203,7 +216,7 @@ class KotlinTextDocumentService(
         LOG.info("Formatting {}", describeURI(params.textDocument.uri))
         listOf(TextEdit(
             Range(Position(0, 0), position(code, code.length)),
-            formatKotlinCode(code, params.options)
+            formattingService.formatKotlinCode(code, params.options)
         ))
     }
 
@@ -259,7 +272,7 @@ class KotlinTextDocumentService(
     }
 
     public fun updateDebouncer() {
-        debounceLint = Debouncer(Duration.ofMillis(config.linting.debounceTime))
+        debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
     }
 
     fun lintAll() {
@@ -297,7 +310,9 @@ class KotlinTextDocumentService(
     }
 
     private fun reportDiagnostics(compiled: Collection<URI>, kotlinDiagnostics: Diagnostics) {
-        val langServerDiagnostics = kotlinDiagnostics.flatMap(::convertDiagnostic)
+        val langServerDiagnostics = kotlinDiagnostics
+            .flatMap(::convertDiagnostic)
+            .filter { config.diagnostics.enabled && it.second.severity <= config.diagnostics.level }
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((uri, diagnostics) in byFile) {

@@ -4,18 +4,24 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiElement
 import org.javacs.kt.compiler.CompilationKind
 import org.javacs.kt.position.changedRegion
+import org.javacs.kt.position.location
 import org.javacs.kt.position.position
+import org.javacs.kt.position.range
+import org.javacs.kt.position.toURIString
 import org.javacs.kt.util.findParent
 import org.javacs.kt.util.nullResult
 import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.lexer.KtTokens
+import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parentsWithSelf
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.scopes.LexicalScope
 import org.jetbrains.kotlin.types.KotlinType
+import org.eclipse.lsp4j.Location
+import java.nio.file.Path
 import java.nio.file.Paths
 
 class CompiledFile(
@@ -65,9 +71,11 @@ class CompiledFile(
         val cursorExpr = element?.findParent<KtExpression>() ?: return nullResult("Couldn't find expression at ${describePosition(cursor)} (only found $element)")
         val surroundingExpr = expandForReference(cursor, cursorExpr)
         val scope = scopeAtPoint(cursor) ?: return nullResult("Couldn't find scope at ${describePosition(cursor)}")
+        // NOTE: Due to our tiny-fake-file mechanism, we may have `path == /dummy.virtual.kt != parse.containingFile.toPath`
+        val path = surroundingExpr.containingFile.toPath()
         val context = bindingContextOf(surroundingExpr, scope)
         LOG.info("Hovering {}", surroundingExpr)
-        return referenceFromContext(cursor, context)
+        return referenceFromContext(cursor, path, context)
     }
 
     /**
@@ -76,13 +84,14 @@ class CompiledFile(
      * This method should not be used for anything other than finding definitions (at least for now).
      */
     fun referenceExpressionAtPoint(cursor: Int): Pair<KtExpression, DeclarationDescriptor>? {
-        return referenceFromContext(cursor, compile)
+        val path = parse.containingFile.toPath()
+        return referenceFromContext(cursor, path, compile)
     }
 
-    private fun referenceFromContext(cursor: Int, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
+    private fun referenceFromContext(cursor: Int, path: Path, context: BindingContext): Pair<KtExpression, DeclarationDescriptor>? {
         val targets = context.getSliceContents(BindingContext.REFERENCE_TARGET)
         return targets.asSequence()
-                .filter { cursor in it.key.textRange }
+                .filter { cursor in it.key.textRange && it.key.containingFile.toPath() == path }
                 .sortedBy { it.key.textRange.length }
                 .map { it.toPair() }
                 .firstOrNull()
@@ -171,14 +180,59 @@ class CompiledFile(
         return psi.findParent<KtElement>()
     }
 
+
+    /**
+     * Find the declaration of the element at the cursor.
+     */
+    fun findDeclaration(cursor: Int): Pair<KtNamedDeclaration, Location>? = findDeclarationReference(cursor) ?: findDeclarationCursorSite(cursor)
+
+    /**
+     * Find the declaration of the element at the cursor. Only works if the element at the cursor is a reference.
+     */
+    private fun findDeclarationReference(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+        val (_, target) = referenceAtPoint(cursor) ?: return null
+        val psi = target.findPsi()
+
+        return if (psi is KtNamedDeclaration) {
+            psi.nameIdentifier?.let {
+                location(it)?.let { location ->
+                    Pair(psi, location)
+                }
+            }
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Find the declaration of the element at the cursor.
+     * Works even in cases where the element at the cursor might not be a reference, so works for declaration sites.
+     */
+    private fun findDeclarationCursorSite(cursor: Int): Pair<KtNamedDeclaration, Location>? {
+        // current symbol might be a declaration. This function is used as a fallback when
+        // findDeclaration fails
+        val declaration = elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
+
+        return declaration?.let {
+            Pair(it,
+                 Location(it.containingFile.toURIString(),
+                          range(content, it.nameIdentifier?.textRange ?: return null)))
+        }
+    }
+
     /**
      * Find the lexical-scope surrounding `cursor`.
      * This may be out-of-date if the user is typing quickly.
      */
     fun scopeAtPoint(cursor: Int): LexicalScope? {
         val oldCursor = oldOffset(cursor)
+        val path = parse.containingFile.toPath()
         return compile.getSliceContents(BindingContext.LEXICAL_SCOPE).asSequence()
-                .filter { it.key.textRange.startOffset <= oldCursor && oldCursor <= it.key.textRange.endOffset }
+                .filter {
+                    it.key.textRange.startOffset <= oldCursor
+                    && oldCursor <= it.key.textRange.endOffset
+                    && it.key.containingFile.toPath() == path
+                }
                 .sortedBy { it.key.textRange.length  }
                 .map { it.value }
                 .firstOrNull()

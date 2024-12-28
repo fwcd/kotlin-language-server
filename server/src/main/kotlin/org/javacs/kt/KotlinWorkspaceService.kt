@@ -80,12 +80,13 @@ class KotlinWorkspaceService(
         }
     }
 
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "NestedBlockDepth")
     override fun didChangeConfiguration(params: DidChangeConfigurationParams) {
         val settings = params.settings as? JsonObject
         settings?.get("kotlin")?.asJsonObject?.apply {
             // Update deprecated configuration keys
             get("debounceTime")?.asLong?.let {
-                config.linting.debounceTime = it
+                config.diagnostics.debounceTime = it
                 docService.updateDebouncer()
             }
             get("snippetsEnabled")?.asBoolean?.let { config.completion.snippets.enabled = it }
@@ -102,13 +103,66 @@ class KotlinWorkspaceService(
                 }
             }
 
-            // Update linter options
-            get("linting")?.asJsonObject?.apply {
-                val linting = config.linting
-                get("debounceTime")?.asLong?.let {
-                    linting.debounceTime = it
-                    docService.updateDebouncer()
+            // Update options for formatting
+            get("formatting")?.asJsonObject?.apply {
+                val formatting = config.formatting
+                get("formatter")?.asString?.let {
+                    formatting.formatter = it
                 }
+                get("ktfmt")?.asJsonObject?.apply {
+                    val ktfmt = formatting.ktfmt
+                    get("style")?.asString?.let { ktfmt.style = it }
+                    get("indent")?.asInt?.let { ktfmt.indent = it }
+                    get("maxWidth")?.asInt?.let { ktfmt.maxWidth = it }
+                    get("continuationIndent")?.asInt?.let { ktfmt.continuationIndent = it }
+                    get("removeUnusedImports")?.asBoolean?.let { ktfmt.removeUnusedImports = it }
+                }
+            }
+
+            // Update options for inlay hints
+            get("inlayHints")?.asJsonObject?.apply {
+                val inlayHints = config.inlayHints
+                get("typeHints")?.asBoolean?.let { inlayHints.typeHints = it }
+                get("parameterHints")?.asBoolean?.let { inlayHints.parameterHints = it }
+                get("chainedHints")?.asBoolean?.let { inlayHints.chainedHints = it }
+            }
+
+            // Update diagnostics options
+            // Note that the 'linting' key is deprecated and only kept
+            // for backwards compatibility.
+            for (diagnosticsKey in listOf("linting", "diagnostics")) {
+                get(diagnosticsKey)?.asJsonObject?.apply {
+                    val diagnostics = config.diagnostics
+                    get("enabled")?.asBoolean?.let {
+                        diagnostics.enabled = it
+                    }
+                    get("level")?.asString?.let {
+                        diagnostics.level = when (it.lowercase()) {
+                            "error" -> DiagnosticSeverity.Error
+                            "warning" -> DiagnosticSeverity.Warning
+                            "information" -> DiagnosticSeverity.Information
+                            else -> DiagnosticSeverity.Hint
+                        }
+                    }
+                    get("debounceTime")?.asLong?.let {
+                        diagnostics.debounceTime = it
+                        docService.updateDebouncer()
+                    }
+                }
+            }
+
+            // Update scripts options
+            get("scripts")?.asJsonObject?.apply {
+                val scripts = config.scripts
+                get("enabled")?.asBoolean?.let { scripts.enabled = it }
+                get("buildScriptsEnabled")?.asBoolean?.let { scripts.buildScriptsEnabled = it }
+                sf.updateExclusions()
+            }
+
+            // Update code generation options
+            get("codegen")?.asJsonObject?.apply {
+                val codegen = config.codegen
+                get("enabled")?.asBoolean?.let { codegen.enabled = it }
             }
 
             // Update code-completion options
@@ -147,17 +201,6 @@ class KotlinWorkspaceService(
     }
 
     override fun didChangeWorkspaceFolders(params: DidChangeWorkspaceFoldersParams) {
-        for (change in params.event.added) {
-            LOG.info("Adding workspace {} to source path", change.uri)
-
-            val root = Paths.get(parseURI(change.uri))
-
-            sf.addWorkspaceRoot(root)
-            val refreshed = cp.addWorkspaceRoot(root)
-            if (refreshed) {
-                sp.refresh()
-            }
-        }
         for (change in params.event.removed) {
             LOG.info("Dropping workspace {} from source path", change.uri)
 
@@ -165,6 +208,17 @@ class KotlinWorkspaceService(
 
             sf.removeWorkspaceRoot(root)
             val refreshed = cp.removeWorkspaceRoot(root)
+            if (refreshed) {
+                sp.refresh()
+            }
+        }
+        for (change in params.event.added) {
+            LOG.info("Adding workspace {} to source path", change.uri)
+
+            val root = Paths.get(parseURI(change.uri))
+
+            sf.addWorkspaceRoot(root)
+            val refreshed = cp.addWorkspaceRoot(root)
             if (refreshed) {
                 sp.refresh()
             }

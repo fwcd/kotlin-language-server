@@ -13,7 +13,7 @@ class Args {
      * The language server can currently be launched in three modes:
      *  - Stdio, in which case no argument should be specified (used by default)
      *  - TCP Server, in which case the client has to connect to the specified tcpServerPort (used by the Docker image)
-     *  - TCP Client, in whcih case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode)
+     *  - TCP Client, in which case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode)
      */
 
     @Parameter(names = ["--tcpServerPort", "-sp"])

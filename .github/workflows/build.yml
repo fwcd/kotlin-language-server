@@ -5,20 +5,25 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        java: [ '11', '17' ]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        java: ['11', '17', '21']
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
-      - uses: gradle/gradle-build-action@v2
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
       - name: Build
-        run: ./gradlew :server:build :shared:build
+        run: ./gradlew :server:build :shared:build -PjavaVersion=${{ matrix.java }}
+      - name: Detekt
+        run: ./gradlew detekt -PjavaVersion=${{ matrix.java }}

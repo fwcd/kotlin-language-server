@@ -13,6 +13,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
     private var artifacts: Set<Artifact>? = null
 
     override val resolverType: String = "Maven"
+
     override val classpath: Set<ClassPathEntry> get() {
         val dependenciesOutput = generateMavenDependencyList(pom)
         val artifacts = readMavenDependencyList(dependenciesOutput)
@@ -53,6 +54,8 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         }.toSet()
     }
 
+    override val currentBuildFileVersion: Long get() = pom.toFile().lastModified()
+
     companion object {
         /** Create a maven resolver if a file is a pom. */
         fun maybeCreate(file: Path): MavenClassPathResolver? =
@@ -84,11 +87,11 @@ private fun readMavenDependencyListWithSources(artifacts: Set<Artifact>, sources
 }
 
 private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
-    val result = mavenHome.resolve("repository")
-        .resolve(a.group.replace('.', File.separatorChar))
-        .resolve(a.artifact)
-        .resolve(a.version)
-        .resolve(mavenJarName(a, source))
+    val result = mavenRepository
+        ?.resolve(a.group.replace('.', File.separatorChar))
+        ?.resolve(a.artifact)
+        ?.resolve(a.version)
+        ?.resolve(mavenJarName(a, source))
 
     return if (Files.exists(result))
         result

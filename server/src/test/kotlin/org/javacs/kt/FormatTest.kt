@@ -4,7 +4,6 @@ import org.eclipse.lsp4j.DocumentFormattingParams
 import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.eclipse.lsp4j.FormattingOptions
 import org.junit.Test
-import org.junit.Ignore
 import org.junit.Assert.assertThat
 import org.hamcrest.Matchers.equalTo
 

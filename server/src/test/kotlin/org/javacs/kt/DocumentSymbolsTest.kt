@@ -6,8 +6,6 @@ import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.eclipse.lsp4j.SymbolKind
 import org.eclipse.lsp4j.TextDocumentIdentifier
-import org.hamcrest.Matchers.hasItem
-import org.hamcrest.Matchers.not
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test

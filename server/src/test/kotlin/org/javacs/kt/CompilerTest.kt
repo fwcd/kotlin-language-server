@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.resolve.BindingContext
 import org.javacs.kt.compiler.Compiler
 import org.junit.Assert.assertThat
 import org.junit.Test
-import org.junit.After
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import java.io.File
@@ -30,11 +29,18 @@ private class FileToEdit {
         @JvmStatic @BeforeClass fun setup() {
             LOG.connectStdioBackend()
             outputDirectory = Files.createTempDirectory("klsBuildOutput").toFile()
-            compiler = Compiler(setOf(), setOf(), outputDirectory = outputDirectory)
+            compiler = Compiler(
+                javaSourcePath = setOf(),
+                classPath = setOf(),
+                scriptsConfig = ScriptsConfiguration(),
+                codegenConfig = CodegenConfiguration(),
+                outputDirectory = outputDirectory
+            )
         }
 
         @JvmStatic @AfterClass
         fun tearDown() {
+            compiler.close()
             outputDirectory.delete()
         }
     }
@@ -88,9 +94,5 @@ private class FileToEdit {
         val target = recompileContext.get(BindingContext.REFERENCE_TARGET, intFunctionRef)!!
 
         assertThat(target.name, hasToString("intFunction"))
-    }
-
-    @After fun cleanUp() {
-        compiler.close()
     }
 }

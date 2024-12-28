@@ -187,9 +187,8 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
         // Literals and string interpolations
 
-        is KtSimpleNameStringTemplateEntry, is KtBlockStringTemplateEntry ->
+        is KtSimpleNameStringTemplateEntry ->
             SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
-        is KtStringTemplateExpression -> SemanticToken(elementRange, SemanticTokenType.STRING)
         is PsiLiteralExpression -> {
             val tokenType = when (element.type) {
                 PsiType.INT, PsiType.LONG, PsiType.DOUBLE -> SemanticTokenType.NUMBER

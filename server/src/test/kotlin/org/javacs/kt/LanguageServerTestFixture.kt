@@ -8,18 +8,26 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.CompletableFuture
 
-abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : LanguageClient {
+abstract class LanguageServerTestFixture(
+    relativeWorkspaceRoot: String,
+    config: Configuration = Configuration()
+) : LanguageClient {
     val workspaceRoot = absoluteWorkspaceRoot(relativeWorkspaceRoot)
-    val languageServer = createLanguageServer()
-    val diagnostics = mutableListOf<Diagnostic>()
+    val languageServer = createLanguageServer(config)
+
+    var diagnostics = listOf<Diagnostic>()
+    val errors: List<Diagnostic>
+        get() = diagnostics.filter { it.severity == DiagnosticSeverity.Error }
+    val warnings: List<Diagnostic>
+        get() = diagnostics.filter { it.severity == DiagnosticSeverity.Warning }
 
     fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
         val testResources = testResourcesRoot()
         return testResources.resolve(relativeWorkspaceRoot)
     }
 
-    private fun createLanguageServer(): KotlinLanguageServer {
-        val languageServer = KotlinLanguageServer()
+    private fun createLanguageServer(config: Configuration): KotlinLanguageServer {
+        val languageServer = KotlinLanguageServer(config)
         val init = InitializeParams().apply {
             capabilities = ClientCapabilities().apply {
                 textDocument = TextDocumentClientCapabilities().apply {
@@ -36,6 +44,12 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
             name = workspaceRoot.fileName.toString()
             uri = workspaceRoot.toUri().toString()
         })
+
+        languageServer.config.inlayHints.apply {
+            typeHints = true
+            parameterHints = true
+            chainedHints = true
+        }
         languageServer.sourcePath.indexEnabled = false
         languageServer.connect(this)
         languageServer.initialize(init).join()
@@ -79,6 +93,9 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
 
     fun hoverParams(relativePath: String, line: Int, column: Int): HoverParams =
         textDocumentPosition(relativePath, line, column).run { HoverParams(textDocument, position) }
+
+    fun inlayHintParams(relativePath: String, range: Range): InlayHintParams =
+        textDocumentPosition(relativePath, 0, 0).run { InlayHintParams(textDocument, range) }
 
     fun semanticTokensParams(relativePath: String): SemanticTokensParams =
         textDocumentPosition(relativePath, 0, 0).run { SemanticTokensParams(textDocument) }
@@ -127,8 +144,8 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     private var version = 1
 
     fun replace(relativePath: String, line: Int, char: Int, oldText: String, newText: String) {
-        val range = Range(position(line, char), Position(line - 1, char - 1 + oldText.length))
-        val edit = TextDocumentContentChangeEvent(range, oldText.length, newText)
+        val range = Range(position(line, char), position(line, char + oldText.length))
+        val edit = TextDocumentContentChangeEvent(range, newText)
         val doc = VersionedTextDocumentIdentifier(uri(relativePath).toString(), version++)
 
         languageServer.textDocumentService.didChange(DidChangeTextDocumentParams(doc, listOf(edit)))
@@ -137,7 +154,7 @@ abstract class LanguageServerTestFixture(relativeWorkspaceRoot: String) : Langua
     // LanguageClient functions
 
     override fun publishDiagnostics(diagnostics: PublishDiagnosticsParams) {
-        this.diagnostics.addAll(diagnostics.diagnostics)
+        this.diagnostics = diagnostics.diagnostics
     }
 
     override fun showMessageRequest(request: ShowMessageRequestParams?): CompletableFuture<MessageActionItem>? {
@@ -163,7 +180,11 @@ fun testResourcesRoot(): Path {
     return Paths.get(anchorTxt).parent!!
 }
 
-open class SingleFileTestFixture(relativeWorkspaceRoot: String, val file: String) : LanguageServerTestFixture(relativeWorkspaceRoot) {
+open class SingleFileTestFixture(
+    relativeWorkspaceRoot: String,
+    val file: String,
+    config: Configuration = Configuration()
+) : LanguageServerTestFixture(relativeWorkspaceRoot, config) {
     @Before fun openFile() {
         open(file)
 
