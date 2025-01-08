@@ -22,6 +22,8 @@ class Args {
     var tcpClientPort: Int? = null
     @Parameter(names = ["--tcpClientHost", "-h"])
     var tcpClientHost: String = "localhost"
+    @Parameter(names = ["--version", "-V"])
+    var versionCheck: Boolean = false
 }
 
 fun main(argv: Array<String>) {
@@ -29,6 +31,12 @@ fun main(argv: Array<String>) {
     LOG.connectJULFrontend()
 
     val args = Args().also { JCommander.newBuilder().addObject(it).build().parse(*argv) }
+
+    if (args.versionCheck) {
+        println(System.getProperty("kotlinLanguageServer.version"))
+        return
+    }
+
     val (inStream, outStream) = args.tcpClientPort?.let {
         // Launch as TCP Client
         LOG.connectStdioBackend()
