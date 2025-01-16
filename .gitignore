@@ -32,3 +32,4 @@ node_modules
 !.vscode/tasks.json
 *.vsix
 kls_database.db
+.kotlin
