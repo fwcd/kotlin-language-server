@@ -84,6 +84,29 @@ require'lspconfig'.kotlin_language_server.setup{
 ## Monaco Editor
 See [kotlin-monaco-language-server](https://github.com/yahorbarkouski/kotlin-monaco-language-server).
 
+## Helix
+
+Using [languages.toml](https://github.com/helix-editor/helix/blob/master/book/src/languages.md)
+
+```toml
+[language-server.kotlin-language-server]
+command = "kotlin-language-server"
+
+[[language]]
+name = "kotlin"
+scope = "source.kotlin"
+file-types = ["kt", "kts"]
+roots = ["settings.gradle", "settings.gradle.kts"]
+comment-token = "//"
+block-comment-tokens = { start = "/*", end = "*/" }
+indent = { tab-width = 4, unit = "    " }
+language-servers = [ "kotlin-language-server" ]
+
+[[grammar]]
+name = "kotlin"
+source = { git = "https://github.com/fwcd/tree-sitter-kotlin", rev = "a4f71eb9b8c9b19ded3e0e9470be4b1b77c2b569" }
+```
+
 ## Other Editors
 Install a [Language Server Protocol client](https://microsoft.github.io/language-server-protocol/implementors/tools/) for your tool. Then invoke the language server executable in a client-specific way.
 
