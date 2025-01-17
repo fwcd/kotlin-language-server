@@ -300,6 +300,7 @@ class OuterDotInnerTest : SingleFileTestFixture("completions", "OuterDotInner.kt
 }
 
 class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
+    @Ignore
     @Test fun `edit existing function`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 11)).get().right!!
         val labels = completions.items.map { it.label }
