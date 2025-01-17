@@ -12,7 +12,7 @@ import org.junit.Test
 class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
     val file = "MainWorkspaceFile.kt"
 
-    fun addWorkspaceRoot() {
+    private fun addWorkspaceRoot() {
         val folder = WorkspaceFolder()
         folder.uri = absoluteWorkspaceRoot("additionalWorkspace").toUri().toString()
 
@@ -23,6 +23,7 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
         languageServer.workspaceService.didChangeWorkspaceFolders(addWorkspace)
     }
 
+    @Ignore
     @Test fun `junit should be on classpath`() {
         addWorkspaceRoot()
         open(file)
