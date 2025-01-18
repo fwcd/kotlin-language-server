@@ -11,7 +11,9 @@ import org.jetbrains.kotlin.psi.psiUtil.parents
 import org.jetbrains.kotlin.resolve.DescriptorToSourceUtils
 
 fun findDoc(declaration: DeclarationDescriptorWithSource): KDocTag? {
-    return when (val source = DescriptorToSourceUtils.descriptorToDeclaration(declaration)?.navigationElement) {
+    val source = DescriptorToSourceUtils.descriptorToDeclaration(declaration)?.navigationElement
+
+    return when (source) {
         is KtParameter -> {
             var container = source.parents.filterIsInstance<KtDeclaration>().firstOrNull() ?: return null
             if (container is KtPrimaryConstructor)
@@ -24,18 +26,15 @@ fun findDoc(declaration: DeclarationDescriptorWithSource): KDocTag? {
 
             return matchName.firstOrNull()
         }
-
         is KtPrimaryConstructor -> {
             val container = source.parents.filterIsInstance<KtDeclaration>().firstOrNull() ?: return null
             val doc = container.docComment ?: return null
             doc.findSectionByTag(KDocKnownTag.CONSTRUCTOR) ?: doc.getDefaultSection()
         }
-
         is KtDeclaration -> {
             val doc = source.docComment ?: return null
             doc.getDefaultSection()
         }
-
         else -> null
     }
 }

@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package org.javacs.kt.symbols
 
 import com.intellij.psi.PsiElement

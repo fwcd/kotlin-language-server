@@ -9,7 +9,7 @@ import org.javacs.kt.util.DelegatePrintStream
 
 val LOG = Logger()
 
-private class JULRedirect(private val downstream: Logger): Handler() {
+private class JULRedirector(private val downstream: Logger): Handler() {
     override fun publish(record: LogRecord) {
         when (record.level) {
             Level.SEVERE -> downstream.error(record.message)
@@ -79,7 +79,7 @@ class Logger {
         }
     }
 
-    inline fun logWithLambdaAt(msgLevel: LogLevel, crossinline msg:() -> String) {
+    inline fun logWithLambdaAt(msgLevel: LogLevel, msg: () -> String) {
         if (level.value <= msgLevel.value) {
             log(LogMessage(msgLevel, msg()))
         }
@@ -103,21 +103,21 @@ class Logger {
 
     // Convenience logging methods using inlined lambdas
 
-    inline fun error(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
+    inline fun error(msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
 
-    inline fun warn(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
+    inline fun warn(msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
 
-    inline fun info(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
+    inline fun info(msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
 
-    inline fun debug(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
+    inline fun debug(msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
 
-    inline fun trace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
+    inline fun trace(msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
 
-    inline fun deepTrace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
+    inline fun deepTrace(msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
 
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")
-        rootLogger.addHandler(JULRedirect(this))
+        rootLogger.addHandler(JULRedirector(this))
     }
 
     fun connectOutputBackend(outBackend: (LogMessage) -> Unit) {

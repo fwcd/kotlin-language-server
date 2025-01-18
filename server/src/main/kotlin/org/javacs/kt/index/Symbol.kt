@@ -22,7 +22,7 @@ data class Symbol(
         UNKNOWN(9);
 
         companion object {
-            fun fromRaw(rawValue: Int) = entries.firstOrNull { it.rawValue == rawValue } ?: Kind.UNKNOWN
+            fun fromRaw(rawValue: Int) = Kind.values().firstOrNull { it.rawValue == rawValue } ?: Kind.UNKNOWN
         }
     }
 
@@ -35,7 +35,7 @@ data class Symbol(
         UNKNOWN(5);
 
         companion object {
-            fun fromRaw(rawValue: Int) = entries.firstOrNull { it.rawValue == rawValue } ?: Visibility.UNKNOWN
+            fun fromRaw(rawValue: Int) = Visibility.values().firstOrNull { it.rawValue == rawValue } ?: Visibility.UNKNOWN
         }
     }
 }

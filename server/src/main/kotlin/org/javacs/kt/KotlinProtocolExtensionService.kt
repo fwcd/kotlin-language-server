@@ -42,12 +42,11 @@ class KotlinProtocolExtensionService(
         )
     }
 
-    override fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>> =
-        async.compute {
-            val fileUri = parseURI(position.textDocument.uri)
-            val compiledFile = sp.currentVersion(fileUri)
-            val cursorOffset = offset(compiledFile.content, position.position)
+    override fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>> = async.compute {
+        val fileUri = parseURI(position.textDocument.uri)
+        val compiledFile = sp.currentVersion(fileUri)
+        val cursorOffset = offset(compiledFile.content, position.position)
 
-            listOverridableMembers(compiledFile, cursorOffset)
-        }
+        listOverridableMembers(compiledFile, cursorOffset)
+    }
 }

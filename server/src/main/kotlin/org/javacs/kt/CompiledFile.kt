@@ -178,7 +178,7 @@ class CompiledFile(
             content.substring(recoveryRange.startOffset, content.length - (parse.text.length - recoveryRange.endOffset))
         offset = recoveryRange.startOffset
 
-        if (asReference && (parent as? KtParameter)?.hasValOrVar() == false) {
+        if (asReference && !((parent as? KtParameter)?.hasValOrVar() ?: true)) {
             // Prepend 'val' to (e.g. function) parameters
             val prefix = "val "
             surroundingContent = prefix + surroundingContent

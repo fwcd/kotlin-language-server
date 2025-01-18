@@ -14,7 +14,7 @@ fun getImportTextEditEntry(parsedFile: KtFile, fqName: FqName): TextEdit {
     val importedNames = imports
         .mapNotNull { it.importedFqName?.shortName() }
         .toSet()
-
+    
     val pos = findImportInsertionPosition(parsedFile, fqName)
     val prefix = if (importedNames.isEmpty()) "\n\n" else "\n"
     return TextEdit(Range(pos, pos), "${prefix}import ${backtickBultins(fqName)}")

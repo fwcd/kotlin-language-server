@@ -193,6 +193,7 @@ class KotlinWorkspaceService(
         LOG.info("Updated configuration: {}", settings)
     }
 
+    @Suppress("DEPRECATION")
     override fun symbol(params: WorkspaceSymbolParams): CompletableFuture<Either<List<SymbolInformation>, List<WorkspaceSymbol>>> {
         val result = workspaceSymbols(params.query, sp)
 

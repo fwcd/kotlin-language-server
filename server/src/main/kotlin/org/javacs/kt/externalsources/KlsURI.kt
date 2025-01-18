@@ -61,11 +61,9 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
             fileUri.schemeSpecificPart.contains("!/modules") -> {
                 ArchiveType.JDK
             }
-
             fileUri.schemeSpecificPart.contains(".zip!") -> {
                 ArchiveType.ZIP
             }
-
             else -> {
                 ArchiveType.JAR
             }
@@ -84,8 +82,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
 
     // If the newArchivePath doesn't have the kls scheme, it is added in the returned KlsURI.
     fun withArchivePath(newArchivePath: Path): KlsURI? =
-        URI(newArchivePath.toUri().toString() + (innerPath.let { "!$it" })).toKlsURI()
-            ?.let { KlsURI(it.fileUri, query) }
+        URI(newArchivePath.toUri().toString() + (innerPath.let { "!$it" } )).toKlsURI()?.let { KlsURI(it.fileUri, query) }
 
     fun withFileExtension(newExtension: String): KlsURI {
         val (parentUri, fileName) = fileUri.toString().partitionAroundLast("/")
@@ -123,7 +120,6 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
                 .bufferedReader()
                 .use(BufferedReader::readText)
         }
-
         ArchiveType.JAR, ArchiveType.JDK -> {
             withJarURLConnection {
                 it.jarFile
@@ -150,8 +146,7 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
 
 private fun parseKlsURIFileURI(uri: URI): URI = URI(uri.toString().split("?")[0])
 
-private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParam, String> =
-    parseQuery(uri.toString().split("?").getOrElse(1) { "" })
+private fun parseKlsURIQuery(uri: URI): Map<KlsURI.QueryParam, String> = parseQuery(uri.toString().split("?").getOrElse(1) { "" })
 
 private fun parseQuery(query: String): Map<KlsURI.QueryParam, String> =
     query.split("&").mapNotNull {

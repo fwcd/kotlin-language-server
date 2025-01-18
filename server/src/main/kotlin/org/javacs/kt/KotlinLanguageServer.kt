@@ -29,22 +29,11 @@ class KotlinLanguageServer(
     val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
-    private val uriContentProvider = URIContentProvider(
-        ClassContentProvider(
-            config.externalSources,
-            classPath,
-            tempDirectory,
-            CompositeSourceArchiveProvider(
-                JdkSourceArchiveProvider(classPath),
-                ClassPathSourceArchiveProvider(classPath)
-            )
-        )
-    )
+    private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
     private val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
 
-    private val textDocuments =
-        KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
+    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath, sourcePath)
 
@@ -96,8 +85,7 @@ class KotlinLanguageServer(
         serverCapabilities.documentSymbolProvider = Either.forLeft(true)
         serverCapabilities.workspaceSymbolProvider = Either.forLeft(true)
         serverCapabilities.referencesProvider = Either.forLeft(true)
-        serverCapabilities.semanticTokensProvider =
-            SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)
+        serverCapabilities.semanticTokensProvider = SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)
         serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
@@ -108,8 +96,7 @@ class KotlinLanguageServer(
         databaseService.setup(storagePath)
 
         val clientCapabilities = params.capabilities
-        config.completion.snippets.enabled =
-            clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
+        config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
         if (clientCapabilities?.window?.workDoneProgress == true) {
             progressFactory = LanguageClientProgress.Factory(client)
@@ -184,6 +171,6 @@ class KotlinLanguageServer(
     // Fixed in https://github.com/eclipse/lsp4j/commit/04b0c6112f0a94140e22b8b15bb5a90d5a0ed851
     // Causes issue in lsp 0.15
     override fun getNotebookDocumentService(): NotebookDocumentService? {
-        return null;
-    }
+		return null;
+	}
 }
