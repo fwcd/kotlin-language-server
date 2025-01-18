@@ -553,7 +553,7 @@ class Compiler(
         }
     }
 
-    fun compileKtExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider> {
+    fun compileKtExpression(expression: KtExpression, scopeWithImports: LexicalScope, sourcePath: Collection<KtFile>, kind: CompilationKind = CompilationKind.DEFAULT): Pair<BindingContext, ComponentProvider>? =
         try {
             // Use same lock as 'compileFile' to avoid concurrency issues such as #42
             compileLock.withLock {
@@ -568,12 +568,17 @@ class Compiler(
                         InferenceSession.default,
                         trace,
                         true)
-                return Pair(trace.bindingContext, container)
+                Pair(trace.bindingContext, container)
             }
         } catch (e: KotlinFrontEndException) {
-            throw KotlinLSException("Error while analyzing: ${describeExpression(expression.text)}", e)
+            LOG.error("""
+                Error while analyzing expression: ${describeExpression(expression.text)}
+                Message: ${e.message}
+                Cause: ${e.cause?.message}
+                Stack trace: ${e.attachments.joinToString("\n") { it.displayText }}
+            """.trimIndent())
+            null
         }
-    }
 
     fun removeGeneratedCode(files: Collection<KtFile>) {
         files.forEach { file ->

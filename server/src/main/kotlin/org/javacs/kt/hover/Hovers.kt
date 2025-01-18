@@ -38,7 +38,8 @@ private fun typeHoverAt(file: CompiledFile, cursor: Int): Hover? {
     val expression = file.parseAtPoint(cursor)?.findParent<KtExpression>() ?: return null
     val javaDoc: String = expression.children.mapNotNull { (it as? PsiDocCommentBase)?.text }.map(::renderJavaDoc).firstOrNull() ?: ""
     val scope = file.scopeAtPoint(cursor) ?: return null
-    val hoverText = renderTypeOf(expression, file.bindingContextOf(expression, scope))
+    val context = file.bindingContextOf(expression, scope) ?: return null
+    val hoverText = renderTypeOf(expression, context)
     val hover = MarkupContent("markdown", listOf("```kotlin\n$hoverText\n```", javaDoc).filter { it.isNotEmpty() }.joinToString("\n---\n"))
     return Hover(hover)
 }
