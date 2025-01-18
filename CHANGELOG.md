@@ -3,6 +3,9 @@ All notable changes to the language server will be documented in this file.
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [1.3.13]
+- Bump Kotlin to 2.1.0
+
 ## [1.3.12]
 - Make code generation for Java interop opt-in (#585)
 
