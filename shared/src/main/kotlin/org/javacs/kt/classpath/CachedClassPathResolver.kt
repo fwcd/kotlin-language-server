@@ -6,7 +6,7 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
@@ -101,9 +101,10 @@ internal class CachedClassPathResolver(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(
+            arrayOf<Table>(
                 ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry
             )
+            Unit
         }
     }
 

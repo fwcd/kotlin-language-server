@@ -89,6 +89,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
     return dependencies
 }
 
+// NOTE: it will be better to send information to lsp
 private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<Path> {
     val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
     if ("FAILURE: Build failed" in errors) {

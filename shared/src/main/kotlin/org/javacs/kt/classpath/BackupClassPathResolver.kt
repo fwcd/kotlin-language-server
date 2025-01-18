@@ -37,15 +37,19 @@ private fun tryFindingLocalArtifactUsing(@Suppress("UNUSED_PARAMETER") group: St
             else -> name.startsWith(artifact) && ("-sources" !in name) && name.endsWith(".jar")
         }
     }
-    return Files.list(artifactDirResolution.artifactDir)
+    return artifactDirResolution.artifactDir?.let {
+        Files.list(it)
         .sorted(::compareVersions)
         .findFirst()
         .orElse(null)
         ?.let {
-            Files.find(artifactDirResolution.artifactDir, 3, isCorrectArtifact)
-                .findFirst()
-                .orElse(null)
+            artifactDirResolution.artifactDir.let { it1 ->
+                Files.find(it1, 3, isCorrectArtifact)
+                    .findFirst()
+                    .orElse(null)
+            }
         }
+    }
 }
 
 private data class LocalArtifactDirectoryResolution(val artifactDir: Path?, val buildTool: String)
