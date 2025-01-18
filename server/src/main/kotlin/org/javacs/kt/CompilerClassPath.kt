@@ -150,7 +150,11 @@ class CompilerClassPath(
         val buildScript = isBuildScript(file)
         val javaSource = isJavaSource(file)
         return if (buildScript || javaSource) {
-            refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)
+            refresh(
+                updateClassPath = buildScript,
+                updateBuildScriptClassPath = false,
+                updateJavaSourcePath = javaSource
+            )
         } else {
             false
         }
@@ -158,7 +162,8 @@ class CompilerClassPath(
 
     private fun isJavaSource(file: Path): Boolean = file.fileName.toString().endsWith(".java")
 
-    private fun isBuildScript(file: Path): Boolean = file.fileName.toString().let { it == "pom.xml" || it == "build.gradle" || it == "build.gradle.kts" }
+    private fun isBuildScript(file: Path): Boolean =
+        file.fileName.toString().let { it == "pom.xml" || it == "build.gradle" || it == "build.gradle.kts" }
 
     private fun findJavaSourceFiles(root: Path): Set<Path> {
         val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")

@@ -79,8 +79,7 @@ fun goToDefinition(
                     }
                     definitionPattern.findAll(content)
                         .map { it.groups[1]!! }
-                        .find { it.value == name }
-                        ?.let { it.range }
+                        .find { it.value == name }?.range
                         ?.let { destination.range = Range(position(content, it.first), position(content, it.last)) }
                 }
             }

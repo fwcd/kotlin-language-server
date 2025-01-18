@@ -17,10 +17,13 @@ class Args {
      */
     @Parameter(names = ["--tcpServerPort", "-sp"])
     var tcpServerPort: Int? = null
+
     @Parameter(names = ["--tcpClientPort", "-p"])
     var tcpClientPort: Int? = null
+
     @Parameter(names = ["--tcpClientHost", "-h"])
     var tcpClientHost: String = "localhost"
+
     @Parameter(names = ["--tcpDebug"])
     var tcpDebug: Boolean = false
 }
