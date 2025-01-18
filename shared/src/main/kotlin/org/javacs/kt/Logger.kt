@@ -47,7 +47,7 @@ class LogMessage(
 }
 
 class Logger {
-    private var outBackends: List<((LogMessage) -> Unit)> = listOf()
+    private var outBackend: ((LogMessage) -> Unit)? = null
     private var errBackend: ((LogMessage) -> Unit)? = null
     private val outQueue: Queue<LogMessage> = ArrayDeque()
     private val errQueue: Queue<LogMessage> = ArrayDeque()
@@ -66,12 +66,10 @@ class Logger {
     }
 
     fun log(msg: LogMessage) {
-        if (outBackends.isEmpty()) {
+        if (outBackend == null) {
             outQueue.offer(msg)
         } else {
-            for (outputBackend in outBackends) {
-                outputBackend.invoke(msg)
-            }
+            outBackend?.invoke(msg)
         }
     }
 
@@ -123,7 +121,7 @@ class Logger {
     }
 
     fun connectOutputBackend(outBackend: (LogMessage) -> Unit) {
-        this.outBackends += outBackend
+        this.outBackend = outBackend
         flushOutQueue()
     }
 
@@ -163,9 +161,7 @@ class Logger {
 
     private fun flushOutQueue() {
         while (outQueue.isNotEmpty()) {
-            for (outBackend in outBackends) {
-                outBackend.invoke(outQueue.poll())
-            }
+            outBackend?.invoke(outQueue.poll())
         }
     }
 
