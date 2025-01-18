@@ -293,7 +293,7 @@ class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
         val labels = completions.items.map { it.label }
 
         assertThat(labels, hasItem(startsWith("println")))
-        assertThat(completions.items.find { it.label.startsWith("println") }, hasProperty("insertText", equalTo("println")))
+        assertThat(completions.items.find { it.label.startsWith("println") }, hasProperty("insertText", equalTo("println(\${1:message})")))
     }
 }
 
