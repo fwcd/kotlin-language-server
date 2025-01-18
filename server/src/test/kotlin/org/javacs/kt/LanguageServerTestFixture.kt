@@ -21,13 +21,16 @@ abstract class LanguageServerTestFixture(
     val warnings: List<Diagnostic>
         get() = diagnostics.filter { it.severity == DiagnosticSeverity.Warning }
 
+    init {
+        LOG.connectStdioBackend()
+    }
     fun absoluteWorkspaceRoot(relativeWorkspaceRoot: String): Path {
         val testResources = testResourcesRoot()
         return testResources.resolve(relativeWorkspaceRoot)
     }
 
     private fun createLanguageServer(config: Configuration): KotlinLanguageServer {
-        val languageServer = KotlinLanguageServer(config)
+        val languageServer = KotlinLanguageServer(config, true)
         val init = InitializeParams().apply {
             capabilities = ClientCapabilities().apply {
                 textDocument = TextDocumentClientCapabilities().apply {
@@ -176,8 +179,8 @@ abstract class LanguageServerTestFixture(
 }
 
 fun testResourcesRoot(): Path {
-    val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt").toURI()
-    return Paths.get(anchorTxt).parent!!
+    val anchorTxt = LanguageServerTestFixture::class.java.getResource("/Anchor.txt")?.toURI()
+    return anchorTxt?.let { Paths.get(it).parent }!!
 }
 
 open class SingleFileTestFixture(

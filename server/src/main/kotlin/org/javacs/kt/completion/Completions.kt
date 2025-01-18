@@ -5,9 +5,6 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
-import org.eclipse.lsp4j.TextEdit
-import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.Position
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
@@ -19,7 +16,6 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
-import org.javacs.kt.position.location
 import org.javacs.kt.imports.getImportTextEditEntry
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.*
@@ -148,7 +144,7 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
-    (KtTokens.SOFT_KEYWORDS.getTypes() + KtTokens.KEYWORDS.getTypes()).asSequence()
+    (KtTokens.SOFT_KEYWORDS.types + KtTokens.KEYWORDS.types).asSequence()
         .mapNotNull { (it as? KtKeywordToken)?.value }
         .filter { it.startsWith(partial) }
         .map { CompletionItem().apply {
@@ -603,7 +599,7 @@ private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUni
 private fun logHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {
     val key = Pair(from.name, target.name)
 
-    loggedHidden.get(key, { doLogHidden(target, from )})
+    loggedHidden.get(key) { doLogHidden(target, from) }
 }
 
 private fun doLogHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {

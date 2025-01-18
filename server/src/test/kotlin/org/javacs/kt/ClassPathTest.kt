@@ -16,21 +16,19 @@ class ClassPathTest {
         }
     }
 
-    @Ignore
     @Test fun `find gradle classpath`() {
         val workspaceRoot = testResourcesRoot().resolve("additionalWorkspace")
-        val buildFile = workspaceRoot.resolve("build.gradle")
+        val buildFile = workspaceRoot.resolve("build.gradle.kts")
 
         assertTrue(Files.exists(buildFile))
 
         val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
-        print(resolvers)
+
         val classPath = resolvers.classpathOrEmpty.map { it.toString() }
 
         assertThat(classPath, hasItem(containsString("junit")))
     }
 
-    @Ignore
     @Test fun `find maven classpath`() {
         val workspaceRoot = testResourcesRoot().resolve("mavenWorkspace")
         val buildFile = workspaceRoot.resolve("pom.xml")
@@ -38,7 +36,7 @@ class ClassPathTest {
         assertTrue(Files.exists(buildFile))
 
         val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
-        print(resolvers)
+
         val classPath = resolvers.classpathOrEmpty.map { it.toString() }
 
         assertThat(classPath, hasItem(containsString("junit")))

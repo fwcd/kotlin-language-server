@@ -6,7 +6,6 @@ import org.junit.Ignore
 import org.junit.Test
 
 class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.kt") {
-    @Ignore
     @Test fun `complete instance members`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 15)).get().right!!
         val labels = completions.items.map { it.label }
@@ -29,7 +28,6 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
         assertThat(labels, hasItem("count"))
     }
 
-    @Ignore
     @Test fun `complete method reference`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 13, 16)).get().right!!
         val labels = completions.items.map { it.label }
@@ -41,7 +39,7 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
         assertThat(labels, not(hasItem(startsWith("getFooVar"))))
         assertThat(labels, not(hasItem(startsWith("setFooVar"))))
 
-        assertThat(completions.items.filter { it.label.startsWith("instanceFoo") }.firstOrNull(), hasProperty("insertText", equalTo("instanceFoo")))
+        assertThat(completions.items.firstOrNull { it.label.startsWith("instanceFoo") }, hasProperty("insertText", equalTo("instanceFoo")))
     }
 
     @Ignore
