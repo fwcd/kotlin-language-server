@@ -23,7 +23,6 @@ class AdditionalWorkspaceTest : LanguageServerTestFixture("mainWorkspace") {
         languageServer.workspaceService.didChangeWorkspaceFolders(addWorkspace)
     }
 
-    @Ignore
     @Test fun `junit should be on classpath`() {
         addWorkspaceRoot()
         open(file)

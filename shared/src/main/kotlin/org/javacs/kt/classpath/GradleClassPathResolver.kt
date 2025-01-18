@@ -64,10 +64,10 @@ private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = f
 private fun getGradleCommand(workspace: Path): Path {
     val wrapperName = if (isOSWindows()) "gradlew.bat" else "gradlew"
     val wrapper = workspace.resolve(wrapperName).toAbsolutePath()
-    if (Files.isExecutable(wrapper)) {
-        return wrapper
+    return if (Files.isExecutable(wrapper)) {
+        wrapper
     } else {
-        return workspace.parent?.let(::getGradleCommand)
+        workspace.parent?.let(::getGradleCommand)
             ?: findCommandOnPath("gradle")
             ?: throw KotlinLSException("Could not find 'gradle' on PATH")
     }
@@ -81,8 +81,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
 
     val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")
     val dependencies = findGradleCLIDependencies(command, projectDirectory)
-        ?.also { LOG.debug("Classpath for task {}", it) }
-        .orEmpty()
+        .also { LOG.debug("Classpath for task {}", it) }
         .filter { it.toString().lowercase().endsWith(".jar") || Files.isDirectory(it) } // Some Gradle plugins seem to cause this to output POMs, therefore filter JARs
         .toSet()
 
@@ -90,7 +89,7 @@ private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: 
     return dependencies
 }
 
-private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<Path>? {
+private fun findGradleCLIDependencies(command: List<String>, projectDirectory: Path): Set<Path> {
     val (result, errors) = execAndReadStdoutAndStderr(command, projectDirectory)
     if ("FAILURE: Build failed" in errors) {
         LOG.warn("Gradle task failed: {}", errors)
@@ -107,10 +106,9 @@ private fun findGradleCLIDependencies(command: List<String>, projectDirectory: P
 private val artifactPattern by lazy { "kotlin-lsp-gradle (.+)(?:\r?\n)".toRegex() }
 private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".toRegex() }
 
-private fun parseGradleCLIDependencies(output: String): Set<Path>? {
+private fun parseGradleCLIDependencies(output: String): Set<Path> {
     LOG.debug(output)
     val artifacts = artifactPattern.findAll(output)
         .mapNotNull { it.groups[1]?.value?.let { it1 -> Paths.get(it1) } }
-        .filterNotNull()
     return artifacts.toSet()
 }
