@@ -21,7 +21,7 @@ import org.javacs.kt.highlight.documentHighlightsAt
 import org.javacs.kt.inlayhints.provideHints
 import org.javacs.kt.symbols.documentSymbols
 import org.javacs.kt.util.AsyncExecutor
-import org.javacs.kt.util.Debouncer
+import org.javacs.kt.util.Debounce
 import org.javacs.kt.util.TemporaryDirectory
 import org.javacs.kt.util.describeURI
 import org.javacs.kt.util.describeURIs
@@ -47,7 +47,7 @@ class KotlinTextDocumentService(
     private val async = AsyncExecutor()
     private val formattingService = FormattingService(config.formatting)
 
-    var debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
+    var debounceLint = Debounce(Duration.ofMillis(config.diagnostics.debounceTime))
     val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
@@ -271,7 +271,7 @@ class KotlinTextDocumentService(
     }
 
     fun updateDebounce() {
-        debounceLint = Debouncer(Duration.ofMillis(config.diagnostics.debounceTime))
+        debounceLint = Debounce(Duration.ofMillis(config.diagnostics.debounceTime))
     }
 
     fun lintAll() {

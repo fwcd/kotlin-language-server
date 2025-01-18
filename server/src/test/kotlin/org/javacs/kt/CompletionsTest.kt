@@ -341,7 +341,6 @@ class TrailingLambdaTest : SingleFileTestFixture("completions", "TrailingLambda.
 }
 
 class JavaGetterSetterConversionTest : SingleFileTestFixture("completions", "JavaGetterSetterConversion.kt") {
-    @Ignore
     @Test fun `test java static method conversion`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 44)).get().right!!
         val labels = completions.items.map { it.label }
