@@ -561,8 +561,8 @@ private fun sameFile(target: DeclarationDescriptor, from: DeclarationDescriptor)
     val targetFile = DescriptorUtils.getContainingSourceFile(target)
     val fromFile = DescriptorUtils.getContainingSourceFile(from)
 
-    if (targetFile == SourceFile.NO_SOURCE_FILE || fromFile == SourceFile.NO_SOURCE_FILE) return true
-    else return targetFile.name == fromFile.name
+    return if (targetFile == SourceFile.NO_SOURCE_FILE || fromFile == SourceFile.NO_SOURCE_FILE) true
+    else targetFile.name == fromFile.name
 }
 
 private fun sameParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {

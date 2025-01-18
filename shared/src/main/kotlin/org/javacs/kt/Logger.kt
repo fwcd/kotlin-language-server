@@ -79,7 +79,7 @@ class Logger {
         }
     }
 
-    inline fun logWithLambdaAt(msgLevel: LogLevel, msg: () -> String) {
+    inline fun logWithLambdaAt(msgLevel: LogLevel, crossinline msg: () -> String) {
         if (level.value <= msgLevel.value) {
             log(LogMessage(msgLevel, msg()))
         }
@@ -103,17 +103,17 @@ class Logger {
 
     // Convenience logging methods using inlined lambdas
 
-    inline fun error(msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
+    inline fun error(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
 
-    inline fun warn(msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
+    inline fun warn(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
 
-    inline fun info(msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
+    inline fun info(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
 
-    inline fun debug(msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
+    inline fun debug(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
 
-    inline fun trace(msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
+    inline fun trace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
 
-    inline fun deepTrace(msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
+    inline fun deepTrace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
 
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")
@@ -145,7 +145,7 @@ class Logger {
 
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
-            val nextChar = if (charIndex != lastIndex) msg.get(charIndex + 1) else '?'
+            val nextChar = if (charIndex != lastIndex) msg[charIndex + 1] else '?'
             if ((placeholderIndex < placeholders.size) && (currentChar == '{') && (nextChar == '}')) {
                 result.append(placeholders[placeholderIndex] ?: "null")
                 placeholderIndex += 1

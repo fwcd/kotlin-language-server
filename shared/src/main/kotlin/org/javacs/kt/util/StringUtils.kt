@@ -15,8 +15,8 @@ package org.javacs.kt.util
  * @param maxOffset The number of characters to search for matching letters
  */
 fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: Int = 4): Int = when {
-    candidate.length == 0 -> pattern.length
-    pattern.length == 0 -> candidate.length
+    candidate.isEmpty() -> pattern.length
+    pattern.isEmpty() -> candidate.length
     else -> {
         val candidateLength = candidate.length
         val patternLength = pattern.length
@@ -69,7 +69,7 @@ fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: In
         }
 
         longestCommonSubsequence += localCommonSubstring
-        Math.max(candidateLength, patternLength) - longestCommonSubsequence
+        candidateLength.coerceAtLeast(patternLength) - longestCommonSubsequence
     }
 }
 

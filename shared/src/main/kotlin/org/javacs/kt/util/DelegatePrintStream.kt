@@ -10,7 +10,7 @@ class DelegatePrintStream(private val delegate: (String) -> Unit): PrintStream(B
 	override fun write(c: Int) = delegate((c.toChar()).toString())
 
 	override fun write(buf: ByteArray, off: Int, len: Int) {
-		if (len > 0 && buf.size > 0) {
+		if (len > 0 && buf.isNotEmpty()) {
 			delegate(String(buf, off, len))
 		}
 	}
@@ -44,9 +44,9 @@ class DelegatePrintStream(private val delegate: (String) -> Unit): PrintStream(B
 
 	override fun print(s: CharArray) = delegate(String(s))
 
-	override fun print(s: String) = delegate(s)
+	override fun print(s: String?) = delegate(s.let { "null" })
 
-	override fun print(obj: Any) = delegate(obj.toString())
+	override fun print(obj: Any?) = delegate(obj.toString())
 
 	override fun println() = delegate(newLine)
 
@@ -64,7 +64,7 @@ class DelegatePrintStream(private val delegate: (String) -> Unit): PrintStream(B
 
 	override fun println(x: CharArray) = delegate(String(x) + newLine)
 
-	override fun println(x: String) = delegate(x + newLine)
+	override fun println(x: String?) = delegate(x.let { "null" } + newLine)
 
-	override fun println(x: Any) = delegate(x.toString() + newLine)
+	override fun println(x: Any?) = delegate(x.toString() + newLine)
 }

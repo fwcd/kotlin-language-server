@@ -14,8 +14,13 @@ val QUICK_FIXES = listOf(
     AddMissingImportsQuickFix()
 )
 
-fun codeActions(file: CompiledFile, index: SymbolIndex, range: Range, context: CodeActionContext): List<Either<Command, CodeAction>> {
-    // context.only does not work when client is emacs... 
+fun codeActions(
+    file: CompiledFile,
+    index: SymbolIndex,
+    range: Range,
+    context: CodeActionContext
+): List<Either<Command, CodeAction>> {
+    // context.only does not work when client is emacs...
     val requestedKinds = context.only ?: listOf(CodeActionKind.Refactor, CodeActionKind.QuickFix)
     return requestedKinds.map {
         when (it) {
@@ -31,10 +36,12 @@ fun getRefactors(file: CompiledFile, range: Range): List<Either<Command, CodeAct
     return if (hasSelection) {
         listOf(
             Either.forLeft<Command, CodeAction>(
-                Command("Convert Java to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
-                    file.parse.toPath().toUri().toString(),
-                    range
-                ))
+                Command(
+                    "Convert Java to Kotlin", JAVA_TO_KOTLIN_COMMAND, listOf(
+                        file.parse.toPath().toUri().toString(),
+                        range
+                    )
+                )
             )
         )
     } else {
@@ -42,7 +49,12 @@ fun getRefactors(file: CompiledFile, range: Range): List<Either<Command, CodeAct
     }
 }
 
-fun getQuickFixes(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
+fun getQuickFixes(
+    file: CompiledFile,
+    index: SymbolIndex,
+    range: Range,
+    diagnostics: List<Diagnostic>
+): List<Either<Command, CodeAction>> {
     return QUICK_FIXES.flatMap {
         it.compute(file, index, range, diagnostics)
     }
