@@ -48,7 +48,7 @@ class KotlinTextDocumentService(
     private val formattingService = FormattingService(config.formatting)
 
     var debounceLint = Debounce(Duration.ofMillis(config.diagnostics.debounceTime))
-    val lintTodo = mutableSetOf<URI>()
+    private val lintTodo = mutableSetOf<URI>()
     var lintCount = 0
 
     var lintRecompilationCallback: () -> Unit

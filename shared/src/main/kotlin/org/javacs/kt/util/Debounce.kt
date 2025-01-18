@@ -22,7 +22,7 @@ class Debounce(
     fun submitImmediately(task: (cancelCallback: () -> Boolean) -> Unit) {
         pendingTask?.cancel(false)
         val currentTaskRef = AtomicReference<Future<*>>()
-        val currentTask = executor.submit { task { currentTaskRef.get()?.isCancelled() ?: false } }
+        val currentTask = executor.submit { task { currentTaskRef.get()?.isCancelled ?: false } }
         currentTaskRef.set(currentTask)
         pendingTask = currentTask
     }
@@ -30,7 +30,7 @@ class Debounce(
     fun schedule(task: (cancelCallback: () -> Boolean) -> Unit) {
         pendingTask?.cancel(false)
         val currentTaskRef = AtomicReference<Future<*>>()
-        val currentTask = executor.schedule({ task { currentTaskRef.get()?.isCancelled() ?: false } }, delayMs, TimeUnit.MILLISECONDS)
+        val currentTask = executor.schedule({ task { currentTaskRef.get()?.isCancelled ?: false } }, delayMs, TimeUnit.MILLISECONDS)
         currentTaskRef.set(currentTask)
         pendingTask = currentTask
     }
@@ -42,7 +42,7 @@ class Debounce(
     fun shutdown(awaitTermination: Boolean) {
         executor.shutdown()
         if (awaitTermination) {
-			LOG.info("Awaiting debouncer termination...")
+			LOG.info("Awaiting debounce termination...")
 			executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS)
 		}
     }

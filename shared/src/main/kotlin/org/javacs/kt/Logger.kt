@@ -9,7 +9,8 @@ import org.javacs.kt.util.DelegatePrintStream
 
 val LOG = Logger()
 
-private class JULRedirector(private val downstream: Logger): Handler() {
+
+private class JULRedirector(private val downstream: Logger) : Handler() {
     override fun publish(record: LogRecord) {
         when (record.level) {
             Level.SEVERE -> downstream.error(record.message)
@@ -40,10 +41,17 @@ enum class LogLevel(val value: Int) {
 
 class LogMessage(
     val level: LogLevel,
-    val message: String
+    val message: String,
+    private val funName: String? = null,
 ) {
     val formatted: String
-        get() = "[$level] $message"
+        get() {
+            return if (funName != null) {
+                "[$level] $funName $message"
+            } else {
+                "[$level] $message"
+            }
+        }
 }
 
 class Logger {
@@ -56,6 +64,7 @@ class Logger {
 
     private val logTime = false
     var level = LogLevel.INFO
+    var fullLog = false;
 
     private fun logError(msg: LogMessage) {
         if (errBackend == null) {
@@ -74,14 +83,24 @@ class Logger {
     }
 
     private fun logWithPlaceholdersAt(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
+        val stackTraceElement = if (fullLog) {
+            Throwable().stackTrace.getOrNull(1) // Caller is usually the 1st element
+        } else {
+            null
+        }
         if (level.value <= msgLevel.value) {
-            log(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
+            log(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders)), stackTraceElement?.className))
         }
     }
 
     inline fun logWithLambdaAt(msgLevel: LogLevel, crossinline msg: () -> String) {
+        val stackTraceElement = if (fullLog) {
+            Throwable().stackTrace.getOrNull(1) // Caller is usually the 1st element
+        } else {
+            null
+        }
         if (level.value <= msgLevel.value) {
-            log(LogMessage(msgLevel, msg()))
+            log(LogMessage(msgLevel, msg(), stackTraceElement?.className))
         }
     }
 
@@ -99,7 +118,8 @@ class Logger {
 
     fun trace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.TRACE, msg, placeholders)
 
-    fun deepTrace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.DEEP_TRACE, msg, placeholders)
+    fun deepTrace(msg: String, vararg placeholders: Any?) =
+        logWithPlaceholdersAt(LogLevel.DEEP_TRACE, msg, placeholders)
 
     // Convenience logging methods using inlined lambdas
 
@@ -134,6 +154,10 @@ class Logger {
         connectOutputBackend {
             System.err.println(it.formatted)
         }
+    }
+
+    fun setFullLog() {
+        fullLog = true
     }
 
     private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {
@@ -178,9 +202,9 @@ class Logger {
     }
 
     private fun shortenOrPad(str: String, length: Int = 10): String =
-            if (str.length <= length) {
-                str.padEnd(length, ' ')
-            } else {
-                ".." + str.substring(str.length - length + 2)
-            }
+        if (str.length <= length) {
+            str.padEnd(length, ' ')
+        } else {
+            ".." + str.substring(str.length - length + 2)
+        }
 }

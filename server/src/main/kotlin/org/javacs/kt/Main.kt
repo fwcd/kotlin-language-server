@@ -26,6 +26,9 @@ class Args {
 
     @Parameter(names = ["--tcpDebug"])
     var tcpDebug: Boolean = false
+
+    @Parameter(names = ["--fullLog"])
+    var fullLog: Boolean = false
 }
 
 fun main(argv: Array<String>) {

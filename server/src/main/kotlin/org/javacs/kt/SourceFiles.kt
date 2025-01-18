@@ -64,7 +64,7 @@ private class NotifySourcePath(private val sp: SourcePath) {
  * Keep track of the text of all files in the workspace
  */
 class SourceFiles(
-    private val sp: SourcePath,
+    sp: SourcePath,
     private val contentProvider: URIContentProvider,
     private val scriptsConfig: ScriptsConfiguration
 ) {
