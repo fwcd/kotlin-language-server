@@ -37,7 +37,6 @@ class CompilerClassPath(
         codegenConfig,
         outputDirectory
     )
-        private set
 
     private val async = AsyncExecutor()
 
