@@ -35,9 +35,9 @@ fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
  */
 fun getDocString(file: CompiledFile, cursor: Int): String {
     val signatures = getSignatures(file, cursor)
-    if (signatures == null || signatures.size == 0 || signatures[0].documentation == null)
+    if (signatures.isNullOrEmpty() || signatures[0].documentation == null)
         return ""
-    return if (signatures[0].documentation.isLeft()) signatures[0].documentation.left else ""
+    return if (signatures[0].documentation.isLeft) signatures[0].documentation.left else ""
 }
 
 // TODO better function name?
