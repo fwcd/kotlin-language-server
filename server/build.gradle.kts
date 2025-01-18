@@ -19,7 +19,9 @@ application {
     mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
-    applicationDistribution.into("bin") { fileMode = 755 }
+    applicationDistribution.into("bin") {
+        filePermissions { unix(755) }
+    }
 }
 
 repositories {
