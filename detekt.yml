@@ -15,8 +15,6 @@ complexity:
   NestedBlockDepth:
     threshold: 10
 
-
-
 empty-blocks:
   excludes: *standardExcludes
 
@@ -30,6 +28,8 @@ exceptions:
       - NumberFormatException
       - ParseException
       - MissingPropertyException
+  TooGenericExceptionCaught:
+    active: false
 
 naming:
   excludes: *standardExcludes
