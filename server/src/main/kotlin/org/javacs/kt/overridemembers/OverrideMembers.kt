@@ -57,7 +57,7 @@ private fun createOverrideAlternatives(file: CompiledFile, kotlinClass: KtClass)
 
     // Get the location where the new code will be placed
     val newMembersStartPosition = getNewMembersStartPosition(file, kotlinClass)
-    
+
     // loop through the memberstoimplement and create code actions
     return membersToImplement.map { member ->
         val newText = System.lineSeparator() + System.lineSeparator() + padding + member
@@ -110,18 +110,22 @@ private fun getUnimplementedMembersStubs(file: CompiledFile, kotlinClass: KtClas
 private fun ClassDescriptor.canBeExtended() = this.kind.isInterface ||
     this.modality == Modality.ABSTRACT ||
     this.modality == Modality.OPEN
-            
+
 private fun MemberDescriptor.canBeOverridden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
 
 // interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor
 fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? =
-        if (descriptor is ClassDescriptor) {
+    when (descriptor) {
+        is ClassDescriptor -> {
             descriptor
-        } else if (descriptor is ClassConstructorDescriptor) {
+        }
+        is ClassConstructorDescriptor -> {
             descriptor.containingDeclaration
-        } else {
+        }
+        else -> {
             null
         }
+    }
 
 fun getSuperClassTypeProjections(
         file: CompiledFile,
@@ -131,8 +135,8 @@ fun getSuperClassTypeProjections(
                 .typeReference
                 ?.typeElement
                 ?.children
-                ?.filter { it is KtTypeArgumentList }
-                ?.flatMap { (it as KtTypeArgumentList).arguments }
+                ?.filterIsInstance<KtTypeArgumentList>()
+                ?.flatMap { it.arguments }
                 ?.mapNotNull {
                     (file.referenceExpressionAtPoint(it?.startOffset ?: 0)?.second as?
                                     ClassDescriptor)
@@ -173,7 +177,7 @@ private fun parametersMatch(
             ) {
                 // Any and Any? seems to be null for Kt* psi objects for some reason? At least for equals
                 // TODO: look further into this
-                
+
                 // Note: Since we treat Java overrides as non nullable by default, the above test
                 // will fail when the user has made the type nullable.
                 // TODO: look into this
@@ -208,14 +212,12 @@ private fun KtTypeReference.typeName(): String? =
 fun createFunctionStub(function: FunctionDescriptor): String {
     val name = function.name
     val arguments =
-            function.valueParameters
-                    .map { argument ->
-                        val argumentName = argument.name
-                        val argumentType = argument.type.unwrappedType()
+        function.valueParameters.joinToString(", ") { argument ->
+            val argumentName = argument.name
+            val argumentType = argument.type.unwrappedType()
 
-                        "$argumentName: $argumentType"
-                    }
-                    .joinToString(", ")
+            "$argumentName: $argumentType"
+        }
     val returnType = function.returnType?.unwrappedType()?.toString()?.takeIf { "Unit" != it }
 
     return "override fun $name($arguments)${returnType?.let { ": $it" } ?: ""} { }"

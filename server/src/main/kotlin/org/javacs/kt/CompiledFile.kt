@@ -29,9 +29,9 @@ class CompiledFile(
     val parse: KtFile,
     val compile: BindingContext,
     val module: ModuleDescriptor,
-    private val sourcePath: Collection<KtFile>,
-    private val classPath: CompilerClassPath,
-    private val isScript: Boolean = false,
+    val sourcePath: Collection<KtFile>,
+    val classPath: CompilerClassPath,
+    val isScript: Boolean = false,
     val kind: CompilationKind = CompilationKind.DEFAULT
 ) {
     /**
