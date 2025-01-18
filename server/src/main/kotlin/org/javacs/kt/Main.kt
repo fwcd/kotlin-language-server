@@ -21,6 +21,8 @@ class Args {
     var tcpClientPort: Int? = null
     @Parameter(names = ["--tcpClientHost", "-h"])
     var tcpClientHost: String = "localhost"
+    @Parameter(names = ["--tcpDebug"])
+    var tcpDebug: Boolean = false
 }
 
 fun main(argv: Array<String>) {
@@ -38,7 +40,7 @@ fun main(argv: Array<String>) {
         tcpStartServer(it)
     } ?: Pair(System.`in`, System.out)
 
-    val server = KotlinLanguageServer()
+    val server = KotlinLanguageServer(tcpDebug = args.tcpDebug)
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }
     val launcher = LSPLauncher.createServerLauncher(server, ExitingInputStream(inStream), outStream, threads) { it }
 
