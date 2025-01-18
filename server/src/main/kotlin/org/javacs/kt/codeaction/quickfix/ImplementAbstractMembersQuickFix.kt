@@ -5,7 +5,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
-import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
 import org.javacs.kt.overridemembers.createFunctionStub
 import org.javacs.kt.overridemembers.createVariableStub
@@ -15,37 +14,18 @@ import org.javacs.kt.overridemembers.getNewMembersStartPosition
 import org.javacs.kt.overridemembers.getSuperClassTypeProjections
 import org.javacs.kt.overridemembers.hasNoBody
 import org.javacs.kt.overridemembers.overridesDeclaration
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
-import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtSimpleNameExpression
-import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
-import org.jetbrains.kotlin.psi.KtTypeArgumentList
-import org.jetbrains.kotlin.psi.KtTypeReference
-import org.jetbrains.kotlin.psi.psiUtil.containingClass
-import org.jetbrains.kotlin.psi.psiUtil.endOffset
-import org.jetbrains.kotlin.psi.psiUtil.isAbstract
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.TypeProjection
-import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
+
 
 class ImplementAbstractMembersQuickFix : QuickFix {
     override fun compute(
-        file: CompiledFile,
-        index: SymbolIndex,
-        range: Range,
-        diagnostics: List<Diagnostic>
+        file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>
     ): List<Either<Command, CodeAction>> {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
 
@@ -69,14 +49,12 @@ class ImplementAbstractMembersQuickFix : QuickFix {
                 val newMembersStartPosition = getNewMembersStartPosition(file, kotlinClass)
                 val bodyAppendBeginning = listOf(
                     TextEdit(
-                        Range(newMembersStartPosition, newMembersStartPosition),
-                        "{"
+                        Range(newMembersStartPosition, newMembersStartPosition), "{"
                     )
                 ).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
                 val bodyAppendEnd = listOf(
                     TextEdit(
-                        Range(newMembersStartPosition, newMembersStartPosition),
-                        System.lineSeparator() + "}"
+                        Range(newMembersStartPosition, newMembersStartPosition), System.lineSeparator() + "}"
                     )
                 ).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
 
@@ -98,24 +76,20 @@ class ImplementAbstractMembersQuickFix : QuickFix {
     }
 }
 
-fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range) =
-    diagnostics.find {
-        diagnosticMatch(
-            it,
-            range,
-            hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
-        )
-    }
+fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range) = diagnostics.find {
+    diagnosticMatch(
+        it, range, hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
+    )
+}
 
-private fun anyDiagnosticMatch(diagnostics: Diagnostics, startCursor: Int, endCursor: Int) =
-    diagnostics.any {
-        diagnosticMatch(
-            it,
-            startCursor,
-            endCursor,
-            hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
-        )
-    }
+private fun anyDiagnosticMatch(diagnostics: Diagnostics, startCursor: Int, endCursor: Int) = diagnostics.any {
+    diagnosticMatch(
+        it,
+        startCursor,
+        endCursor,
+        hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
+    )
+}
 
 private fun getAbstractMembersStubs(file: CompiledFile, kotlinClass: KtClass) =
     // For each of the super types used by this class
@@ -131,11 +105,9 @@ private fun getAbstractMembersStubs(file: CompiledFile, kotlinClass: KtClass) =
             val superClassTypeArguments = getSuperClassTypeProjections(file, it)
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
                 (classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(
-                    kotlinClass,
-                    classMember
+                    kotlinClass, classMember
                 )) || (classMember is PropertyDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(
-                    kotlinClass,
-                    classMember
+                    kotlinClass, classMember
                 ))
             }.mapNotNull { member ->
                 when (member) {
