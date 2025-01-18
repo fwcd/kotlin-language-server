@@ -15,8 +15,8 @@ dependencies {
     implementation(platform(project(":platform")))
 
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.exposed:exposed-core")
-    implementation("org.jetbrains.exposed:exposed-dao")
-    testImplementation("org.hamcrest:hamcrest-all")
-    testImplementation("junit:junit")
+    implementation(libs.org.jetbrains.exposed.core)
+    implementation(libs.org.jetbrains.exposed.dao)
+    testImplementation(libs.hamcrest.all)
+    testImplementation(libs.junit.junit)
 }

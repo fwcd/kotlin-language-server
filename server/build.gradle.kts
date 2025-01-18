@@ -2,8 +2,8 @@ plugins {
     kotlin("jvm")
     id("maven-publish")
     id("application")
-    id("com.github.jk1.tcdeps")
-    id("com.jaredsburrows.license")
+    alias(libs.plugins.com.github.jk1.tcdeps)
+    alias(libs.plugins.com.jaredsburrows.license)
     id("kotlin-language-server.publishing-conventions")
     id("kotlin-language-server.distribution-conventions")
     id("kotlin-language-server.kotlin-conventions")
@@ -19,9 +19,7 @@ application {
     mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
-    applicationDistribution.into("bin") {
-        fileMode = 755
-    }
+    applicationDistribution.into("bin") { fileMode = 755 }
 }
 
 repositories {
@@ -40,49 +38,49 @@ dependencies {
 
     implementation(project(":shared"))
 
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j")
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc")
+    implementation(libs.org.eclipse.lsp4j.lsp4j)
+    implementation(libs.org.eclipse.lsp4j.jsonrpc)
+
     implementation(kotlin("compiler"))
     implementation(kotlin("scripting-compiler"))
     implementation(kotlin("scripting-jvm-host-unshaded"))
     implementation(kotlin("sam-with-receiver-compiler-plugin"))
     implementation(kotlin("reflect"))
-    implementation("org.jetbrains:fernflower")
-    implementation("org.jetbrains.exposed:exposed-core")
-    implementation("org.jetbrains.exposed:exposed-dao")
-    implementation("org.jetbrains.exposed:exposed-jdbc")
-    implementation("com.h2database:h2")
-    implementation("com.github.fwcd.ktfmt:ktfmt")
-    implementation("com.beust:jcommander")
-    implementation("org.xerial:sqlite-jdbc")
+    implementation(libs.org.jetbrains.fernflower)
+    implementation(libs.org.jetbrains.exposed.core)
+    implementation(libs.org.jetbrains.exposed.dao)
+    implementation(libs.org.jetbrains.exposed.jdbc)
+    implementation(libs.com.h2database.h2)
+    implementation(libs.com.github.fwcd.ktfmt)
+    implementation(libs.com.beust.jcommander)
+    implementation(libs.org.xerial.sqlite.jdbc)
 
-    testImplementation("org.hamcrest:hamcrest-all")
-    testImplementation("junit:junit")
-    testImplementation("org.openjdk.jmh:jmh-core")
+    testImplementation(libs.hamcrest.all)
+    testImplementation(libs.junit.junit)
+    testImplementation(libs.org.openjdk.jmh.core)
 
-    // See https://github.com/JetBrains/kotlin/blob/65b0a5f90328f4b9addd3a10c6f24f3037482276/libraries/examples/scripting/jvm-embeddable-host/build.gradle.kts#L8
+    // See
+    // https://github.com/JetBrains/kotlin/blob/65b0a5f90328f4b9addd3a10c6f24f3037482276/libraries/examples/scripting/jvm-embeddable-host/build.gradle.kts#L8
     compileOnly(kotlin("scripting-jvm-host"))
     testCompileOnly(kotlin("scripting-jvm-host"))
 
-    annotationProcessor("org.openjdk.jmh:jmh-generator-annprocess")
+    annotationProcessor(libs.org.openjdk.jmh.generator.annprocess)
 }
 
-configurations.forEach { config ->
-    config.resolutionStrategy {
-        preferProjectModules()
-    }
-}
+configurations.forEach { config -> config.resolutionStrategy { preferProjectModules() } }
 
-tasks.startScripts {
-    applicationName = "kotlin-language-server"
-}
+tasks.startScripts { applicationName = "kotlin-language-server" }
 
 tasks.register<Exec>("fixFilePermissions") {
     // When running on macOS or Linux the start script
     // needs executable permissions to run.
 
     onlyIf { !System.getProperty("os.name").lowercase().contains("windows") }
-    commandLine("chmod", "+x", "${tasks.installDist.get().destinationDir}/bin/kotlin-language-server")
+    commandLine(
+            "chmod",
+            "+x",
+            "${tasks.installDist.get().destinationDir}/bin/kotlin-language-server"
+    )
 }
 
 tasks.register<JavaExec>("debugRun") {
@@ -91,9 +89,7 @@ tasks.register<JavaExec>("debugRun") {
     standardInput = System.`in`
 
     jvmArgs(debugArgs)
-    doLast {
-        println("Using debug port $debugPort")
-    }
+    doLast { println("Using debug port $debugPort") }
 }
 
 tasks.register<CreateStartScripts>("debugStartScripts") {
@@ -116,10 +112,6 @@ tasks.withType<Test>() {
     }
 }
 
-tasks.installDist {
-    finalizedBy("fixFilePermissions")
-}
+tasks.installDist { finalizedBy("fixFilePermissions") }
 
-tasks.build {
-    finalizedBy("installDist")
-}
+tasks.build { finalizedBy("installDist") }

@@ -4,7 +4,7 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 plugins {
     kotlin("jvm")
     `maven-publish`
-    id("io.gitlab.arturbosch.detekt") version "1.22.0"
+    alias(libs.plugins.io.gitlab.arturbosch.detekt)
 }
 
 repositories {

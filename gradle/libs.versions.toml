@@ -1,0 +1,49 @@
+[versions]
+kotlinVersion = "2.1.0"
+lsp4jVersion = "0.21.2"
+exposedVersion = "0.37.3"
+jmhVersion = "1.20"
+
+[libraries]
+org-jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-compiler = { module = "org.jetbrains.kotlin:kotlin-compiler", version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-ktscompiler = { module = "org.jetbrains.kotlin:kotlin-scripting-compiler", version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-kts-jvm-host-unshaded = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host-unshaded", version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-sam-with-receiver-compiler-plugin = { module = "org.jetbrains.kotlin:kotlin-sam-with-receiver-compiler-plugin", version.ref = "kotlinVersion" }
+
+org-jetbrains-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-jvm = { module = "org.jetbrains.kotlin:kotlin-jvm", version.ref = "kotlinVersion" }
+
+org-jetbrains-kotlin-kotlin-scripting-jvm-host = { module = "org.jetbrains.kotlin:kotlin-scripting-jvm-host", version.ref = "kotlinVersion" }
+
+org-eclipse-lsp4j-lsp4j = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4jVersion" }
+org-eclipse-lsp4j-jsonrpc = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc", version.ref = "lsp4jVersion" }
+
+hamcrest-all = { module = "org.hamcrest:hamcrest-all", version = "1.3" }
+
+junit-junit = { module = "junit:junit", version = "4.11" }
+
+org-jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposedVersion" }
+org-jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedVersion" }
+org-jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion" }
+
+org-jetbrains-fernflower = { module = "org.jetbrains:fernflower", version = "1.0" }
+
+com-github-fwcd-ktfmt = { module = "com.github.fwcd.ktfmt:ktfmt", version = "b5d31d1" }
+
+com-h2database-h2 = { module = "com.h2database:h2", version = "1.4.200" }
+
+com-beust-jcommander = { module = "com.beust:jcommander", version = "1.78" }
+
+org-openjdk-jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmhVersion" }
+org-openjdk-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmhVersion" }
+
+org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.41.2.1" }
+
+# buildSrc
+org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin",version.ref = "kotlinVersion" }
+
+[plugins]
+com-github-jk1-tcdeps = { id = "com.github.jk1.tcdeps", version = "1.2" }
+com-jaredsburrows-license = { id = "com.jaredsburrows.license", version = "0.8.42" }
+io-gitlab-arturbosch-detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.22.0" }

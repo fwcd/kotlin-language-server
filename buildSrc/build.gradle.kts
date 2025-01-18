@@ -30,5 +30,5 @@ kotlin {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin")
+    implementation(libs.org.jetbrains.kotlin.gradle.plugin)
 }
