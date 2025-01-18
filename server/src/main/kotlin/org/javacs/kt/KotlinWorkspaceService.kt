@@ -87,7 +87,7 @@ class KotlinWorkspaceService(
             // Update deprecated configuration keys
             get("debounceTime")?.asLong?.let {
                 config.diagnostics.debounceTime = it
-                docService.updateDebouncer()
+                docService.updateDebounce()
             }
             get("snippetsEnabled")?.asBoolean?.let { config.completion.snippets.enabled = it }
 
@@ -146,7 +146,7 @@ class KotlinWorkspaceService(
                     }
                     get("debounceTime")?.asLong?.let {
                         diagnostics.debounceTime = it
-                        docService.updateDebouncer()
+                        docService.updateDebounce()
                     }
                 }
             }

@@ -47,7 +47,7 @@ class LogMessage(
 }
 
 class Logger {
-    private var outBackend: ((LogMessage) -> Unit)? = null
+    private var outBackends: List<((LogMessage) -> Unit)> = listOf()
     private var errBackend: ((LogMessage) -> Unit)? = null
     private val outQueue: Queue<LogMessage> = ArrayDeque()
     private val errQueue: Queue<LogMessage> = ArrayDeque()
@@ -66,10 +66,12 @@ class Logger {
     }
 
     fun log(msg: LogMessage) {
-        if (outBackend == null) {
+        if (outBackends.isEmpty()) {
             outQueue.offer(msg)
         } else {
-            outBackend?.invoke(msg)
+            for (outputBackend in outBackends) {
+                outputBackend.invoke(msg)
+            }
         }
     }
 
@@ -121,7 +123,7 @@ class Logger {
     }
 
     fun connectOutputBackend(outBackend: (LogMessage) -> Unit) {
-        this.outBackend = outBackend
+        this.outBackends += outBackend
         flushOutQueue()
     }
 
@@ -131,8 +133,9 @@ class Logger {
     }
 
     fun connectStdioBackend() {
-        connectOutputBackend { println(it.formatted) }
-        connectOutputBackend { System.err.println(it.formatted) }
+        connectOutputBackend {
+            System.err.println(it.formatted)
+        }
     }
 
     private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {
@@ -160,7 +163,9 @@ class Logger {
 
     private fun flushOutQueue() {
         while (outQueue.isNotEmpty()) {
-            outBackend?.invoke(outQueue.poll())
+            for (outBackend in outBackends) {
+                outBackend.invoke(outQueue.poll())
+            }
         }
     }
 
