@@ -41,13 +41,18 @@ import org.jetbrains.kotlin.types.TypeProjection
 import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
 class ImplementAbstractMembersQuickFix : QuickFix {
-    override fun compute(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
+    override fun compute(
+        file: CompiledFile,
+        index: SymbolIndex,
+        range: Range,
+        diagnostics: List<Diagnostic>
+    ): List<Either<Command, CodeAction>> {
         val diagnostic = findDiagnosticMatch(diagnostics, range)
 
         val startCursor = offset(file.content, range.start)
         val endCursor = offset(file.content, range.end)
         val kotlinDiagnostics = file.compile.diagnostics
-        
+
         // If the client side and the server side diagnostics contain a valid diagnostic for this range.
         if (diagnostic != null && anyDiagnosticMatch(kotlinDiagnostics, startCursor, endCursor)) {
             // Get the class with the missing members
@@ -62,8 +67,18 @@ class ImplementAbstractMembersQuickFix : QuickFix {
 
                 // Get the location where the new code will be placed
                 val newMembersStartPosition = getNewMembersStartPosition(file, kotlinClass)
-                val bodyAppendBeginning = listOf(TextEdit(Range(newMembersStartPosition, newMembersStartPosition), "{")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
-                val bodyAppendEnd = listOf(TextEdit(Range(newMembersStartPosition, newMembersStartPosition), System.lineSeparator() + "}")).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
+                val bodyAppendBeginning = listOf(
+                    TextEdit(
+                        Range(newMembersStartPosition, newMembersStartPosition),
+                        "{"
+                    )
+                ).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
+                val bodyAppendEnd = listOf(
+                    TextEdit(
+                        Range(newMembersStartPosition, newMembersStartPosition),
+                        System.lineSeparator() + "}"
+                    )
+                ).takeIf { kotlinClass.hasNoBody() } ?: emptyList()
 
                 val textEdits = bodyAppendBeginning + membersToImplement.map {
                     // We leave two new lines before the member is inserted
@@ -84,10 +99,23 @@ class ImplementAbstractMembersQuickFix : QuickFix {
 }
 
 fun findDiagnosticMatch(diagnostics: List<Diagnostic>, range: Range) =
-    diagnostics.find { diagnosticMatch(it, range, hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")) }
+    diagnostics.find {
+        diagnosticMatch(
+            it,
+            range,
+            hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
+        )
+    }
 
 private fun anyDiagnosticMatch(diagnostics: Diagnostics, startCursor: Int, endCursor: Int) =
-    diagnostics.any { diagnosticMatch(it, startCursor, endCursor, hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")) }
+    diagnostics.any {
+        diagnosticMatch(
+            it,
+            startCursor,
+            endCursor,
+            hashSetOf("ABSTRACT_MEMBER_NOT_IMPLEMENTED", "ABSTRACT_CLASS_MEMBER_NOT_IMPLEMENTED")
+        )
+    }
 
 private fun getAbstractMembersStubs(file: CompiledFile, kotlinClass: KtClass) =
     // For each of the super types used by this class
@@ -97,12 +125,18 @@ private fun getAbstractMembersStubs(file: CompiledFile, kotlinClass: KtClass) =
         val descriptor = referenceAtPoint?.second
 
         val classDescriptor = getClassDescriptor(descriptor)
-        
+
         // If the super class is abstract or an interface
         if (null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
             val superClassTypeArguments = getSuperClassTypeProjections(file, it)
             classDescriptor.getMemberScope(superClassTypeArguments).getContributedDescriptors().filter { classMember ->
-               (classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember)) || (classMember is PropertyDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(kotlinClass, classMember))
+                (classMember is FunctionDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(
+                    kotlinClass,
+                    classMember
+                )) || (classMember is PropertyDescriptor && classMember.modality == Modality.ABSTRACT && !overridesDeclaration(
+                    kotlinClass,
+                    classMember
+                ))
             }.mapNotNull { member ->
                 when (member) {
                     is FunctionDescriptor -> createFunctionStub(member)

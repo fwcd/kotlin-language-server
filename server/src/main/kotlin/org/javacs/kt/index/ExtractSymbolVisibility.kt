@@ -12,11 +12,13 @@ object ExtractSymbolVisibility : DeclarationDescriptorVisitor<Symbol.Visibility,
         else -> Symbol.Visibility.UNKNOWN
     }
 
-    override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?) = convert(desc.visibility)
+    override fun visitPropertySetterDescriptor(desc: PropertySetterDescriptor, nothing: Unit?) =
+        convert(desc.visibility)
 
     override fun visitConstructorDescriptor(desc: ConstructorDescriptor, nothing: Unit?) = convert(desc.visibility)
 
-    override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?) = convert(desc.visibility)
+    override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?) =
+        convert(desc.visibility)
 
     override fun visitPackageViewDescriptor(desc: PackageViewDescriptor, nothing: Unit?) = Symbol.Visibility.PUBLIC
 
@@ -26,9 +28,11 @@ object ExtractSymbolVisibility : DeclarationDescriptorVisitor<Symbol.Visibility,
 
     override fun visitClassDescriptor(desc: ClassDescriptor, nothing: Unit?) = convert(desc.visibility)
 
-    override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?) = Symbol.Visibility.PUBLIC
+    override fun visitPackageFragmentDescriptor(desc: PackageFragmentDescriptor, nothing: Unit?) =
+        Symbol.Visibility.PUBLIC
 
-    override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?) = convert(desc.visibility)
+    override fun visitValueParameterDescriptor(desc: ValueParameterDescriptor, nothing: Unit?) =
+        convert(desc.visibility)
 
     override fun visitTypeParameterDescriptor(desc: TypeParameterDescriptor, nothing: Unit?) = Symbol.Visibility.PUBLIC
 
@@ -36,7 +40,8 @@ object ExtractSymbolVisibility : DeclarationDescriptorVisitor<Symbol.Visibility,
 
     override fun visitTypeAliasDescriptor(desc: TypeAliasDescriptor, nothing: Unit?) = convert(desc.visibility)
 
-    override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?) = convert(desc.visibility)
+    override fun visitPropertyGetterDescriptor(desc: PropertyGetterDescriptor, nothing: Unit?) =
+        convert(desc.visibility)
 
     override fun visitVariableDescriptor(desc: VariableDescriptor, nothing: Unit?) = convert(desc.visibility)
 

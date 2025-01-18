@@ -62,14 +62,20 @@ fun completions(file: CompiledFile, cursor: Int, index: SymbolIndex, config: Com
     val elementItemLabels = elementItemList.mapNotNull { it.label }.toSet()
 
     val isExhaustive = element !is KtNameReferenceExpression
-                    && element !is KtTypeElement
-                    && element !is KtQualifiedExpression
+        && element !is KtTypeElement
+        && element !is KtQualifiedExpression
 
     val items = (
         elementItemList.asSequence()
-        + (if (!isExhaustive) indexCompletionItems(file, cursor, element, index, partial).filter { it.label !in elementItemLabels } else emptySequence())
-        + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
-    )
+            + (if (!isExhaustive) indexCompletionItems(
+            file,
+            cursor,
+            element,
+            index,
+            partial
+        ).filter { it.label !in elementItemLabels } else emptySequence())
+            + (if (elementItemList.isEmpty()) keywordCompletionItems(partial) else emptySequence())
+        )
     val itemList = items
         .take(MAX_COMPLETION_ITEMS)
         .toList()
@@ -85,7 +91,13 @@ private fun getQueryNameFromExpression(receiver: KtExpression?, cursor: Int, fil
 }
 
 /** Finds completions in the global symbol index, for potentially unimported symbols. */
-private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtElement?, index: SymbolIndex, partial: String): Sequence<CompletionItem> {
+private fun indexCompletionItems(
+    file: CompiledFile,
+    cursor: Int,
+    element: KtElement?,
+    index: SymbolIndex,
+    partial: String
+): Sequence<CompletionItem> {
     val parsedFile = file.parse
     val imports = parsedFile.importDirectives
     // TODO: Deal with alias imports
@@ -99,7 +111,12 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
         .toSet()
 
     val queryName = when (element) {
-        is KtQualifiedExpression -> getQueryNameFromExpression(element.receiverExpression, element.receiverExpression.startOffset, file)
+        is KtQualifiedExpression -> getQueryNameFromExpression(
+            element.receiverExpression,
+            element.receiverExpression.startOffset,
+            file
+        )
+
         is KtSimpleNameExpression -> {
             val receiver = element.getReceiverExpression()
             when {
@@ -107,6 +124,7 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
                 else -> null
             }
         }
+
         is KtUserType -> file.referenceAtPoint(element.qualifier?.startOffset ?: cursor)?.second?.fqNameSafe
         is KtTypeElement -> file.referenceAtPoint(element.startOffsetInParent)?.second?.fqNameOrNull()
         else -> null
@@ -119,27 +137,29 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
         .filter { it.fqName.shortName() !in importedNames && it.fqName.parent() !in wildcardPackages }
         .filter {
             // TODO: Visibility checker should be less liberal
-               it.visibility == Symbol.Visibility.PUBLIC
-            || it.visibility == Symbol.Visibility.PROTECTED
-            || it.visibility == Symbol.Visibility.INTERNAL
+            it.visibility == Symbol.Visibility.PUBLIC
+                || it.visibility == Symbol.Visibility.PROTECTED
+                || it.visibility == Symbol.Visibility.INTERNAL
         }
-        .map { CompletionItem().apply {
-            label = it.fqName.shortName().toString()
-            kind = when (it.kind) {
-                Symbol.Kind.CLASS -> CompletionItemKind.Class
-                Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
-                Symbol.Kind.FUNCTION -> CompletionItemKind.Function
-                Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
-                Symbol.Kind.MODULE -> CompletionItemKind.Module
-                Symbol.Kind.ENUM -> CompletionItemKind.Enum
-                Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
-                Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
-                Symbol.Kind.FIELD -> CompletionItemKind.Field
-                Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
+        .map {
+            CompletionItem().apply {
+                label = it.fqName.shortName().toString()
+                kind = when (it.kind) {
+                    Symbol.Kind.CLASS -> CompletionItemKind.Class
+                    Symbol.Kind.INTERFACE -> CompletionItemKind.Interface
+                    Symbol.Kind.FUNCTION -> CompletionItemKind.Function
+                    Symbol.Kind.VARIABLE -> CompletionItemKind.Variable
+                    Symbol.Kind.MODULE -> CompletionItemKind.Module
+                    Symbol.Kind.ENUM -> CompletionItemKind.Enum
+                    Symbol.Kind.ENUM_MEMBER -> CompletionItemKind.EnumMember
+                    Symbol.Kind.CONSTRUCTOR -> CompletionItemKind.Constructor
+                    Symbol.Kind.FIELD -> CompletionItemKind.Field
+                    Symbol.Kind.UNKNOWN -> CompletionItemKind.Text
+                }
+                detail = "(import from ${it.fqName.parent()})"
+                additionalTextEdits = listOf(getImportTextEditEntry(parsedFile, it.fqName)) // TODO: CRLF?
             }
-            detail = "(import from ${it.fqName.parent()})"
-            additionalTextEdits = listOf(getImportTextEditEntry(parsedFile, it.fqName)) // TODO: CRLF?
-        } }
+        }
 }
 
 /** Finds keyword completions starting with the given partial identifier. */
@@ -147,32 +167,49 @@ private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
     (KtTokens.SOFT_KEYWORDS.types + KtTokens.KEYWORDS.types).asSequence()
         .mapNotNull { (it as? KtKeywordToken)?.value }
         .filter { it.startsWith(partial) }
-        .map { CompletionItem().apply {
-            label = it
-            kind = CompletionItemKind.Keyword
-        } }
+        .map {
+            CompletionItem().apply {
+                label = it
+                kind = CompletionItemKind.Keyword
+            }
+        }
 
 data class ElementCompletionItems(val items: Sequence<CompletionItem>, val element: KtElement? = null)
 
 /** Finds completions based on the element around the user's cursor. */
-private fun elementCompletionItems(file: CompiledFile, cursor: Int, config: CompletionConfiguration, partial: String): ElementCompletionItems {
-    val (surroundingElement, isGlobal) = completableElement(file, cursor) ?: return ElementCompletionItems(emptySequence())
+private fun elementCompletionItems(
+    file: CompiledFile,
+    cursor: Int,
+    config: CompletionConfiguration,
+    partial: String
+): ElementCompletionItems {
+    val (surroundingElement, isGlobal) = completableElement(file, cursor)
+        ?: return ElementCompletionItems(emptySequence())
     val completions = elementCompletions(file, cursor, surroundingElement, isGlobal)
         .applyIf(isGlobal) { filter { declarationIsInfix(it) } }
         .applyIf(surroundingElement.endOffset == cursor) {
             filter { containsCharactersInOrder(name(it), partial, caseSensitive = false) }
         }
-    val sorted = completions.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
-        ?: completions.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
+    val sorted =
+        completions.takeIf { partial.length >= MIN_SORT_LENGTH }?.sortedBy { stringDistance(name(it), partial) }
+            ?: completions.sortedBy { if (name(it).startsWith(partial)) 0 else 1 }
     val visible = sorted.filter(isVisible(file, cursor))
 
-    return ElementCompletionItems(visible.map { completionItem(it, surroundingElement, file, config) }, surroundingElement)
+    return ElementCompletionItems(
+        visible.map { completionItem(it, surroundingElement, file, config) },
+        surroundingElement
+    )
 }
 
 private val callPattern = Regex("(.*)\\((?:\\$\\d+)?\\)(?:\\$0)?")
 private val methodSignature = Regex("""(?:fun|constructor) (?:<(?:[a-zA-Z\?\!\: ]+)(?:, [A-Z])*> )?([a-zA-Z]+\(.*\))""")
 
-private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtElement, file: CompiledFile, config: CompletionConfiguration): CompletionItem {
+private fun completionItem(
+    d: DeclarationDescriptor,
+    surroundingElement: KtElement,
+    file: CompiledFile,
+    config: CompletionConfiguration
+): CompletionItem {
     val renderWithSnippets = config.snippets.enabled
         && surroundingElement !is KtCallableReferenceExpression
         && surroundingElement !is KtImportDirective
@@ -218,21 +255,22 @@ private fun extractPropertyName(d: DeclarationDescriptor): String {
 }
 
 private fun isGetter(d: DeclarationDescriptor): Boolean =
-        d is CallableDescriptor &&
+    d is CallableDescriptor &&
         !d.name.isSpecial &&
         d.name.identifier.matches(Regex("(get|is)[A-Z]\\w+")) &&
         d.valueParameters.isEmpty()
 
 private fun isSetter(d: DeclarationDescriptor): Boolean =
-        d is CallableDescriptor &&
+    d is CallableDescriptor &&
         !d.name.isSpecial &&
         d.name.identifier.matches(Regex("set[A-Z]\\w+")) &&
         d.valueParameters.size == 1
 
-private fun isGlobalCall(el: KtElement) = el is KtBlockExpression || el is KtClassBody || el.parent is KtBinaryExpression
+private fun isGlobalCall(el: KtElement) =
+    el is KtBlockExpression || el is KtClassBody || el.parent is KtBinaryExpression
 
 private fun asGlobalCompletable(file: CompiledFile, cursor: Int, el: KtElement): KtElement? {
-    val psi =  file.parse.findElementAt(cursor) ?: return null
+    val psi = file.parse.findElementAt(cursor) ?: return null
     val element = when (val e = psi.getPrevSiblingIgnoringWhitespace() ?: psi.parent) {
         is KtProperty -> e.children.lastOrNull()
         is KtBinaryExpression -> el
@@ -245,7 +283,7 @@ private fun asGlobalCompletable(file: CompiledFile, cursor: Int, el: KtElement):
 
 private fun KtElement.asKtClass(): KtElement? {
     return this.findParent<KtImportDirective>() // import x.y.?
-        // package x.y.?
+    // package x.y.?
         ?: this.findParent<KtPackageDirective>()
         // :?
         ?: this as? KtUserType
@@ -272,8 +310,8 @@ private fun completableElement(file: CompiledFile, cursor: Int): Pair<KtElement,
     val parsed = file.parseAtPoint(cursor - 1) ?: return null
     val asGlobal = isGlobalCall(parsed)
     val el = (
-            if (asGlobal) asGlobalCompletable(file, cursor, parsed) else null
-     ) ?: parsed
+        if (asGlobal) asGlobalCompletable(file, cursor, parsed) else null
+        ) ?: parsed
 
     return el.asKtClass()?.let {
         Pair(it, asGlobal)
@@ -281,13 +319,21 @@ private fun completableElement(file: CompiledFile, cursor: Int): Pair<KtElement,
 }
 
 @Suppress("LongMethod", "ReturnCount", "CyclomaticComplexMethod")
-private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement, infixCall: Boolean): Sequence<DeclarationDescriptor> {
+private fun elementCompletions(
+    file: CompiledFile,
+    cursor: Int,
+    surroundingElement: KtElement,
+    infixCall: Boolean
+): Sequence<DeclarationDescriptor> {
     return when (surroundingElement) {
         // import x.y.?
         is KtImportDirective -> {
             LOG.info("Completing import '{}'", surroundingElement.text)
             val module = file.module
-            val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
+            val match =
+                Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(
+                    surroundingElement
+                )
             val parentDot = match.groupValues[1].ifBlank { "." }
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.debug("Looking for members of package '{}'", parent)
@@ -300,7 +346,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             val module = file.module
             val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
                 ?: return doesntLookLikePackage(surroundingElement)
-            val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
+            val parentDot = match.groupValues[1].ifBlank { "." }
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.debug("Looking for members of package '{}'", parent)
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
@@ -331,6 +377,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             val exp = if (infixCall) surroundingElement else surroundingElement.receiverExpression
             completeMembers(file, cursor, exp, surroundingElement is KtSafeQualifiedExpression)
         }
+
         is KtCallableReferenceExpression -> {
             // something::?
             if (surroundingElement.receiverExpression != null) {
@@ -340,7 +387,8 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             // ::?
             else {
                 LOG.info("Completing function reference '{}'", surroundingElement.text)
-                val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+                val scope = file.scopeAtPoint(surroundingElement.startOffset)
+                    ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
                 identifiers(scope)
             }
         }
@@ -350,7 +398,8 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             if (infixCall) {
                 completeMembers(file, surroundingElement.startOffset, surroundingElement)
             } else {
-                val scope = file.scopeAtPoint(surroundingElement.startOffset) ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
+                val scope = file.scopeAtPoint(surroundingElement.startOffset)
+                    ?: return noResult("No scope at ${file.describePosition(cursor)}", emptySequence())
                 identifiers(scope)
             }
         }
@@ -360,17 +409,28 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
                 completeMembers(file, cursor, surroundingElement.left!!)
             } else emptySequence()
         }
+
         is KtCallExpression, is KtConstantExpression -> {
             completeMembers(file, cursor, surroundingElement as KtExpression)
         }
+
         else -> {
-            LOG.info("{} {} didn't look like a type, a member, or an identifier", surroundingElement::class.simpleName, surroundingElement.text)
+            LOG.info(
+                "{} {} didn't look like a type, a member, or an identifier",
+                surroundingElement::class.simpleName,
+                surroundingElement.text
+            )
             emptySequence()
         }
     }
 }
 
-private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence<DeclarationDescriptor> {
+private fun completeMembers(
+    file: CompiledFile,
+    cursor: Int,
+    receiverExpr: KtExpression,
+    unwrapNullable: Boolean = false
+): Sequence<DeclarationDescriptor> {
     // thingWithType.?
     var descriptors = emptySequence<DeclarationDescriptor>()
     file.scopeAtPoint(cursor)?.let { lexicalScope ->
@@ -408,7 +468,8 @@ private fun ClassDescriptor.getDescriptors(): Sequence<DeclarationDescriptor> {
     val statics = staticScope.getContributedDescriptors().asSequence()
     val classes = unsubstitutedInnerClassesScope.getContributedDescriptors().asSequence()
     val types = unsubstitutedMemberScope.getContributedDescriptors().asSequence()
-    val companionDescriptors = if (hasCompanionObject && companionObjectDescriptor != null) companionObjectDescriptor!!.getDescriptors() else emptySequence()
+    val companionDescriptors =
+        if (hasCompanionObject && companionObjectDescriptor != null) companionObjectDescriptor!!.getDescriptors() else emptySequence()
 
     return (statics + classes + types + companionDescriptors).toSet().asSequence()
 
@@ -449,28 +510,29 @@ fun memberOverloads(type: KotlinType, identifier: String): Sequence<CallableDesc
     val nameFilter = equalsIdentifier(identifier)
 
     return type.memberScope
-            .getContributedDescriptors(Companion.CALLABLES).asSequence()
-            .filterIsInstance<CallableDescriptor>()
-            .filter(nameFilter)
+        .getContributedDescriptors(Companion.CALLABLES).asSequence()
+        .filterIsInstance<CallableDescriptor>()
+        .filter(nameFilter)
 }
 
 private fun completeTypeMembers(type: KotlinType): Sequence<DeclarationDescriptor> =
     type.memberScope.getDescriptorsFiltered(TYPES_FILTER).asSequence()
 
 private fun scopeChainTypes(scope: LexicalScope): Sequence<DeclarationDescriptor> =
-        scope.parentsWithSelf.flatMap(::scopeTypes)
+    scope.parentsWithSelf.flatMap(::scopeTypes)
 
-private val TYPES_FILTER = DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
+private val TYPES_FILTER =
+    DescriptorKindFilter(DescriptorKindFilter.NON_SINGLETON_CLASSIFIERS_MASK or DescriptorKindFilter.TYPE_ALIASES_MASK)
 
 private fun scopeTypes(scope: HierarchicalScope): Sequence<DeclarationDescriptor> =
-        scope.getContributedDescriptors(TYPES_FILTER).asSequence()
+    scope.getContributedDescriptors(TYPES_FILTER).asSequence()
 
 fun identifierOverloads(scope: LexicalScope, identifier: String): Sequence<CallableDescriptor> {
     val nameFilter = equalsIdentifier(identifier)
 
     return identifiers(scope)
-            .filterIsInstance<CallableDescriptor>()
-            .filter(nameFilter)
+        .filterIsInstance<CallableDescriptor>()
+        .filter(nameFilter)
 }
 
 private fun extensionFunctions(scope: LexicalScope): Sequence<CallableDescriptor> =
@@ -478,13 +540,13 @@ private fun extensionFunctions(scope: LexicalScope): Sequence<CallableDescriptor
 
 private fun scopeExtensionFunctions(scope: HierarchicalScope): Sequence<CallableDescriptor> =
     scope.getContributedDescriptors(DescriptorKindFilter.CALLABLES).asSequence()
-            .filterIsInstance<CallableDescriptor>()
-            .filter { it.isExtension }
+        .filterIsInstance<CallableDescriptor>()
+        .filter { it.isExtension }
 
 private fun identifiers(scope: LexicalScope): Sequence<DeclarationDescriptor> =
     scope.parentsWithSelf
-            .flatMap(::scopeIdentifiers)
-            .flatMap(::explodeConstructors)
+        .flatMap(::scopeIdentifiers)
+        .flatMap(::explodeConstructors)
 
 private fun scopeIdentifiers(scope: HierarchicalScope): Sequence<DeclarationDescriptor> {
     val locals = scope.getContributedDescriptors().asSequence()
@@ -497,6 +559,7 @@ private fun explodeConstructors(declaration: DeclarationDescriptor): Sequence<De
     return when (declaration) {
         is ClassDescriptor ->
             declaration.constructors.asSequence() + declaration
+
         else ->
             sequenceOf(declaration)
     }
@@ -522,8 +585,9 @@ private fun name(d: DeclarationDescriptor): String {
 private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) -> Boolean {
     val el = file.elementAtPoint(cursor) ?: return { true }
     val from = el.parentsWithSelf
-                       .mapNotNull { file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
-                       .firstOrNull() ?: return { true }
+        .mapNotNull { file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, it] }
+        .firstOrNull() ?: return { true }
+
     fun check(target: DeclarationDescriptor): Boolean {
         val visible = isDeclarationVisible(target, from)
 
@@ -539,8 +603,8 @@ private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) 
 // Instead, we implement our own "liberal" visibility checker that defaults to visible when in doubt
 private fun isDeclarationVisible(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean =
     target.parentsWithSelf
-            .filterIsInstance<DeclarationDescriptorWithVisibility>()
-            .none { isNotVisible(it, from) }
+        .filterIsInstance<DeclarationDescriptorWithVisibility>()
+        .none { isNotVisible(it, from) }
 
 private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean {
     return when (target.visibility.delegate) {
@@ -550,9 +614,11 @@ private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: Decl
             else
                 !sameParent(target, from)
         }
+
         Visibilities.Protected -> {
             !subclassParent(target, from)
         }
+
         else -> false
     }
 }
@@ -586,7 +652,8 @@ private fun isParentClass(declaration: DeclarationDescriptor): ClassDescriptor? 
     else null
 
 private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescriptor): Boolean {
-    val receiverType = extensionFunction.extensionReceiverParameter?.type?.replaceArgumentsWithStarProjections() ?: return false
+    val receiverType =
+        extensionFunction.extensionReceiverParameter?.type?.replaceArgumentsWithStarProjections() ?: return false
     return KotlinTypeChecker.DEFAULT.isSubtypeOf(type, receiverType)
         || (TypeUtils.getTypeParameterDescriptorOrNull(receiverType)?.isGenericExtensionFor(type) ?: false)
 }
@@ -594,7 +661,8 @@ private fun isExtensionFor(type: KotlinType, extensionFunction: CallableDescript
 private fun TypeParameterDescriptor.isGenericExtensionFor(type: KotlinType): Boolean =
     upperBounds.all { KotlinTypeChecker.DEFAULT.isSubtypeOf(type, it) }
 
-private val loggedHidden = CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
+private val loggedHidden =
+    CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build<Pair<Name, Name>, Unit>()
 
 private fun logHidden(target: DeclarationDescriptor, from: DeclarationDescriptor) {
     val key = Pair(from.name, target.name)

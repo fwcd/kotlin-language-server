@@ -183,21 +183,27 @@ class SymbolIndex(
         fqName.toString().length <= MAX_FQNAME_LENGTH
             && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
-    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> = transaction(db) {
-        // TODO: Extension completion currently only works if the receiver matches exactly,
-        //       ideally this should work with subtypes as well
-        SymbolEntity.find {
-            (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
-        }.limit(limit)
-            .map { Symbol(
-                fqName = FqName(it.fqName),
-                kind = Symbol.Kind.fromRaw(it.kind),
-                visibility = Symbol.Visibility.fromRaw(it.visibility),
-                extensionReceiverType = it.extensionReceiverType?.let(::FqName)
-            ) }
-    }
+    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> =
+        transaction(db) {
+            // TODO: Extension completion currently only works if the receiver matches exactly,
+            //       ideally this should work with subtypes as well
+            SymbolEntity.find {
+                (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
+            }.limit(limit)
+                .map {
+                    Symbol(
+                        fqName = FqName(it.fqName),
+                        kind = Symbol.Kind.fromRaw(it.kind),
+                        visibility = Symbol.Visibility.fromRaw(it.visibility),
+                        extensionReceiverType = it.extensionReceiverType?.let(::FqName)
+                    )
+                }
+        }
 
-    private fun allDescriptors(module: ModuleDescriptor, exclusions: Sequence<DeclarationDescriptor>): Sequence<DeclarationDescriptor> = allPackages(module)
+    private fun allDescriptors(
+        module: ModuleDescriptor,
+        exclusions: Sequence<DeclarationDescriptor>
+    ): Sequence<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
         .flatMap {
             try {

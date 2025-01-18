@@ -90,7 +90,8 @@ class RenderCompletionItem(val snippetsEnabled: Boolean) : DeclarationDescriptor
             val hasTrailingLambda = parameters.lastOrNull()?.type?.isFunctionType ?: false
 
             if (hasTrailingLambda) {
-                val parenthesizedParams = parameters.dropLast(1).ifEmpty { null }?.let { "(${valueParametersSnippet(it)})" } ?: ""
+                val parenthesizedParams =
+                    parameters.dropLast(1).ifEmpty { null }?.let { "(${valueParametersSnippet(it)})" } ?: ""
                 "$name$parenthesizedParams { \${${parameters.size}:${parameters.last().name}} }"
             } else {
                 "$name(${valueParametersSnippet(parameters)})"

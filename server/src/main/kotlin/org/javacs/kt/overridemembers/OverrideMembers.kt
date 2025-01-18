@@ -205,8 +205,8 @@ private fun KtTypeReference.typeName(): String? =
         this.name
                 ?: this.typeElement
                         ?.children
-                        ?.filter { it is KtSimpleNameExpression }
-                        ?.map { (it as KtSimpleNameExpression).getReferencedName() }
+                        ?.filterIsInstance<KtSimpleNameExpression>()
+                        ?.map { it.getReferencedName() }
                         ?.firstOrNull()
 
 fun createFunctionStub(function: FunctionDescriptor): String {

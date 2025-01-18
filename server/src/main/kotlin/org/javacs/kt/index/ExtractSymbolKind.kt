@@ -7,7 +7,8 @@ object ExtractSymbolKind : DeclarationDescriptorVisitor<Symbol.Kind, Unit> {
 
     override fun visitConstructorDescriptor(desc: ConstructorDescriptor, nothing: Unit?) = Symbol.Kind.CONSTRUCTOR
 
-    override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?) = Symbol.Kind.VARIABLE
+    override fun visitReceiverParameterDescriptor(desc: ReceiverParameterDescriptor, nothing: Unit?) =
+        Symbol.Kind.VARIABLE
 
     override fun visitPackageViewDescriptor(desc: PackageViewDescriptor, nothing: Unit?) = Symbol.Kind.MODULE
 

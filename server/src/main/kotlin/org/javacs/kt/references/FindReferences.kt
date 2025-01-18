@@ -27,30 +27,28 @@ import org.jetbrains.kotlin.util.OperatorNameConventions
 import java.nio.file.Path
 
 fun findReferences(file: Path, cursor: Int, sp: SourcePath): List<Location> {
-    return doFindReferences(file, cursor, sp)
-            .map { location(it) }
-            .filterNotNull()
-            .toList()
-            .sortedWith(compareBy({ it.getUri() }, { it.getRange().getStart().getLine() }))
+    return doFindReferences(file, cursor, sp).mapNotNull { location(it) }
+        .toList()
+        .sortedWith(compareBy({ it.uri }, { it.range.start.line }))
 }
 
 fun findReferences(declaration: KtNamedDeclaration, sp: SourcePath): List<Location> {
-    return doFindReferences(declaration, sp)
-        .map { location(it) }
-        .filterNotNull()
+    return doFindReferences(declaration, sp).mapNotNull { location(it) }
         .toList()
-        .sortedWith(compareBy({ it.getUri() }, { it.getRange().getStart().getLine() }))
+        .sortedWith(compareBy({ it.uri }, { it.range.start.line }))
 }
 
 private fun doFindReferences(file: Path, cursor: Int, sp: SourcePath): Collection<KtElement> {
     val recover = sp.currentVersion(file.toUri())
-    val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>() ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
+    val element = recover.elementAtPoint(cursor)?.findParent<KtNamedDeclaration>()
+        ?: return emptyResult("No declaration at ${recover.describePosition(cursor)}")
     return doFindReferences(element, sp)
 }
 
 private fun doFindReferences(element: KtNamedDeclaration, sp: SourcePath): Collection<KtElement> {
     val recover = sp.currentVersion(element.containingFile.toPath().toUri())
-    val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element] ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
+    val declaration = recover.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, element]
+        ?: return emptyResult("Declaration ${element.fqName} has no descriptor")
     val maybes = possibleReferences(declaration, sp).map { it.toPath() }
     LOG.debug("Scanning {} files for references to {}", maybes.size, element.fqName)
     val recompile = sp.compileFiles(maybes.map(Path::toUri))
@@ -58,7 +56,11 @@ private fun doFindReferences(element: KtNamedDeclaration, sp: SourcePath): Colle
     return when {
         isComponent(declaration) -> findComponentReferences(element, recompile) + findNameReferences(element, recompile)
         isIterator(declaration) -> findIteratorReferences(element, recompile) + findNameReferences(element, recompile)
-        isPropertyDelegate(declaration) -> findDelegateReferences(element, recompile) + findNameReferences(element, recompile)
+        isPropertyDelegate(declaration) -> findDelegateReferences(element, recompile) + findNameReferences(
+            element,
+            recompile
+        )
+
         else -> findNameReferences(element, recompile)
     }
 }
@@ -69,20 +71,33 @@ private fun doFindReferences(element: KtNamedDeclaration, sp: SourcePath): Colle
  * @returns ranges of references in the file. Empty list if none are found
  */
 fun findReferencesToDeclarationInFile(declaration: KtNamedDeclaration, file: CompiledFile): List<Range> {
-    val descriptor = file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, declaration] ?: return emptyResult("Declaration ${declaration.fqName} has no descriptor")
+    val descriptor = file.compile[BindingContext.DECLARATION_TO_DESCRIPTOR, declaration]
+        ?: return emptyResult("Declaration ${declaration.fqName} has no descriptor")
     val bindingContext = file.compile
 
     val references = when {
-        isComponent(descriptor) -> findComponentReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
-        isIterator(descriptor) -> findIteratorReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
-        isPropertyDelegate(descriptor) -> findDelegateReferences(declaration, bindingContext) + findNameReferences(declaration, bindingContext)
+        isComponent(descriptor) -> findComponentReferences(
+            declaration,
+            bindingContext
+        ) + findNameReferences(declaration, bindingContext)
+
+        isIterator(descriptor) -> findIteratorReferences(declaration, bindingContext) + findNameReferences(
+            declaration,
+            bindingContext
+        )
+
+        isPropertyDelegate(descriptor) -> findDelegateReferences(declaration, bindingContext) + findNameReferences(
+            declaration,
+            bindingContext
+        )
+
         else -> findNameReferences(declaration, bindingContext)
     }
 
     return references.map {
         location(it)?.range
     }.filterNotNull()
-     .sortedWith(compareBy({ it.start.line }))
+        .sortedWith(compareBy({ it.start.line }))
 }
 
 private fun findNameReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtReferenceExpression> {
@@ -95,24 +110,24 @@ private fun findDelegateReferences(element: KtNamedDeclaration, recompile: Bindi
     val references = recompile.getSliceContents(BindingContext.DELEGATED_PROPERTY_RESOLVED_CALL)
 
     return references
-            .filter { matchesReference(it.value.candidateDescriptor, element) }
-            .map { it.value.call.callElement }
+        .filter { matchesReference(it.value.candidateDescriptor, element) }
+        .map { it.value.call.callElement }
 }
 
 private fun findIteratorReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
     val references = recompile.getSliceContents(BindingContext.LOOP_RANGE_ITERATOR_RESOLVED_CALL)
 
     return references
-            .filter { matchesReference( it.value.candidateDescriptor, element) }
-            .map { it.value.call.callElement }
+        .filter { matchesReference(it.value.candidateDescriptor, element) }
+        .map { it.value.call.callElement }
 }
 
 private fun findComponentReferences(element: KtNamedDeclaration, recompile: BindingContext): List<KtElement> {
     val references = recompile.getSliceContents(BindingContext.COMPONENT_RESOLVED_CALL)
 
     return references
-            .filter { matchesReference(it.value.candidateDescriptor, element) }
-            .map { it.value.call.callElement }
+        .filter { matchesReference(it.value.candidateDescriptor, element) }
+        .map { it.value.call.callElement }
 }
 
 // TODO use imports to limit search
@@ -144,73 +159,76 @@ private fun possibleReferences(declaration: DeclarationDescriptor, sp: SourcePat
 }
 
 private fun isPropertyDelegate(declaration: DeclarationDescriptor) =
-        declaration is FunctionDescriptor &&
+    declaration is FunctionDescriptor &&
         declaration.isOperator &&
         (declaration.name == OperatorNameConventions.GET_VALUE || declaration.name == OperatorNameConventions.SET_VALUE)
 
 private fun hasPropertyDelegates(sp: SourcePath): Set<KtFile> =
-        sp.all().filter(::hasPropertyDelegate).toSet()
+    sp.all().filter(::hasPropertyDelegate).toSet()
 
 fun hasPropertyDelegate(source: KtFile): Boolean =
-        source.preOrderTraversal().filterIsInstance<KtPropertyDelegate>().any()
+    source.preOrderTraversal().filterIsInstance<KtPropertyDelegate>().any()
 
 private fun isIterator(declaration: DeclarationDescriptor) =
-        declaration is FunctionDescriptor &&
+    declaration is FunctionDescriptor &&
         declaration.isOperator &&
         declaration.name == OperatorNameConventions.ITERATOR
 
 private fun hasForLoops(sp: SourcePath): Set<KtFile> =
-        sp.all().filter(::hasForLoop).toSet()
+    sp.all().filter(::hasForLoop).toSet()
 
 private fun hasForLoop(source: KtFile): Boolean =
-        source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
+    source.preOrderTraversal().filterIsInstance<KtForExpression>().any()
 
 private fun isGetSet(declaration: DeclarationDescriptor) =
-        declaration is FunctionDescriptor &&
+    declaration is FunctionDescriptor &&
         declaration.isOperator &&
         (declaration.name == OperatorNameConventions.GET || declaration.name == OperatorNameConventions.SET)
 
 private fun possibleGetSets(sp: SourcePath): Set<KtFile> =
-        sp.all().filter(::possibleGetSet).toSet()
+    sp.all().filter(::possibleGetSet).toSet()
 
 private fun possibleGetSet(source: KtFile) =
-        source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
+    source.preOrderTraversal().filterIsInstance<KtArrayAccessExpression>().any()
 
 private fun possibleInvokeReferences(declaration: FunctionDescriptor, sp: SourcePath) =
-        sp.all().filter { possibleInvokeReference(declaration, it) }.toSet()
+    sp.all().filter { possibleInvokeReference(declaration, it) }.toSet()
 
 // TODO this is not very selective
-private fun possibleInvokeReference(@Suppress("UNUSED_PARAMETER") declaration: FunctionDescriptor, source: KtFile): Boolean =
-        source.preOrderTraversal().filterIsInstance<KtCallExpression>().any()
+private fun possibleInvokeReference(
+    @Suppress("UNUSED_PARAMETER") declaration: FunctionDescriptor,
+    source: KtFile
+): Boolean =
+    source.preOrderTraversal().filterIsInstance<KtCallExpression>().any()
 
 private fun isComponent(declaration: DeclarationDescriptor): Boolean =
-        declaration is FunctionDescriptor &&
+    declaration is FunctionDescriptor &&
         declaration.isOperator &&
         OperatorNameConventions.COMPONENT_REGEX.matches(declaration.name.identifier)
 
 private fun possibleComponentReferences(sp: SourcePath): Set<KtFile> =
-        sp.all().filter { possibleComponentReference(it) }.toSet()
+    sp.all().filter { possibleComponentReference(it) }.toSet()
 
 private fun possibleComponentReference(source: KtFile): Boolean =
-        source.preOrderTraversal()
-                .filterIsInstance<KtDestructuringDeclarationEntry>()
-                .any()
+    source.preOrderTraversal()
+        .filterIsInstance<KtDestructuringDeclarationEntry>()
+        .any()
 
 private fun possibleTokenReferences(find: List<KtSingleValueToken>, sp: SourcePath): Set<KtFile> =
-        sp.all().filter { possibleTokenReference(find, it) }.toSet()
+    sp.all().filter { possibleTokenReference(find, it) }.toSet()
 
 private fun possibleTokenReference(find: List<KtSingleValueToken>, source: KtFile): Boolean =
-        source.preOrderTraversal()
-                .filterIsInstance<KtOperationReferenceExpression>()
-                .any { it.operationSignTokenType in find }
+    source.preOrderTraversal()
+        .filterIsInstance<KtOperationReferenceExpression>()
+        .any { it.operationSignTokenType in find }
 
 private fun possibleNameReferences(declaration: Name, sp: SourcePath): Set<KtFile> =
-        sp.all().filter { possibleNameReference(declaration, it) }.toSet()
+    sp.all().filter { possibleNameReference(declaration, it) }.toSet()
 
 private fun possibleNameReference(declaration: Name, source: KtFile): Boolean =
-        source.preOrderTraversal()
-                .filterIsInstance<KtSimpleNameExpression>()
-                .any { it.getReferencedNameAsName() == declaration }
+    source.preOrderTraversal()
+        .filterIsInstance<KtSimpleNameExpression>()
+        .any { it.getReferencedNameAsName() == declaration }
 
 private fun matchesReference(found: DeclarationDescriptor, search: KtNamedDeclaration): Boolean {
     if (found is ConstructorDescriptor && found.isPrimary)
@@ -220,14 +238,14 @@ private fun matchesReference(found: DeclarationDescriptor, search: KtNamedDeclar
 }
 
 private fun operatorNames(name: Name): List<KtSingleValueToken> =
-        when (name) {
-            OperatorNameConventions.EQUALS -> listOf(KtTokens.EQEQ)
-            OperatorNameConventions.COMPARE_TO -> listOf(KtTokens.GT, KtTokens.LT, KtTokens.LTEQ, KtTokens.GTEQ)
-            else -> {
-                val token = OperatorConventions.UNARY_OPERATION_NAMES.inverse()[name] ?:
-                            OperatorConventions.BINARY_OPERATION_NAMES.inverse()[name] ?:
-                            OperatorConventions.ASSIGNMENT_OPERATIONS.inverse()[name] ?:
-                            OperatorConventions.BOOLEAN_OPERATIONS.inverse()[name]
-                listOfNotNull(token)
-            }
+    when (name) {
+        OperatorNameConventions.EQUALS -> listOf(KtTokens.EQEQ)
+        OperatorNameConventions.COMPARE_TO -> listOf(KtTokens.GT, KtTokens.LT, KtTokens.LTEQ, KtTokens.GTEQ)
+        else -> {
+            val token = OperatorConventions.UNARY_OPERATION_NAMES.inverse()[name]
+                ?: OperatorConventions.BINARY_OPERATION_NAMES.inverse()[name]
+                ?: OperatorConventions.ASSIGNMENT_OPERATIONS.inverse()[name]
+                ?: OperatorConventions.BOOLEAN_OPERATIONS.inverse()[name]
+            listOfNotNull(token)
         }
+    }

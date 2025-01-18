@@ -16,8 +16,9 @@ class KtfmtFormatter(private val config: KtfmtConfiguration) : Formatter {
             "dropbox" -> KtfmtOptions.Style.DROPBOX
             else -> KtfmtOptions.Style.GOOGLE
         }
-        return Ktfmt.format(KtfmtOptions(
-            style = style,
+        return Ktfmt.format(
+            KtfmtOptions(
+                style = style,
             maxWidth = config.maxWidth,
             blockIndent = options.tabSize.takeUnless { it == 0 } ?: config.indent,
             continuationIndent = config.continuationIndent,
