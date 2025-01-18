@@ -53,7 +53,7 @@ class SourcePath(
         val isTemporary: Boolean = false, // A temporary source file will not be returned by .all()
         var lastSavedFile: KtFile? = null,
     ) {
-        val extension: String? = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
+        val extension: String = uri.fileExtension ?: "kt" // TODO: Use language?.associatedFileType?.defaultExtension again
         val isScript: Boolean = extension == "kts"
         val kind: CompilationKind =
             if (path?.fileName?.toString()?.endsWith(".gradle.kts") == true) CompilationKind.BUILD_SCRIPT
