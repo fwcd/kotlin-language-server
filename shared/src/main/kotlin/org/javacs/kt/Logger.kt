@@ -84,7 +84,7 @@ class Logger {
 
     private fun logWithPlaceholdersAt(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
         val stackTraceElement = if (fullLog) {
-            Throwable().stackTrace.getOrNull(1) // Caller is usually the 1st element
+            Throwable().stackTrace.firstOrNull { it.className != this::class.java.name }
         } else {
             null
         }
@@ -95,7 +95,7 @@ class Logger {
 
     inline fun logWithLambdaAt(msgLevel: LogLevel, crossinline msg: () -> String) {
         val stackTraceElement = if (fullLog) {
-            Throwable().stackTrace.getOrNull(1) // Caller is usually the 1st element
+            Throwable().stackTrace.firstOrNull { it.className != this::class.java.name }
         } else {
             null
         }
