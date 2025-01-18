@@ -1,13 +1,11 @@
 package org.javacs.kt
 
 import com.intellij.openapi.util.text.StringUtil.convertLineSeparators
-import com.intellij.lang.java.JavaLanguage
 import com.intellij.lang.Language
 import org.jetbrains.kotlin.idea.KotlinLanguage
 import org.eclipse.lsp4j.TextDocumentContentChangeEvent
 import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.filePath
-import org.javacs.kt.util.partitionAroundLast
 import org.javacs.kt.util.describeURIs
 import org.javacs.kt.util.describeURI
 import java.io.BufferedReader
@@ -17,9 +15,7 @@ import java.io.IOException
 import java.io.FileNotFoundException
 import java.net.URI
 import java.nio.file.FileSystems
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
 
