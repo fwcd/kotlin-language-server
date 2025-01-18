@@ -53,8 +53,8 @@ private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = f
     LOG.debug("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
-        GradleClassPathResolver::class.java.getResourceAsStream("/$scriptName").bufferedReader().use { configReader ->
-            configReader.copyTo(configWriter)
+        GradleClassPathResolver::class.java.getResourceAsStream("/$scriptName")?.bufferedReader().use { configReader ->
+            configReader?.copyTo(configWriter)
         }
     }
 
@@ -110,7 +110,7 @@ private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".to
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
     LOG.debug(output)
     val artifacts = artifactPattern.findAll(output)
-        .mapNotNull { Paths.get(it.groups[1]?.value) }
+        .mapNotNull { it.groups[1]?.value?.let { it1 -> Paths.get(it1) } }
         .filterNotNull()
     return artifacts.toSet()
 }
