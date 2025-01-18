@@ -20,7 +20,7 @@ application {
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
     applicationDistribution.into("bin") {
-        filePermissions { unix(755) }
+        filePermissions { unix("755".toInt(radix = 8)) }
     }
 }
 
