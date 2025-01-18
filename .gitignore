@@ -16,6 +16,9 @@ build
 target
 out
 
+# Kotlin
+.kotlin
+
 # Python
 __pycache__
 
