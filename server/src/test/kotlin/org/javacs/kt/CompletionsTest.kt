@@ -122,7 +122,6 @@ class InstanceMembersJava : SingleFileTestFixture("completions", "InstanceMember
 }
 
 class FunctionScopeTest : SingleFileTestFixture("completions", "FunctionScope.kt") {
-    @Ignore
     @Test fun `complete identifiers in function scope`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -144,7 +143,6 @@ class FunctionScopeTest : SingleFileTestFixture("completions", "FunctionScope.kt
 }
 
 class TypesTest : SingleFileTestFixture("completions", "Types.kt") {
-    @Ignore
     @Test fun `complete a type name`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 25)).get().right!!
         val labels = completions.items.map { it.label }
@@ -169,7 +167,6 @@ class FillEmptyBodyTest : SingleFileTestFixture("completions", "FillEmptyBody.kt
 }
 
 class ConstructorTest : SingleFileTestFixture("completions", "Constructor.kt") {
-    @Ignore
     @Test fun `complete a constructor`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -228,7 +225,6 @@ class CompleteStaticsTest : SingleFileTestFixture("completions", "Statics.kt") {
 }
 
 class VisibilityTest : SingleFileTestFixture("completions", "Visibility.kt") {
-    @Ignore
     @Test fun `find tricky visibility members`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 3, 10)).get().right!!
         val labels = completions.items.map { it.label }
@@ -353,7 +349,6 @@ class JavaGetterSetterConversionTest : SingleFileTestFixture("completions", "Jav
         assertThat(labels, hasItem(startsWith("getInstance")))
     }
 
-    @Ignore
     @Test fun `test java getter and setter conversion`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 5, 18)).get().right!!
         val labels = completions.items.map { it.label }
