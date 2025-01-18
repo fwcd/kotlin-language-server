@@ -2,7 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
-    <ID>ComplexCondition:SemanticTokens.kt$element is KtVariableDeclaration &amp;&amp; (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter</ID>
+    <ID>ComplexCondition:SemanticTokens.kt$element is KtVariableDeclaration &amp;&amp; (!element.isVar || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter</ID>
     <ID>CyclomaticComplexMethod:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
     <ID>CyclomaticComplexMethod:Completions.kt$private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtElement?, index: SymbolIndex, partial: String): Sequence&lt;CompletionItem&gt;</ID>
     <ID>CyclomaticComplexMethod:GoToDefinition.kt$fun goToDefinition( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath ): Location?</ID>

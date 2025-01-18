@@ -20,21 +20,16 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtModifierListOwner
 import org.jetbrains.kotlin.psi.KtNameReferenceExpression
 import org.jetbrains.kotlin.psi.KtVariableDeclaration
-import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import org.jetbrains.kotlin.psi.KtParameter
 import org.jetbrains.kotlin.psi.KtEnumEntry
-import org.jetbrains.kotlin.psi.KtStringTemplateEntry
-import org.jetbrains.kotlin.psi.KtStringTemplateExpression
 import org.jetbrains.kotlin.psi.KtSimpleNameStringTemplateEntry
-import org.jetbrains.kotlin.psi.KtBlockStringTemplateEntry
-import org.jetbrains.kotlin.psi.KtEscapeStringTemplateEntry
 import org.jetbrains.kotlin.resolve.BindingContext
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNameIdentifierOwner
 import com.intellij.psi.PsiLiteralExpression
-import com.intellij.psi.PsiType
 import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiTypes
 
 enum class SemanticTokenType(val typeName: String) {
     KEYWORD(SemanticTokenTypes.Keyword),
@@ -62,8 +57,8 @@ enum class SemanticTokenModifier(val modifierName: String) {
 }
 
 val semanticTokensLegend = SemanticTokensLegend(
-    SemanticTokenType.values().map { it.typeName },
-    SemanticTokenModifier.values().map { it.modifierName }
+    SemanticTokenType.entries.map { it.typeName },
+    SemanticTokenModifier.entries.map { it.modifierName }
 )
 
 data class SemanticToken(val range: Range, val type: SemanticTokenType, val modifiers: Set<SemanticTokenModifier> = setOf())
@@ -119,7 +114,7 @@ private fun elementTokens(element: PsiElement, bindingContext: BindingContext, r
         // TODO: Ideally we would like to cut-off subtrees outside our range, but this doesn't quite seem to work
         // .preOrderTraversal { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
         .preOrderTraversal()
-        .filter { elem -> textRange?.let { it.contains(elem.textRange) } ?: true }
+        .filter { elem -> textRange?.contains(elem.textRange) ?: true }
         .mapNotNull { elementToken(it, bindingContext) }
 }
 
@@ -129,7 +124,6 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
 
     return when (element) {
         // References (variables, types, functions, ...)
-
         is KtNameReferenceExpression -> {
             val target = bindingContext[BindingContext.REFERENCE_TARGET, element]
             val tokenType = when (target) {
@@ -158,7 +152,6 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
         }
 
         // Declarations (variables, types, functions, ...)
-
         is PsiNameIdentifierOwner -> {
             val tokenType = when (element) {
                 is KtParameter -> SemanticTokenType.PARAMETER
@@ -172,7 +165,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
             val identifierRange = element.nameIdentifier?.let { range(file.text, it.textRange) } ?: return null
             val modifiers = mutableSetOf(SemanticTokenModifier.DECLARATION)
 
-            if (element is KtVariableDeclaration && (!element.isVar() || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter) {
+            if (element is KtVariableDeclaration && (!element.isVar || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter) {
                 modifiers.add(SemanticTokenModifier.READONLY)
             }
 
@@ -186,14 +179,13 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
         }
 
         // Literals and string interpolations
-
         is KtSimpleNameStringTemplateEntry ->
             SemanticToken(elementRange, SemanticTokenType.INTERPOLATION_ENTRY)
         is PsiLiteralExpression -> {
             val tokenType = when (element.type) {
-                PsiType.INT, PsiType.LONG, PsiType.DOUBLE -> SemanticTokenType.NUMBER
-                PsiType.CHAR -> SemanticTokenType.STRING
-                PsiType.BOOLEAN, PsiType.NULL -> SemanticTokenType.KEYWORD
+                PsiTypes.intType(), PsiTypes.longType(), PsiTypes.doubleType() -> SemanticTokenType.NUMBER
+                PsiTypes.charType() -> SemanticTokenType.STRING
+                PsiTypes.booleanType(), PsiTypes.nullType() -> SemanticTokenType.KEYWORD
                 else -> return null
             }
             SemanticToken(elementRange, tokenType)
