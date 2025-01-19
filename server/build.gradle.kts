@@ -9,8 +9,9 @@ plugins {
     id("kotlin-language-server.kotlin-conventions")
 }
 
+val serverDebugPort = 4000
 val debugPort = 8000
-val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=8000,suspend=n,quiet=y"
+val debugArgs = "-agentlib:jdwp=transport=dt_socket,server=y,address=$debugPort,suspend=n,quiet=y"
 
 val serverMainClassName = "org.javacs.kt.MainKt"
 val applicationName = "kotlin-language-server"
@@ -91,6 +92,7 @@ tasks.register<JavaExec>("debugRun") {
     standardInput = System.`in`
 
     jvmArgs(debugArgs)
+    args(listOf("--tcpServerPort", serverDebugPort, "--tcpDebug", "--tracingLog"))
     doLast { println("Using debug port $debugPort") }
 }
 
