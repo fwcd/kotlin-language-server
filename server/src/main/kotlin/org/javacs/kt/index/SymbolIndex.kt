@@ -1,4 +1,3 @@
-@file:Suppress("DEPRECATION")
 package org.javacs.kt.index
 
 import org.jetbrains.exposed.sql.transactions.transaction

@@ -42,7 +42,6 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
         assertThat(completions.items.firstOrNull { it.label.startsWith("instanceFoo") }, hasProperty("insertText", equalTo("instanceFoo")))
     }
 
-    @Ignore
     @Test fun `complete unqualified function reference`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 17, 8)).get().right!!
         val labels = completions.items.map { it.label }
@@ -59,7 +58,6 @@ class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.
         assertThat(labels, not(hasItem("instanceFoo")))
     }
 
-    @Ignore
     @Test fun `find completions on letters of method call`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 26, 26)).get().right!!
         val labels = completions.items.map { it.label }
@@ -111,7 +109,6 @@ class InfixMethodTest : SingleFileTestFixture("completions", "InfixFunctions.kt"
 }
 
 class InstanceMembersJava : SingleFileTestFixture("completions", "InstanceMembersJava.kt") {
-    @Ignore
     @Test fun `convert getFileName to fileName`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 4, 14)).get().right!!
         val labels = completions.items.map { it.label }
@@ -184,7 +181,6 @@ class MiddleOfFunctionTest : SingleFileTestFixture("completions", "MiddleOfFunct
     }
 }
 
-@Ignore
 class BackquotedFunctionTest : SingleFileTestFixture("completions", "BackquotedFunction.kt") {
     @Test fun `complete with backquotes`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 7)).get().right!!
@@ -294,7 +290,6 @@ class OuterDotInnerTest : SingleFileTestFixture("completions", "OuterDotInner.kt
 }
 
 class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
-    @Ignore
     @Test fun `edit existing function`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 11)).get().right!!
         val labels = completions.items.map { it.label }

@@ -4,7 +4,7 @@ lsp4jVersion = "0.23.1"
 exposedVersion = "0.58.0"
 jmhVersion = "1.20"
 slf4j = "2.0.16"
-gruavaVersion = "33.4.0-jre"
+guavaVersion = "33.4.0-jre"
 
 [libraries]
 org-jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
@@ -33,7 +33,7 @@ org-jetbrains-fernflower = { module = "org.jetbrains:fernflower", version = "1.0
 
 com-github-fwcd-ktfmt = { module = "com.github.fwcd.ktfmt:ktfmt", version = "b5d31d1" }
 
-com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "gruavaVersion" }
+com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "guavaVersion" }
 
 com-h2database-h2 = { module = "com.h2database:h2", version = "1.4.200" }
 
