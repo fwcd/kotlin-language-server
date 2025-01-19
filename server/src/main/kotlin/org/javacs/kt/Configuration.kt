@@ -35,21 +35,21 @@ data class DiagnosticsConfiguration(
     var debounceTime: Long = 250L
 )
 
-public data class JVMConfiguration(
+data class JVMConfiguration(
     /** Which JVM target the Kotlin compiler uses. See Compiler.jvmTargetFrom for possible values. */
     var target: String = "default"
 )
 
-public data class CompilerConfiguration(
+data class CompilerConfiguration(
     val jvm: JVMConfiguration = JVMConfiguration()
 )
 
-public data class IndexingConfiguration(
+data class IndexingConfiguration(
     /** Whether an index of global symbols should be built in the background. */
     var enabled: Boolean = true
 )
 
-public data class ExternalSourcesConfiguration(
+data class ExternalSourcesConfiguration(
     /** Whether kls-URIs should be sent to the client to describe classes in JARs. */
     var useKlsScheme: Boolean = false,
     /** Whether external classes should be automatically converted to Kotlin. */
@@ -104,7 +104,7 @@ class GsonPathConverter : JsonDeserializer<Path?> {
     }
 }
 
-public data class Configuration(
+data class Configuration(
     val codegen: CodegenConfiguration = CodegenConfiguration(),
     val compiler: CompilerConfiguration = CompilerConfiguration(),
     val completion: CompletionConfiguration = CompletionConfiguration(),
