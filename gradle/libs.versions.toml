@@ -1,7 +1,7 @@
 [versions]
 kotlinVersion = "2.1.0"
 lsp4jVersion = "0.21.2"
-exposedVersion = "0.37.3"
+exposedVersion = "0.58.0"
 jmhVersion = "1.37"
 guavaVersion = "33.4.0-jre"
 fernFlowerVersion = "243.22562.218"
@@ -45,9 +45,15 @@ org-openjdk-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh
 org-xerial-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.48.0.0" }
 
 # buildSrc
-org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin",version.ref = "kotlinVersion" }
+org-jetbrains-kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlinVersion" }
+
+# this is used to remove the error info in console log
+org-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+org-slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+
 
 [plugins]
 com-github-jk1-tcdeps = { id = "com.github.jk1.tcdeps", version = "1.6.2" }
+
 com-jaredsburrows-license = { id = "com.jaredsburrows.license", version = "0.9.8" }
 io-gitlab-arturbosch-detekt = { id = "io.gitlab.arturbosch.detekt", version = "1.22.0" }
