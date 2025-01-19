@@ -82,9 +82,7 @@ fun <T> firstNonNull(vararg optionals: () -> T?): T? {
 }
 
 fun <T> nonNull(item: T?, errorMsgIfNull: String): T =
-    if (item == null) {
-        throw NullPointerException(errorMsgIfNull)
-    } else item
+    item ?: throw NullPointerException(errorMsgIfNull)
 
 inline fun <T> tryResolving(what: String, resolver: () -> T?): T? {
     try {

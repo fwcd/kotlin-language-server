@@ -53,8 +53,8 @@ private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = f
     LOG.debug("Creating temporary gradle file {}", config.absolutePath)
 
     config.bufferedWriter().use { configWriter ->
-        GradleClassPathResolver::class.java.getResourceAsStream("/$scriptName").bufferedReader().use { configReader ->
-            configReader.copyTo(configWriter)
+        GradleClassPathResolver::class.java.getResourceAsStream("/$scriptName")?.bufferedReader().use { configReader ->
+            configReader?.copyTo(configWriter)
         }
     }
 
@@ -64,10 +64,10 @@ private fun gradleScriptToTempFile(scriptName: String, deleteOnExit: Boolean = f
 private fun getGradleCommand(workspace: Path): Path {
     val wrapperName = if (isOSWindows()) "gradlew.bat" else "gradlew"
     val wrapper = workspace.resolve(wrapperName).toAbsolutePath()
-    if (Files.isExecutable(wrapper)) {
-        return wrapper
+    return if (Files.isExecutable(wrapper)) {
+        wrapper
     } else {
-        return workspace.parent?.let(::getGradleCommand)
+        workspace.parent?.let(::getGradleCommand)
             ?: findCommandOnPath("gradle")
             ?: throw KotlinLSException("Could not find 'gradle' on PATH")
     }
@@ -110,7 +110,6 @@ private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".to
 private fun parseGradleCLIDependencies(output: String): Set<Path>? {
     LOG.debug(output)
     val artifacts = artifactPattern.findAll(output)
-        .mapNotNull { Paths.get(it.groups[1]?.value) }
-        .filterNotNull()
+        .mapNotNull { it.groups[1]?.value?.let { it1 -> Paths.get(it1) } }
     return artifacts.toSet()
 }

@@ -35,9 +35,9 @@ fun fetchSignatureHelpAt(file: CompiledFile, cursor: Int): SignatureHelp? {
  */
 fun getDocString(file: CompiledFile, cursor: Int): String {
     val signatures = getSignatures(file, cursor)
-    if (signatures == null || signatures.size == 0 || signatures[0].documentation == null)
+    if (signatures.isNullOrEmpty() || signatures[0].documentation == null)
         return ""
-    return if (signatures[0].documentation.isLeft()) signatures[0].documentation.left else ""
+    return if (signatures[0].documentation.isLeft) signatures[0].documentation.left else ""
 }
 
 // TODO better function name?
@@ -133,8 +133,8 @@ private fun activeParameter(call: KtCallExpression, cursor: Int): Int? {
     val text = args.text
     if (text.length == 2)
         return 0
-    val min = Math.min(args.textRange.startOffset, cursor)
-    val max = Math.max(args.textRange.startOffset, cursor)
+    val min = args.textRange.startOffset.coerceAtMost(cursor)
+    val max = args.textRange.startOffset.coerceAtLeast(cursor)
     val beforeCursor = text.subSequence(0, max-min)
     return beforeCursor.count { it == ','}
 }

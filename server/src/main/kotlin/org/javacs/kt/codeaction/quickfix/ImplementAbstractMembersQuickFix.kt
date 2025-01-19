@@ -5,7 +5,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.index.SymbolIndex
 import org.javacs.kt.position.offset
-import org.javacs.kt.position.position
 import org.javacs.kt.util.toPath
 import org.javacs.kt.overridemembers.createFunctionStub
 import org.javacs.kt.overridemembers.createVariableStub
@@ -15,30 +14,13 @@ import org.javacs.kt.overridemembers.getNewMembersStartPosition
 import org.javacs.kt.overridemembers.getSuperClassTypeProjections
 import org.javacs.kt.overridemembers.hasNoBody
 import org.javacs.kt.overridemembers.overridesDeclaration
-import org.jetbrains.kotlin.descriptors.ClassDescriptor
-import org.jetbrains.kotlin.descriptors.ClassConstructorDescriptor
-import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PropertyDescriptor
 import org.jetbrains.kotlin.descriptors.isInterface
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.js.resolve.diagnostics.findPsi
-import org.jetbrains.kotlin.lexer.KtTokens
 import org.jetbrains.kotlin.psi.KtClass
-import org.jetbrains.kotlin.psi.KtDeclaration
-import org.jetbrains.kotlin.psi.KtNamedFunction
-import org.jetbrains.kotlin.psi.KtSimpleNameExpression
-import org.jetbrains.kotlin.psi.KtSuperTypeListEntry
-import org.jetbrains.kotlin.psi.KtTypeArgumentList
-import org.jetbrains.kotlin.psi.KtTypeReference
-import org.jetbrains.kotlin.psi.psiUtil.containingClass
-import org.jetbrains.kotlin.psi.psiUtil.endOffset
-import org.jetbrains.kotlin.psi.psiUtil.isAbstract
 import org.jetbrains.kotlin.psi.psiUtil.startOffset
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
-import org.jetbrains.kotlin.types.KotlinType
-import org.jetbrains.kotlin.types.TypeProjection
-import org.jetbrains.kotlin.types.typeUtil.asTypeProjection
 
 class ImplementAbstractMembersQuickFix : QuickFix {
     override fun compute(file: CompiledFile, index: SymbolIndex, range: Range, diagnostics: List<Diagnostic>): List<Either<Command, CodeAction>> {
@@ -47,7 +29,7 @@ class ImplementAbstractMembersQuickFix : QuickFix {
         val startCursor = offset(file.content, range.start)
         val endCursor = offset(file.content, range.end)
         val kotlinDiagnostics = file.compile.diagnostics
-        
+
         // If the client side and the server side diagnostics contain a valid diagnostic for this range.
         if (diagnostic != null && anyDiagnosticMatch(kotlinDiagnostics, startCursor, endCursor)) {
             // Get the class with the missing members
@@ -97,7 +79,7 @@ private fun getAbstractMembersStubs(file: CompiledFile, kotlinClass: KtClass) =
         val descriptor = referenceAtPoint?.second
 
         val classDescriptor = getClassDescriptor(descriptor)
-        
+
         // If the super class is abstract or an interface
         if (null != classDescriptor && (classDescriptor.kind.isInterface || classDescriptor.modality == Modality.ABSTRACT)) {
             val superClassTypeArguments = getSuperClassTypeProjections(file, it)

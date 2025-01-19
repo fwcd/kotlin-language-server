@@ -145,7 +145,7 @@ private fun elementToken(element: PsiElement, bindingContext: BindingContext): S
                 }
                 else -> return null
             }
-            val isConstant = (target as? VariableDescriptor)?.let { !it.isVar() || it.isConst() } ?: false
+            val isConstant = (target as? VariableDescriptor)?.let { !it.isVar || it.isConst } ?: false
             val modifiers = if (isConstant) setOf(SemanticTokenModifier.READONLY) else setOf()
 
             SemanticToken(elementRange, tokenType, modifiers)

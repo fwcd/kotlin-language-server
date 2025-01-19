@@ -12,21 +12,21 @@ import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
 
-public data class SnippetsConfiguration(
+data class SnippetsConfiguration(
     /** Whether code completion should return VSCode-style snippets. */
     var enabled: Boolean = true
 )
 
-public data class CodegenConfiguration(
+data class CodegenConfiguration(
     /** Whether to enable code generation to a temporary build directory for Java interoperability. */
     var enabled: Boolean = false
 )
 
-public data class CompletionConfiguration(
+data class CompletionConfiguration(
     val snippets: SnippetsConfiguration = SnippetsConfiguration()
 )
 
-public data class DiagnosticsConfiguration(
+data class DiagnosticsConfiguration(
     /** Whether diagnostics are enabled. */
     var enabled: Boolean = true,
     /** The minimum severity of enabled diagnostics. */

@@ -169,7 +169,6 @@ class KotlinTextDocumentService(
         TODO("not implemented")
     }
 
-    @Suppress("DEPRECATION")
     override fun documentSymbol(params: DocumentSymbolParams): CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> = async.compute {
         LOG.info("Find symbols in {}", describeURI(params.textDocument.uri))
 

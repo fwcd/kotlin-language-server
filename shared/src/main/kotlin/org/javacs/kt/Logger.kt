@@ -166,7 +166,7 @@ class Logger {
         val lastIndex = msgLength - 1
         var charIndex = 0
         var placeholderIndex = 0
-        var result = StringBuilder()
+        val result = StringBuilder()
 
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
