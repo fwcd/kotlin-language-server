@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.descriptors.*
 
 object ExtractSymbolVisibility : DeclarationDescriptorVisitor<Symbol.Visibility, Unit> {
     private fun convert(visibility: DescriptorVisibility): Symbol.Visibility = when (visibility.delegate) {
-        Visibilities.PrivateToThis -> Symbol.Visibility.PRIAVTE_TO_THIS
+        Visibilities.PrivateToThis -> Symbol.Visibility.PRIVATE_TO_THIS
         Visibilities.Private -> Symbol.Visibility.PRIVATE
         Visibilities.Internal -> Symbol.Visibility.INTERNAL
         Visibilities.Protected -> Symbol.Visibility.PROTECTED
