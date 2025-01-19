@@ -100,18 +100,15 @@ class KotlinLanguageServer(
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (clientCapabilities?.window?.workDoneProgress ?: false) {
+        if (clientCapabilities?.window?.workDoneProgress == true) {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        if (clientCapabilities?.textDocument?.rename?.prepareSupport ?: false) {
+        if (clientCapabilities?.textDocument?.rename?.prepareSupport == true) {
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
-        @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
-            ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)
-            ?: params.rootPath?.let(Paths::get)?.toUri()?.toString()?.let(::WorkspaceFolder)?.let(::listOf)
             ?: listOf()
 
         val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }

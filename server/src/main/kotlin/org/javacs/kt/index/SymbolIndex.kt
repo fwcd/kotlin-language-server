@@ -15,6 +15,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import kotlin.sequences.Sequence
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 private const val MAX_FQNAME_LENGTH = 255
 private const val MAX_SHORT_NAME_LENGTH = 80
@@ -110,7 +111,7 @@ class SymbolIndex(
                     addDeclarations(allDescriptors(module, exclusions))
 
                     val finished = System.currentTimeMillis()
-                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                    val count = Symbols.selectAll().first()[Symbols.fqName.count()]
                     LOG.info("Updated full symbol index in ${finished - started} ms! (${count} symbol(s))")
                 }
             } catch (e: Exception) {
@@ -133,7 +134,7 @@ class SymbolIndex(
                 addDeclarations(add)
 
                 val finished = System.currentTimeMillis()
-                val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                val count = Symbols.selectAll().first()[Symbols.fqName.count()]
                 LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
             }
         } catch (e: Exception) {
