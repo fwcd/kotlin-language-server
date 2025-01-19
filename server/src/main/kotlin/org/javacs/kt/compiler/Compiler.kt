@@ -153,7 +153,7 @@ private val DEFAULT_IMPORT = listOf(
     "org.gradle.api.tasks.testing.*",
     "org.gradle.api.tasks.testing.junit.*",
     "org.gradle.api.tasks.testing.junitplatform.*",
-    "org.gradle.api.tasks.testing.testng.*",
+    "org.gradle.api.tasks.testing.testing.*",
     "org.gradle.api.tasks.util.*",
     "org.gradle.api.tasks.wrapper.*",
     "org.gradle.authentication.*",
