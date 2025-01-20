@@ -21,7 +21,7 @@ class ClassContentProvider(
     private val cp: CompilerClassPath,
     private val tempDir: TemporaryDirectory,
     private val sourceArchiveProvider: SourceArchiveProvider,
-    private val decompiler: Decompiler = FernflowerDecompiler()
+    private val decompiler: Decompiler = FernFlowerDecompiler()
 ) {
     /** Maps recently used (source-)KLS-URIs to their source contents (e.g. decompiled code) and the file extension. */
     private val cachedContents = object : LinkedHashMap<String, Pair<String, String>>() {
