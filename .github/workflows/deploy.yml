@@ -16,7 +16,7 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           cache-disabled: ${{ contains(matrix.os, 'windows') }}
       - name: Get tag name
