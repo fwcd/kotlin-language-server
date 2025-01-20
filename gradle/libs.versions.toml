@@ -4,6 +4,7 @@ lsp4jVersion = "0.21.2"
 exposedVersion = "0.37.3"
 jmhVersion = "1.37"
 guavaVersion = "33.4.0-jre"
+fernFlowerVersion = "243.22562.218"
 
 [libraries]
 org-jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
@@ -28,7 +29,7 @@ org-jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", ve
 org-jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposedVersion" }
 org-jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposedVersion" }
 
-org-jetbrains-fernflower = { module = "org.jetbrains:fernflower", version = "1.0" }
+com-jetbrains-intellij-java-decompiler = { module = "com.jetbrains.intellij.java:java-decompiler-engine", version.ref = "fernFlowerVersion" }
 
 com-github-fwcd-ktfmt = { module = "com.github.fwcd.ktfmt:ktfmt", version = "b5d31d1" }
 

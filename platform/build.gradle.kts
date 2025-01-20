@@ -15,7 +15,7 @@ dependencies {
         api(libs.org.jetbrains.kotlin.sam.with.receiver.compiler.plugin)
         api(libs.org.jetbrains.kotlin.reflect)
         api(libs.org.jetbrains.kotlin.jvm)
-        api(libs.org.jetbrains.fernflower)
+        api(libs.com.jetbrains.intellij.java.decompiler)
         api(libs.org.jetbrains.exposed.core)
         api(libs.org.jetbrains.exposed.dao)
         api(libs.org.jetbrains.exposed.jdbc)

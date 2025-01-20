@@ -19,16 +19,13 @@ application {
     mainClass.set(serverMainClassName)
     description = "Code completions, diagnostics and more for Kotlin"
     applicationDefaultJvmArgs = listOf("-DkotlinLanguageServer.version=$version")
-    applicationDistribution.into("bin") {
-        filePermissions { unix("755".toInt(radix = 8)) }
-    }
+    applicationDistribution.into("bin") { filePermissions { unix("755".toInt(radix = 8)) } }
 }
 
 repositories {
     maven(url = "https://repo.gradle.org/gradle/libs-releases")
-    maven { url = uri("$projectDir/lib") }
-    maven(uri("$projectDir/lib"))
     maven("https://jitpack.io")
+    maven(url = "https://www.jetbrains.com/intellij-repository/releases")
     mavenCentral()
 }
 
@@ -48,7 +45,7 @@ dependencies {
     implementation(kotlin("scripting-jvm-host-unshaded"))
     implementation(kotlin("sam-with-receiver-compiler-plugin"))
     implementation(kotlin("reflect"))
-    implementation(libs.org.jetbrains.fernflower)
+    implementation(libs.com.jetbrains.intellij.java.decompiler)
     implementation(libs.org.jetbrains.exposed.core)
     implementation(libs.org.jetbrains.exposed.dao)
     implementation(libs.org.jetbrains.exposed.jdbc)
@@ -79,9 +76,9 @@ tasks.register<Exec>("fixFilePermissions") {
 
     onlyIf { !System.getProperty("os.name").lowercase().contains("windows") }
     commandLine(
-            "chmod",
-            "+x",
-            "${tasks.installDist.get().destinationDir}/bin/kotlin-language-server"
+        "chmod",
+        "+x",
+        "${tasks.installDist.get().destinationDir}/bin/kotlin-language-server",
     )
 }
 
