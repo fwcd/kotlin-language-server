@@ -3,7 +3,7 @@ kotlinVersion = "2.1.0"
 lsp4jVersion = "0.21.2"
 exposedVersion = "0.37.3"
 jmhVersion = "1.20"
-guavaVersion = "33.3.0-jre"
+guavaVersion = "33.4.0-jre"
 
 [libraries]
 org-jetbrains-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlinVersion" }
