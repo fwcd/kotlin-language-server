@@ -36,7 +36,7 @@ com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "gua
 
 com-h2database-h2 = { module = "com.h2database:h2", version = "1.4.200" }
 
-com-beust-jcommander = { module = "com.beust:jcommander", version = "1.78" }
+com-beust-jcommander = { module = "com.beust:jcommander", version = "1.82" }
 
 org-openjdk-jmh-generator-annprocess = { module = "org.openjdk.jmh:jmh-generator-annprocess", version.ref = "jmhVersion" }
 org-openjdk-jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmhVersion" }
