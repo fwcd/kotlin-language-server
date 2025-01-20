@@ -1,7 +1,7 @@
 package org.javacs.kt
 
 import org.hamcrest.Matchers.*
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.kt") {

@@ -4,7 +4,7 @@ import org.eclipse.lsp4j.SymbolKind
 import org.eclipse.lsp4j.WorkspaceSymbolParams
 import org.hamcrest.Matchers.hasItem
 import org.hamcrest.Matchers.not
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class WorkspaceSymbolsTest : SingleFileTestFixture("symbols", "DocumentSymbols.kt") {

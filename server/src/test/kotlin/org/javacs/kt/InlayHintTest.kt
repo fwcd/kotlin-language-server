@@ -7,7 +7,7 @@ import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.everyItem
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Test

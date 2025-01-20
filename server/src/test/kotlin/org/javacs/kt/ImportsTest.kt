@@ -3,7 +3,7 @@ package org.javacs.kt
 import org.javacs.kt.imports.getImportTextEditEntry
 import org.jetbrains.kotlin.name.FqName
 import org.hamcrest.Matchers.*
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class ImportTextEditTest : SingleFileTestFixture("imports", "Simple.kt") {

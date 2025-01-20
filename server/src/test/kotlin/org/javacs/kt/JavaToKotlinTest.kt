@@ -2,7 +2,7 @@ package org.javacs.kt
 
 import org.javacs.kt.j2k.convertJavaToKotlin
 import org.junit.Test
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Ignore
 import org.hamcrest.Matchers.equalTo
 

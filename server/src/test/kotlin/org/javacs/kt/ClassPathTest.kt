@@ -2,7 +2,7 @@ package org.javacs.kt
 
 import org.hamcrest.Matchers.*
 import org.javacs.kt.classpath.*
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.BeforeClass

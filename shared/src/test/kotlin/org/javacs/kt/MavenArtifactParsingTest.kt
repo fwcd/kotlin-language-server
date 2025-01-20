@@ -4,7 +4,7 @@ import org.hamcrest.Matchers.*
 import org.javacs.kt.classpath.parseMavenArtifact
 import org.javacs.kt.classpath.Artifact
 import org.javacs.kt.classpath.parseMavenSource
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class MavenArtifactParsingTest {

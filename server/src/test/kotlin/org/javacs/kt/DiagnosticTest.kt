@@ -6,7 +6,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity
 import org.eclipse.lsp4j.DocumentSymbolParams
 import org.eclipse.lsp4j.TextDocumentIdentifier
 import org.hamcrest.Matchers.*
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {

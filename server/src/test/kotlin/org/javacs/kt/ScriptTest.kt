@@ -1,7 +1,7 @@
 package org.javacs.kt
 
 import org.hamcrest.Matchers.hasItem
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class ScriptTest : LanguageServerTestFixture("script", Configuration().apply {

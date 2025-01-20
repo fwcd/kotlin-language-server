@@ -8,7 +8,7 @@ import org.hamcrest.Matchers.containsInAnyOrder
 import org.hamcrest.Matchers.hasItems
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 
 class OverrideMemberTest : SingleFileTestFixture("overridemember", "OverrideMembers.kt") {
 

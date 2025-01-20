@@ -1,7 +1,7 @@
 package org.javacs.kt
 
 import org.hamcrest.Matchers.equalTo
-import org.junit.Assert.assertThat
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 import org.javacs.kt.util.Debouncer
 import java.time.Duration
