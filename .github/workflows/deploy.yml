@@ -11,12 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          cache-disabled: ${{ contains(matrix.os, 'windows') }}
       - name: Get tag name
         id: tag
         run: |
