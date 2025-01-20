@@ -93,7 +93,7 @@ private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
         ?.resolve(a.version)
         ?.resolve(mavenJarName(a, source))
 
-    return if (Files.exists(result))
+    return if (result?.let { Files.exists(it) } == true)
         result
     else {
         LOG.warn("Couldn't find {} in {}", a, result)

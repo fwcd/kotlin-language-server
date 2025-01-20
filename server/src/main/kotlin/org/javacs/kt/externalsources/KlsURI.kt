@@ -155,7 +155,7 @@ private fun parseQuery(query: String): Map<KlsURI.QueryParam, String> =
     }.toMap()
 
 private fun getQueryParameter(property: String, value: String): Pair<KlsURI.QueryParam, String>? {
-    val queryParam: KlsURI.QueryParam? = KlsURI.QueryParam.values().find { it.parameterName == property }
+    val queryParam: KlsURI.QueryParam? = KlsURI.QueryParam.entries.find { it.parameterName == property }
 
     if (queryParam != null) {
         return Pair(queryParam, value)

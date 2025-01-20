@@ -29,7 +29,7 @@ val URI.fileExtension: String?
 fun describeURIs(uris: Collection<URI>): String =
     if (uris.isEmpty()) "0 files"
     else if (uris.size > 5) "${uris.size} files"
-    else uris.map(::describeURI).joinToString(", ")
+    else uris.joinToString(", ", transform = ::describeURI)
 
 fun describeURI(uri: String): String = describeURI(parseURI(uri))
 

@@ -42,7 +42,7 @@ class SourceExclusions(
         && exclusionMatchers.none { matcher ->
             workspaceRoots
                 .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
-                .flatMap { it } // Extract path segments
+                .flatten() // Extract path segments
                 .any(matcher::matches)
         }
 }

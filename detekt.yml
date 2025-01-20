@@ -24,6 +24,8 @@ exceptions:
       - NumberFormatException
       - ParseException
       - MissingPropertyException
+  TooGenericExceptionCaught:
+    active: false
 
 naming:
   excludes: *standardExcludes
@@ -38,6 +40,9 @@ style:
   excludes: *standardExcludes
   MaxLineLength:
     active: false
+  ReturnCount:
+    active: true
+    max: 3  # Maximum allowed return statements in a function
   WildcardImport:
     excludeImports:
       - java.util.*

@@ -191,7 +191,7 @@ private fun declarationHint(
 ) {
     if (!config.typeHints) return
 
-    //check decleration does not include type i.e. var t1: String
+    //check declaration does not include type i.e. var t1: String
     if (node.typeReference != null) return
 
     val hint = node.hintBuilder(InlayKind.TypeHint, file) ?: return

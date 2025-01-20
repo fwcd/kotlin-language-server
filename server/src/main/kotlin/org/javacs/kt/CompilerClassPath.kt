@@ -149,10 +149,10 @@ class CompilerClassPath(
     fun changedOnDisk(file: Path): Boolean {
         val buildScript = isBuildScript(file)
         val javaSource = isJavaSource(file)
-        if (buildScript || javaSource) {
-            return refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)
+        return if (buildScript || javaSource) {
+            refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)
         } else {
-            return false
+            false
         }
     }
 

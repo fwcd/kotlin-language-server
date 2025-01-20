@@ -15,6 +15,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import kotlin.sequences.Sequence
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 private const val MAX_FQNAME_LENGTH = 255
 private const val MAX_SHORT_NAME_LENGTH = 80
@@ -92,7 +93,7 @@ class SymbolIndex(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(Symbols, Locations, Ranges, Positions)
+            SchemaUtils.create(Symbols, Locations, Ranges, Positions)
         }
     }
 
@@ -110,7 +111,7 @@ class SymbolIndex(
                     addDeclarations(allDescriptors(module, exclusions))
 
                     val finished = System.currentTimeMillis()
-                    val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                    val count = Symbols.selectAll().first()[Symbols.fqName.count()]
                     LOG.info("Updated full symbol index in ${finished - started} ms! (${count} symbol(s))")
                 }
             } catch (e: Exception) {
@@ -133,7 +134,7 @@ class SymbolIndex(
                 addDeclarations(add)
 
                 val finished = System.currentTimeMillis()
-                val count = Symbols.slice(Symbols.fqName.count()).selectAll().first()[Symbols.fqName.count()]
+                val count = Symbols.selectAll().first()[Symbols.fqName.count()]
                 LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
             }
         } catch (e: Exception) {
@@ -183,21 +184,27 @@ class SymbolIndex(
         fqName.toString().length <= MAX_FQNAME_LENGTH
             && fqName.shortName().toString().length <= MAX_SHORT_NAME_LENGTH
 
-    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> = transaction(db) {
-        // TODO: Extension completion currently only works if the receiver matches exactly,
-        //       ideally this should work with subtypes as well
-        SymbolEntity.find {
-            (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
-        }.limit(limit)
-            .map { Symbol(
-                fqName = FqName(it.fqName),
-                kind = Symbol.Kind.fromRaw(it.kind),
-                visibility = Symbol.Visibility.fromRaw(it.visibility),
-                extensionReceiverType = it.extensionReceiverType?.let(::FqName)
-            ) }
-    }
+    fun query(prefix: String, receiverType: FqName? = null, limit: Int = 20, suffix: String = "%"): List<Symbol> =
+        transaction(db) {
+            // TODO: Extension completion currently only works if the receiver matches exactly,
+            //       ideally this should work with subtypes as well
+            SymbolEntity.find {
+                (Symbols.shortName like "$prefix$suffix") and (Symbols.extensionReceiverType eq receiverType?.toString())
+            }.limit(limit)
+                .map {
+                    Symbol(
+                        fqName = FqName(it.fqName),
+                        kind = Symbol.Kind.fromRaw(it.kind),
+                        visibility = Symbol.Visibility.fromRaw(it.visibility),
+                        extensionReceiverType = it.extensionReceiverType?.let(::FqName)
+                    )
+                }
+        }
 
-    private fun allDescriptors(module: ModuleDescriptor, exclusions: Sequence<DeclarationDescriptor>): Sequence<DeclarationDescriptor> = allPackages(module)
+    private fun allDescriptors(
+        module: ModuleDescriptor,
+        exclusions: Sequence<DeclarationDescriptor>
+    ): Sequence<DeclarationDescriptor> = allPackages(module)
         .map(module::getPackage)
         .flatMap {
             try {

@@ -12,7 +12,7 @@ import org.javacs.kt.util.DelegatePrintStream
 
 val LOG = Logger()
 
-private class JULRedirector(private val downstream: Logger): Handler() {
+private class JULRedirector(private val downstream: Logger) : Handler() {
     override fun publish(record: LogRecord) {
         when (record.level) {
             Level.SEVERE -> downstream.error(record.message)
@@ -43,10 +43,17 @@ enum class LogLevel(val value: Int) {
 
 class LogMessage(
     val level: LogLevel,
-    val message: String
+    val message: String,
+    private val funName: String? = null,
 ) {
     val formatted: String
-        get() = "[$level] $message"
+        get() {
+            return if (funName != null) {
+                "[$level] $funName $message"
+            } else {
+                "[$level] $message"
+            }
+        }
 }
 
 class Logger {
@@ -58,10 +65,11 @@ class Logger {
     val outStream = DelegatePrintStream { log(LogMessage(LogLevel.INFO, it.trimEnd())) }
 
     private val newline = System.lineSeparator()
-    val logTime = false
+    private val logTime = false
     var level = LogLevel.INFO
+    var tracingLog = false;
 
-    fun logError(msg: LogMessage) {
+    private fun logError(msg: LogMessage) {
         if (errBackend == null) {
             errQueue.offer(msg)
         } else {
@@ -78,14 +86,24 @@ class Logger {
     }
 
     private fun logWithPlaceholdersAt(msgLevel: LogLevel, msg: String, placeholders: Array<out Any?>) {
+        val stackTraceElement = if (tracingLog) {
+            Throwable("Capturing stack trace for logging").stackTrace.firstOrNull { it.className != this::class.java.name }
+        } else {
+            null
+        }
         if (level.value <= msgLevel.value) {
-            log(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders))))
+            log(LogMessage(msgLevel, format(insertPlaceholders(msg, placeholders)), stackTraceElement?.className))
         }
     }
 
-    inline fun logWithLambdaAt(msgLevel: LogLevel, msg: () -> String) {
+    inline fun logWithLambdaAt(msgLevel: LogLevel, crossinline msg: () -> String) {
+        val stackTraceElement = if (tracingLog) {
+            Throwable("Capturing stack trace for logging").stackTrace.firstOrNull { it.className != this::class.java.name }
+        } else {
+            null
+        }
         if (level.value <= msgLevel.value) {
-            log(LogMessage(msgLevel, msg()))
+            log(LogMessage(msgLevel, msg(), stackTraceElement?.className))
         }
     }
 
@@ -103,22 +121,26 @@ class Logger {
 
     fun trace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.TRACE, msg, placeholders)
 
-    fun deepTrace(msg: String, vararg placeholders: Any?) = logWithPlaceholdersAt(LogLevel.DEEP_TRACE, msg, placeholders)
+    fun deepTrace(msg: String, vararg placeholders: Any?) =
+        logWithPlaceholdersAt(LogLevel.DEEP_TRACE, msg, placeholders)
 
     // Convenience logging methods using inlined lambdas
 
-    inline fun error(msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
+    inline fun error(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.ERROR, msg)
 
-    inline fun warn(msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
+    inline fun warn(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.WARN, msg)
 
-    inline fun info(msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
+    inline fun info(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.INFO, msg)
 
-    inline fun debug(msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
+    inline fun debug(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEBUG, msg)
 
-    inline fun trace(msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
+    inline fun trace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.TRACE, msg)
 
-    inline fun deepTrace(msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
+    inline fun deepTrace(crossinline msg: () -> String) = logWithLambdaAt(LogLevel.DEEP_TRACE, msg)
 
+    fun setTracing() {
+        tracingLog = true
+    }
     fun connectJULFrontend() {
         val rootLogger = java.util.logging.Logger.getLogger("")
         rootLogger.addHandler(JULRedirector(this))
@@ -144,7 +166,7 @@ class Logger {
         val lastIndex = msgLength - 1
         var charIndex = 0
         var placeholderIndex = 0
-        var result = StringBuilder()
+        val result = StringBuilder()
 
         while (charIndex < msgLength) {
             val currentChar = msg.get(charIndex)
@@ -182,9 +204,9 @@ class Logger {
     }
 
     private fun shortenOrPad(str: String, length: Int): String =
-            if (str.length <= length) {
-                str.padEnd(length, ' ')
-            } else {
-                ".." + str.substring(str.length - length + 2)
-            }
+        if (str.length <= length) {
+            str.padEnd(length, ' ')
+        } else {
+            ".." + str.substring(str.length - length + 2)
+        }
 }

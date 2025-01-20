@@ -15,7 +15,7 @@ class FernflowerDecompiler : Decompiler {
 
 	override fun decompileJar(compiledJar: Path) = decompile(compiledJar, ".jar")
 
-	fun decompile(compiledClassOrJar: Path, newFileExtension: String): Path {
+	private fun decompile(compiledClassOrJar: Path, newFileExtension: String): Path {
 		invokeDecompiler(compiledClassOrJar, outputDir)
 		val srcOutName = compiledClassOrJar.fileName.replaceExtensionWith(newFileExtension)
 		val srcOutPath = outputDir.resolve(srcOutName)

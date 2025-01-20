@@ -23,17 +23,29 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer(
-    val config: Configuration = Configuration()
+    val config: Configuration = Configuration(),
+    private val tcpDebug: Boolean = false
 ) : LanguageServer, LanguageClientAware, Closeable {
-    val databaseService = DatabaseService()
+    private val databaseService = DatabaseService()
     val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
 
     private val tempDirectory = TemporaryDirectory()
-    private val uriContentProvider = URIContentProvider(ClassContentProvider(config.externalSources, classPath, tempDirectory, CompositeSourceArchiveProvider(JdkSourceArchiveProvider(classPath), ClassPathSourceArchiveProvider(classPath))))
+    private val uriContentProvider = URIContentProvider(
+        ClassContentProvider(
+            config.externalSources,
+            classPath,
+            tempDirectory,
+            CompositeSourceArchiveProvider(
+                JdkSourceArchiveProvider(classPath),
+                ClassPathSourceArchiveProvider(classPath)
+            )
+        )
+    )
     val sourcePath = SourcePath(classPath, uriContentProvider, config.indexing, databaseService)
-    val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
+    private val sourceFiles = SourceFiles(sourcePath, uriContentProvider, config.scripts)
 
-    private val textDocuments = KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
+    private val textDocuments =
+        KotlinTextDocumentService(sourceFiles, sourcePath, config, tempDirectory, uriContentProvider, classPath)
     private val workspaces = KotlinWorkspaceService(sourceFiles, sourcePath, classPath, textDocuments, config)
     private val protocolExtensions = KotlinProtocolExtensionService(uriContentProvider, classPath, sourcePath)
 
@@ -56,7 +68,9 @@ class KotlinLanguageServer(
 
     override fun connect(client: LanguageClient) {
         this.client = client
-        connectLoggingBackend()
+        if (!tcpDebug) {
+            connectLoggingBackend()
+        }
 
         workspaces.connect(client)
         textDocuments.connect(client)
@@ -87,7 +101,8 @@ class KotlinLanguageServer(
         serverCapabilities.documentSymbolProvider = Either.forLeft(true)
         serverCapabilities.workspaceSymbolProvider = Either.forLeft(true)
         serverCapabilities.referencesProvider = Either.forLeft(true)
-        serverCapabilities.semanticTokensProvider = SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)
+        serverCapabilities.semanticTokensProvider =
+            SemanticTokensWithRegistrationOptions(semanticTokensLegend, true, true)
         serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
@@ -98,20 +113,18 @@ class KotlinLanguageServer(
         databaseService.setup(storagePath)
 
         val clientCapabilities = params.capabilities
-        config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
+        config.completion.snippets.enabled =
+            clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (clientCapabilities?.window?.workDoneProgress ?: false) {
+        if (clientCapabilities?.window?.workDoneProgress == true) {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        if (clientCapabilities?.textDocument?.rename?.prepareSupport ?: false) {
+        if (clientCapabilities?.textDocument?.rename?.prepareSupport == true) {
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
-        @Suppress("DEPRECATION")
         val folders = params.workspaceFolders?.takeIf { it.isNotEmpty() }
-            ?: params.rootUri?.let(::WorkspaceFolder)?.let(::listOf)
-            ?: params.rootPath?.let(Paths::get)?.toUri()?.toString()?.let(::WorkspaceFolder)?.let(::listOf)
             ?: listOf()
 
         val progress = params.workDoneToken?.let { LanguageClientProgress("Workspace folders", it, client) }
@@ -176,6 +189,6 @@ class KotlinLanguageServer(
     // Fixed in https://github.com/eclipse/lsp4j/commit/04b0c6112f0a94140e22b8b15bb5a90d5a0ed851
     // Causes issue in lsp 0.15
     override fun getNotebookDocumentService(): NotebookDocumentService? {
-		return null;
-	}
+        return null;
+    }
 }

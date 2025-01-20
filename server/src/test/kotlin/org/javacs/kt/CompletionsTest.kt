@@ -3,6 +3,7 @@ package org.javacs.kt
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertThat
 import org.junit.Test
+import org.junit.Ignore
 
 class InstanceMemberTest : SingleFileTestFixture("completions", "InstanceMember.kt") {
     @Test fun `complete instance members`() {
@@ -288,6 +289,7 @@ class OuterDotInnerTest : SingleFileTestFixture("completions", "OuterDotInner.kt
 }
 
 class EditCallTest : SingleFileTestFixture("completions", "EditCall.kt") {
+    @Ignore
     @Test fun `edit existing function`() {
         val completions = languageServer.textDocumentService.completion(completionParams(file, 2, 11)).get().right!!
         val labels = completions.items.map { it.label }

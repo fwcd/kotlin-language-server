@@ -101,48 +101,59 @@ internal class CachedClassPathResolver(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(
+            SchemaUtils.create(
                 ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry
             )
         }
     }
 
-    override val classpath: Set<ClassPathEntry> get() {
-        cachedClassPathEntries.let { if (!dependenciesChanged()) {
-            LOG.info("Classpath has not changed. Fetching from cache")
-            return it
-        } }
+    override val classpath: Set<ClassPathEntry>
+        get() {
+            cachedClassPathEntries.let {
+                if (!dependenciesChanged()) {
+                    LOG.info("Classpath has not changed. Fetching from cache")
+                    return it
+                }
+            }
 
-        LOG.info("Cached classpath is outdated or not found. Resolving again")
+            LOG.info("Cached classpath is outdated or not found. Resolving again")
 
-        val newClasspath = wrapped.classpath
-        updateClasspathCache(newClasspath, false)
+            val newClasspath = wrapped.classpath
+            // We need to make sure the cache resolve won't throw error here, make deps can be loaded successfully
+            try {
+                // in old exposed this will throw error, but I do not know if it will throw again, so I catch here
+                updateClasspathCache(newClasspath, false)
+            } catch (e: Exception) {
+                LOG.warn("Something error during update database, error: ${e.message}")
+            }
 
-        return newClasspath
-    }
-
-    override val buildScriptClasspath: Set<Path> get() {
-        if (!dependenciesChanged()) {
-            LOG.info("Build script classpath has not changed. Fetching from cache")
-            return cachedBuildScriptClassPathEntries
+            return newClasspath
         }
 
-        LOG.info("Cached build script classpath is outdated or not found. Resolving again")
+    override val buildScriptClasspath: Set<Path>
+        get() {
+            if (!dependenciesChanged()) {
+                LOG.info("Build script classpath has not changed. Fetching from cache")
+                return cachedBuildScriptClassPathEntries
+            }
 
-        val newBuildScriptClasspath = wrapped.buildScriptClasspath
+            LOG.info("Cached build script classpath is outdated or not found. Resolving again")
 
-        updateBuildScriptClasspathCache(newBuildScriptClasspath)
-        return newBuildScriptClasspath
-    }
+            val newBuildScriptClasspath = wrapped.buildScriptClasspath
 
-    override val classpathWithSources: Set<ClassPathEntry> get() {
-        cachedClassPathMetadata?.let { if (!dependenciesChanged() && it.includesSources) return cachedClassPathEntries }
+            updateBuildScriptClasspathCache(newBuildScriptClasspath)
+            return newBuildScriptClasspath
+        }
 
-        val newClasspath = wrapped.classpathWithSources
-        updateClasspathCache(newClasspath, true)
+    override val classpathWithSources: Set<ClassPathEntry>
+        get() {
+            cachedClassPathMetadata?.let { if (!dependenciesChanged() && it.includesSources) return cachedClassPathEntries }
 
-        return newClasspath
-    }
+            val newClasspath = wrapped.classpathWithSources
+            updateClasspathCache(newClasspath, true)
+
+            return newClasspath
+        }
 
     override val currentBuildFileVersion: Long get() = wrapped.currentBuildFileVersion
 

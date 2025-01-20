@@ -34,7 +34,7 @@ abstract class MyAbstract {
 
 class MyImplClass : MyAbstract() {}
 
-class My2ndClass : MyAbstract() {
+class My2andClass : MyAbstract() {
     override val name = "Nils"
 }
 

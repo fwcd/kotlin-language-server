@@ -148,7 +148,7 @@ private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtEle
 
 /** Finds keyword completions starting with the given partial identifier. */
 private fun keywordCompletionItems(partial: String): Sequence<CompletionItem> =
-    (KtTokens.SOFT_KEYWORDS.getTypes() + KtTokens.KEYWORDS.getTypes()).asSequence()
+    (KtTokens.SOFT_KEYWORDS.types + KtTokens.KEYWORDS.types).asSequence()
         .mapNotNull { (it as? KtKeywordToken)?.value }
         .filter { it.startsWith(partial) }
         .map { CompletionItem().apply {
@@ -292,7 +292,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             LOG.info("Completing import '{}'", surroundingElement.text)
             val module = file.module
             val match = Regex("import ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text) ?: return doesntLookLikeImport(surroundingElement)
-            val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
+            val parentDot = match.groupValues[1].ifBlank { "." }
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.debug("Looking for members of package '{}'", parent)
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
@@ -304,7 +304,7 @@ private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingEleme
             val module = file.module
             val match = Regex("package ((\\w+\\.)*)[\\w*]*").matchEntire(surroundingElement.text)
                 ?: return doesntLookLikePackage(surroundingElement)
-            val parentDot = if (match.groupValues[1].isNotBlank()) match.groupValues[1] else "."
+            val parentDot = match.groupValues[1].ifBlank { "." }
             val parent = parentDot.substring(0, parentDot.length - 1)
             LOG.debug("Looking for members of package '{}'", parent)
             val parentPackage = module.getPackage(FqName.fromSegments(parent.split('.')))
@@ -547,17 +547,17 @@ private fun isDeclarationVisible(target: DeclarationDescriptor, from: Declaratio
             .none { isNotVisible(it, from) }
 
 private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean {
-    when (target.visibility.delegate) {
+    return when (target.visibility.delegate) {
         Visibilities.Private, Visibilities.PrivateToThis -> {
             if (DescriptorUtils.isTopLevelDeclaration(target))
-                return !sameFile(target, from)
+                !sameFile(target, from)
             else
-                return !sameParent(target, from)
+                !sameParent(target, from)
         }
         Visibilities.Protected -> {
-            return !subclassParent(target, from)
+            !subclassParent(target, from)
         }
-        else -> return false
+        else -> false
     }
 }
 
@@ -565,8 +565,8 @@ private fun sameFile(target: DeclarationDescriptor, from: DeclarationDescriptor)
     val targetFile = DescriptorUtils.getContainingSourceFile(target)
     val fromFile = DescriptorUtils.getContainingSourceFile(from)
 
-    if (targetFile == SourceFile.NO_SOURCE_FILE || fromFile == SourceFile.NO_SOURCE_FILE) return true
-    else return targetFile.name == fromFile.name
+    return if (targetFile == SourceFile.NO_SOURCE_FILE || fromFile == SourceFile.NO_SOURCE_FILE) true
+    else targetFile.name == fromFile.name
 }
 
 private fun sameParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean {
@@ -580,8 +580,8 @@ private fun subclassParent(target: DeclarationDescriptor, from: DeclarationDescr
     val targetParent = target.parentsWithSelf.mapNotNull(::isParentClass).firstOrNull() ?: return true
     val fromParents = from.parentsWithSelf.mapNotNull(::isParentClass).toList()
 
-    if (fromParents.isEmpty()) return true
-    else return fromParents.any { DescriptorUtils.isSubclass(it, targetParent) }
+    return if (fromParents.isEmpty()) true
+    else fromParents.any { DescriptorUtils.isSubclass(it, targetParent) }
 }
 
 private fun isParentClass(declaration: DeclarationDescriptor): ClassDescriptor? =
