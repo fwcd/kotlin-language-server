@@ -121,7 +121,7 @@ internal class CachedClassPathResolver(
             // in old exposed this will throw error, but I do not know if it will throw again, so I catch here
             updateClasspathCache(newClasspath, false)
         } catch (e: Exception) {
-            LOG.warn("Something error during update database, error: ${e.message}")
+            LOG.warn("Error during database update, error: ${e.message}")
         }
 
         return newClasspath

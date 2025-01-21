@@ -100,11 +100,11 @@ class KotlinLanguageServer(
         val clientCapabilities = params.capabilities
         config.completion.snippets.enabled = clientCapabilities?.textDocument?.completion?.completionItem?.snippetSupport ?: false
 
-        if (clientCapabilities?.window?.workDoneProgress == true) {
+        if (clientCapabilities?.window?.workDoneProgress ?: false) {
             progressFactory = LanguageClientProgress.Factory(client)
         }
 
-        if (clientCapabilities?.textDocument?.rename?.prepareSupport == true) {
+        if (clientCapabilities?.textDocument?.rename?.prepareSupport ?: false) {
             serverCapabilities.renameProvider = Either.forRight(RenameOptions(false))
         }
 
