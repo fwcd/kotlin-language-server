@@ -1,7 +1,7 @@
 [versions]
 kotlinVersion = "2.1.0"
 lsp4jVersion = "0.21.2"
-exposedVersion = "0.37.3"
+exposedVersion = "0.58.0"
 jmhVersion = "1.37"
 guavaVersion = "33.4.0-jre"
 fernFlowerVersion = "243.22562.218"
