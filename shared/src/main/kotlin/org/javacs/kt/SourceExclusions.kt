@@ -3,7 +3,9 @@ package org.javacs.kt
 import org.javacs.kt.util.filePath
 import java.io.File
 import java.net.URI
+import java.util.regex.PatternSyntaxException
 import java.nio.file.FileSystems
+import java.nio.file.PathMatcher
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -24,7 +26,29 @@ class SourceExclusions(
     } + configuredExclusions
 
     private val exclusionMatchers = excludedPatterns
-        .map { FileSystems.getDefault().getPathMatcher("glob:$it") }
+        .map(::parseExcludePattern)
+        .filterNotNull()
+
+    private fun parseExcludePattern(pattern: String): PathMatcher? {
+        try {
+            val normalizedPattern = pattern.removeSuffix("/").trim()
+            val pathMatcher =
+                // Takes inspiration from https://git-scm.com/docs/gitignore
+                if (normalizedPattern.contains("/")) {
+                    FileSystems.getDefault().getPathMatcher("glob:$normalizedPattern")
+                } else {
+                    PathMatcher { path -> path.any { FileSystems.getDefault().getPathMatcher("glob:$normalizedPattern").matches(it) } }
+                }
+            return pathMatcher
+        } catch (e: IllegalArgumentException) {
+            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+        } catch (e: PatternSyntaxException) {
+            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+        } catch (e: UnsupportedOperationException) {
+            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+        }
+        return null
+    }
 
     /** Finds all non-excluded files recursively. */
     fun walkIncluded(): Sequence<Path> = workspaceRoots.asSequence().flatMap { root ->
@@ -42,7 +66,6 @@ class SourceExclusions(
         && exclusionMatchers.none { matcher ->
             workspaceRoots
                 .mapNotNull { if (file.startsWith(it)) it.relativize(file) else null }
-                .flatMap { it } // Extract path segments
                 .any(matcher::matches)
         }
 }
