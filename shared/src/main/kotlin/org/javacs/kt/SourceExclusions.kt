@@ -7,21 +7,21 @@ import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
 
-// TODO: Read exclusions from gitignore/settings.json/... instead of
-// hardcoding them
 class SourceExclusions(
     private val workspaceRoots: Collection<Path>,
-    private val scriptsConfig: ScriptsConfiguration
+    private val scriptsConfig: ScriptsConfiguration,
+    private val exclusionsConfig: ExclusionsConfiguration,
 ) {
-    val excludedPatterns = (listOf(
+    val configuredExclusions = exclusionsConfig.excludePatterns.split(";").map { it.trim() }.filter { it.isNotEmpty() }
+    val excludedPatterns = listOf(
         ".git", ".hg", ".svn",                                                      // Version control systems
         ".idea", ".idea_modules", ".vs", ".vscode", ".code-workspace", ".settings", // IDEs
-        "bazel-*", "bin", "build", "node_modules", "target",                        // Build systems
+        "bazel-*", "bin", "node_modules",                                           // Build systems
     ) + when {
         !scriptsConfig.enabled -> listOf("*.kts")
         !scriptsConfig.buildScriptsEnabled -> listOf("*.gradle.kts")
         else -> emptyList()
-    })
+    } + configuredExclusions
 
     private val exclusionMatchers = excludedPatterns
         .map { FileSystems.getDefault().getPathMatcher("glob:$it") }

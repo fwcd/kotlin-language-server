@@ -188,6 +188,13 @@ class KotlinWorkspaceService(
                 get("useKlsScheme")?.asBoolean?.let { externalSources.useKlsScheme = it }
                 get("autoConvertToKotlin")?.asBoolean?.let { externalSources.autoConvertToKotlin = it }
             }
+
+            // Update source file exclusions
+            get("exclusions")?.asJsonObject?.apply {
+                val exclusions = config.exclusions
+                get("excludePatterns")?.asString?.let { exclusions.excludePatterns = it }
+                sf.updateExclusions()
+            }
         }
 
         LOG.info("Updated configuration: {}", settings)

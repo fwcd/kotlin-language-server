@@ -18,6 +18,7 @@ import java.nio.file.Path
 class CompilerClassPath(
     private val config: CompilerConfiguration,
     private val scriptsConfig: ScriptsConfiguration,
+    private val exclusionsConfig: ExclusionsConfiguration,
     private val codegenConfig: CodegenConfiguration,
     private val databaseService: DatabaseService
 ) : Closeable {
@@ -162,7 +163,7 @@ class CompilerClassPath(
 
     private fun findJavaSourceFiles(root: Path): Set<Path> {
         val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
-        return SourceExclusions(listOf(root), scriptsConfig)
+        return SourceExclusions(listOf(root), scriptsConfig, exclusionsConfig)
             .walkIncluded()
             .filter { sourceMatcher.matches(it.fileName) }
             .toSet()
