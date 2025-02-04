@@ -14,7 +14,7 @@ class SourceExclusions(
     private val scriptsConfig: ScriptsConfiguration,
     private val exclusionsConfig: ExclusionsConfiguration,
 ) {
-    val configuredExclusions = exclusionsConfig.excludePatterns.split(";").map { it.trim() }.filter { it.isNotEmpty() }
+    val configuredExclusions = exclusionsConfig.excludePatterns.map { it.trim() }.filter { it.isNotEmpty() }
     val excludedPatterns = listOf(
         ".git", ".hg", ".svn",                                                      // Version control systems
         ".idea", ".idea_modules", ".vs", ".vscode", ".code-workspace", ".settings", // IDEs
@@ -30,6 +30,7 @@ class SourceExclusions(
         .filterNotNull()
 
     private fun parseExcludePattern(pattern: String): PathMatcher? {
+        fun warning(e: Exception) = LOG.warn("Did not recognize exclude pattern: '$pattern' (${e.message})")
         try {
             val normalizedPattern = pattern.removeSuffix("/").trim()
             val pathMatcher =
@@ -41,11 +42,11 @@ class SourceExclusions(
                 }
             return pathMatcher
         } catch (e: IllegalArgumentException) {
-            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+            warning(e)
         } catch (e: PatternSyntaxException) {
-            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+            warning(e)
         } catch (e: UnsupportedOperationException) {
-            LOG.warn("Did not recognize exclude pattern: '{}' ({})", pattern, e.message)
+            warning(e)
         }
         return null
     }

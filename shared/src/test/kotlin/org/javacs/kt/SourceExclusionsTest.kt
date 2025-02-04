@@ -13,7 +13,7 @@ import org.junit.Test
 
 class SourceExclusionsTest {
     private val workspaceRoots = listOf(File("/test/workspace1").toPath(), File("/test/workspace2").toPath())
-    private var excludePatterns = ""
+    private var excludePatterns = listOf<String>()
 
     @Test
     fun `test only default exclusions`() {
@@ -25,7 +25,7 @@ class SourceExclusionsTest {
 
     @Test
     fun `test configured exclusions`() {
-        excludePatterns = "build;junk"
+        excludePatterns = listOf("build","junk")
         assertIncluded("/test/workspace1/src/main/kotlin/MyClass.kt")
         assertExcluded("/test/workspace1/build/generated/blah.kt")
         assertExcluded("/test/workspace1/src/main/kotlin/junk/blah.kt")
@@ -33,7 +33,7 @@ class SourceExclusionsTest {
 
     @Test
     fun `test configured directory exclusions`() {
-        excludePatterns = "build/dist/**"
+        excludePatterns = listOf("build/dist/**")
         assertIncluded("/test/workspace1/build/generated/blah.kt")
         assertIncluded("/test/workspace1/blah/build/dist/blah.kt")
         assertExcluded("/test/workspace1/build/dist/blah.kt")
@@ -41,7 +41,7 @@ class SourceExclusionsTest {
 
     @Test
     fun `test configured wildcard directory exclusions`() {
-        excludePatterns = "**/build/dist/**;build/dist/**"
+        excludePatterns = listOf("**/build/dist/**", "build/dist/**")
         assertIncluded("/test/workspace1/build/generated/blah.kt")
         assertExcluded("/test/workspace1/blah/build/dist/blah.kt")
         assertExcluded("/test/workspace1/build/dist/blah.kt")

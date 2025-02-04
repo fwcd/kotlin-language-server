@@ -192,7 +192,7 @@ class KotlinWorkspaceService(
             // Update source file exclusions
             get("exclusions")?.asJsonObject?.apply {
                 val exclusions = config.exclusions
-                get("excludePatterns")?.asString?.let { exclusions.excludePatterns = it }
+                get("excludePatterns")?.asJsonArray?.let { exclusions.excludePatterns = it.asList().map { it.asString } }
                 sf.updateExclusions()
             }
         }
