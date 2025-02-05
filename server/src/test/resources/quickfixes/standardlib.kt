@@ -4,6 +4,6 @@ import java.util.Comparator
 
 class MyThread : Runnable {}
 
-class MyComperable : Comparator<String> {}
+class MyComparable : Comparator<String> {}
 
 class MyList : AbstractList<String>() {}

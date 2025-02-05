@@ -27,7 +27,7 @@ data class Symbol(
     }
 
     enum class Visibility(val rawValue: Int) {
-        PRIAVTE_TO_THIS(0),
+        PRIVATE_TO_THIS(0),
         PRIVATE(1),
         INTERNAL(2),
         PROTECTED(3),

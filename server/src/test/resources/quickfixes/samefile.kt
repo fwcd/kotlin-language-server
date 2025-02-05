@@ -26,7 +26,7 @@ class NullClass : NullMethodAndReturn<String> {}
 
 abstract class MyAbstract {
     val otherValToTestAbstractOverride = 1
-    
+
     abstract val name: String
 
     abstract fun myFun()

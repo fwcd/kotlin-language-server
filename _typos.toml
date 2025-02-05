@@ -1,0 +1,7 @@
+[files]
+extend-exclude = ["server/src/test/resources/completions/*.kt"]
+
+[default.extend-words]
+ba = "ba"
+vertx = "vertx"
+nd = "nd"

@@ -91,7 +91,7 @@ private fun getUnimplementedMembersStubs(file: CompiledFile, kotlinClass: KtClas
                     .getContributedDescriptors()
                     .filter { classMember ->
                         classMember is MemberDescriptor &&
-                         classMember.canBeOverriden() &&
+                         classMember.canBeOverridden() &&
                          !overridesDeclaration(kotlinClass, classMember)
                     }
                     .mapNotNull { member ->
@@ -111,7 +111,7 @@ private fun ClassDescriptor.canBeExtended() = this.kind.isInterface ||
     this.modality == Modality.ABSTRACT ||
     this.modality == Modality.OPEN
             
-private fun MemberDescriptor.canBeOverriden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
+private fun MemberDescriptor.canBeOverridden() = (Modality.ABSTRACT == this.modality || Modality.OPEN == this.modality) && Modality.FINAL != this.modality && this.visibility != DescriptorVisibilities.PRIVATE && this.visibility != DescriptorVisibilities.PROTECTED
 
 // interfaces are ClassDescriptors by default. When calling AbstractClass super methods, we get a ClassConstructorDescriptor
 fun getClassDescriptor(descriptor: DeclarationDescriptor?): ClassDescriptor? =
