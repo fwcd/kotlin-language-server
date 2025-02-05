@@ -3,7 +3,6 @@ package org.javacs.kt
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.*
-import java.util.logging.Formatter
 import java.util.logging.LogRecord
 import java.util.logging.Handler
 import java.util.logging.Level
@@ -136,7 +135,7 @@ class Logger {
 
     fun connectStdioBackend() {
         connectOutputBackend { println(it.formatted) }
-        connectOutputBackend { System.err.println(it.formatted) }
+        connectErrorBackend { System.err.println(it.formatted) }
     }
 
     private fun insertPlaceholders(msg: String, placeholders: Array<out Any?>): String {
