@@ -14,7 +14,7 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
 
     override val resolverType: String = "Maven"
 
-    override val classpath: Set<ClassPathEntry> get() {
+    override val classpath: ClassPathResult get() {
         val dependenciesOutput = generateMavenDependencyList(pom)
         val artifacts = readMavenDependencyList(dependenciesOutput)
 
@@ -27,10 +27,10 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         Files.deleteIfExists(dependenciesOutput)
 
         this.artifacts = artifacts
-        return artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet()
+        return ClassPathResult(artifacts.mapNotNull { findMavenArtifact(it, false)?.let { it1 -> ClassPathEntry(it1, null) } }.toSet())
     }
 
-    override val classpathWithSources: Set<ClassPathEntry> get() {
+    override val classpathWithSources: ClassPathResult get() {
         // Fetch artifacts if not yet present.
         var artifacts: Set<Artifact>
         if (this.artifacts != null) {
@@ -47,11 +47,11 @@ internal class MavenClassPathResolver private constructor(private val pom: Path)
         artifacts = readMavenDependencyListWithSources(artifacts, sourcesOutput)
 
         Files.deleteIfExists(sourcesOutput)
-        return artifacts.mapNotNull {
+        return ClassPathResult(artifacts.mapNotNull {
             findMavenArtifact(it, false)?.let {
                 it1 -> ClassPathEntry(it1, if (it.source) findMavenArtifact(it, it.source) else null)
             }
-        }.toSet()
+        }.toSet())
     }
 
     override val currentBuildFileVersion: Long get() = pom.toFile().lastModified()

@@ -13,7 +13,7 @@ import java.nio.file.Paths
 /** Backup classpath that find Kotlin in the user's Maven/Gradle home or kotlinc's libraries folder. */
 object BackupClassPathResolver : ClassPathResolver {
     override val resolverType: String = "Backup"
-    override val classpath: Set<ClassPathEntry> get() = findKotlinStdlib()?.let { setOf(it) }.orEmpty().map { ClassPathEntry(it, null) }.toSet()
+    override val classpath: ClassPathResult get() = ClassPathResult(findKotlinStdlib()?.let { setOf(it) }.orEmpty().map { ClassPathEntry(it, null) }.toSet())
 }
 
 fun findKotlinStdlib(): Path? =
