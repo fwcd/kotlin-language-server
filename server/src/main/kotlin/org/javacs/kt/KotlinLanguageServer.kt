@@ -162,6 +162,7 @@ class KotlinLanguageServer(
     override fun close() {
         textDocumentService.close()
         classPath.close()
+        sourcePath.close()
         tempDirectory.close()
         async.shutdown(awaitTermination = true)
     }

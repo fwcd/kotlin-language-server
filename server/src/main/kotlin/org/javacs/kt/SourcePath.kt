@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.resolve.BindingContext
 import org.jetbrains.kotlin.resolve.CompositeBindingContext
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
+import java.io.Closeable
 import kotlin.concurrent.withLock
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -25,7 +26,7 @@ class SourcePath(
     private val contentProvider: URIContentProvider,
     private val indexingConfig: IndexingConfiguration,
     private val databaseService: DatabaseService
-) {
+): Closeable {
     private val files = mutableMapOf<URI, SourceFile>()
     private val parseDataWriteLock = ReentrantLock()
 
@@ -354,4 +355,8 @@ class SourcePath(
             files.values
                 .filter { includeHidden || !it.isTemporary }
                 .map { it.apply { parseIfChanged() }.parsed!! }
+
+    override fun close() {
+        indexAsync.shutdown(true)
+    }
 }
