@@ -52,8 +52,11 @@ allprojects { project ->
                 }
             } else if (project.hasProperty('sourceSets')) {
                 // Print the list of all dependencies jar files.
+                def useCompileClasspath = project.hasProperty("useCompileClasspath")
+
                 sourceSets.forEach {
-                    it.compileClasspath.forEach {
+                    def classPathSource = useCompileClasspath ? it.compileClasspath : it.runtimeClasspath
+                    classPathSource.forEach {
                         System.out.println "kotlin-lsp-gradle $it"
                     }
                 }

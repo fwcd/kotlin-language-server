@@ -10,7 +10,11 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-internal class GradleClassPathResolver(private val path: Path, private val includeKotlinDSL: Boolean): ClassPathResolver {
+internal class GradleClassPathResolver(
+    private val path: Path,
+    private val includeKotlinDSL: Boolean,
+    private val useCompileClasspath: Boolean
+): ClassPathResolver {
     override val resolverType: String = "Gradle"
     private val projectDirectory: Path get() = path.parent
 
@@ -18,7 +22,7 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
         val scripts = listOf("projectClassPathFinder.gradle")
         val tasks = listOf("kotlinLSPProjectDeps")
 
-        return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks)
+        return readDependenciesViaGradleCLI(projectDirectory, scripts, tasks, useCompileClasspath)
             .apply { if (isNotEmpty()) LOG.info("Successfully resolved dependencies for '${projectDirectory.fileName}' using Gradle") }
             .map { ClassPathEntry(it, null) }.toSet()
     }
@@ -38,9 +42,15 @@ internal class GradleClassPathResolver(private val path: Path, private val inclu
 
     companion object {
         /** Create a Gradle resolver if a file is a pom. */
-        fun maybeCreate(file: Path): GradleClassPathResolver? =
+        fun maybeCreate(file: Path, options: ResolverOptions): GradleClassPathResolver? =
             file.takeIf { file.endsWith("build.gradle") || file.endsWith("build.gradle.kts") }
-                ?.let { GradleClassPathResolver(it, includeKotlinDSL = file.toString().endsWith(".kts")) }
+                ?.let {
+                    GradleClassPathResolver(
+                        path = it,
+                        includeKotlinDSL = file.endsWith(".kts"),
+                        useCompileClasspath = options.useCompileClasspath,
+                    )
+                }
     }
 }
 
@@ -73,13 +83,26 @@ private fun getGradleCommand(workspace: Path): Path {
     }
 }
 
-private fun readDependenciesViaGradleCLI(projectDirectory: Path, gradleScripts: List<String>, gradleTasks: List<String>): Set<Path> {
+private fun readDependenciesViaGradleCLI(
+    projectDirectory: Path,
+    gradleScripts: List<String>,
+    gradleTasks: List<String>,
+    useCompileClasspath: Boolean = true,
+): Set<Path> {
     LOG.info("Resolving dependencies for '{}' through Gradle's CLI using tasks {}...", projectDirectory.fileName, gradleTasks)
 
     val tmpScripts = gradleScripts.map { gradleScriptToTempFile(it, deleteOnExit = false).toPath().toAbsolutePath() }
     val gradle = getGradleCommand(projectDirectory)
 
-    val command = listOf(gradle.toString()) + tmpScripts.flatMap { listOf("-I", it.toString()) } + gradleTasks + listOf("--console=plain")
+    val command = mutableListOf<String>().apply {
+        add(gradle.toString())
+        addAll(tmpScripts.flatMap { listOf("-I", it.toString()) })
+        addAll(gradleTasks)
+        add("--console=plain")
+
+        if (useCompileClasspath) add("-PuseCompileClasspath=1")
+    }.toList()
+
     val dependencies = findGradleCLIDependencies(command, projectDirectory)
         ?.also { LOG.debug("Classpath for task {}", it) }
         .orEmpty()
