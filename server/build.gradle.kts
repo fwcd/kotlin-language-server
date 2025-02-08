@@ -40,6 +40,10 @@ dependencies {
     implementation(libs.org.eclipse.lsp4j.lsp4j)
     implementation(libs.org.eclipse.lsp4j.jsonrpc)
 
+    // used to clear the error during console log
+    implementation(libs.org.slf4j.api)
+    implementation(libs.org.slf4j.simple)
+
     implementation(kotlin("compiler"))
     implementation(kotlin("scripting-compiler"))
     implementation(kotlin("scripting-jvm-host-unshaded"))

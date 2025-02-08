@@ -24,6 +24,8 @@ exceptions:
       - NumberFormatException
       - ParseException
       - MissingPropertyException
+  TooGenericExceptionCaught:
+    active: false
 
 naming:
   excludes: *standardExcludes
