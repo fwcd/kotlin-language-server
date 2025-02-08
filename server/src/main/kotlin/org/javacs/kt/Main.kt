@@ -7,7 +7,6 @@ import org.eclipse.lsp4j.launch.LSPLauncher
 import org.javacs.kt.util.ExitingInputStream
 import org.javacs.kt.util.tcpStartServer
 import org.javacs.kt.util.tcpConnectToClient
-
 class Args {
     /*
      * The language server can currently be launched in three modes:
@@ -15,13 +14,20 @@ class Args {
      *  - TCP Server, in which case the client has to connect to the specified tcpServerPort (used by the Docker image)
      *  - TCP Client, in which case the server will connect to the specified tcpClientPort/tcpClientHost (optionally used by VSCode)
      */
-
     @Parameter(names = ["--tcpServerPort", "-sp"])
     var tcpServerPort: Int? = null
+
     @Parameter(names = ["--tcpClientPort", "-p"])
     var tcpClientPort: Int? = null
+
     @Parameter(names = ["--tcpClientHost", "-h"])
     var tcpClientHost: String = "localhost"
+
+    @Parameter(names = ["--level"])
+    var logLevel: String = "info"
+
+    @Parameter(names = ["--tcpDebug"])
+    var tcpDebug: Boolean = false
 }
 
 fun main(argv: Array<String>) {
@@ -39,7 +45,8 @@ fun main(argv: Array<String>) {
         tcpStartServer(it)
     } ?: Pair(System.`in`, System.out)
 
-    val server = KotlinLanguageServer()
+    LOG.setLogLevel(args.logLevel)
+    val server = KotlinLanguageServer(tcpDebug = args.tcpDebug)
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }
     val launcher = LSPLauncher.createServerLauncher(server, ExitingInputStream(inStream), outStream, threads) { it }
 

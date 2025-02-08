@@ -23,7 +23,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CompletableFuture.completedFuture
 
 class KotlinLanguageServer(
-    val config: Configuration = Configuration()
+    val config: Configuration = Configuration(),
+    private val tcpDebug: Boolean = false
 ) : LanguageServer, LanguageClientAware, Closeable {
     val databaseService = DatabaseService()
     val classPath = CompilerClassPath(config.compiler, config.scripts, config.codegen, databaseService)
@@ -56,7 +57,9 @@ class KotlinLanguageServer(
 
     override fun connect(client: LanguageClient) {
         this.client = client
-        connectLoggingBackend()
+        if (!tcpDebug) {
+            connectLoggingBackend()
+        }
 
         workspaces.connect(client)
         textDocuments.connect(client)
