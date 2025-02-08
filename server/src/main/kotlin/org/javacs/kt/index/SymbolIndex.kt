@@ -93,7 +93,7 @@ class SymbolIndex(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(Symbols, Locations, Ranges, Positions)
+            SchemaUtils.create(Symbols, Locations, Ranges, Positions)
         }
     }
 
@@ -111,7 +111,7 @@ class SymbolIndex(
                     addDeclarations(allDescriptors(module, exclusions))
 
                     val finished = System.currentTimeMillis()
-                    val count = Symbols.selectAll().first()[Symbols.fqName.count()]
+                    val count = Symbols.select(Symbols.fqName.count()).first()[Symbols.fqName.count()]
                     LOG.info("Updated full symbol index in ${finished - started} ms! (${count} symbol(s))")
                 }
             } catch (e: Exception) {
@@ -134,7 +134,7 @@ class SymbolIndex(
                 addDeclarations(add)
 
                 val finished = System.currentTimeMillis()
-                val count = Symbols.selectAll().first()[Symbols.fqName.count()]
+                val count = Symbols.select(Symbols.fqName.count()).first()[Symbols.fqName.count()]
                 LOG.info("Updated symbol index in ${finished - started} ms! (${count} symbol(s))")
             }
         } catch (e: Exception) {
@@ -149,7 +149,7 @@ class SymbolIndex(
 
             if (validFqName(descriptorFqn) && (extensionReceiverFqn?.let { validFqName(it) } != false)) {
                 Symbols.deleteWhere {
-                    (Symbols.fqName eq descriptorFqn.toString()) and (Symbols.extensionReceiverType eq extensionReceiverFqn?.toString())
+                    (fqName eq descriptorFqn.toString()) and (extensionReceiverType eq extensionReceiverFqn?.toString())
                 }
             } else {
                 LOG.warn("Excluding symbol {} from index since its name is too long", descriptorFqn.toString())

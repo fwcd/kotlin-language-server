@@ -101,7 +101,7 @@ internal class CachedClassPathResolver(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(
+            SchemaUtils.create(
                 ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry
             )
         }

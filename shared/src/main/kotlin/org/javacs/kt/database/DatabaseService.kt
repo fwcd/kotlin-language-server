@@ -37,7 +37,7 @@ class DatabaseService {
         db = getDbFromFile(storagePath)
 
         val currentVersion = transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(DatabaseMetadata)
+            SchemaUtils.create(DatabaseMetadata)
 
             DatabaseMetadataEntity.all().firstOrNull()?.version ?: 0
         }
