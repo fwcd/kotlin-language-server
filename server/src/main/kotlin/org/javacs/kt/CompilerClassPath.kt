@@ -45,7 +45,7 @@ class CompilerClassPath(
         compiler.updateConfiguration(config)
     }
 
-    /** Updates and possibly reinstantiates the compiler using new paths. */
+    /** Updates and possibly re-instantiates the compiler using new paths. */
     private fun refresh(
         updateClassPath: Boolean = true,
         updateBuildScriptClassPath: Boolean = true,
