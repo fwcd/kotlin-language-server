@@ -43,9 +43,9 @@ object JavaTypeConverter : PsiTypeVisitor<String>() {
     }
 
     override fun visitWildcardType(wildcardType: PsiWildcardType): String =
-        if (wildcardType.isSuper()) {
+        if (wildcardType.isSuper) {
             "in ${wildcardType.bound?.accept(this)}"
-        } else if (wildcardType.isExtends()) {
+        } else if (wildcardType.isExtends) {
             "out ${wildcardType.bound?.accept(this)}"
         } else {
             super.visitWildcardType(wildcardType) ?: "?"

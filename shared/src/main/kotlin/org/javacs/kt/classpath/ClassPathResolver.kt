@@ -14,17 +14,17 @@ interface ClassPathResolver {
             classpath
         } catch (e: Exception) {
             LOG.warn("Could not resolve classpath using {}: {}", resolverType, e.message)
-            emptySet<ClassPathEntry>()
+            emptySet()
         }
 
     val buildScriptClasspath: Set<Path>
-        get() = emptySet<Path>()
+        get() = emptySet()
     val buildScriptClasspathOrEmpty: Set<Path>
         get() = try {
             buildScriptClasspath
         } catch (e: Exception) {
             LOG.warn("Could not resolve buildscript classpath using {}: {}", resolverType, e.message)
-            emptySet<Path>()
+            emptySet()
         }
 
     val classpathWithSources: Set<ClassPathEntry> get() = classpath

@@ -1,11 +1,9 @@
 package org.javacs.kt
 
 import org.javacs.kt.util.filePath
-import java.io.File
 import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.Path
-import java.nio.file.Paths
 
 // TODO: Read exclusions from gitignore/settings.json/... instead of
 // hardcoding them

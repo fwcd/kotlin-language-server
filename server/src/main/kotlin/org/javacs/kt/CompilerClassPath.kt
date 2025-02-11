@@ -5,6 +5,7 @@ import org.javacs.kt.classpath.defaultClassPathResolver
 import org.javacs.kt.compiler.Compiler
 import org.javacs.kt.database.DatabaseService
 import org.javacs.kt.util.AsyncExecutor
+import org.javacs.kt.util.KotlinLSException
 import java.io.Closeable
 import java.io.File
 import java.nio.file.FileSystems
@@ -39,7 +40,7 @@ class CompilerClassPath(
     )
         private set
 
-    private val async = AsyncExecutor()
+    private val asyncExecutor = AsyncExecutor(name = "CompilerClassPath")
 
     init {
         compiler.updateConfiguration(config)
@@ -64,7 +65,7 @@ class CompilerClassPath(
                 refreshCompiler = true
             }
 
-            async.compute {
+            asyncExecutor.compute {
                 val newClassPathWithSources = resolver.classpathWithSources
                 synchronized(classPath) {
                     syncPaths(classPath, newClassPathWithSources, "class path with sources") { it.compiledJar }
@@ -170,7 +171,12 @@ class CompilerClassPath(
 
     override fun close() {
         compiler.close()
-        outputDirectory.delete()
+        outputDirectory.delete().also { deleted ->
+            if (!deleted) {
+                throw KotlinLSException("Failed to delete output directory: $outputDirectory")
+            }
+            LOG.info("Deleted output directory: $outputDirectory")
+        }
     }
 }
 

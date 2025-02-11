@@ -2,7 +2,6 @@ package org.javacs.kt.util
 
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import java.util.function.Consumer
 
 class DelegatePrintStream(private val delegate: (String) -> Unit): PrintStream(ByteArrayOutputStream(0)) {
 	private val newLine = System.lineSeparator()
@@ -10,7 +9,7 @@ class DelegatePrintStream(private val delegate: (String) -> Unit): PrintStream(B
 	override fun write(c: Int) = delegate((c.toChar()).toString())
 
 	override fun write(buf: ByteArray, off: Int, len: Int) {
-		if (len > 0 && buf.size > 0) {
+		if (len > 0 && buf.isNotEmpty()) {
 			delegate(String(buf, off, len))
 		}
 	}

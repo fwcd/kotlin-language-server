@@ -1,6 +1,7 @@
 package org.javacs.kt.classpath
 
 import org.javacs.kt.LOG
+import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.findCommandOnPath
 import org.javacs.kt.util.findProjectCommandWithName
 import org.javacs.kt.util.execAndReadStdoutAndStderr
@@ -93,7 +94,7 @@ private fun findMavenArtifact(a: Artifact, source: Boolean): Path? {
         ?.resolve(a.version)
         ?.resolve(mavenJarName(a, source))
 
-    return if (Files.exists(result))
+    return if (result?.let { Files.exists(it) } == true)
         result
     else {
         LOG.warn("Couldn't find {} in {}", a, result)
@@ -134,9 +135,8 @@ private val mvnCommandFromPath: Path? by lazy {
 }
 
 private fun mvnCommand(pom: Path): Path {
-    return requireNotNull(mvnCommandFromPath ?: findProjectCommandWithName("mvnw", pom)?.also {
-        LOG.info("Using mvn wrapper (mvnw) in place of mvn command")
-    }) { "Unable to find the 'mvn' command or suitable wrapper" }
+    return mvnCommandFromPath ?: findProjectCommandWithName("mvnw", pom)
+    ?: throw KotlinLSException("Unable to find the 'mvn' command or suitable wrapper")
 }
 
 fun parseMavenArtifact(rawArtifact: String, version: String? = null): Artifact {

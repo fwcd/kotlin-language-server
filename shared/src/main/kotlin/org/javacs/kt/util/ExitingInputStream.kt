@@ -2,6 +2,7 @@ package org.javacs.kt.util
 
 import java.io.InputStream
 import org.javacs.kt.LOG
+import kotlin.system.exitProcess
 
 class ExitingInputStream(private val delegate: InputStream): InputStream() {
     override fun read(): Int = exitIfNegative { delegate.read() }
@@ -15,7 +16,7 @@ class ExitingInputStream(private val delegate: InputStream): InputStream() {
 
         if (result < 0) {
             LOG.info("System.in has closed, exiting")
-            System.exit(0)
+            exitProcess(0)
         }
 
         return result

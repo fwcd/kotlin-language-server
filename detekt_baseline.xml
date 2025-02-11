@@ -3,98 +3,29 @@
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:SemanticTokens.kt$element is KtVariableDeclaration &amp;&amp; (!element.isVar || element.hasModifier(KtTokens.CONST_KEYWORD)) || element is KtParameter</ID>
-    <ID>CyclomaticComplexMethod:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
     <ID>CyclomaticComplexMethod:Completions.kt$private fun indexCompletionItems(file: CompiledFile, cursor: Int, element: KtElement?, index: SymbolIndex, partial: String): Sequence&lt;CompletionItem&gt;</ID>
-    <ID>CyclomaticComplexMethod:GoToDefinition.kt$fun goToDefinition( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath ): Location?</ID>
-    <ID>CyclomaticComplexMethod:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeConfiguration(params: DidChangeConfigurationParams)</ID>
     <ID>CyclomaticComplexMethod:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
     <ID>CyclomaticComplexMethod:StringUtils.kt$fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: Int = 4): Int</ID>
-    <ID>EmptyCatchBlock:LintTest.kt$LintTest${}</ID>
-    <ID>EmptyClassBlock:BigFile.kt$BigFile.Maze${}</ID>
-    <ID>EmptyClassBlock:BigFile.kt$BigFile.MyClass${}</ID>
-    <ID>EmptyClassBlock:Constructor.kt$SomeConstructor${ }</ID>
-    <ID>EmptyClassBlock:Enum.kt$TokenType.Companion${ }</ID>
-    <ID>EmptyClassBlock:OuterDotInner.kt$MyOuterClass.InnerClass${ }</ID>
-    <ID>EmptyClassBlock:OverrideMembers.kt$Closed${}</ID>
-    <ID>EmptyClassBlock:OverrideMembers.kt$MyPrintable${}</ID>
-    <ID>EmptyClassBlock:OverrideMembers.kt$MyThread${}</ID>
-    <ID>EmptyClassBlock:SomeOtherClass.kt$SomeOtherClass${ }</ID>
-    <ID>EmptyClassBlock:SomeSubclass.kt$SomeSubclass${ }</ID>
-    <ID>EmptyClassBlock:Types.kt$Types.SomeInnerObject${ }</ID>
-    <ID>EmptyClassBlock:When.kt$SealedClass.Test${}</ID>
-    <ID>EmptyClassBlock:samefile.kt$MyClass${ }</ID>
-    <ID>EmptyClassBlock:samefile.kt$MyImplClass${}</ID>
-    <ID>EmptyClassBlock:samefile.kt$NullClass${}</ID>
-    <ID>EmptyClassBlock:samefile.kt$PrintableClass${}</ID>
-    <ID>EmptyClassBlock:standardlib.kt$MyComperable${}</ID>
-    <ID>EmptyClassBlock:standardlib.kt$MyList${}</ID>
-    <ID>EmptyClassBlock:standardlib.kt$MyThread${}</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.A$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.B$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Body$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Delegate$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.H1$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.HTML$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Head$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.LI$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.MyClass$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.P$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.Title$()</ID>
-    <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.UL$()</ID>
-    <ID>EmptyDefaultConstructor:Types.kt$Types.SomeInnerClass$()</ID>
-    <ID>EmptyForBlock:ReferenceCollectionish.kt${ }</ID>
-    <ID>EmptyFunctionBlock:BackquotedFunction.kt${ }</ID>
-    <ID>EmptyFunctionBlock:DocumentSymbols.kt$DocumentSymbols${ }</ID>
-    <ID>EmptyFunctionBlock:FillEmptyBody.kt$Caller${ }</ID>
-    <ID>EmptyFunctionBlock:GoFrom.kt$GoFrom${ }</ID>
-    <ID>EmptyFunctionBlock:GoTo.kt$GoTo${ }</ID>
-    <ID>EmptyFunctionBlock:JvmNameAnnotation.kt${ }</ID>
-    <ID>EmptyFunctionBlock:KotlinLanguageServer.kt$KotlinLanguageServer${}</ID>
+    <ID>EmptyClassBlock:KotlinLSException.kt$KotlinLSException${ }</ID>
     <ID>EmptyFunctionBlock:Logger.kt$JULRedirector${}</ID>
     <ID>EmptyFunctionBlock:LoggingMessageCollector.kt$LoggingMessageCollector${}</ID>
-    <ID>EmptyFunctionBlock:ObjectReference.kt$AnObject${ }</ID>
-    <ID>EmptyFunctionBlock:ReferenceGetterSetter.kt$ReferenceGetterSetter${ }</ID>
-    <ID>EmptyFunctionBlock:ReferenceTo.kt$ReferenceTo${ }</ID>
-    <ID>EmptyFunctionBlock:ResolveToFile.kt$ResolveToFile${ }</ID>
-    <ID>EmptyFunctionBlock:SignatureHelp.kt$Target${ }</ID>
-    <ID>EmptyFunctionBlock:SomeSubclass.kt$YetAnotherSubclass${ }</ID>
-    <ID>EmptyFunctionBlock:Statics.kt$MyClass.Companion${ }</ID>
-    <ID>EmptyFunctionBlock:Statics.kt$MyObject${ }</ID>
-    <ID>EmptyFunctionBlock:TrailingLambda.kt${}</ID>
-    <ID>EmptyFunctionBlock:Visibility.kt$Visibility${ }</ID>
-    <ID>EmptyFunctionBlock:Visibility.kt$Visibility.Companion${ }</ID>
-    <ID>EmptyFunctionBlock:Visibility.kt$VisibilitySuper${ }</ID>
-    <ID>EmptyFunctionBlock:Visibility.kt$VisibilitySuper.Companion${ }</ID>
-    <ID>EmptyFunctionBlock:Visibility.kt${ }</ID>
-    <ID>EmptyFunctionBlock:samefile.kt$OtherPrintableClass${}</ID>
-    <ID>EmptySecondaryConstructor:DocumentSymbols.kt$DocumentSymbols${ }</ID>
-    <ID>EmptySecondaryConstructor:KotlinLSException.kt$KotlinLSException${}</ID>
-    <ID>EmptySecondaryConstructor:OtherFileSymbols.kt$OtherFileSymbols${ }</ID>
-    <ID>EmptySecondaryConstructor:ReferenceConstructor.kt$ReferenceConstructor${ }</ID>
-    <ID>EmptySecondaryConstructor:SourceExclusions.kt$SourceExclusions${}</ID>
-    <ID>EqualsAlwaysReturnsTrueOrFalse:OverrideMembers.kt$CompletePrintable$override fun equals(other: Any?): Boolean</ID>
-    <ID>EqualsWithHashCodeExist:ReferenceOperator.kt$ReferenceEquals</ID>
-    <ID>EqualsWithHashCodeExist:ReferenceOperator.kt$ReferenceOperator</ID>
-    <ID>EqualsWithHashCodeExist:ReferenceOperatorUsingName.kt$ReferenceOperatorUsingName</ID>
     <ID>ExplicitItLambdaParameter:Hovers.kt${ i, it -&gt; val ret: String if (i == 0) ret = it.substring(it.indexOf("/**") + 3) // get rid of the start comment characters else if (i == split.size - 1) ret = it.substring(it.indexOf("*/") + 2) // get rid of the end comment characters else ret = it.substring(it.indexOf('*') + 1) // get rid of any leading * ret }</ID>
     <ID>ExplicitItLambdaParameter:RenderCompletionItem.kt${ it -&gt; it }</ID>
     <ID>ForbiddenComment:AddMissingImportsQuickFix.kt$AddMissingImportsQuickFix$// TODO: Visibility checker should be less liberal</ID>
     <ID>ForbiddenComment:BackupClassPathResolver.kt$// TODO: Resolve the gradleCaches dynamically instead of hardcoding this path</ID>
+    <ID>ForbiddenComment:CompilationEnvironment.kt$CompilationEnvironment$// TODO: KotlinScriptDefinition will soon be deprecated, use</ID>
+    <ID>ForbiddenComment:CompilationEnvironment.kt$CompilationEnvironment$// TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible</ID>
     <ID>ForbiddenComment:CompiledFile.kt$CompiledFile$* Looks for a reference expression at the given cursor. * This is currently used by many features in the language server. * Unfortunately, it fails to find declarations for JDK symbols. * [referenceExpressionAtPoint] provides an alternative implementation that can find JDK symbols. * It cannot, however, replace this method at the moment. * TODO: Investigate why this method doesn't find JDK symbols.</ID>
-    <ID>ForbiddenComment:Compiler.kt$CompilationEnvironment$// TODO: KotlinScriptDefinition will soon be deprecated, use</ID>
-    <ID>ForbiddenComment:Compiler.kt$CompilationEnvironment$// TODO: Use ScriptDefinition.FromLegacyTemplate directly if possible</ID>
     <ID>ForbiddenComment:Compiler.kt$Compiler$// TODO: Lock at file-level</ID>
     <ID>ForbiddenComment:CompilerClassPath.kt$CompilerClassPath$// TODO: Fetch class path and build script class path concurrently (and asynchronously)</ID>
     <ID>ForbiddenComment:Completions.kt$// TODO: CRLF?</ID>
     <ID>ForbiddenComment:Completions.kt$// TODO: Deal with alias imports</ID>
     <ID>ForbiddenComment:Completions.kt$// TODO: Visibility checker should be less liberal</ID>
-    <ID>ForbiddenComment:Home.kt$// TODO: try and figure out if mavenHome is in non-default position (requires finding and parsing settings.xml)</ID>
     <ID>ForbiddenComment:Imports.kt$// TODO: Lexicographic insertion</ID>
     <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Break labels</ID>
     <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Nullability</ID>
     <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Type parameters, annotations, modifiers, ...</ID>
     <ID>ForbiddenComment:JavaElementConverter.kt$JavaElementConverter$// TODO: Varargs, ...</ID>
-    <ID>ForbiddenComment:JavaToKotlinTest.kt$JavaToKotlinTest$// TODO: Seems to throw the same exception as</ID>
     <ID>ForbiddenComment:JdkSourceArchiveProvider.kt$JdkSourceArchiveProvider$* Checks if the given path is inside the JDK. If it is, we return the corresponding source zip. * Note that this method currently doesn't take into the account the JDK version, which means JDK source code * is only available for JDK 9+ builds. * TODO: improve this resolution logic to work for older JDK versions as well.</ID>
     <ID>ForbiddenComment:KotlinTextDocumentService.kt$KotlinTextDocumentService$// TODO: Investigate when to recompile</ID>
     <ID>ForbiddenComment:OverrideMembers.kt$// TODO: any way can repeat less code between this and the getAbstractMembersStubs in the ImplementAbstractMembersQuickfix?</ID>
@@ -103,45 +34,16 @@
     <ID>ForbiddenComment:OverrideMembers.kt$// TODO: look into this</ID>
     <ID>ForbiddenComment:OverrideMembers.kt$// TODO: see where this should ideally be placed</ID>
     <ID>ForbiddenComment:SemanticTokens.kt$// TODO: Ideally we would like to cut-off subtrees outside our range, but this doesn't quite seem to work</ID>
-    <ID>ForbiddenComment:SimpleScriptTest.kt$SimpleScriptTest$// TODO:</ID>
-    <ID>ForbiddenComment:SimpleScriptTest.kt$SimpleScriptTest$// TODO: Test a script using the language server instead</ID>
     <ID>ForbiddenComment:SourceExclusions.kt$SourceExclusions$// TODO: Read exclusions from gitignore/settings.json/... instead of</ID>
-    <ID>ForbiddenComment:SourcePath.kt$SourcePath$// TODO: Investigate the possibility of compiling all files at once, instead of iterating here</ID>
+    <ID>ForbiddenComment:SourcePath.kt$SourcePath$// TODO: Investigate the possibility of compiling all files at once, instead of iterating</ID>
     <ID>ForbiddenComment:SourcePath.kt$SourcePath.SourceFile$// TODO: Create PsiFile using the stored language instead</ID>
     <ID>ForbiddenComment:SourcePath.kt$SourcePath.SourceFile$// TODO: Use language?.associatedFileType?.defaultExtension again</ID>
     <ID>ForbiddenComment:Symbol.kt$Symbol$// TODO: Store location (e.g. using a URI)</ID>
     <ID>ForbiddenComment:SymbolIndex.kt$SymbolIndex$// TODO: Extension completion currently only works if the receiver matches exactly,</ID>
-    <ID>ForbiddenComment:build.gradle.kts$// TODO: Currently not possible, see https://github.com/gradle/gradle/issues/9830</ID>
-    <ID>FunctionNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$internal fun org.gradle.api.artifacts.dsl.RepositoryHandler.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
-    <ID>FunctionNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$internal fun org.gradle.api.artifacts.dsl.DependencyHandler.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
-    <ID>FunctionNaming:Accessorsasa455whv8s4bk3c97fzgde0p.kt$internal fun org.gradle.api.publish.PublishingExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
-    <ID>FunctionNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$internal fun org.gradle.api.Project.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
-    <ID>FunctionNaming:Accessorscchdiujech8u294vwhihsq7gh.kt$internal fun org.gradle.api.Project.`publishing`(configure: Action&lt;org.gradle.api.publish.PublishingExtension&gt;): Unit</ID>
     <ID>FunctionOnlyReturningConstant:Example.kt$fun example()</ID>
-    <ID>FunctionOnlyReturningConstant:FunctionScope.kt$FunctionScope$private fun aClassFun()</ID>
-    <ID>FunctionOnlyReturningConstant:FunctionScope.kt$FunctionScope.Companion$private fun aCompanionFun()</ID>
-    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$fun instanceFee()</ID>
-    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$fun instanceFoo()</ID>
-    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$SomeClass$private fun privateInstanceFoo()</ID>
-    <ID>FunctionOnlyReturningConstant:InstanceMember.kt$private fun SomeClass.extensionFoo()</ID>
-    <ID>FunctionOnlyReturningConstant:LintErrors.kt$LintErrors$fun foo()</ID>
-    <ID>FunctionOnlyReturningConstant:Recover.kt$private fun intFunction()</ID>
-    <ID>FunctionOnlyReturningConstant:Recover.kt$private fun singleExpressionFunction()</ID>
-    <ID>InvalidPackageDeclaration:CompanionObject.kt$package test.my.companion</ID>
-    <ID>InvalidPackageDeclaration:DeclSite.kt$package declsite</ID>
-    <ID>InvalidPackageDeclaration:JvmNameAnnotation.kt$package com.mypackage.name</ID>
-    <ID>InvalidPackageDeclaration:NoMain.kt$package no.main.found.hopefully</ID>
-    <ID>InvalidPackageDeclaration:Simple.kt$package test</ID>
-    <ID>InvalidPackageDeclaration:Simple.kt$package test.mypackage</ID>
-    <ID>InvalidPackageDeclaration:UsageSite.kt$package declsite</ID>
-    <ID>InvalidPackageDeclaration:samefile.kt$package test.kotlin.lsp</ID>
-    <ID>InvalidPackageDeclaration:standardlib.kt$package test.kotlin.lsp</ID>
-    <ID>LongMethod:Compiler.kt$CompilationEnvironment.&lt;no name provided&gt;.&lt;no name provided&gt;$override fun resolve(scriptContents: ScriptContents, environment: Environment)</ID>
-    <ID>LongMethod:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
+    <ID>LongMethod:CompilationEnvironment.kt$CompilationEnvironment.&lt;no name provided&gt;.&lt;no name provided&gt;$override fun resolve( scriptContents: ScriptContents, environment: Environment )</ID>
     <ID>LongMethod:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
-    <ID>LongParameterList:CompiledFile.kt$CompiledFile$( val content: String, val parse: KtFile, val compile: BindingContext, val module: ModuleDescriptor, val sourcePath: Collection&lt;KtFile&gt;, val classPath: CompilerClassPath, val isScript: Boolean = false, val kind: CompilationKind = CompilationKind.DEFAULT )</ID>
-    <ID>LongParameterList:GoToDefinition.kt$( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath )</ID>
-    <ID>LongParameterList:LanguageServerTestFixture.kt$LanguageServerTestFixture$(relativePath: String, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int, diagnostics: List&lt;Diagnostic&gt;, only: List&lt;String&gt;)</ID>
+    <ID>LongParameterList:CompiledFile.kt$CompiledFile$( val content: String, val parse: KtFile, val compile: BindingContext, val module: ModuleDescriptor, private val sourcePath: Collection&lt;KtFile&gt;, private val classPath: CompilerClassPath, private val isScript: Boolean = false, val kind: CompilationType = CompilationType.DEFAULT )</ID>
     <ID>LongParameterList:SourcePath.kt$SourcePath.SourceFile$( val uri: URI, var content: String, val path: Path? = uri.filePath, var parsed: KtFile? = null, var compiledFile: KtFile? = null, var compiledContext: BindingContext? = null, var module: ModuleDescriptor? = null, val language: Language? = null, val isTemporary: Boolean = false, // A temporary source file will not be returned by .all() var lastSavedFile: KtFile? = null, )</ID>
     <ID>LoopWithTooManyJumpStatements:StringUtils.kt$for (i in 0 until maxOffset) { when { (iCandidate + i) &lt; candidateLength -&gt; { if (candidate[iCandidate + i] == pattern[iPattern]) { iCandidate += i localCommonSubstring++ break@searchWindow } } (iPattern + i) &lt; patternLength -&gt; { if (candidate[iCandidate] == pattern[iPattern + i]) { iPattern += i localCommonSubstring++ break@searchWindow } } else -&gt; break@searchWindow } }</ID>
     <ID>MagicNumber:BackupClassPathResolver.kt$3</ID>
@@ -149,9 +51,7 @@
     <ID>MagicNumber:Compiler.kt$3</ID>
     <ID>MagicNumber:Compiler.kt$5</ID>
     <ID>MagicNumber:CompilerClassPath.kt$5</ID>
-    <ID>MagicNumber:Formatter.kt$4</ID>
     <ID>MagicNumber:Hovers.kt$3</ID>
-    <ID>MagicNumber:KotlinLanguageServer.kt$KotlinLanguageServer$100</ID>
     <ID>MagicNumber:Logger.kt$LogLevel.ALL$100</ID>
     <ID>MagicNumber:Logger.kt$LogLevel.DEEP_TRACE$3</ID>
     <ID>MagicNumber:Logger.kt$LogLevel.NONE$100</ID>
@@ -162,6 +62,7 @@
     <ID>MagicNumber:MavenClassPathResolver.kt$5</ID>
     <ID>MagicNumber:MavenClassPathResolver.kt$6</ID>
     <ID>MagicNumber:MavenClassPathResolver.kt$MavenClassPathResolver$5</ID>
+    <ID>MagicNumber:Server.kt$Server$100</ID>
     <ID>MagicNumber:Symbol.kt$Symbol.Kind.CONSTRUCTOR$7</ID>
     <ID>MagicNumber:Symbol.kt$Symbol.Kind.ENUM$5</ID>
     <ID>MagicNumber:Symbol.kt$Symbol.Kind.ENUM_MEMBER$6</ID>
@@ -176,89 +77,23 @@
     <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$3</ID>
     <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$4</ID>
     <ID>MagicNumber:WithStdlibResolver.kt$StdLibItem.Companion$5</ID>
-    <ID>MatchingDeclarationName:Enum.kt$TokenType</ID>
-    <ID>MatchingDeclarationName:ImportsTest.kt$ImportTextEditTest : SingleFileTestFixture</ID>
     <ID>MatchingDeclarationName:Main.kt$Args</ID>
-    <ID>MatchingDeclarationName:Spaces.kt$Test</ID>
-    <ID>MatchingDeclarationName:When.kt$SealedClass</ID>
-    <ID>MayBeConst:CompanionObject.kt$val SOME_GLOBAL_CONSTANT = 42</ID>
-    <ID>MayBeConst:DeclSite.kt$val myvar = 2</ID>
-    <ID>MayBeConst:DocumentHighlight.kt$val globalval = 23</ID>
-    <ID>MayBeConst:FunctionScope.kt$FunctionScope.Companion$private val aCompanionVal = 1</ID>
-    <ID>MayBeConst:JvmNameAnnotation.kt$val MY_CONSTANT = 1</ID>
-    <ID>MayBeConst:OtherFile.kt$val somevalinotherfile = 42</ID>
-    <ID>MayBeConst:Simple.kt$val something = 1</ID>
-    <ID>MemberNameEqualsClassName:ReferenceGetSetValue.kt$Main$private fun main()</ID>
     <ID>NestedBlockDepth:Completions.kt$private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence&lt;DeclarationDescriptor&gt;</ID>
-    <ID>NestedBlockDepth:GoToDefinition.kt$fun goToDefinition( file: CompiledFile, cursor: Int, classContentProvider: ClassContentProvider, tempDir: TemporaryDirectory, config: ExternalSourcesConfiguration, cp: CompilerClassPath ): Location?</ID>
-    <ID>NestedBlockDepth:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeConfiguration(params: DidChangeConfigurationParams)</ID>
     <ID>NestedBlockDepth:KotlinWorkspaceService.kt$KotlinWorkspaceService$override fun didChangeWatchedFiles(params: DidChangeWatchedFilesParams)</ID>
-    <ID>NestedBlockDepth:LanguageServerTestFixture.kt$LanguageServerTestFixture$private fun createLanguageServer(): KotlinLanguageServer</ID>
     <ID>NestedBlockDepth:OverrideMembers.kt$private fun parametersMatch( function: KtNamedFunction, functionDescriptor: FunctionDescriptor ): Boolean</ID>
     <ID>NestedBlockDepth:SourcePath.kt$SourcePath$fun save(uri: URI)</ID>
     <ID>NestedBlockDepth:StringUtils.kt$fun stringDistance(candidate: CharSequence, pattern: CharSequence, maxOffset: Int = 4): Int</ID>
-    <ID>NewLineAtEndOfFile:BackquotedFunction.kt$.BackquotedFunction.kt</ID>
-    <ID>NewLineAtEndOfFile:BigFile.kt$.BigFile.kt</ID>
-    <ID>NewLineAtEndOfFile:CompiledFileExample.kt$.CompiledFileExample.kt</ID>
-    <ID>NewLineAtEndOfFile:Constructor.kt$.Constructor.kt</ID>
-    <ID>NewLineAtEndOfFile:DocumentSymbols.kt$.DocumentSymbols.kt</ID>
-    <ID>NewLineAtEndOfFile:DoubleDot.kt$.DoubleDot.kt</ID>
-    <ID>NewLineAtEndOfFile:EditCall.kt$.EditCall.kt</ID>
     <ID>NewLineAtEndOfFile:Example.kt$.Example.kt</ID>
-    <ID>NewLineAtEndOfFile:ExampleScript.kts$.ExampleScript.kts</ID>
-    <ID>NewLineAtEndOfFile:FileToEdit.kt$.FileToEdit.kt</ID>
-    <ID>NewLineAtEndOfFile:FillEmptyBody.kt$.FillEmptyBody.kt</ID>
-    <ID>NewLineAtEndOfFile:FindDoc.kt$org.javacs.kt.docs.FindDoc.kt</ID>
-    <ID>NewLineAtEndOfFile:FunctionReference.kt$.FunctionReference.kt</ID>
-    <ID>NewLineAtEndOfFile:FunctionScope.kt$.FunctionScope.kt</ID>
-    <ID>NewLineAtEndOfFile:GoFrom.kt$.GoFrom.kt</ID>
-    <ID>NewLineAtEndOfFile:GoTo.kt$.GoTo.kt</ID>
-    <ID>NewLineAtEndOfFile:InstanceMembersJava.kt$.InstanceMembersJava.kt</ID>
-    <ID>NewLineAtEndOfFile:LintErrors.kt$.LintErrors.kt</ID>
-    <ID>NewLineAtEndOfFile:Literals.kt$.Literals.kt</ID>
-    <ID>NewLineAtEndOfFile:MiddleOfFunction.kt$.MiddleOfFunction.kt</ID>
-    <ID>NewLineAtEndOfFile:ObjectReference.kt$.ObjectReference.kt</ID>
-    <ID>NewLineAtEndOfFile:OtherFileSymbols.kt$.OtherFileSymbols.kt</ID>
-    <ID>NewLineAtEndOfFile:OuterDotInner.kt$.OuterDotInner.kt</ID>
-    <ID>NewLineAtEndOfFile:QuestionDot.kt$.QuestionDot.kt</ID>
-    <ID>NewLineAtEndOfFile:Recover.kt$.Recover.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceCollectionish.kt$.ReferenceCollectionish.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceComponents.kt$.ReferenceComponents.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceFrom.kt$.ReferenceFrom.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceGetSetValue.kt$.ReferenceGetSetValue.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceGetterSetter.kt$.ReferenceGetterSetter.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceInvoke.kt$.ReferenceInvoke.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceOperator.kt$.ReferenceOperator.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceOperatorUsingName.kt$.ReferenceOperatorUsingName.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferenceTo.kt$.ReferenceTo.kt</ID>
-    <ID>NewLineAtEndOfFile:ReferencesBigFile.kt$.ReferencesBigFile.kt</ID>
-    <ID>NewLineAtEndOfFile:ResolveFromFile.kt$.ResolveFromFile.kt</ID>
-    <ID>NewLineAtEndOfFile:ResolveToFile.kt$.ResolveToFile.kt</ID>
-    <ID>NewLineAtEndOfFile:SemanticTokens.kt$.SemanticTokens.kt</ID>
-    <ID>NewLineAtEndOfFile:SignatureHelp.kt$.SignatureHelp.kt</ID>
-    <ID>NewLineAtEndOfFile:Statics.kt$.Statics.kt</ID>
-    <ID>NewLineAtEndOfFile:Types.kt$.Types.kt</ID>
-    <ID>NewLineAtEndOfFile:configure-publishing.gradle.kts$.configure-publishing.gradle.kts</ID>
-    <ID>PackageNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessors6xcmy081jxud3rx4r453mbm9f.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessorsasa455whv8s4bk3c97fzgde0p.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessorsb13nju9doius8kxwhlptqirtr.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:Accessorscchdiujech8u294vwhihsq7gh.kt$package gradle.kotlin.dsl.accessors._b7719bb009bf77985775c5b9fa4e40d9</ID>
-    <ID>PackageNaming:JavaJSONConverter.kt$package j2k</ID>
-    <ID>PackageNaming:PluginSpecBuilders.kt$package gradle.kotlin.dsl.plugins._7df07e7e20c071e0f60c36a84fdf1bc1</ID>
-    <ID>ReturnCount:BigFile.kt$BigFile$fun Maze.addIfFree(i: Int, j: Int, result: MutableList&lt;Point&gt;)</ID>
     <ID>ReturnCount:CompiledFile.kt$CompiledFile$fun referenceAtPoint(cursor: Int): Pair&lt;KtExpression, DeclarationDescriptor&gt;?</ID>
     <ID>ReturnCount:CompiledFile.kt$CompiledFile$fun typeAtPoint(cursor: Int): KotlinType?</ID>
     <ID>ReturnCount:Completions.kt$private fun completeMembers(file: CompiledFile, cursor: Int, receiverExpr: KtExpression, unwrapNullable: Boolean = false): Sequence&lt;DeclarationDescriptor&gt;</ID>
-    <ID>ReturnCount:Completions.kt$private fun elementCompletions(file: CompiledFile, cursor: Int, surroundingElement: KtElement): Sequence&lt;DeclarationDescriptor&gt;</ID>
     <ID>ReturnCount:Completions.kt$private fun findPartialIdentifier(file: CompiledFile, cursor: Int): String</ID>
     <ID>ReturnCount:Completions.kt$private fun implicitMembers(scope: HierarchicalScope): Sequence&lt;DeclarationDescriptor&gt;</ID>
     <ID>ReturnCount:Completions.kt$private fun isNotStaticJavaMethod( descriptor: DeclarationDescriptor ): Boolean</ID>
     <ID>ReturnCount:Completions.kt$private fun isNotVisible(target: DeclarationDescriptorWithVisibility, from: DeclarationDescriptor): Boolean</ID>
     <ID>ReturnCount:Completions.kt$private fun isVisible(file: CompiledFile, cursor: Int): (DeclarationDescriptor) -&gt; Boolean</ID>
     <ID>ReturnCount:Completions.kt$private fun subclassParent(target: DeclarationDescriptor, from: DeclarationDescriptor): Boolean</ID>
+    <ID>ReturnCount:DefinitionHandler.kt$DefinitionHandler$fun goToDefinition(file: CompiledFile, cursor: Int): Location?</ID>
     <ID>ReturnCount:FindDoc.kt$fun findDoc(declaration: DeclarationDescriptorWithSource): KDocTag?</ID>
     <ID>ReturnCount:FindReferences.kt$private fun possibleReferences(declaration: DeclarationDescriptor, sp: SourcePath): Set&lt;KtFile&gt;</ID>
     <ID>ReturnCount:Hovers.kt$@OptIn(IDEAPluginsCompatibilityAPI::class) private fun renderTypeOf(element: KtExpression, bindingContext: BindingContext): String?</ID>
@@ -267,28 +102,22 @@
     <ID>ReturnCount:Position.kt$fun location(declaration: DeclarationDescriptor): Location?</ID>
     <ID>ReturnCount:ResolveMain.kt$fun resolveMain(file: CompiledFile): Map&lt;String,Any&gt;</ID>
     <ID>ReturnCount:SemanticTokens.kt$private fun elementToken(element: PsiElement, bindingContext: BindingContext): SemanticToken?</ID>
-    <ID>ReturnCount:SignatureHelp.kt$private fun activeParameter(call: KtCallExpression, cursor: Int): Int</ID>
     <ID>ReturnCount:SignatureHelp.kt$private fun candidates(call: KtCallExpression, file: CompiledFile): List&lt;CallableDescriptor&gt;</ID>
     <ID>ReturnCount:SignatureHelp.kt$private fun isCompatibleWith(call: KtCallExpression, candidate: CallableDescriptor): Boolean</ID>
     <ID>SpreadOperator:Main.kt$(*argv)</ID>
-    <ID>SwallowedException:AsyncExecutor.kt$AsyncExecutor$e: Exception</ID>
     <ID>SwallowedException:ClassContentProvider.kt$ClassContentProvider$e: FileNotFoundException</ID>
-    <ID>SwallowedException:ConfigurePublishingPlugin.kt$ConfigurePublishingPlugin$e: java.lang.reflect.InvocationTargetException</ID>
-    <ID>SwallowedException:LintTest.kt$LintTest$ex: CancellationException</ID>
     <ID>SwallowedException:Position.kt$e: NullPointerException</ID>
     <ID>SwallowedException:SourceFiles.kt$SourceFiles$e: FileNotFoundException</ID>
     <ID>SwallowedException:SourceFiles.kt$SourceFiles$e: IOException</ID>
     <ID>SwallowedException:SymbolIndex.kt$SymbolIndex$e: IllegalStateException</ID>
-    <ID>TooGenericExceptionCaught:AsyncExecutor.kt$AsyncExecutor$e: Exception</ID>
     <ID>TooGenericExceptionCaught:ClassPathResolver.kt$ClassPathResolver$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:Compiler.kt$CompilationEnvironment$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:CompilationEnvironment.kt$CompilationEnvironment$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Completions.kt$e: Exception</ID>
     <ID>TooGenericExceptionCaught:DefaultClassPathResolver.kt$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Position.kt$e: NullPointerException</ID>
     <ID>TooGenericExceptionCaught:SourcePath.kt$SourcePath$ex: Exception</ID>
     <ID>TooGenericExceptionCaught:SymbolIndex.kt$SymbolIndex$e: Exception</ID>
     <ID>TooGenericExceptionCaught:Utils.kt$e: Exception</ID>
-    <ID>TooGenericExceptionThrown:OneFilePerformance.kt$OneFilePerformance$throw RuntimeException("Expected BigFile.max but found " + call)</ID>
     <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching char $char")</ID>
     <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching line $line")</ID>
     <ID>TooGenericExceptionThrown:Position.kt$throw RuntimeException("Reached end of file before reaching offset $offset")</ID>
@@ -303,257 +132,43 @@
     <ID>TooManyFunctions:FindReferences.kt$org.javacs.kt.references.FindReferences.kt</ID>
     <ID>TooManyFunctions:JavaElementConverter.kt$JavaElementConverter : JavaElementVisitor</ID>
     <ID>TooManyFunctions:JavaTypeConverter.kt$JavaTypeConverter : PsiTypeVisitor</ID>
-    <ID>TooManyFunctions:KotlinLanguageServer.kt$KotlinLanguageServer : LanguageServerLanguageClientAwareCloseable</ID>
     <ID>TooManyFunctions:KotlinTextDocumentService.kt$KotlinTextDocumentService : TextDocumentServiceCloseable</ID>
     <ID>TooManyFunctions:Logger.kt$Logger</ID>
     <ID>TooManyFunctions:OverrideMembers.kt$org.javacs.kt.overridemembers.OverrideMembers.kt</ID>
     <ID>TooManyFunctions:RenderCompletionItem.kt$RenderCompletionItem : DeclarationDescriptorVisitor</ID>
+    <ID>TooManyFunctions:Server.kt$Server : LanguageServerLanguageClientAwareCloseable</ID>
     <ID>TooManyFunctions:SignatureHelp.kt$org.javacs.kt.signaturehelp.SignatureHelp.kt</ID>
     <ID>TooManyFunctions:SourceFiles.kt$SourceFiles</ID>
     <ID>TooManyFunctions:SourcePath.kt$SourcePath</ID>
     <ID>TooManyFunctions:SourcePath.kt$SourcePath$SourceFile</ID>
-    <ID>TooManyFunctions:Utils.kt$org.javacs.kt.util.Utils.kt</ID>
-    <ID>TopLevelPropertyNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$/** * Retrieves the [ext][org.gradle.api.plugins.ExtraPropertiesExtension] extension. */ internal val org.gradle.api.artifacts.dsl.RepositoryHandler.`ext`: org.gradle.api.plugins.ExtraPropertiesExtension get() = (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
-    <ID>TopLevelPropertyNaming:Accessors6xcmy081jxud3rx4r453mbm9f.kt$/** * Provides the existing [publishToMavenLocal][org.gradle.api.DefaultTask] task. */ internal val TaskContainer.`publishToMavenLocal`: TaskProvider&lt;org.gradle.api.DefaultTask&gt; get() = named&lt;org.gradle.api.DefaultTask&gt;("publishToMavenLocal")</ID>
-    <ID>TopLevelPropertyNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$/** * Retrieves the [ext][org.gradle.api.plugins.ExtraPropertiesExtension] extension. */ internal val org.gradle.api.artifacts.dsl.DependencyHandler.`ext`: org.gradle.api.plugins.ExtraPropertiesExtension get() = (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
-    <ID>TopLevelPropertyNaming:Accessorsasa455whv8s4bk3c97fzgde0p.kt$/** * Retrieves the [ext][org.gradle.api.plugins.ExtraPropertiesExtension] extension. */ internal val org.gradle.api.publish.PublishingExtension.`ext`: org.gradle.api.plugins.ExtraPropertiesExtension get() = (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
-    <ID>TopLevelPropertyNaming:Accessorsb13nju9doius8kxwhlptqirtr.kt$/** * Provides the existing [publish][org.gradle.api.DefaultTask] task. */ internal val TaskContainer.`publish`: TaskProvider&lt;org.gradle.api.DefaultTask&gt; get() = named&lt;org.gradle.api.DefaultTask&gt;("publish")</ID>
-    <ID>TopLevelPropertyNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$/** * Retrieves the [ext][org.gradle.api.plugins.ExtraPropertiesExtension] extension. */ internal val org.gradle.api.Project.`ext`: org.gradle.api.plugins.ExtraPropertiesExtension get() = (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
-    <ID>TopLevelPropertyNaming:Accessorscchdiujech8u294vwhihsq7gh.kt$/** * Retrieves the [publishing][org.gradle.api.publish.PublishingExtension] extension. */ internal val org.gradle.api.Project.`publishing`: org.gradle.api.publish.PublishingExtension get() = (this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("publishing") as org.gradle.api.publish.PublishingExtension</ID>
-    <ID>TopLevelPropertyNaming:GoToProperties.kt$const val globalNumber: Int = 2</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * Plugin ids starting with `org.gradle`. */ internal val `OrgPluginGroup`.`gradle`: `OrgGradlePluginGroup` get() = `OrgGradlePluginGroup`(plugins)</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * Plugin ids starting with `org`. */ internal val `PluginDependenciesSpec`.`org`: `OrgPluginGroup` get() = `OrgPluginGroup`(this)</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.antlr` plugin implemented by [org.gradle.api.plugins.antlr.AntlrPlugin]. */ internal val `OrgGradlePluginGroup`.`antlr`: PluginDependencySpec get() = plugins.id("org.gradle.antlr")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.application` plugin implemented by [org.gradle.api.plugins.ApplicationPlugin]. */ internal val `OrgGradlePluginGroup`.`application`: PluginDependencySpec get() = plugins.id("org.gradle.application")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.assembler-lang` plugin implemented by [org.gradle.language.assembler.plugins.AssemblerLangPlugin]. */ internal val `OrgGradlePluginGroup`.`assembler-lang`: PluginDependencySpec get() = plugins.id("org.gradle.assembler-lang")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.assembler` plugin implemented by [org.gradle.language.assembler.plugins.AssemblerPlugin]. */ internal val `OrgGradlePluginGroup`.`assembler`: PluginDependencySpec get() = plugins.id("org.gradle.assembler")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.base` plugin implemented by [org.gradle.api.plugins.BasePlugin]. */ internal val `OrgGradlePluginGroup`.`base`: PluginDependencySpec get() = plugins.id("org.gradle.base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.binary-base` plugin implemented by [org.gradle.platform.base.plugins.BinaryBasePlugin]. */ internal val `OrgGradlePluginGroup`.`binary-base`: PluginDependencySpec get() = plugins.id("org.gradle.binary-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.build-dashboard` plugin implemented by [org.gradle.api.reporting.plugins.BuildDashboardPlugin]. */ internal val `OrgGradlePluginGroup`.`build-dashboard`: PluginDependencySpec get() = plugins.id("org.gradle.build-dashboard")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.build-init` plugin implemented by [org.gradle.buildinit.plugins.BuildInitPlugin]. */ internal val `OrgGradlePluginGroup`.`build-init`: PluginDependencySpec get() = plugins.id("org.gradle.build-init")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.c-lang` plugin implemented by [org.gradle.language.c.plugins.CLangPlugin]. */ internal val `OrgGradlePluginGroup`.`c-lang`: PluginDependencySpec get() = plugins.id("org.gradle.c-lang")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.c` plugin implemented by [org.gradle.language.c.plugins.CPlugin]. */ internal val `OrgGradlePluginGroup`.`c`: PluginDependencySpec get() = plugins.id("org.gradle.c")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.checkstyle` plugin implemented by [org.gradle.api.plugins.quality.CheckstylePlugin]. */ internal val `OrgGradlePluginGroup`.`checkstyle`: PluginDependencySpec get() = plugins.id("org.gradle.checkstyle")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.clang-compiler` plugin implemented by [org.gradle.nativeplatform.toolchain.plugins.ClangCompilerPlugin]. */ internal val `OrgGradlePluginGroup`.`clang-compiler`: PluginDependencySpec get() = plugins.id("org.gradle.clang-compiler")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.codenarc` plugin implemented by [org.gradle.api.plugins.quality.CodeNarcPlugin]. */ internal val `OrgGradlePluginGroup`.`codenarc`: PluginDependencySpec get() = plugins.id("org.gradle.codenarc")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.component-base` plugin implemented by [org.gradle.platform.base.plugins.ComponentBasePlugin]. */ internal val `OrgGradlePluginGroup`.`component-base`: PluginDependencySpec get() = plugins.id("org.gradle.component-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.component-model-base` plugin implemented by [org.gradle.language.base.plugins.ComponentModelBasePlugin]. */ internal val `OrgGradlePluginGroup`.`component-model-base`: PluginDependencySpec get() = plugins.id("org.gradle.component-model-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cpp-application` plugin implemented by [org.gradle.language.cpp.plugins.CppApplicationPlugin]. */ internal val `OrgGradlePluginGroup`.`cpp-application`: PluginDependencySpec get() = plugins.id("org.gradle.cpp-application")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cpp-lang` plugin implemented by [org.gradle.language.cpp.plugins.CppLangPlugin]. */ internal val `OrgGradlePluginGroup`.`cpp-lang`: PluginDependencySpec get() = plugins.id("org.gradle.cpp-lang")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cpp-library` plugin implemented by [org.gradle.language.cpp.plugins.CppLibraryPlugin]. */ internal val `OrgGradlePluginGroup`.`cpp-library`: PluginDependencySpec get() = plugins.id("org.gradle.cpp-library")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cpp-unit-test` plugin implemented by [org.gradle.nativeplatform.test.cpp.plugins.CppUnitTestPlugin]. */ internal val `OrgGradlePluginGroup`.`cpp-unit-test`: PluginDependencySpec get() = plugins.id("org.gradle.cpp-unit-test")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cpp` plugin implemented by [org.gradle.language.cpp.plugins.CppPlugin]. */ internal val `OrgGradlePluginGroup`.`cpp`: PluginDependencySpec get() = plugins.id("org.gradle.cpp")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cunit-test-suite` plugin implemented by [org.gradle.nativeplatform.test.cunit.plugins.CUnitPlugin]. */ internal val `OrgGradlePluginGroup`.`cunit-test-suite`: PluginDependencySpec get() = plugins.id("org.gradle.cunit-test-suite")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.cunit` plugin implemented by [org.gradle.nativeplatform.test.cunit.plugins.CUnitConventionPlugin]. */ internal val `OrgGradlePluginGroup`.`cunit`: PluginDependencySpec get() = plugins.id("org.gradle.cunit")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.distribution` plugin implemented by [org.gradle.api.distribution.plugins.DistributionPlugin]. */ internal val `OrgGradlePluginGroup`.`distribution`: PluginDependencySpec get() = plugins.id("org.gradle.distribution")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.ear` plugin implemented by [org.gradle.plugins.ear.EarPlugin]. */ internal val `OrgGradlePluginGroup`.`ear`: PluginDependencySpec get() = plugins.id("org.gradle.ear")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.eclipse-wtp` plugin implemented by [org.gradle.plugins.ide.eclipse.EclipseWtpPlugin]. */ internal val `OrgGradlePluginGroup`.`eclipse-wtp`: PluginDependencySpec get() = plugins.id("org.gradle.eclipse-wtp")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.eclipse` plugin implemented by [org.gradle.plugins.ide.eclipse.EclipsePlugin]. */ internal val `OrgGradlePluginGroup`.`eclipse`: PluginDependencySpec get() = plugins.id("org.gradle.eclipse")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.gcc-compiler` plugin implemented by [org.gradle.nativeplatform.toolchain.plugins.GccCompilerPlugin]. */ internal val `OrgGradlePluginGroup`.`gcc-compiler`: PluginDependencySpec get() = plugins.id("org.gradle.gcc-compiler")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.google-test-test-suite` plugin implemented by [org.gradle.nativeplatform.test.googletest.plugins.GoogleTestPlugin]. */ internal val `OrgGradlePluginGroup`.`google-test-test-suite`: PluginDependencySpec get() = plugins.id("org.gradle.google-test-test-suite")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.google-test` plugin implemented by [org.gradle.nativeplatform.test.googletest.plugins.GoogleTestConventionPlugin]. */ internal val `OrgGradlePluginGroup`.`google-test`: PluginDependencySpec get() = plugins.id("org.gradle.google-test")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.groovy-base` plugin implemented by [org.gradle.api.plugins.GroovyBasePlugin]. */ internal val `OrgGradlePluginGroup`.`groovy-base`: PluginDependencySpec get() = plugins.id("org.gradle.groovy-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.groovy-gradle-plugin` plugin implemented by [org.gradle.plugin.devel.internal.precompiled.PrecompiledGroovyPluginsPlugin]. */ internal val `OrgGradlePluginGroup`.`groovy-gradle-plugin`: PluginDependencySpec get() = plugins.id("org.gradle.groovy-gradle-plugin")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.groovy` plugin implemented by [org.gradle.api.plugins.GroovyPlugin]. */ internal val `OrgGradlePluginGroup`.`groovy`: PluginDependencySpec get() = plugins.id("org.gradle.groovy")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.help-tasks` plugin implemented by [org.gradle.api.plugins.HelpTasksPlugin]. */ internal val `OrgGradlePluginGroup`.`help-tasks`: PluginDependencySpec get() = plugins.id("org.gradle.help-tasks")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.idea` plugin implemented by [org.gradle.plugins.ide.idea.IdeaPlugin]. */ internal val `OrgGradlePluginGroup`.`idea`: PluginDependencySpec get() = plugins.id("org.gradle.idea")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.ivy-publish` plugin implemented by [org.gradle.api.publish.ivy.plugins.IvyPublishPlugin]. */ internal val `OrgGradlePluginGroup`.`ivy-publish`: PluginDependencySpec get() = plugins.id("org.gradle.ivy-publish")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.jacoco-report-aggregation` plugin implemented by [org.gradle.testing.jacoco.plugins.JacocoReportAggregationPlugin]. */ internal val `OrgGradlePluginGroup`.`jacoco-report-aggregation`: PluginDependencySpec get() = plugins.id("org.gradle.jacoco-report-aggregation")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.jacoco` plugin implemented by [org.gradle.testing.jacoco.plugins.JacocoPlugin]. */ internal val `OrgGradlePluginGroup`.`jacoco`: PluginDependencySpec get() = plugins.id("org.gradle.jacoco")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-base` plugin implemented by [org.gradle.api.plugins.JavaBasePlugin]. */ internal val `OrgGradlePluginGroup`.`java-base`: PluginDependencySpec get() = plugins.id("org.gradle.java-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-gradle-plugin` plugin implemented by [org.gradle.plugin.devel.plugins.JavaGradlePluginPlugin]. */ internal val `OrgGradlePluginGroup`.`java-gradle-plugin`: PluginDependencySpec get() = plugins.id("org.gradle.java-gradle-plugin")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-library-distribution` plugin implemented by [org.gradle.api.plugins.JavaLibraryDistributionPlugin]. */ internal val `OrgGradlePluginGroup`.`java-library-distribution`: PluginDependencySpec get() = plugins.id("org.gradle.java-library-distribution")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-library` plugin implemented by [org.gradle.api.plugins.JavaLibraryPlugin]. */ internal val `OrgGradlePluginGroup`.`java-library`: PluginDependencySpec get() = plugins.id("org.gradle.java-library")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-platform` plugin implemented by [org.gradle.api.plugins.JavaPlatformPlugin]. */ internal val `OrgGradlePluginGroup`.`java-platform`: PluginDependencySpec get() = plugins.id("org.gradle.java-platform")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java-test-fixtures` plugin implemented by [org.gradle.api.plugins.JavaTestFixturesPlugin]. */ internal val `OrgGradlePluginGroup`.`java-test-fixtures`: PluginDependencySpec get() = plugins.id("org.gradle.java-test-fixtures")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.java` plugin implemented by [org.gradle.api.plugins.JavaPlugin]. */ internal val `OrgGradlePluginGroup`.`java`: PluginDependencySpec get() = plugins.id("org.gradle.java")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.jvm-ecosystem` plugin implemented by [org.gradle.api.plugins.JvmEcosystemPlugin]. */ internal val `OrgGradlePluginGroup`.`jvm-ecosystem`: PluginDependencySpec get() = plugins.id("org.gradle.jvm-ecosystem")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.jvm-test-suite` plugin implemented by [org.gradle.api.plugins.JvmTestSuitePlugin]. */ internal val `OrgGradlePluginGroup`.`jvm-test-suite`: PluginDependencySpec get() = plugins.id("org.gradle.jvm-test-suite")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.language-base` plugin implemented by [org.gradle.language.base.plugins.LanguageBasePlugin]. */ internal val `OrgGradlePluginGroup`.`language-base`: PluginDependencySpec get() = plugins.id("org.gradle.language-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.lifecycle-base` plugin implemented by [org.gradle.language.base.plugins.LifecycleBasePlugin]. */ internal val `OrgGradlePluginGroup`.`lifecycle-base`: PluginDependencySpec get() = plugins.id("org.gradle.lifecycle-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.maven-publish` plugin implemented by [org.gradle.api.publish.maven.plugins.MavenPublishPlugin]. */ internal val `OrgGradlePluginGroup`.`maven-publish`: PluginDependencySpec get() = plugins.id("org.gradle.maven-publish")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.microsoft-visual-cpp-compiler` plugin implemented by [org.gradle.nativeplatform.toolchain.plugins.MicrosoftVisualCppCompilerPlugin]. */ internal val `OrgGradlePluginGroup`.`microsoft-visual-cpp-compiler`: PluginDependencySpec get() = plugins.id("org.gradle.microsoft-visual-cpp-compiler")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.native-component-model` plugin implemented by [org.gradle.nativeplatform.plugins.NativeComponentModelPlugin]. */ internal val `OrgGradlePluginGroup`.`native-component-model`: PluginDependencySpec get() = plugins.id("org.gradle.native-component-model")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.native-component` plugin implemented by [org.gradle.nativeplatform.plugins.NativeComponentPlugin]. */ internal val `OrgGradlePluginGroup`.`native-component`: PluginDependencySpec get() = plugins.id("org.gradle.native-component")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.objective-c-lang` plugin implemented by [org.gradle.language.objectivec.plugins.ObjectiveCLangPlugin]. */ internal val `OrgGradlePluginGroup`.`objective-c-lang`: PluginDependencySpec get() = plugins.id("org.gradle.objective-c-lang")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.objective-c` plugin implemented by [org.gradle.language.objectivec.plugins.ObjectiveCPlugin]. */ internal val `OrgGradlePluginGroup`.`objective-c`: PluginDependencySpec get() = plugins.id("org.gradle.objective-c")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.objective-cpp-lang` plugin implemented by [org.gradle.language.objectivecpp.plugins.ObjectiveCppLangPlugin]. */ internal val `OrgGradlePluginGroup`.`objective-cpp-lang`: PluginDependencySpec get() = plugins.id("org.gradle.objective-cpp-lang")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.objective-cpp` plugin implemented by [org.gradle.language.objectivecpp.plugins.ObjectiveCppPlugin]. */ internal val `OrgGradlePluginGroup`.`objective-cpp`: PluginDependencySpec get() = plugins.id("org.gradle.objective-cpp")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.pmd` plugin implemented by [org.gradle.api.plugins.quality.PmdPlugin]. */ internal val `OrgGradlePluginGroup`.`pmd`: PluginDependencySpec get() = plugins.id("org.gradle.pmd")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.project-report` plugin implemented by [org.gradle.api.plugins.ProjectReportsPlugin]. */ internal val `OrgGradlePluginGroup`.`project-report`: PluginDependencySpec get() = plugins.id("org.gradle.project-report")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.project-reports` plugin implemented by [org.gradle.api.plugins.ProjectReportsPlugin]. */ internal val `OrgGradlePluginGroup`.`project-reports`: PluginDependencySpec get() = plugins.id("org.gradle.project-reports")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.publishing` plugin implemented by [org.gradle.api.publish.plugins.PublishingPlugin]. */ internal val `OrgGradlePluginGroup`.`publishing`: PluginDependencySpec get() = plugins.id("org.gradle.publishing")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.reporting-base` plugin implemented by [org.gradle.api.plugins.ReportingBasePlugin]. */ internal val `OrgGradlePluginGroup`.`reporting-base`: PluginDependencySpec get() = plugins.id("org.gradle.reporting-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.scala-base` plugin implemented by [org.gradle.api.plugins.scala.ScalaBasePlugin]. */ internal val `OrgGradlePluginGroup`.`scala-base`: PluginDependencySpec get() = plugins.id("org.gradle.scala-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.scala` plugin implemented by [org.gradle.api.plugins.scala.ScalaPlugin]. */ internal val `OrgGradlePluginGroup`.`scala`: PluginDependencySpec get() = plugins.id("org.gradle.scala")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.signing` plugin implemented by [org.gradle.plugins.signing.SigningPlugin]. */ internal val `OrgGradlePluginGroup`.`signing`: PluginDependencySpec get() = plugins.id("org.gradle.signing")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.standard-tool-chains` plugin implemented by [org.gradle.nativeplatform.toolchain.internal.plugins.StandardToolChainsPlugin]. */ internal val `OrgGradlePluginGroup`.`standard-tool-chains`: PluginDependencySpec get() = plugins.id("org.gradle.standard-tool-chains")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.swift-application` plugin implemented by [org.gradle.language.swift.plugins.SwiftApplicationPlugin]. */ internal val `OrgGradlePluginGroup`.`swift-application`: PluginDependencySpec get() = plugins.id("org.gradle.swift-application")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.swift-library` plugin implemented by [org.gradle.language.swift.plugins.SwiftLibraryPlugin]. */ internal val `OrgGradlePluginGroup`.`swift-library`: PluginDependencySpec get() = plugins.id("org.gradle.swift-library")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.swiftpm-export` plugin implemented by [org.gradle.swiftpm.plugins.SwiftPackageManagerExportPlugin]. */ internal val `OrgGradlePluginGroup`.`swiftpm-export`: PluginDependencySpec get() = plugins.id("org.gradle.swiftpm-export")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.test-report-aggregation` plugin implemented by [org.gradle.api.plugins.TestReportAggregationPlugin]. */ internal val `OrgGradlePluginGroup`.`test-report-aggregation`: PluginDependencySpec get() = plugins.id("org.gradle.test-report-aggregation")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.test-suite-base` plugin implemented by [org.gradle.testing.base.plugins.TestSuiteBasePlugin]. */ internal val `OrgGradlePluginGroup`.`test-suite-base`: PluginDependencySpec get() = plugins.id("org.gradle.test-suite-base")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.validate-external-gradle-plugin` plugin implemented by [org.gradle.plugin.devel.plugins.ExternalPluginValidationPlugin]. */ internal val `OrgGradlePluginGroup`.`validate-external-gradle-plugin`: PluginDependencySpec get() = plugins.id("org.gradle.validate-external-gradle-plugin")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.version-catalog` plugin implemented by [org.gradle.api.plugins.catalog.VersionCatalogPlugin]. */ internal val `OrgGradlePluginGroup`.`version-catalog`: PluginDependencySpec get() = plugins.id("org.gradle.version-catalog")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.visual-studio` plugin implemented by [org.gradle.ide.visualstudio.plugins.VisualStudioPlugin]. */ internal val `OrgGradlePluginGroup`.`visual-studio`: PluginDependencySpec get() = plugins.id("org.gradle.visual-studio")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.war` plugin implemented by [org.gradle.api.plugins.WarPlugin]. */ internal val `OrgGradlePluginGroup`.`war`: PluginDependencySpec get() = plugins.id("org.gradle.war")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.windows-resource-script` plugin implemented by [org.gradle.language.rc.plugins.WindowsResourceScriptPlugin]. */ internal val `OrgGradlePluginGroup`.`windows-resource-script`: PluginDependencySpec get() = plugins.id("org.gradle.windows-resource-script")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.windows-resources` plugin implemented by [org.gradle.language.rc.plugins.WindowsResourcesPlugin]. */ internal val `OrgGradlePluginGroup`.`windows-resources`: PluginDependencySpec get() = plugins.id("org.gradle.windows-resources")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.wrapper` plugin implemented by [org.gradle.buildinit.plugins.WrapperPlugin]. */ internal val `OrgGradlePluginGroup`.`wrapper`: PluginDependencySpec get() = plugins.id("org.gradle.wrapper")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.xcode` plugin implemented by [org.gradle.ide.xcode.plugins.XcodePlugin]. */ internal val `OrgGradlePluginGroup`.`xcode`: PluginDependencySpec get() = plugins.id("org.gradle.xcode")</ID>
-    <ID>TopLevelPropertyNaming:PluginSpecBuilders.kt$/** * The `org.gradle.xctest` plugin implemented by [org.gradle.nativeplatform.test.xctest.plugins.XCTestConventionPlugin]. */ internal val `OrgGradlePluginGroup`.`xctest`: PluginDependencySpec get() = plugins.id("org.gradle.xctest")</ID>
-    <ID>UnnecessaryAbstractClass:SimpleScriptTest.kt$SimpleScript$SimpleScript</ID>
-    <ID>UnnecessaryAbstractClass:SomeSuperClass.kt$SomeSuperClass$SomeSuperClass</ID>
-    <ID>UnnecessaryAbstractClass:samefile.kt$CanPrint$CanPrint</ID>
-    <ID>UnusedPrivateClass:CompiledFileExample.kt$CompiledFileExample</ID>
-    <ID>UnusedPrivateClass:Constructor.kt$SomeConstructor</ID>
-    <ID>UnusedPrivateClass:DocumentSymbols.kt$DocumentSymbols</ID>
-    <ID>UnusedPrivateClass:FileToEdit.kt$FileToEdit</ID>
-    <ID>UnusedPrivateClass:FunctionScope.kt$FunctionScope</ID>
-    <ID>UnusedPrivateClass:LintErrors.kt$LintErrors</ID>
-    <ID>UnusedPrivateClass:MainWorkspaceFile.kt$MainWorkspaceFile</ID>
-    <ID>UnusedPrivateClass:MiddleOfFunction.kt$MiddleOfFunction</ID>
-    <ID>UnusedPrivateClass:ReferenceGetSetValue.kt$Main</ID>
-    <ID>UnusedPrivateClass:Types.kt$Types</ID>
-    <ID>UnusedPrivateClass:Visibility.kt$Visibility : VisibilitySuper</ID>
-    <ID>UnusedPrivateMember:BackquotedFunction.kt$private fun `fun that needs backquotes`()</ID>
-    <ID>UnusedPrivateMember:BackquotedFunction.kt$private fun completeBackquotedFunction()</ID>
-    <ID>UnusedPrivateMember:BigFile.kt$BigFile$args: Array&lt;String&gt;</ID>
     <ID>UnusedPrivateMember:Completions.kt$private fun completeTypeMembers(type: KotlinType): Sequence&lt;DeclarationDescriptor&gt;</ID>
-    <ID>UnusedPrivateMember:Completions.kt$private fun empty(message: String): CompletionList</ID>
-    <ID>UnusedPrivateMember:Constructor.kt$SomeConstructor$x: Int</ID>
-    <ID>UnusedPrivateMember:Constructor.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:DebouncerTest.kt$DebouncerTest$i</ID>
-    <ID>UnusedPrivateMember:DocumentSymbols.kt$DocumentSymbols$aConstructorArg: Int</ID>
-    <ID>UnusedPrivateMember:DocumentSymbols.kt$DocumentSymbols$aFunctionArg: Int</ID>
-    <ID>UnusedPrivateMember:DoubleDot.kt$private fun doubleDot(p: String)</ID>
-    <ID>UnusedPrivateMember:EditCall.kt$private fun test()</ID>
-    <ID>UnusedPrivateMember:FunctionReference.kt$private fun foo(): List&lt;String&gt;</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$anArgument: Int</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$private fun aClassFun()</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$private val aClassVal = 1</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope$val aLocal = 1</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope.Companion$private fun aCompanionFun()</ID>
-    <ID>UnusedPrivateMember:FunctionScope.kt$FunctionScope.Companion$private val aCompanionVal = 1</ID>
-    <ID>UnusedPrivateMember:FunctionScript.kts$val first = 1</ID>
-    <ID>UnusedPrivateMember:FunctionScript.kts$val second = 2</ID>
-    <ID>UnusedPrivateMember:GradleClassPathResolver.kt$private val gradleErrorWherePattern by lazy { "\\*\\s+Where:[\r\n]+(\\S\\.*)".toRegex() }</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$SomeClass$private fun privateInstanceFoo()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun SomeClass.extensionFoo()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun completeIdentifierInsideCall()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findCompletionsForLettersInFullMethod()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findFunctionReference()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findListExtensionFunctions()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun findUnqualifiedFunctionReference()</ID>
-    <ID>UnusedPrivateMember:InstanceMember.kt$private fun foo()</ID>
-    <ID>UnusedPrivateMember:InstanceMembersJava.kt$private fun findJavaInstanceMembers(p: Path)</ID>
     <ID>UnusedPrivateMember:JavaElementConverter.kt$JavaElementConverter$private fun PsiCallExpression.translateTypeArguments(): String</ID>
-    <ID>UnusedPrivateMember:KotlinTextDocumentService.kt$KotlinTextDocumentService$private val TextDocumentIdentifier.isKotlinScript: Boolean get() = uri.endsWith(".kts")</ID>
-    <ID>UnusedPrivateMember:LintTest.kt$LintTest$i</ID>
-    <ID>UnusedPrivateMember:Literals.kt$private fun foo()</ID>
     <ID>UnusedPrivateMember:Logger.kt$Logger$private val newline = System.lineSeparator()</ID>
-    <ID>UnusedPrivateMember:ObjectReference.kt$private fun bar()</ID>
-    <ID>UnusedPrivateMember:ObjectReference.kt$private fun dang()</ID>
-    <ID>UnusedPrivateMember:ObjectReference.kt$private fun foo()</ID>
-    <ID>UnusedPrivateMember:OtherFileSymbols.kt$OtherFileSymbols$aConstructorArg: Int</ID>
-    <ID>UnusedPrivateMember:OtherFileSymbols.kt$OtherFileSymbols$val otherFileLocalVariable = 1</ID>
-    <ID>UnusedPrivateMember:OuterDotInner.kt$private fun staticDot()</ID>
-    <ID>UnusedPrivateMember:OuterDotInner.kt$private fun test(p: Any)</ID>
-    <ID>UnusedPrivateMember:QuestionDot.kt$private fun completeQuestionDot(s: String?)</ID>
-    <ID>UnusedPrivateMember:Recover.kt$private fun blockFunction()</ID>
-    <ID>UnusedPrivateMember:Recover.kt$private fun intFunction()</ID>
-    <ID>UnusedPrivateMember:Recover.kt$private fun singleExpressionFunction()</ID>
-    <ID>UnusedPrivateMember:ReferenceCollectionish.kt$i</ID>
-    <ID>UnusedPrivateMember:ReferenceCollectionish.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceComponents.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceComponents.kt$val c = ReferenceComponents().component1()</ID>
-    <ID>UnusedPrivateMember:ReferenceConstructor.kt$ReferenceConstructor$mainConstructor: String</ID>
-    <ID>UnusedPrivateMember:ReferenceConstructor.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceGetSetValue.kt$Main$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceGetterSetter.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceInvoke.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceOperator.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:ReferenceOperatorUsingName.kt$private fun main()</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$SignatureHelp$param: String</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$bar: Int</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$bar: String</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$first: Int</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$first: String</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$second: Int</ID>
-    <ID>UnusedPrivateMember:SignatureHelp.kt$Target$second: String</ID>
-    <ID>UnusedPrivateMember:SimpleScriptTest.kt$SimpleScriptTest$val resultValue = (result as ResultWithDiagnostics.Success).value.returnValue as ResultValue.Value</ID>
     <ID>UnusedPrivateMember:SourceFiles.kt$i</ID>
-    <ID>UnusedPrivateMember:Statics.kt$private fun completeStatics()</ID>
-    <ID>UnusedPrivateMember:TrailingLambda.kt$a: Int</ID>
-    <ID>UnusedPrivateMember:TrailingLambda.kt$b: (Int) -&gt; Unit</ID>
-    <ID>UnusedPrivateMember:TrailingLambda.kt$x: () -&gt; Unit</ID>
-    <ID>UnusedPrivateMember:Visibility.kt$Visibility$private fun privateThisFun()</ID>
-    <ID>UnusedPrivateMember:Visibility.kt$Visibility.Companion$private fun privateThisCompanionFun()</ID>
-    <ID>UnusedPrivateMember:Visibility.kt$VisibilitySuper$private fun privateSuperFun()</ID>
-    <ID>UnusedPrivateMember:Visibility.kt$VisibilitySuper.Companion$private fun privateSuperCompanionFun()</ID>
-    <ID>UnusedPrivateMember:Visibility.kt$private fun privateTopLevelFun()</ID>
-    <ID>UtilityClassWithPublicConstructor:CompanionObject.kt$SweetPotato</ID>
-    <ID>UtilityClassWithPublicConstructor:Statics.kt$MyClass</ID>
-    <ID>WildcardImport:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessors6xcmy081jxud3rx4r453mbm9f.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessors6xcmy081jxud3rx4r453mbm9f.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessorsasa455whv8s4bk3c97fzgde0p.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessorsasa455whv8s4bk3c97fzgde0p.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessorsb13nju9doius8kxwhlptqirtr.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessorsb13nju9doius8kxwhlptqirtr.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
-    <ID>WildcardImport:Accessorscchdiujech8u294vwhihsq7gh.kt$import org.gradle.kotlin.dsl.*</ID>
-    <ID>WildcardImport:Accessorscchdiujech8u294vwhihsq7gh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
     <ID>WildcardImport:AddMissingImportsQuickFix.kt$import org.eclipse.lsp4j.*</ID>
-    <ID>WildcardImport:AdditionalWorkspaceTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:ClassPathTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:ClassPathTest.kt$import org.javacs.kt.classpath.*</ID>
     <ID>WildcardImport:CodeAction.kt$import org.eclipse.lsp4j.*</ID>
     <ID>WildcardImport:CompiledFile.kt$import org.jetbrains.kotlin.psi.*</ID>
-    <ID>WildcardImport:Compiler.kt$import org.jetbrains.kotlin.config.*</ID>
     <ID>WildcardImport:Compiler.kt$import org.jetbrains.kotlin.psi.*</ID>
     <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.descriptors.*</ID>
     <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.psi.*</ID>
     <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.psi.psiUtil.*</ID>
     <ID>WildcardImport:Completions.kt$import org.jetbrains.kotlin.resolve.descriptorUtil.*</ID>
-    <ID>WildcardImport:CompletionsTest.kt$import org.hamcrest.Matchers.*</ID>
     <ID>WildcardImport:ExtractSymbolExtensionReceiverType.kt$import org.jetbrains.kotlin.descriptors.*</ID>
     <ID>WildcardImport:ExtractSymbolKind.kt$import org.jetbrains.kotlin.descriptors.*</ID>
     <ID>WildcardImport:ExtractSymbolVisibility.kt$import org.jetbrains.kotlin.descriptors.*</ID>
     <ID>WildcardImport:FindReferences.kt$import org.jetbrains.kotlin.psi.*</ID>
-    <ID>WildcardImport:GradleDSLScriptTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:HoverTest.kt$import org.hamcrest.Matchers.*</ID>
     <ID>WildcardImport:Hovers.kt$import org.jetbrains.kotlin.psi.*</ID>
     <ID>WildcardImport:ImplementAbstractMembersQuickFix.kt$import org.eclipse.lsp4j.*</ID>
     <ID>WildcardImport:Imports.kt$import org.jetbrains.kotlin.psi.*</ID>
-    <ID>WildcardImport:ImportsTest.kt$import org.hamcrest.Matchers.*</ID>
     <ID>WildcardImport:JavaElementConverter.kt$import com.intellij.psi.*</ID>
     <ID>WildcardImport:JavaElementConverter.kt$import com.intellij.psi.javadoc.*</ID>
     <ID>WildcardImport:JavaTypeConverter.kt$import com.intellij.psi.*</ID>
-    <ID>WildcardImport:KotlinLanguageServer.kt$import org.eclipse.lsp4j.*</ID>
-    <ID>WildcardImport:KotlinLanguageServer.kt$import org.javacs.kt.externalsources.*</ID>
     <ID>WildcardImport:KotlinProtocolExtensionService.kt$import org.eclipse.lsp4j.*</ID>
     <ID>WildcardImport:KotlinProtocolExtensions.kt$import org.eclipse.lsp4j.*</ID>
     <ID>WildcardImport:KotlinTextDocumentService.kt$import org.eclipse.lsp4j.*</ID>
-    <ID>WildcardImport:KotlinTextDocumentService.kt$import org.javacs.kt.completion.*</ID>
     <ID>WildcardImport:KotlinWorkspaceService.kt$import org.eclipse.lsp4j.*</ID>
-    <ID>WildcardImport:LanguageServerTestFixture.kt$import org.eclipse.lsp4j.*</ID>
-    <ID>WildcardImport:LintTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:MavenArtifactParsingTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:OneFilePerformance.kt$import org.openjdk.jmh.annotations.*</ID>
-    <ID>WildcardImport:ReferencesTest.kt$import org.hamcrest.Matchers.*</ID>
     <ID>WildcardImport:Rename.kt$import org.eclipse.lsp4j.*</ID>
     <ID>WildcardImport:RenderCompletionItem.kt$import org.jetbrains.kotlin.descriptors.*</ID>
-    <ID>WildcardImport:SemanticTokensTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:SignatureHelpTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:SimpleScriptTest.kt$import kotlin.script.experimental.api.*</ID>
-    <ID>WildcardImport:SimpleScriptTest.kt$import org.hamcrest.Matchers.*</ID>
-    <ID>WildcardImport:SimpleScriptTest.kt$import org.junit.*</ID>
-    <ID>WildcardImport:SimpleScriptTest.kt$import org.junit.Assert.*</ID>
     <ID>WildcardImport:SymbolIndex.kt$import org.jetbrains.exposed.sql.*</ID>
     <ID>WildcardImport:Symbols.kt$import org.jetbrains.kotlin.psi.*</ID>
   </CurrentIssues>

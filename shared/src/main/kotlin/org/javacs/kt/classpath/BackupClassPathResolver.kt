@@ -109,7 +109,7 @@ private fun compareVersions(left: Path, right: Path): Int {
     val leftVersion = extractVersion(left)
     val rightVersion = extractVersion(right)
 
-    for (i in 0 until Math.min(leftVersion.size, rightVersion.size)) {
+    for (i in 0 until leftVersion.size.coerceAtMost(rightVersion.size)) {
         val leftRev = leftVersion[i].reversed()
         val rightRev = rightVersion[i].reversed()
         val compare = leftRev.compareTo(rightRev)

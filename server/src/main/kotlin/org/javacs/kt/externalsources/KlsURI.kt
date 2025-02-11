@@ -99,7 +99,10 @@ data class KlsURI(val fileUri: URI, val query: Map<QueryParam, String>) {
 
     private fun toURI(): URI = URI(fileUri.toString() + queryString)
 
-    private fun toJarURL(): URL = URL("jar:${fileUri.schemeSpecificPart}")
+    private fun toJarURL(): URL {
+        val jarUri = URI("jar", fileUri.schemeSpecificPart, null)
+        return jarUri.toURL()
+    }
 
     private fun openJarURLConnection() = toJarURL().openConnection() as JarURLConnection
 

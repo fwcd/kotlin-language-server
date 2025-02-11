@@ -11,7 +11,7 @@ import org.junit.Test
 
 class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
     @Test fun `report diagnostics on open`() {
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
 
         assertThat(diagnostics, hasSize(2))
         assertThat(errors, hasSize(1))
@@ -23,7 +23,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
         // Trigger a diagnostics update via a dummy change.
         replace(file, 6, 1, "", " ")
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
 
         assertThat(diagnostics, hasSize(1))
         assertThat(errors, hasSize(1))
@@ -35,7 +35,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
         // Trigger a diagnostics update via a dummy change.
         replace(file, 1, 1, "", " ")
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
 
         assertThat(diagnostics, empty<Diagnostic>())
     }
@@ -49,7 +49,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
             text = newText
         }
 
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
 
         assertThat(diagnostics, not(empty<Diagnostic>()))
         assertThat(languageServer.textDocumentService.lintCount, lessThan(5))
@@ -57,7 +57,7 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
     @Test fun `linting should not be dropped if another linting is running`() {
         var callbackCount = 0
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
         languageServer.textDocumentService.lintRecompilationCallback = {
             if (callbackCount++ == 0) {
                 replace(file, 7, 9, "return 11", "")
@@ -69,11 +69,11 @@ class DiagnosticTest : SingleFileTestFixture("diagnostic", "Diagnostics.kt") {
 
         while (callbackCount < 2) {
             try {
-                languageServer.textDocumentService.debounceLint.waitForPendingTask()
+                languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
             } catch (ex: CancellationException) {}
         }
 
-        languageServer.textDocumentService.debounceLint.waitForPendingTask()
+        languageServer.textDocumentService.lintDebouncer.waitForPendingTask()
         assertThat(diagnostics, empty<Diagnostic>())
         languageServer.textDocumentService.lintRecompilationCallback = {}
     }
