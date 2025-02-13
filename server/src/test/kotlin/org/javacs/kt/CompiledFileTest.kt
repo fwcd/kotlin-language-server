@@ -36,7 +36,7 @@ class CompiledFileTest {
         val file = testResourcesRoot().resolve("compiledFile/CompiledFileExample.kt")
         val content = Files.readAllLines(file).joinToString("\n")
         val parse = compiler.createKtFile(content, file)
-        val classPath = CompilerClassPath(CompilerConfiguration(), ScriptsConfiguration(), CodegenConfiguration(), DatabaseService())
+        val classPath = CompilerClassPath(CompilerConfiguration(), ScriptsConfiguration(), ExclusionsConfiguration(), CodegenConfiguration(), DatabaseService())
         val sourcePath = listOf(parse)
         val (context, container) = compiler.compileKtFiles(sourcePath, sourcePath)
         CompiledFile(content, parse, context, container, sourcePath, classPath)
