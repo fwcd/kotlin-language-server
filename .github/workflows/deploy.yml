@@ -41,7 +41,7 @@ jobs:
           tag="${{ steps.tag.outputs.tag }}"
           gh release upload "$tag" server/build/distributions/*
       - name: Deploy Maven artifacts to GitHub Packages
-        run: ./gradlew :shared:publish :server:publish
+        run: ./gradlew :shared:publish :server:publish :platform:publish
         env:
           GPR_USERNAME: ${{ github.actor }}
           GPR_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
