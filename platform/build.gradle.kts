@@ -1,4 +1,7 @@
-plugins { id("java-platform") }
+plugins {
+    id("java-platform")
+    id("kotlin-language-server.publishing-repository-conventions")
+}
 
 javaPlatform { allowDependencies() }
 
@@ -27,5 +30,13 @@ dependencies {
         api(libs.org.jetbrains.kotlin.kotlin.scripting.jvm.host)
         api(libs.org.openjdk.jmh.generator.annprocess)
         api(libs.org.xerial.sqlite.jdbc)
+    }
+}
+
+publishing {
+    publications {
+        register("gpr", MavenPublication::class) {
+            from(components["javaPlatform"])
+        }
     }
 }
