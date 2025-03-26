@@ -34,6 +34,7 @@ import java.io.Closeable
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import org.javacs.kt.implementation.findImplementation
 
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
@@ -265,6 +266,20 @@ class KotlinTextDocumentService(
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
+    }
+
+    override fun implementation(params: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
+        reportTime {
+            LOG.info("Find implementation at {}", describePosition(params))
+
+            val (file, cursor) = recover(params, Recompile.NEVER) ?: return@compute Either.forLeft(emptyList())
+            val implementations = findImplementation(sp, sf, file, cursor)
+            if (implementations.isEmpty()) {
+                noResult("No implementations found at ${describePosition(params)}", Either.forLeft(emptyList()))
+            } else {
+                Either.forLeft(implementations)
+            }
+        }
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {

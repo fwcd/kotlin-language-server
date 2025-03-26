@@ -20,6 +20,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.streams.toList
 
 private class SourceVersion(val content: String, val version: Int, val language: Language?, val isTemporary: Boolean)
 
@@ -77,6 +78,14 @@ class SourceFiles(
         if (isIncluded(uri)) {
             files[uri] = SourceVersion(content, version, languageOf(uri), isTemporary = false)
             open.add(uri)
+        }
+    }
+
+    fun getAllUris(): List<URI> {
+        return workspaceRoots.flatMap { root ->
+            Files.walk(root)
+                .filter { it.toString().endsWith(".kt") || it.toString().endsWith(".kts") }
+                .map { it.toUri() }.toList()
         }
     }
 
