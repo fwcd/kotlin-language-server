@@ -120,8 +120,27 @@ class KotlinTextDocumentService(
         documentHighlightsAt(file, cursor)
     }
 
-    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> {
-        TODO("not implemented")
+    override fun onTypeFormatting(params: DocumentOnTypeFormattingParams): CompletableFuture<List<TextEdit>> = async.compute {
+        val code = params.textDocument.content
+        val position = params.position
+        val offset = offset(code, position.line, position.character)
+        
+        // Get the line up to the cursor position
+        val lineStart = code.lastIndexOf('\n', offset - 1) + 1
+        val lineEnd = code.indexOf('\n', offset)
+        val line = if (lineEnd == -1) code.substring(lineStart) else code.substring(lineStart, lineEnd)
+        
+        // Format the line
+        val formattedLine = formattingService.formatKotlinCode(line, params.options)
+        
+        // Create a range for the line
+        val range = Range(
+            Position(position.line, 0),
+            Position(position.line, line.length)
+        )
+        
+        // Return the edit
+        listOf(TextEdit(range, formattedLine))
     }
 
     override fun definition(position: DefinitionParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
