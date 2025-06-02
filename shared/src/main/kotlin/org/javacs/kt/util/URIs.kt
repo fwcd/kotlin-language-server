@@ -1,6 +1,7 @@
 package org.javacs.kt.util
 
 import java.net.URI
+import java.net.URLEncoder
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -12,7 +13,20 @@ import java.nio.file.Paths
  * (including VSCode) invalidly percent-encode colons.
  */
 fun parseURI(uri: String): URI =
-    URI.create(runCatching { URLDecoder.decode(uri, StandardCharsets.UTF_8.toString()).replace(" ", "%20") }.getOrDefault(uri))
+    URI.create(runCatching {
+        // val decoded = URLDecoder.decode(uri, StandardCharsets.UTF_8)
+
+        // Don't encode the protocol
+        val protocol = uri.substring(0, uri.indexOf('/'))
+        val path = uri.substringAfter('/')
+
+        val parts = path.split("/")
+        val encodedParts = parts.map { URLEncoder.encode(it, StandardCharsets.UTF_8) }
+        val encoded = protocol + '/' + encodedParts.joinToString(separator = "/")
+
+        // URLEncoder uses '+' instead of '%20' fpr spaces
+        encoded.replace("+", "%20")
+    }.getOrDefault(uri))
 
 val URI.filePath: Path? get() = runCatching { Paths.get(this) }.getOrNull()
 
