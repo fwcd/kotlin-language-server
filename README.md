@@ -1,4 +1,4 @@
-> ![IMPORTANT]
+> [!IMPORTANT]
 > There is now an [official language server](https://github.com/Kotlin/kotlin-lsp), so this project can be considered deprecated.
 
 # Kotlin Language Server
