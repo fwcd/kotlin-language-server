@@ -1,3 +1,6 @@
+> ![IMPORTANT]
+> There is now an [official language server](https://github.com/Kotlin/kotlin-lsp), so this project can be considered deprecated.
+
 # Kotlin Language Server
 
 [![Release](https://img.shields.io/github/release/fwcd/kotlin-language-server)](https://github.com/fwcd/kotlin-language-server/releases)
