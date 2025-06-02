@@ -34,6 +34,7 @@ import java.io.Closeable
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import org.javacs.kt.inlinevalue.findInlineValues
 
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
@@ -265,6 +266,11 @@ class KotlinTextDocumentService(
 
     override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
         TODO("not implemented")
+    }
+
+    override fun inlineValue(params: InlineValueParams): CompletableFuture<List<InlineValue>> = async.compute {
+        val (file, _) = recover(params.textDocument.uri, params.range.start, Recompile.ALWAYS) ?: return@compute emptyList()
+        findInlineValues(file, params.range)
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {

@@ -93,6 +93,7 @@ class KotlinLanguageServer(
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
         serverCapabilities.documentHighlightProvider = Either.forLeft(true)
+        serverCapabilities.inlineValueProvider = Either.forLeft(true)
 
         val storagePath = getStoragePath(params)
         databaseService.setup(storagePath)
