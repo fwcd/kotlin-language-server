@@ -1,0 +1,23 @@
+name: Sourcegraph LSIF
+on:
+  push:
+  pull_request:
+jobs:
+  lsif:
+    runs-on: ubuntu-latest
+    name: "Upload LSIF"
+    steps:
+      - uses: actions/checkout@v2
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1.1.2
+        with:
+          jvm: adopt:11
+          apps: lsif-java
+      - name: Generate LSIF
+        run: lsif-java index
+      - name: Upload LSIF data
+        uses: sourcegraph/lsif-upload-action@master
+        with:
+          endpoint: https://sourcegraph.com
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dump.lsif
