@@ -114,4 +114,5 @@ public data class Configuration(
     val externalSources: ExternalSourcesConfiguration = ExternalSourcesConfiguration(),
     val inlayHints: InlayHintsConfiguration = InlayHintsConfiguration(),
     val formatting: FormattingConfiguration = FormattingConfiguration(),
+    val exclusions: ExclusionsConfiguration = ExclusionsConfiguration(),
 )
