@@ -101,7 +101,7 @@ internal class CachedClassPathResolver(
 
     init {
         transaction(db) {
-            SchemaUtils.createMissingTablesAndColumns(
+            SchemaUtils.create(
                 ClassPathMetadataCache, ClassPathCacheEntry, BuildScriptClassPathCacheEntry
             )
         }
@@ -116,7 +116,13 @@ internal class CachedClassPathResolver(
         LOG.info("Cached classpath is outdated or not found. Resolving again")
 
         val newClasspath = wrapped.classpath
-        updateClasspathCache(newClasspath, false)
+        // We need to make sure the cache resolve won't throw error here, make deps can be loaded successfully
+        try {
+            // in old exposed this will throw error, but I do not know if it will throw again, so I catch here
+            updateClasspathCache(newClasspath, false)
+        } catch (e: Exception) {
+            LOG.warn("Error during database update, error: ${e.message}")
+        }
 
         return newClasspath
     }
