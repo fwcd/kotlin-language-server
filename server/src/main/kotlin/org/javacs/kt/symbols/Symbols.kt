@@ -3,6 +3,7 @@
 package org.javacs.kt.symbols
 
 import com.intellij.psi.PsiElement
+import org.eclipse.lsp4j.Location
 import org.eclipse.lsp4j.SymbolInformation
 import org.eclipse.lsp4j.SymbolKind
 import org.eclipse.lsp4j.DocumentSymbol
@@ -11,9 +12,9 @@ import org.eclipse.lsp4j.WorkspaceSymbolLocation
 import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.javacs.kt.SourcePath
 import org.javacs.kt.position.range
+import org.javacs.kt.position.toURIString
 import org.javacs.kt.util.containsCharactersInOrder
 import org.javacs.kt.util.preOrderTraversal
-import org.javacs.kt.util.toPath
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.parents
 
@@ -33,10 +34,10 @@ private fun doDocumentSymbols(element: PsiElement): List<DocumentSymbol> {
     } ?: children
 }
 
-fun workspaceSymbols(query: String, sp: SourcePath): List<WorkspaceSymbol> =
+fun workspaceSymbols(query: String, sp: SourcePath, locationRequired: Boolean): List<WorkspaceSymbol> =
         doWorkspaceSymbols(sp)
                 .filter { containsCharactersInOrder(it.name!!, query, false) }
-                .mapNotNull(::workspaceSymbol)
+                .mapNotNull { workspaceSymbol(it, locationRequired) }
                 .toList()
 
 private fun doWorkspaceSymbols(sp: SourcePath): Sequence<KtNamedDeclaration> =
@@ -56,11 +57,22 @@ private fun pickImportantElements(node: PsiElement, includeLocals: Boolean): KtN
             else -> null
         }
 
-private fun workspaceSymbol(d: KtNamedDeclaration): WorkspaceSymbol? {
-    val name = d.name ?: return null
+private fun workspaceSymbol(d: KtNamedDeclaration, locationRequired: Boolean): WorkspaceSymbol? =
+    d.name?.let { name ->
+        val location: Either<Location, WorkspaceSymbolLocation>? = if (locationRequired) {
+            val content = d.containingFile?.text
+            val locationInContent = (d.nameIdentifier?.textRange ?: d.textRange)
+            if (content != null && locationInContent != null) {
+                Either.forLeft(Location(d.containingFile.toURIString(), range(content, locationInContent)))
+            } else {
+                null
+            }
+        } else {
+            d.containingFile?.let { Either.forRight(WorkspaceSymbolLocation(it.toURIString())) }
+        }
 
-    return WorkspaceSymbol(name, symbolKind(d), Either.forRight(workspaceLocation(d)), symbolContainer(d))
-}
+        location?.let { WorkspaceSymbol(name, symbolKind(d), it, symbolContainer(d)) }
+    }
 
 private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
         when (d) {
@@ -72,13 +84,6 @@ private fun symbolKind(d: KtNamedDeclaration): SymbolKind =
             is KtVariableDeclaration -> SymbolKind.Variable
             else -> throw IllegalArgumentException("Unexpected symbol $d")
         }
-
-private fun workspaceLocation(d: KtNamedDeclaration): WorkspaceSymbolLocation {
-    val file = d.containingFile
-    val uri = file.toPath().toUri().toString()
-
-    return WorkspaceSymbolLocation(uri)
-}
 
 private fun symbolContainer(d: KtNamedDeclaration): String? =
         d.parents
