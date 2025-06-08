@@ -5,9 +5,6 @@ import org.eclipse.lsp4j.CompletionItem
 import org.eclipse.lsp4j.CompletionItemKind
 import org.eclipse.lsp4j.CompletionItemTag
 import org.eclipse.lsp4j.CompletionList
-import org.eclipse.lsp4j.TextEdit
-import org.eclipse.lsp4j.Range
-import org.eclipse.lsp4j.Position
 import org.javacs.kt.CompiledFile
 import org.javacs.kt.LOG
 import org.javacs.kt.CompletionConfiguration
@@ -19,7 +16,6 @@ import org.javacs.kt.util.noResult
 import org.javacs.kt.util.stringDistance
 import org.javacs.kt.util.toPath
 import org.javacs.kt.util.onEachIndexed
-import org.javacs.kt.position.location
 import org.javacs.kt.imports.getImportTextEditEntry
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.descriptors.*
@@ -627,10 +623,4 @@ private fun doesntLookLikePackage(packageDirective: KtPackageDirective): Sequenc
     LOG.debug("{} doesn't look like package a.b...", packageDirective.text)
 
     return emptySequence()
-}
-
-private fun empty(message: String): CompletionList {
-    LOG.debug(message)
-
-    return CompletionList(true, emptyList())
 }

@@ -39,7 +39,7 @@ fun main(argv: Array<String>) {
         tcpStartServer(it)
     } ?: Pair(System.`in`, System.out)
 
-    val server = KotlinLanguageServer()
+    val server = Server()
     val threads = Executors.newSingleThreadExecutor { Thread(it, "client") }
     val launcher = LSPLauncher.createServerLauncher(server, ExitingInputStream(inStream), outStream, threads) { it }
 

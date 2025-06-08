@@ -14,27 +14,27 @@ class KotlinProtocolExtensionService(
     private val cp: CompilerClassPath,
     private val sp: SourcePath
 ) : KotlinProtocolExtensions {
-    private val async = AsyncExecutor()
+    private val asyncExecutor = AsyncExecutor(name = "KotlinProtocolExtensionService")
 
-    override fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?> = async.compute {
+    override fun jarClassContents(textDocument: TextDocumentIdentifier): CompletableFuture<String?> = asyncExecutor.compute {
         uriContentProvider.contentOf(parseURI(textDocument.uri))
     }
 
-    override fun buildOutputLocation(): CompletableFuture<String?> = async.compute {
+    override fun buildOutputLocation(): CompletableFuture<String?> = asyncExecutor.compute {
         cp.outputDirectory.absolutePath
     }
 
-    override fun mainClass(textDocument: TextDocumentIdentifier): CompletableFuture<Map<String, Any?>> = async.compute {
+    override fun mainClass(textDocument: TextDocumentIdentifier): CompletableFuture<Map<String, Any?>> = asyncExecutor.compute {
         val fileUri = parseURI(textDocument.uri)
         val filePath = Paths.get(fileUri)
-        
+
         // we find the longest one in case both the root and submodule are included
         val workspacePath = cp.workspaceRoots.filter {
             filePath.startsWith(it)
         }.map {
             it.toString()
         }.maxByOrNull(String::length) ?: ""
-        
+
         val compiledFile = sp.currentVersion(fileUri)
 
         resolveMain(compiledFile) + mapOf(
@@ -42,7 +42,7 @@ class KotlinProtocolExtensionService(
         )
     }
 
-    override fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>> = async.compute {
+    override fun overrideMember(position: TextDocumentPositionParams): CompletableFuture<List<CodeAction>> = asyncExecutor.compute {
         val fileUri = parseURI(position.textDocument.uri)
         val compiledFile = sp.currentVersion(fileUri)
         val cursorOffset = offset(compiledFile.content, position.position)
