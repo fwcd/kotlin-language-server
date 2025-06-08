@@ -23,7 +23,7 @@ class ClassPathTest {
 
         val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
         print(resolvers)
-        val classPath = resolvers.classpathOrEmpty.map { it.toString() }
+        val classPath = resolvers.classpathOrEmpty.entries.map { it.toString() }
 
         assertThat(classPath, hasItem(containsString("junit")))
     }
@@ -36,7 +36,7 @@ class ClassPathTest {
 
         val resolvers = defaultClassPathResolver(listOf(workspaceRoot))
         print(resolvers)
-        val classPath = resolvers.classpathOrEmpty.map { it.toString() }
+        val classPath = resolvers.classpathOrEmpty.entries.map { it.toString() }
 
         assertThat(classPath, hasItem(containsString("junit")))
     }

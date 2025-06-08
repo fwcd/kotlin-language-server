@@ -107,16 +107,16 @@ internal class CachedClassPathResolver(
         }
     }
 
-    override val classpath: Set<ClassPathEntry> get() {
+    override val classpath: ClassPathResult get() {
         cachedClassPathEntries.let { if (!dependenciesChanged()) {
             LOG.info("Classpath has not changed. Fetching from cache")
-            return it
+            return ClassPathResult(it, cacheHit = true)
         } }
 
         LOG.info("Cached classpath is outdated or not found. Resolving again")
 
         val newClasspath = wrapped.classpath
-        updateClasspathCache(newClasspath, false)
+        updateClasspathCache(newClasspath.entries, false)
 
         return newClasspath
     }
@@ -135,11 +135,13 @@ internal class CachedClassPathResolver(
         return newBuildScriptClasspath
     }
 
-    override val classpathWithSources: Set<ClassPathEntry> get() {
-        cachedClassPathMetadata?.let { if (!dependenciesChanged() && it.includesSources) return cachedClassPathEntries }
+    override val classpathWithSources: ClassPathResult get() {
+        cachedClassPathMetadata?.let { if (!dependenciesChanged() && it.includesSources) {
+            return ClassPathResult(cachedClassPathEntries, cacheHit = true)
+        } }
 
         val newClasspath = wrapped.classpathWithSources
-        updateClasspathCache(newClasspath, true)
+        updateClasspathCache(newClasspath.entries, true)
 
         return newClasspath
     }

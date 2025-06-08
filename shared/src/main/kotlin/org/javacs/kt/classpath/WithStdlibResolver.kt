@@ -5,16 +5,16 @@ import java.nio.file.Path
 /** A classpath resolver that ensures another resolver contains the stdlib */
 internal class WithStdlibResolver(private val wrapped: ClassPathResolver) : ClassPathResolver {
     override val resolverType: String get() = "Stdlib + ${wrapped.resolverType}"
-    override val classpath: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpath)
-    override val classpathOrEmpty: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathOrEmpty)
+    override val classpath: ClassPathResult get() = wrapWithStdlibEntries(wrapped.classpath.entries)
+    override val classpathOrEmpty: ClassPathResult get() = wrapWithStdlibEntries(wrapped.classpathOrEmpty.entries)
     override val buildScriptClasspath: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspath)
     override val buildScriptClasspathOrEmpty: Set<Path> get() = wrapWithStdlib(wrapped.buildScriptClasspathOrEmpty)
-    override val classpathWithSources: Set<ClassPathEntry> get() = wrapWithStdlibEntries(wrapped.classpathWithSources)
+    override val classpathWithSources: ClassPathResult get() = wrapWithStdlibEntries(wrapped.classpathWithSources.entries)
     override val currentBuildFileVersion: Long get() = wrapped.currentBuildFileVersion
 }
 
-private fun wrapWithStdlibEntries(paths: Set<ClassPathEntry>): Set<ClassPathEntry> {
-    return wrapWithStdlib(paths.map { it.compiledJar }.toSet()).map { ClassPathEntry(it, paths.find { it1 -> it1.compiledJar == it }?.sourceJar) }.toSet()
+private fun wrapWithStdlibEntries(paths: Set<ClassPathEntry>): ClassPathResult {
+    return ClassPathResult(wrapWithStdlib(paths.map { it.compiledJar }.toSet()).map { ClassPathEntry(it, paths.find { it1 -> it1.compiledJar == it }?.sourceJar) }.toSet())
 }
 
 private fun wrapWithStdlib(paths: Set<Path>): Set<Path> {
