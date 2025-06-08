@@ -5,7 +5,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
 
 class ReferencesTest : SingleFileTestFixture("references", "ReferenceTo.kt") {
-    @Test fun `find referencs to foo`() {
+    @Test fun `find references to foo`() {
         val request = referenceParams(file, 2, 11)
         val references = languageServer.textDocumentService.references(request).get()
         val referenceStrs = references?.map { it.toString() }

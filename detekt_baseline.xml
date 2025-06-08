@@ -26,7 +26,7 @@
     <ID>EmptyClassBlock:samefile.kt$MyImplClass${}</ID>
     <ID>EmptyClassBlock:samefile.kt$NullClass${}</ID>
     <ID>EmptyClassBlock:samefile.kt$PrintableClass${}</ID>
-    <ID>EmptyClassBlock:standardlib.kt$MyComperable${}</ID>
+    <ID>EmptyClassBlock:standardlib.kt$MyComparable${}</ID>
     <ID>EmptyClassBlock:standardlib.kt$MyList${}</ID>
     <ID>EmptyClassBlock:standardlib.kt$MyThread${}</ID>
     <ID>EmptyDefaultConstructor:BigFile.kt$BigFile.A$()</ID>
