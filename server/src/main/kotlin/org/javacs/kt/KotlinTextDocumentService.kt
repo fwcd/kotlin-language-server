@@ -34,6 +34,7 @@ import java.io.Closeable
 import java.nio.file.Path
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import org.javacs.kt.codelens.findCodeLenses
 
 class KotlinTextDocumentService(
     private val sf: SourceFiles,
@@ -144,8 +145,14 @@ class KotlinTextDocumentService(
         ))
     }
 
-    override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>> {
-        TODO("not implemented")
+    override fun codeLens(params: CodeLensParams): CompletableFuture<List<CodeLens>> = async.compute {
+        reportTime {
+            LOG.info("Finding code lenses in {}", describeURI(params.textDocument.uri))
+
+            val uri = parseURI(params.textDocument.uri)
+            val file = sp.currentVersion(uri)
+            return@compute findCodeLenses(file)
+        }
     }
 
     override fun rename(params: RenameParams) = async.compute {
@@ -263,8 +270,66 @@ class KotlinTextDocumentService(
         }
     }
 
-    override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> {
-        TODO("not implemented")
+    override fun resolveCodeLens(unresolved: CodeLens): CompletableFuture<CodeLens> = async.compute {
+        reportTime {
+            LOG.info("Resolving code lens {}", unresolved.command?.command)
+
+            val command = unresolved.command
+            if (command == null) {
+                return@compute unresolved
+            }
+
+            val args = command.arguments as List<*>
+            if (args.size != 3) {
+                return@compute unresolved
+            }
+
+            val uri = args[0] as String
+            val line = args[1] as Int
+            val character = args[2] as Int
+
+            val file = sp.currentVersion(parseURI(uri))
+            val content = sp.content(parseURI(uri))
+            val offset = offset(content, line, character)
+
+            when (command.command) {
+                "kotlin.showImplementations" -> {
+                    val implementations = findImplementation(sp, sf, file, offset)
+                    if (implementations.isNotEmpty()) {
+                        unresolved.command = Command(
+                            command.title,
+                            command.command,
+                            listOf(uri, line, character, implementations)
+                        )
+                    }
+                }
+                "kotlin.showSubclasses" -> {
+                    val implementations = findImplementation(sp, sf, file, offset)
+                    if (implementations.isNotEmpty()) {
+                        unresolved.command = Command(
+                            command.title,
+                            command.command,
+                            listOf(uri, line, character, implementations)
+                        )
+                    }
+                }
+                "kotlin.showReferences" -> {
+                    val filePath = parseURI(uri).filePath
+                    if (filePath != null) {
+                        val references = findReferences(filePath, offset, sp)
+                        if (references.isNotEmpty()) {
+                            unresolved.command = Command(
+                                command.title,
+                                command.command,
+                                listOf(uri, line, character, references)
+                            )
+                        }
+                    }
+                }
+            }
+
+            return@compute unresolved
+        }
     }
 
     private fun describePosition(position: TextDocumentPositionParams): String {
