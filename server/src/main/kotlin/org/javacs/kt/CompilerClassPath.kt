@@ -162,7 +162,7 @@ class CompilerClassPath(
 
     private fun findJavaSourceFiles(root: Path): Set<Path> {
         val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
-        return SourceExclusions(listOf(root), scriptsConfig)
+        return SourceExclusions(listOf(root), scriptsConfig, mutableListOf())
             .walkIncluded()
             .filter { sourceMatcher.matches(it.fileName) }
             .toSet()
