@@ -184,14 +184,15 @@ private fun completionItem(d: DeclarationDescriptor, surroundingElement: KtEleme
 
     result.label = methodSignature.find(result.detail)?.groupValues?.get(1) ?: result.label
 
-    if (isNotStaticJavaMethod(d) && (isGetter(d) || isSetter(d))) {
-        val name = extractPropertyName(d)
-
-        result.detail += " (from ${result.label})"
-        result.label = name
-        result.insertText = name
-        result.filterText = name
-    }
+    // TODO: @xiaobo; sceptical about this code block, it might mistakenly extract function names
+//    if (isNotStaticJavaMethod(d) && (isGetter(d) || isSetter(d))) {
+//        val name = extractPropertyName(d)
+//
+//        result.detail += " (from ${result.label})"
+//        result.label = name
+//        result.insertText = name
+//        result.filterText = name
+//    }
 
     if (KotlinBuiltIns.isDeprecated(d)) {
         result.tags = listOf(CompletionItemTag.Deprecated)
