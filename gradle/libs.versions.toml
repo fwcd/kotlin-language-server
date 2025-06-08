@@ -1,6 +1,6 @@
 [versions]
 kotlinVersion = "2.1.0"
-lsp4jVersion = "0.21.2"
+lsp4jVersion = "0.24.0"
 exposedVersion = "0.37.3"
 jmhVersion = "1.37"
 guavaVersion = "33.4.0-jre"
