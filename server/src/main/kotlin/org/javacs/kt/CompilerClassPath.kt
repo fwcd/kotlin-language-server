@@ -1,25 +1,27 @@
 package org.javacs.kt
 
-import org.javacs.kt.classpath.ClassPathEntry
-import org.javacs.kt.classpath.defaultClassPathResolver
-import org.javacs.kt.compiler.Compiler
-import org.javacs.kt.database.DatabaseService
-import org.javacs.kt.util.AsyncExecutor
 import java.io.Closeable
 import java.io.File
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.CompletableFuture
+import org.javacs.kt.classpath.ClassPathEntry
+import org.javacs.kt.classpath.ClassPathResolver
+import org.javacs.kt.classpath.defaultClassPathResolver
+import org.javacs.kt.compiler.Compiler
+import org.javacs.kt.database.DatabaseService
+import org.javacs.kt.util.AsyncExecutor
 
 /**
- * Manages the class path (compiled JARs, etc), the Java source path
- * and the compiler. Note that Kotlin sources are stored in SourcePath.
+ * Manages the class path (compiled JARs, etc), the Java source path and the compiler. Note that
+ * Kotlin sources are stored in SourcePath.
  */
 class CompilerClassPath(
     private val config: CompilerConfiguration,
     private val scriptsConfig: ScriptsConfiguration,
     private val codegenConfig: CodegenConfiguration,
-    private val databaseService: DatabaseService
+    private val databaseService: DatabaseService,
 ) : Closeable {
     val workspaceRoots = mutableSetOf<Path>()
 
@@ -29,14 +31,15 @@ class CompilerClassPath(
     val outputDirectory: File = Files.createTempDirectory("klsBuildOutput").toFile()
     val javaHome: String? = System.getProperty("java.home", null)
 
-    var compiler = Compiler(
-        javaSourcePath,
-        classPath.map { it.compiledJar }.toSet(),
-        buildScriptClassPath,
-        scriptsConfig,
-        codegenConfig,
-        outputDirectory
-    )
+    var compiler =
+        Compiler(
+            javaSourcePath,
+            classPath.map { it.compiledJar }.toSet(),
+            buildScriptClassPath,
+            scriptsConfig,
+            codegenConfig,
+            outputDirectory,
+        )
         private set
 
     private val async = AsyncExecutor()
@@ -49,53 +52,91 @@ class CompilerClassPath(
     private fun refresh(
         updateClassPath: Boolean = true,
         updateBuildScriptClassPath: Boolean = true,
-        updateJavaSourcePath: Boolean = true
+        updateJavaSourcePath: Boolean = true,
     ): Boolean {
-        // TODO: Fetch class path and build script class path concurrently (and asynchronously)
         val resolver = defaultClassPathResolver(workspaceRoots, databaseService.db)
         var refreshCompiler = updateJavaSourcePath
 
-        if (updateClassPath) {
+        val classPathFuture =
+            if (updateClassPath) {
+                updateClassPathAsync(resolver)
+            } else {
+                CompletableFuture.completedFuture(false)
+            }
+
+        val buildScriptClassPathFuture =
+            if (updateBuildScriptClassPath) {
+                updateBuildScriptClassPathAsync(resolver)
+            } else {
+                CompletableFuture.completedFuture(false)
+            }
+
+        CompletableFuture.allOf(classPathFuture, buildScriptClassPathFuture).join()
+
+        refreshCompiler =
+            refreshCompiler || classPathFuture.get() || buildScriptClassPathFuture.get()
+
+        if (refreshCompiler) {
+            LOG.info("Reinstantiating compiler")
+            compiler.close()
+            compiler =
+                Compiler(
+                    javaSourcePath,
+                    classPath.map { it.compiledJar }.toSet(),
+                    buildScriptClassPath,
+                    scriptsConfig,
+                    codegenConfig,
+                    outputDirectory,
+                )
+            updateCompilerConfiguration()
+        }
+
+        return refreshCompiler
+    }
+
+    private fun updateClassPathAsync(resolver: ClassPathResolver): CompletableFuture<Boolean> {
+        return async.compute {
+            var updated = false
             val newClassPath = resolver.classpathOrEmpty
             if (newClassPath != classPath) {
                 synchronized(classPath) {
                     syncPaths(classPath, newClassPath, "class path") { it.compiledJar }
                 }
-                refreshCompiler = true
+                updated = true
             }
 
-            async.compute {
-                val newClassPathWithSources = resolver.classpathWithSources
-                synchronized(classPath) {
-                    syncPaths(classPath, newClassPathWithSources, "class path with sources") { it.compiledJar }
+            val newClassPathWithSources = resolver.classpathWithSources
+            synchronized(classPath) {
+                syncPaths(classPath, newClassPathWithSources, "class path with sources") {
+                    it.compiledJar
                 }
             }
-        }
 
-        if (updateBuildScriptClassPath) {
+            updated
+        }
+    }
+
+    private fun updateBuildScriptClassPathAsync(
+        resolver: ClassPathResolver
+    ): CompletableFuture<Boolean> {
+        return async.compute {
+            var updated = false
             LOG.info("Update build script path")
             val newBuildScriptClassPath = resolver.buildScriptClasspathOrEmpty
             if (newBuildScriptClassPath != buildScriptClassPath) {
-                syncPaths(buildScriptClassPath, newBuildScriptClassPath, "build script class path") { it }
-                refreshCompiler = true
+                synchronized(buildScriptClassPath) {
+                    syncPaths(
+                        buildScriptClassPath,
+                        newBuildScriptClassPath,
+                        "build script class path",
+                    ) {
+                        it
+                    }
+                }
+                updated = true
             }
+            updated
         }
-
-        if (refreshCompiler) {
-            LOG.info("Reinstantiating compiler")
-            compiler.close()
-            compiler = Compiler(
-                javaSourcePath,
-                classPath.map { it.compiledJar }.toSet(),
-                buildScriptClassPath,
-                scriptsConfig,
-                codegenConfig,
-                outputDirectory
-            )
-            updateCompilerConfiguration()
-        }
-
-        return refreshCompiler
     }
 
     /** Synchronizes the given two path sets and logs the differences. */
@@ -150,7 +191,11 @@ class CompilerClassPath(
         val buildScript = isBuildScript(file)
         val javaSource = isJavaSource(file)
         if (buildScript || javaSource) {
-            return refresh(updateClassPath = buildScript, updateBuildScriptClassPath = false, updateJavaSourcePath = javaSource)
+            return refresh(
+                updateClassPath = buildScript,
+                updateBuildScriptClassPath = false,
+                updateJavaSourcePath = javaSource,
+            )
         } else {
             return false
         }
@@ -158,7 +203,10 @@ class CompilerClassPath(
 
     private fun isJavaSource(file: Path): Boolean = file.fileName.toString().endsWith(".java")
 
-    private fun isBuildScript(file: Path): Boolean = file.fileName.toString().let { it == "pom.xml" || it == "build.gradle" || it == "build.gradle.kts" }
+    private fun isBuildScript(file: Path): Boolean =
+        file.fileName.toString().let {
+            it == "pom.xml" || it == "build.gradle" || it == "build.gradle.kts"
+        }
 
     private fun findJavaSourceFiles(root: Path): Set<Path> {
         val sourceMatcher = FileSystems.getDefault().getPathMatcher("glob:*.java")
