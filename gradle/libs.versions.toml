@@ -35,7 +35,7 @@ com-github-fwcd-ktfmt = { module = "com.github.fwcd.ktfmt:ktfmt", version = "b5d
 
 com-google-guava-guava = { module = "com.google.guava:guava", version.ref = "guavaVersion" }
 
-com-h2database-h2 = { module = "com.h2database:h2", version = "1.4.200" }
+com-h2database-h2 = { module = "com.h2database:h2", version = "2.3.232" }
 
 com-beust-jcommander = { module = "com.beust:jcommander", version = "1.82" }
 
