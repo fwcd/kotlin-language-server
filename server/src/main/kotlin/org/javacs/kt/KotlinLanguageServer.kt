@@ -91,6 +91,7 @@ class KotlinLanguageServer(
         serverCapabilities.codeActionProvider = Either.forLeft(true)
         serverCapabilities.documentFormattingProvider = Either.forLeft(true)
         serverCapabilities.documentRangeFormattingProvider = Either.forLeft(true)
+        serverCapabilities.documentOnTypeFormattingProvider = DocumentOnTypeFormattingOptions("}", listOf(";", "\n"))
         serverCapabilities.executeCommandProvider = ExecuteCommandOptions(ALL_COMMANDS)
         serverCapabilities.documentHighlightProvider = Either.forLeft(true)
 
