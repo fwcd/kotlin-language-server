@@ -1,6 +1,13 @@
+import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
+import org.gradle.plugins.ide.eclipse.model.EclipseModel
+import org.gradle.plugins.ide.eclipse.model.Library
+
 allprojects { project ->
+    apply plugin: "eclipse"
+
     task kotlinLSPProjectDeps { task ->
         doLast {
+            def classpaths = new HashMap()
             System.out.println ""
             System.out.println "gradle-version $gradleVersion"
             System.out.println "kotlin-lsp-project ${project.name}"
@@ -28,7 +35,7 @@ allprojects { project ->
                         File.separator + variantBase +
                         File.separator + "classes"
 
-                    System.out.println "kotlin-lsp-gradle $buildClasses"
+                    classpaths[buildClasses.toString()] = null
 
                     def userClasses = project.getBuildDir().absolutePath +
                         File.separator + "intermediates" +
@@ -36,7 +43,7 @@ allprojects { project ->
                         File.separator + variantBase +
                         File.separator + "compile" + variantBase.capitalize() + "JavaWithJavac" + File.separator + "classes"
 
-                    System.out.println "kotlin-lsp-gradle $userClasses"
+                    classpaths[userClasses.toString()] = null
 
                     def userVariantClasses = project.getBuildDir().absolutePath +
                         File.separator + "intermediates" +
@@ -44,17 +51,19 @@ allprojects { project ->
                         File.separator + variantBase +
                         File.separator + "classes"
 
-                    System.out.println "kotlin-lsp-gradle $userVariantClasses"
+                    classpaths[userVariantClasses.toString()] = null
 
                     variant.getCompileClasspath().each {
-                        System.out.println "kotlin-lsp-gradle $it"
+                        classpaths[it.toString()] = null
                     }
                 }
+
+
             } else if (project.hasProperty('sourceSets')) {
                 // Print the list of all dependencies jar files.
                 sourceSets.forEach {
                     it.compileClasspath.forEach {
-                        System.out.println "kotlin-lsp-gradle $it"
+                        classpaths[it.toString()] = null
                     }
                 }
             }
@@ -69,9 +78,23 @@ allprojects { project ->
                 kotlinExtension.targets.names.each {
                     def classpath = configurations["${it}CompileClasspath"]
                     classpath.files.each {
-                        System.out.println "kotlin-lsp-gradle $it"
+                        classpaths[it.toString()] = null
                     }
                 }
+            }
+
+            EclipseModel eclipseModel = project.extensions.getByType(EclipseModel.class)
+
+            for (ClasspathEntry dep : (eclipseModel.getClasspath().resolveDependencies())) {
+                if (dep instanceof Library) {
+                    if (classpaths.get(dep.getPath()) == null){
+                        classpaths[dep.getPath()] = dep.getSourcePath()?.getPath()
+                    }
+                }
+            }
+
+            for (e in classpaths) {
+                System.out.println "kotlin-lsp-gradle path:$e.key source:$e.value"
             }
         }
     }
@@ -80,7 +103,7 @@ allprojects { project ->
         doLast {
             fileTree("$gradle.gradleHomeDir/lib")
                 .findAll { it.toString().endsWith '.jar' }
-                .forEach { System.out.println "kotlin-lsp-gradle $it" }
+                .forEach { System.out.println "kotlin-lsp-gradle path:$it source:null" }
         }
     }
 }
