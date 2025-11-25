@@ -99,6 +99,13 @@ class SourceFiles(
 
     fun edit(uri: URI, newVersion: Int, contentChanges: List<TextDocumentContentChangeEvent>) {
         if (isIncluded(uri)) {
+            if (!isOpen(uri)) {
+                // There might be a case where the file is not have been opened yet if the configuration
+                // is changed to include/exclude certain files. In that case, we read it from disk first.
+                readFromDisk(uri, temporary = false)?.let {
+                    files[uri] = it
+                } ?: LOG.warn("Could not read source file '{}'", uri.path)
+            }
             val existing = files[uri]!!
             var newText = existing.content
 
@@ -193,7 +200,7 @@ class SourceFiles(
         LOG.info("Updated exclusions: ${exclusions.excludedPatterns}")
     }
 
-    fun isOpen(uri: URI): Boolean = (uri in open)
+    private fun isOpen(uri: URI): Boolean = (uri in open)
 
     fun isIncluded(uri: URI): Boolean = exclusions.isURIIncluded(uri)
 }
