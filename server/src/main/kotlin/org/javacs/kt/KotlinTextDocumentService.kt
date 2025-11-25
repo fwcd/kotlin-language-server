@@ -316,12 +316,12 @@ class KotlinTextDocumentService(
         val byFile = langServerDiagnostics.groupBy({ it.first }, { it.second })
 
         for ((uri, diagnostics) in byFile) {
-            if (sf.isOpen(uri)) {
+            if (sf.isIncluded(uri)) {
                 client.publishDiagnostics(PublishDiagnosticsParams(uri.toString(), diagnostics))
 
                 LOG.info("Reported {} diagnostics in {}", diagnostics.size, describeURI(uri))
             }
-            else LOG.info("Ignore {} diagnostics in {} because it's not open", diagnostics.size, describeURI(uri))
+            else LOG.info("Ignore {} diagnostics in {} because it's excluded", diagnostics.size, describeURI(uri))
         }
 
         val noErrors = compiled - byFile.keys
