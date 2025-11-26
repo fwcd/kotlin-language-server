@@ -7,7 +7,9 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -64,22 +66,27 @@ internal class CachedClassPathResolver(
                 )
             }.toSet()
         }
-        set(newEntries) = transaction(db) {
-            ClassPathCacheEntry.deleteAll()
-            newEntries.map {
-                ClassPathCacheEntryEntity.new {
-                    compiledJar = it.compiledJar.toString()
-                    sourceJar = it.sourceJar?.toString()
+        set(newEntries) {
+            transaction(db) {
+                ClassPathCacheEntry.deleteAll()
+                ClassPathCacheEntry.batchInsert(newEntries) {
+                    this[ClassPathCacheEntry.compiledJar] = it.compiledJar.toString()
+                    this[ClassPathCacheEntry.sourceJar] = it.sourceJar?.toString()
                 }
             }
         }
 
     private var cachedBuildScriptClassPathEntries: Set<Path>
         get() = transaction(db) { BuildScriptClassPathCacheEntryEntity.all().map { Paths.get(it.jar) }.toSet() }
-        set(newEntries) = transaction(db) {
-            BuildScriptClassPathCacheEntry.deleteAll()
-            newEntries.map { BuildScriptClassPathCacheEntryEntity.new { jar = it.toString() } }
+        set(newEntries) {
+            transaction(db) {
+                BuildScriptClassPathCacheEntry.deleteAll()
+                BuildScriptClassPathCacheEntry.batchInsert(newEntries) {
+                    this[BuildScriptClassPathCacheEntry.jar] = it.toString()
+                }
+            }
         }
+
 
     private var cachedClassPathMetadata
         get() = transaction(db) {
@@ -90,12 +97,14 @@ internal class CachedClassPathResolver(
                 )
             }.firstOrNull()
         }
-        set(newClassPathMetadata) = transaction(db) {
-            ClassPathMetadataCache.deleteAll()
-            val newClassPathMetadataRow = newClassPathMetadata ?: ClasspathMetadata()
-            ClassPathMetadataCacheEntity.new {
-                includesSources = newClassPathMetadataRow.includesSources
-                buildFileVersion = newClassPathMetadataRow.buildFileVersion
+        set(newClassPathMetadata) {
+            transaction(db) {
+                ClassPathMetadataCache.deleteAll()
+                val newClassPathMetadataRow = newClassPathMetadata ?: ClasspathMetadata()
+                ClassPathMetadataCache.insert {
+                    it[includesSources] = newClassPathMetadataRow.includesSources
+                    it[buildFileVersion] = newClassPathMetadataRow.buildFileVersion
+                }
             }
         }
 
