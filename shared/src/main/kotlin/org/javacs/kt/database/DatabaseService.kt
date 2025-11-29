@@ -62,7 +62,14 @@ class DatabaseService {
     private fun getDbFromFile(storagePath: Path?): Database? {
         return storagePath?.let {
             if (Files.isDirectory(it)) {
-                Database.connect("jdbc:sqlite:${getDbFilePath(it)}")
+                Database.connect("jdbc:sqlite:${getDbFilePath(it)}").also { db ->
+                    transaction(db) {
+                        // WAL mode: better concurrent read performance
+                        exec("PRAGMA journal_mode = WAL")
+                        // Reduce fsync calls (safe with WAL mode)
+                        exec("PRAGMA synchronous = NORMAL")
+                    }
+                }
             } else {
                 null
             }
