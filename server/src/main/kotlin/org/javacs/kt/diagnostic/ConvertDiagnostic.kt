@@ -44,5 +44,5 @@ private fun severity(severity: Severity): DiagnosticSeverity =
             Severity.INFO -> DiagnosticSeverity.Information
             Severity.ERROR -> DiagnosticSeverity.Error
             Severity.WARNING -> DiagnosticSeverity.Warning
+            Severity.FIXED_WARNING -> DiagnosticSeverity.Hint
         }
-
