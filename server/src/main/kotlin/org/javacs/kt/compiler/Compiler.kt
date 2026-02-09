@@ -10,6 +10,7 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.VirtualFileSystem
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiFileFactory
+import org.jetbrains.kotlin.backend.jvm.JvmIrCodegenFactory
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.environment.setIdeaIoUseFallback
 import org.jetbrains.kotlin.cli.jvm.config.addJavaSourceRoots
@@ -64,7 +65,6 @@ import org.javacs.kt.util.KotlinLSException
 import org.javacs.kt.util.LoggingMessageCollector
 import org.jetbrains.kotlin.cli.common.output.writeAllTo
 import org.jetbrains.kotlin.codegen.ClassBuilderFactories
-import org.jetbrains.kotlin.codegen.KotlinCodegenFacade
 import org.jetbrains.kotlin.codegen.state.GenerationState
 import org.jetbrains.kotlin.container.getService
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
@@ -594,15 +594,16 @@ class Compiler(
         outputDirectory.takeIf { codegenConfig.enabled }?.let {
             compileLock.withLock {
                 val compileEnv = compileEnvironmentFor(CompilationKind.DEFAULT)
-                val state = GenerationState.Builder(
-                    project = compileEnv.environment.project,
-                    builderFactory = ClassBuilderFactories.BINARIES,
-                    module = module,
-                    bindingContext = bindingContext,
-                    files = files.toList(),
-                    configuration = compileEnv.environment.configuration
-                ).build()
-                KotlinCodegenFacade.compileCorrectFiles(state)
+                val codegenFactory = JvmIrCodegenFactory(
+                    compileEnv.environment.configuration,
+                )
+                val state = GenerationState(
+                    compileEnv.environment.project,
+                    module,
+                    compileEnv.environment.configuration,
+                    ClassBuilderFactories.BINARIES,
+                )
+                codegenFactory.convertAndGenerate(files, state, bindingContext)
                 state.factory.writeAllTo(it)
             }
         }
