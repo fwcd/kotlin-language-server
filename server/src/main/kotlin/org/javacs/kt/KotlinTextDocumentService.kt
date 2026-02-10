@@ -7,6 +7,7 @@ import org.eclipse.lsp4j.services.TextDocumentService
 import org.javacs.kt.codeaction.codeActions
 import org.javacs.kt.completion.completions
 import org.javacs.kt.definition.goToDefinition
+import org.javacs.kt.implementation.findImplementations
 import org.javacs.kt.diagnostic.convertDiagnostic
 import org.javacs.kt.formatting.FormattingService
 import org.javacs.kt.hover.hoverAt
@@ -133,6 +134,17 @@ class KotlinTextDocumentService(
                 ?.let(::listOf)
                 ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
                 ?: noResult("Couldn't find definition at ${describePosition(position)}", Either.forLeft(emptyList()))
+        }
+    }
+
+    override fun implementation(position: ImplementationParams): CompletableFuture<Either<List<Location>, List<LocationLink>>> = async.compute {
+        reportTime {
+            LOG.info("Go-to-implementation at {}", describePosition(position))
+
+            position.textDocument.filePath
+                ?.let { findImplementations(it, offset(sp.content(parseURI(position.textDocument.uri)), position.position.line, position.position.character), sp) }
+                ?.let { Either.forLeft<List<Location>, List<LocationLink>>(it) }
+                ?: Either.forLeft(emptyList())
         }
     }
 
